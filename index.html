@@ -1571,13 +1571,18 @@ function loadKartes() {
     buildKarteFilters(karteData);
     return;
   }
-  fetch(GAS_API_URL + '?sheet=' + encodeURIComponent(KARTE_SHEET_NAME))
+  const url = GAS_API_URL + '?sheet=' + encodeURIComponent(KARTE_SHEET_NAME);
+  console.log('カルテ読み込み開始:', url);
+
+  fetch(url)
     .then(r => r.json())
     .then(data => {
-      if (!Array.isArray(data) || data.error) throw new Error('カルテデータ取得失敗');
+      console.log('カルテAPIレスポンス:', data);
+      if (!Array.isArray(data)) throw new Error('配列ではありません: ' + JSON.stringify(data).slice(0, 100));
+
       karteData = data.map(row => ({
-        id:             row['カルテID'] || '',
-        title:          row['事案名'] || '',
+        id:             row['カルテID'] || row['id'] || '',
+        title:          row['事案名'] || row['title'] || '',
         region:         row['地域'] || '',
         field:          row['分野'] || '',
         summary:        row['概要'] || '',
@@ -1591,14 +1596,20 @@ function loadKartes() {
         created_at:     row['作成日'] || '',
         updated_at:     row['最終更新日'] || '',
         start_date:     row['事案開始日'] || '',
-      })).filter(r => r.title);
+      })).filter(r => r.id || r.title); // IDまたはタイトルがあれば表示
+
+      console.log('カルテ読み込み成功:', karteData.length + '件');
       renderKartes(karteData);
       buildKarteFilters(karteData);
     })
-    .catch(() => {
-      karteData = demoKartes;
-      renderKartes(karteData);
-      buildKarteFilters(karteData);
+    .catch(err => {
+      console.error('カルテ読み込みエラー:', err.message);
+      // エラー時はデモデータではなくエラーメッセージを表示
+      const list = document.getElementById('karte-list');
+      if (list) list.innerHTML = `<div class="db-empty">
+        カルテの読み込みに失敗しました<br>
+        <span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ink-light)">${err.message}</span>
+      </div>`;
     });
 }
 
