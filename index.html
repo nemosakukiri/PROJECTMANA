@@ -239,7 +239,43 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 .qa-status.checking{color:var(--ink-mid);background:var(--paper-warm);border:1px solid var(--rule)}
 .qa-status.ok{color:#2d6a2d;background:#f0f7f0;border:1px solid #b8d8b8}
 .qa-status.ng{color:var(--accent);background:#fdf0f0;border:1px solid #f0b8b8}
-/* ===== スマホ対応 (768px以下) ===== */
+/* KARTE PAGE */
+.karte-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
+.karte-layout{display:grid;grid-template-columns:200px 1fr;gap:2.5rem;padding:1.5rem 0;align-items:start}
+.karte-sidebar{position:sticky;top:90px}
+.karte-filter-block{margin-bottom:1.2rem}
+.karte-filter-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;border-top:1px solid var(--rule);padding-top:0.5rem}
+.karte-sidebar select{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.6rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none}
+.karte-card{border:1px solid var(--rule);padding:1.4rem;margin-bottom:1rem;cursor:pointer;transition:border-color 0.15s}
+.karte-card:hover{border-color:var(--accent)}
+.karte-card-top{display:flex;gap:0.6rem;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap}
+.karte-card-id{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light)}
+.karte-card-region{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);font-weight:500}
+.karte-card-field{font-size:0.62rem;padding:0.08rem 0.35rem;background:var(--paper-warm);border:1px solid var(--rule);color:var(--ink-mid)}
+.karte-card-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;line-height:1.3;margin-bottom:0.5rem}
+.karte-card-summary{font-size:0.8rem;color:var(--ink-mid);line-height:1.75;margin-bottom:0.6rem}
+.karte-card-progress{font-size:0.75rem;color:var(--ink-mid);border-left:2px solid var(--accent);padding-left:0.6rem;margin-bottom:0.6rem;font-style:italic}
+.karte-card-tags{display:flex;flex-wrap:wrap;gap:0.22rem;margin-bottom:0.6rem}
+.karte-card-footer{display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
+.karte-related{margin-top:0.5rem}
+.karte-related-label{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-bottom:0.3rem}
+.karte-related-link{display:block;font-size:0.72rem;color:var(--accent);border-bottom:1px solid var(--rule);padding:0.2rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* DETAIL MODAL */
+.karte-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto}
+.karte-modal-overlay.show{display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.karte-modal{background:var(--paper);max-width:720px;width:100%;padding:2rem;position:relative}
+.karte-modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-mid)}
+.karte-modal-id{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-bottom:0.5rem}
+.karte-modal-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;line-height:1.2;margin-bottom:1rem}
+.karte-modal-section{margin-bottom:1.2rem;border-top:1px solid var(--rule);padding-top:0.8rem}
+.karte-modal-section-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem}
+.karte-modal-text{font-size:0.85rem;line-height:1.85;color:var(--ink-mid)}
+.karte-modal-progress{font-size:0.82rem;border-left:2px solid var(--accent);padding-left:0.8rem;color:var(--ink-mid);font-style:italic}
+.karte-related-cards{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem}
+.karte-related-card{padding:0.6rem 0.8rem;border:1px solid var(--rule);font-size:0.78rem;cursor:pointer}
+.karte-related-card:hover{border-color:var(--accent);color:var(--accent)}
+
 @media (max-width: 768px) {
 
   /* 全体の横幅制限 */
@@ -357,6 +393,7 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
         <a href="#" onclick="showPage('db',this)">観測DB</a>
         <a href="#" onclick="showPage('survey',this)">市民の声</a>
         <a href="#" onclick="showPage('essays',this)">論考</a>
+        <a href="#" onclick="showPage('karte',this)">事案カルテ</a>
         <a href="#" onclick="showPage('guide',this)">生活保護の手引き</a>
       </nav>
     </div>
@@ -865,7 +902,57 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
     </div>
   </div>
 </div>
-<footer>
+<!-- KARTE PAGE -->
+<div class="page" id="page-karte">
+  <div class="karte-header">
+    <div class="page-title">事案カルテ</div>
+    <div class="page-subtitle">同じ地域・分野・時期の記事を束ねた事案単位のカルテ。構造タグで関連事案を探せます。</div>
+  </div>
+
+  <div class="karte-layout">
+    <div class="karte-sidebar">
+      <div class="karte-filter-block">
+        <div class="karte-filter-label">地域</div>
+        <select id="karte-pref" onchange="filterKartes()">
+          <option value="">全て</option>
+        </select>
+      </div>
+      <div class="karte-filter-block">
+        <div class="karte-filter-label">分野</div>
+        <select id="karte-field" onchange="filterKartes()">
+          <option value="">全て</option>
+        </select>
+      </div>
+      <div class="karte-filter-block">
+        <div class="karte-filter-label">構造タグ</div>
+        <select id="karte-structure" onchange="filterKartes()">
+          <option value="">全て</option>
+        </select>
+      </div>
+      <div class="karte-filter-block">
+        <div class="karte-filter-label">状態</div>
+        <select id="karte-status" onchange="filterKartes()">
+          <option value="">全て</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <div class="db-count" id="karte-count-label"></div>
+      <div id="karte-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- カルテ詳細モーダル -->
+<div class="karte-modal-overlay" id="karte-modal" onclick="closeKarteModal(event)">
+  <div class="karte-modal">
+    <button class="karte-modal-close" onclick="document.getElementById('karte-modal').classList.remove('show')">✕</button>
+    <div id="karte-modal-content"></div>
+  </div>
+</div>
+
+
   <div class="footer-name">PROJECT MANA</div>
   <div class="footer-copy">独立市民調査プラットフォーム — 京都 — © 2026</div>
 </footer>
@@ -899,6 +986,7 @@ function showPage(name, navEl) {
   if (navEl) navEl.classList.add('active');
   window.scrollTo(0, 0);
   if (name === 'essays') loadEssays();
+  if (name === 'karte') loadKartes();
 }
 
 // ===== LOAD DB FROM GOOGLE SHEETS =====
@@ -1441,7 +1529,227 @@ const GAS_QA_URL = 'YOUR_GAS_WEB_APP_URL_HERE'; // survey_receiver.gsと同じGA
 let qaData = [];
 
 // デモQ&Aデータ
-// ===== ESSAY ARCHIVE =====
+// ===== KARTE =====
+const KARTE_SHEET_NAME = 'カルテ';
+let karteData = [];
+
+const demoKartes = [
+  {
+    id:'KARTE-0001', title:'京都市生活保護窓口での申請妨害', region:'京都府', field:'生活保護',
+    summary:'京都市の福祉窓口において、生活保護申請者が「まず家族に相談を」「書類が揃ってから来て」などの言葉で申請を阻まれる事案が複数件確認されている。担当者が異なるにもかかわらず言葉が酷似しており、組織的な対応指針の存在が疑われる。',
+    progress:'市民団体が事例を収集中。行政は「個別対応」として組織的関与を否定。',
+    tags_event:'申請妨害 / 扶養照会濫用',
+    tags_structure:'組織的不作為 / 説明責任 / 前例主義',
+    tags_status:'疑惑段階',
+    tags_evidence:'当事者証言',
+    related_urls:'https://example.com/article1\nhttps://example.com/article2',
+    mana_comment:'',
+    created_at:'2026-06-08',
+    updated_at:'2026-06-09',
+    start_date:'2026-06-01',
+  },
+  {
+    id:'KARTE-0002', title:'燕市生活保護費の過大支給と回収問題', region:'新潟県', field:'生活保護',
+    summary:'新潟県燕市において、生活保護受給者9人への総額約855万円の誤支給が判明。行政ミスによる過払いにもかかわらず、受給者への返還請求が行われた。制度の説明責任と内部チェック機能の不備が問われている。',
+    progress:'行政が誤りを認め謝罪。返還交渉中。',
+    tags_event:'誤情報提供 / 財政推計ミス',
+    tags_structure:'内部統制 / 説明責任 / 自己修正不能',
+    tags_status:'行政が認めた / 謝罪あり',
+    tags_evidence:'報道',
+    related_urls:'https://example.com/article3',
+    mana_comment:'',
+    created_at:'2026-06-08',
+    updated_at:'2026-06-08',
+    start_date:'2026-06-08',
+  },
+];
+
+function loadKartes() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') {
+    karteData = demoKartes;
+    renderKartes(karteData);
+    buildKarteFilters(karteData);
+    return;
+  }
+  fetch(GAS_API_URL + '?sheet=' + encodeURIComponent(KARTE_SHEET_NAME))
+    .then(r => r.json())
+    .then(data => {
+      if (!Array.isArray(data) || data.error) throw new Error('カルテデータ取得失敗');
+      karteData = data.map(row => ({
+        id:             row['カルテID'] || '',
+        title:          row['事案名'] || '',
+        region:         row['地域'] || '',
+        field:          row['分野'] || '',
+        summary:        row['概要'] || '',
+        progress:       row['経過'] || '',
+        tags_event:     row['出来事タグ'] || '',
+        tags_structure: row['構造タグ'] || '',
+        tags_status:    row['状態タグ'] || '',
+        tags_evidence:  row['根拠タグ'] || '',
+        related_urls:   row['関連記事URL'] || '',
+        mana_comment:   row['MANAコメント'] || '',
+        created_at:     row['作成日'] || '',
+        updated_at:     row['最終更新日'] || '',
+        start_date:     row['事案開始日'] || '',
+      })).filter(r => r.title);
+      renderKartes(karteData);
+      buildKarteFilters(karteData);
+    })
+    .catch(() => {
+      karteData = demoKartes;
+      renderKartes(karteData);
+      buildKarteFilters(karteData);
+    });
+}
+
+function renderKartes(data) {
+  const list = document.getElementById('karte-list');
+  document.getElementById('karte-count-label').textContent = data.length + ' 件';
+
+  if (!data.length) {
+    list.innerHTML = '<div class="db-empty">該当する事案カルテがありません</div>';
+    return;
+  }
+
+  list.innerHTML = data.map(k => {
+    const urls = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
+    const structTags = splitKarteTags(k.tags_structure);
+    const eventTags  = splitKarteTags(k.tags_event);
+    const statusTags = splitKarteTags(k.tags_status);
+
+    return `<div class="karte-card" onclick="openKarteModal('${k.id}')">
+      <div class="karte-card-top">
+        <span class="karte-card-id">${k.id}</span>
+        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
+        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
+        ${statusTags[0] ? `<span class="db-tag-t">${statusTags[0]}</span>` : ''}
+      </div>
+      <div class="karte-card-title">${k.title}</div>
+      ${k.summary ? `<div class="karte-card-summary">${k.summary.slice(0, 120)}${k.summary.length > 120 ? '……' : ''}</div>` : ''}
+      ${k.progress ? `<div class="karte-card-progress">${k.progress}</div>` : ''}
+      <div class="karte-card-tags">
+        ${structTags.map(t => `<span class="db-tag-s">${t}</span>`).join('')}
+        ${eventTags.map(t  => `<span class="db-tag-e">${t}</span>`).join('')}
+      </div>
+      <div class="karte-card-footer">
+        <span>記事 ${urls.length} 件</span>
+        <span>更新: ${k.updated_at ? k.updated_at.slice(0,10) : ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildKarteFilters(data) {
+  const prefs     = [...new Set(data.map(k => k.region).filter(Boolean))].sort();
+  const fields    = [...new Set(data.map(k => k.field).filter(Boolean))].sort();
+  const structs   = [...new Set(data.flatMap(k => splitKarteTags(k.tags_structure)))].sort();
+  const statuses  = [...new Set(data.flatMap(k => splitKarteTags(k.tags_status)))].sort();
+
+  const fill = (id, items) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const first = sel.options[0].outerHTML;
+    sel.innerHTML = first + items.map(v => `<option value="${v}">${v}</option>`).join('');
+  };
+
+  fill('karte-pref',      prefs);
+  fill('karte-field',     fields);
+  fill('karte-structure', structs);
+  fill('karte-status',    statuses);
+}
+
+function filterKartes() {
+  const pref   = document.getElementById('karte-pref')?.value || '';
+  const field  = document.getElementById('karte-field')?.value || '';
+  const struct = document.getElementById('karte-structure')?.value || '';
+  const status = document.getElementById('karte-status')?.value || '';
+
+  const filtered = karteData.filter(k =>
+    (!pref   || k.region === pref) &&
+    (!field  || k.field === field) &&
+    (!struct || (k.tags_structure || '').includes(struct)) &&
+    (!status || (k.tags_status || '').includes(status))
+  );
+  renderKartes(filtered);
+}
+
+function openKarteModal(id) {
+  const k = karteData.find(k => k.id === id);
+  if (!k) return;
+
+  // 共通構造タグを持つ関連カルテを検索
+  const myStructTags = splitKarteTags(k.tags_structure);
+  const related = karteData.filter(other =>
+    other.id !== k.id &&
+    splitKarteTags(other.tags_structure).some(t => myStructTags.includes(t))
+  ).slice(0, 5);
+
+  const urls = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
+
+  document.getElementById('karte-modal-content').innerHTML = `
+    <div class="karte-modal-id">${k.id}</div>
+    <div class="karte-modal-title">${k.title}</div>
+    <div class="karte-card-top" style="margin-bottom:1rem">
+      ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
+      ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
+    </div>
+
+    <div class="karte-modal-section">
+      <div class="karte-modal-section-label">概要</div>
+      <div class="karte-modal-text">${k.summary}</div>
+    </div>
+
+    ${k.progress ? `<div class="karte-modal-section">
+      <div class="karte-modal-section-label">現在の経過</div>
+      <div class="karte-modal-progress">${k.progress}</div>
+    </div>` : ''}
+
+    <div class="karte-modal-section">
+      <div class="karte-modal-section-label">タグ</div>
+      <div class="karte-card-tags">
+        ${splitKarteTags(k.tags_structure).map(t => `<span class="db-tag-s">${t}</span>`).join('')}
+        ${splitKarteTags(k.tags_event).map(t    => `<span class="db-tag-e">${t}</span>`).join('')}
+        ${splitKarteTags(k.tags_status).map(t   => `<span class="db-tag-t">${t}</span>`).join('')}
+        ${splitKarteTags(k.tags_evidence).map(t => `<span class="db-tag-v">${t}</span>`).join('')}
+      </div>
+    </div>
+
+    ${k.mana_comment ? `<div class="karte-modal-section">
+      <div class="karte-modal-section-label">MANAコメント</div>
+      <div class="karte-modal-text">${k.mana_comment}</div>
+    </div>` : ''}
+
+    ${urls.length ? `<div class="karte-modal-section">
+      <div class="karte-modal-section-label">関連記事 (${urls.length}件)</div>
+      ${urls.map(u => `<a class="karte-related-link" href="${u}" target="_blank">${u}</a>`).join('')}
+    </div>` : ''}
+
+    ${related.length ? `<div class="karte-modal-section">
+      <div class="karte-modal-section-label">共通構造タグを持つ関連事案</div>
+      <div class="karte-related-cards">
+        ${related.map(r => `<div class="karte-related-card" onclick="openKarteModal('${r.id}')">
+          <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent)">${r.region} / ${r.field}</span>
+          <div style="font-weight:500;margin-top:0.2rem">${r.title}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+
+  document.getElementById('karte-modal').classList.add('show');
+}
+
+function closeKarteModal(e) {
+  if (e.target.id === 'karte-modal') {
+    document.getElementById('karte-modal').classList.remove('show');
+  }
+}
+
+function splitKarteTags(str) {
+  if (!str) return [];
+  return str.split(/[\/・,、]/).map(t => t.trim()).filter(Boolean);
+}
+
+
 const ESSAY_SHEET_NAME = '論考';
 let essayData = [];
 
