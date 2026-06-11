@@ -975,6 +975,7 @@ let surveyData = [];
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('hdate').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'.');
+  loadKartes(); // カルテを先に読み込む（DB表示時にURL照合できるよう）
   loadDB();
   loadSurveyVoices();
 });
@@ -1647,8 +1648,17 @@ function loadKartes() {
       })).filter(r => r.id || r.title); // IDまたはタイトルがあれば表示
 
       console.log('カルテ読み込み成功:', karteData.length + '件');
+      // カルテのrelated_urls先頭3件をログ
+      karteData.slice(0, 3).forEach((k, i) => {
+        console.log(`カルテ[${i}] id:${k.id} related_urls:「${(k.related_urls||'').slice(0, 150)}」`);
+      });
       renderKartes(karteData);
       buildKarteFilters(karteData);
+      // DBが既に表示済みなら再描画してカルテボタンを反映
+      if (dbData.length) {
+        console.log('カルテ読み込み完了→DB再描画');
+        renderDB(dbData);
+      }
     })
     .catch(err => {
       console.error('カルテ読み込みエラー:', err.message);
