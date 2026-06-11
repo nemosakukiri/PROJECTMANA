@@ -140,6 +140,7 @@ nav a:hover,nav a.active{border-color:var(--accent);color:var(--accent)}
 .db-tag-t{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#faeeda;border:1px solid #ef9f27;color:#633806;cursor:pointer}
 .db-card-karte-btn{display:inline-flex;align-items:center;gap:0.3rem;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.18rem 0.5rem;border:1px solid var(--accent);color:var(--accent);background:transparent;cursor:pointer;transition:all 0.12s;margin-top:0.4rem}
 .db-card-karte-btn:hover{background:var(--accent);color:#fff}
+.db-card-karte-badge{font-family:'DM Mono',monospace;font-size:0.55rem;padding:0.1rem 0.35rem;background:var(--accent);color:#fff;letter-spacing:0.04em}
 .pref-tag{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent)}
 
 /* SURVEY PAGE */
@@ -1216,10 +1217,12 @@ function renderDB(data) {
         ${r.region ? `<span class="db-card-region">${r.region}${r.municipality ? ' / ' + r.municipality : ''}</span>` : ''}
         ${r.field ? `<span class="db-card-field">${r.field}</span>` : ''}
         ${sev}
+        ${relatedKarte ? `<span class="db-card-karte-badge">カルテあり</span>` : ''}
       </div>
       <div class="db-card-title">
         ${r.url ? `<a href="${r.url}" target="_blank">${r.title}</a>` : r.title}
       </div>
+      ${relatedKarte ? `<button class="db-card-karte-btn" onclick="openKarteFromDB('${relatedKarte.id}')">📋 事案カルテを見る：${relatedKarte.title}</button>` : ''}
       ${r.summary ? `<div class="db-card-summary">${r.summary}</div>` : ''}
       <div class="db-card-tags">
         ${eventTags.map(t=>`<span class="db-tag-e" onclick="addTagFilter('event','${t}')">${t}</span>`).join('')}
@@ -1227,7 +1230,6 @@ function renderDB(data) {
         ${evidTags.map(t=>`<span class="db-tag-v" onclick="addTagFilter('evidence','${t}')">${t}</span>`).join('')}
         ${statusTags.map(t=>`<span class="db-tag-t" onclick="addTagFilter('status','${t}')">${t}</span>`).join('')}
       </div>
-      ${relatedKarte ? `<button class="db-card-karte-btn" onclick="openKarteFromDB('${relatedKarte.id}')">📋 カルテを見る：${relatedKarte.title}</button>` : ''}
       ${hasAnyTag ? `<button class="db-similar-btn" id="similar-btn-${idx}" onclick="toggleSimilar(${idx})">共通する構造を探す</button>` : ''}
       <div class="db-card-similar" id="similar-${idx}"></div>
     </div>`;
