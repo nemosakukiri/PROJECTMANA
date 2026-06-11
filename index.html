@@ -1175,6 +1175,20 @@ function renderDB(data) {
   const container = document.getElementById('db-cards');
   if (!container) return;
 
+  // デバッグ用ログ
+  console.log('renderDB - dbData件数:', data.length);
+  console.log('renderDB - karteData件数:', (karteData && karteData.length) ? karteData.length : '未読み込み');
+  const totalMatch = data.filter(r => findKarteByUrl(r.url)).length;
+  console.log('renderDB - URL照合成功件数:', totalMatch + '/' + data.length);
+  // 最初の3件の照合詳細
+  data.slice(0, 3).forEach((r, i) => {
+    const k = findKarteByUrl(r.url);
+    console.log(`記事[${i}] URL:「${r.url}」→ カルテ:`, k ? k.id + ' ' + k.title : 'なし');
+    if (!k && karteData && karteData.length) {
+      console.log(`  related_urls例:`, karteData[0]?.related_urls?.slice(0, 100));
+    }
+  });
+
   if (!data.length) {
     container.innerHTML = '<div class="db-empty">該当するデータがありません</div>';
     document.getElementById('db-count-label').textContent = '';
