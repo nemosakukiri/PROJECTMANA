@@ -138,7 +138,8 @@ nav a:hover,nav a.active{border-color:var(--accent);color:var(--accent)}
 .db-tag-s{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#e6f1fb;border:1px solid #85b7eb;color:#0c447c;cursor:pointer}
 .db-tag-v{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#eaf3de;border:1px solid #97c459;color:#27500a;cursor:pointer}
 .db-tag-t{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#faeeda;border:1px solid #ef9f27;color:#633806;cursor:pointer}
-.db-empty{padding:3rem 0;text-align:center;color:var(--ink-light);font-size:0.85rem}
+.db-card-karte-btn{display:inline-flex;align-items:center;gap:0.3rem;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.18rem 0.5rem;border:1px solid var(--accent);color:var(--accent);background:transparent;cursor:pointer;transition:all 0.12s;margin-top:0.4rem}
+.db-card-karte-btn:hover{background:var(--accent);color:#fff}
 .pref-tag{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent)}
 
 /* SURVEY PAGE */
@@ -1191,6 +1192,9 @@ function renderDB(data) {
                 r.severity === '中' ? `<span class="db-card-sev-mid">中</span>` : '';
     const hasAnyTag = eventTags.length || structTags.length || evidTags.length || statusTags.length;
 
+    // 対応カルテをURLで逆引き（安全版）
+    const relatedKarte = findKarteByUrl(r.url);
+
     return `<div class="db-card" id="card-${idx}">
       <div class="db-card-top">
         <span class="db-card-date">${r.date}</span>
@@ -1208,13 +1212,43 @@ function renderDB(data) {
         ${evidTags.map(t=>`<span class="db-tag-v" onclick="addTagFilter('evidence','${t}')">${t}</span>`).join('')}
         ${statusTags.map(t=>`<span class="db-tag-t" onclick="addTagFilter('status','${t}')">${t}</span>`).join('')}
       </div>
+      ${relatedKarte ? `<button class="db-card-karte-btn" onclick="openKarteFromDB('${relatedKarte.id}')">📋 カルテを見る：${relatedKarte.title}</button>` : ''}
       ${hasAnyTag ? `<button class="db-similar-btn" id="similar-btn-${idx}" onclick="toggleSimilar(${idx})">共通する構造を探す</button>` : ''}
       <div class="db-card-similar" id="similar-${idx}"></div>
     </div>`;
   }).join('');
 }
 
-function splitTags(str) {
+function openKarteFromDB(karteId) {
+  // カルテページに遷移してモーダルを開く
+  showPage('karte', document.querySelector('nav a:nth-child(5)'));
+  // karteDataが読み込まれるまで少し待ってからモーダルを開く
+  setTimeout(() => openKarteModal(karteId), 300);
+}
+
+// URL正規化（将来的な正規化拡張のための関数）
+function normalizeUrl(url) {
+  if (!url) return '';
+  return url.trim().replace(/\/$/, ''); // 末尾スラッシュ除去
+}
+
+// 記事URLからカルテを逆引き（安全版）
+function findKarteByUrl(articleUrl) {
+  if (!articleUrl) return null;
+  if (!karteData || !karteData.length) return null; // 未読み込み時は安全に返す
+  const normalized = normalizeUrl(articleUrl);
+  return karteData.find(k => {
+    const urls = k.related_urls;
+    if (!urls) return false;
+    // 文字列でも配列でも安全に処理
+    const urlList = Array.isArray(urls)
+      ? urls
+      : String(urls).split('\n');
+    return urlList.map(u => normalizeUrl(u)).includes(normalized);
+  }) || null;
+}
+
+
   if (!str) return [];
   return str.split('/').map(t=>t.trim()).filter(Boolean);
 }
