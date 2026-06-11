@@ -1818,13 +1818,18 @@ function openKarteModal(id) {
     </div>` : ''}
 
     <div class="karte-modal-section">
-      <div class="karte-modal-section-label">タグ</div>
-      <div class="karte-card-tags">
-        ${splitKarteTags(k.tags_structure).map(t => `<span class="db-tag-s">${t}</span>`).join('')}
-        ${splitKarteTags(k.tags_event).map(t    => `<span class="db-tag-e">${t}</span>`).join('')}
-        ${splitKarteTags(k.tags_status).map(t   => `<span class="db-tag-t">${t}</span>`).join('')}
-        ${splitKarteTags(k.tags_evidence).map(t => `<span class="db-tag-v">${t}</span>`).join('')}
-      </div>
+      <div class="karte-modal-section-label">このカルテのタグ</div>
+      ${[
+        {label:'出来事', tags: splitKarteTags(k.tags_event),     cls:'db-tag-e'},
+        {label:'状態',   tags: splitKarteTags(k.tags_status),    cls:'db-tag-t'},
+        {label:'根拠',   tags: splitKarteTags(k.tags_evidence),  cls:'db-tag-v'},
+        {label:'構造',   tags: splitKarteTags(k.tags_structure), cls:'db-tag-s'},
+      ].filter(g => g.tags.length).map(g => `
+        <div style="margin-bottom:0.5rem">
+          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-right:0.4rem">${g.label}</span>
+          ${g.tags.map(t => `<span class="${g.cls}" style="cursor:pointer" onclick="filterKarteByTag('${t}')" title="「${t}」の事案を探す">${t}</span>`).join('')}
+        </div>
+      `).join('')}
     </div>
 
     ${k.mana_comment ? `<div class="karte-modal-section">
@@ -1855,6 +1860,24 @@ function closeKarteModal(e) {
   if (e.target.id === 'karte-modal') {
     document.getElementById('karte-modal').classList.remove('show');
   }
+}
+
+// タグクリックでカルテ一覧を絞り込む
+function filterKarteByTag(tag) {
+  // モーダルを閉じる
+  document.getElementById('karte-modal').classList.remove('show');
+  // カルテページに移動
+  showPage('karte', document.querySelector('nav a:nth-child(5)'));
+  // 絞り込み実行（全タグフィールドを横断して検索）
+  setTimeout(() => {
+    const filtered = karteData.filter(k =>
+      [k.tags_event, k.tags_structure, k.tags_status, k.tags_evidence]
+        .some(t => (t || '').includes(tag))
+    );
+    renderKartes(filtered);
+    document.getElementById('karte-count-label').textContent =
+      `「${tag}」の事案： ${filtered.length} 件`;
+  }, 100);
 }
 
 function splitKarteTags(str) {
