@@ -1248,9 +1248,9 @@ function findKarteByUrl(articleUrl) {
   }) || null;
 }
 
-
+function splitTags(str) {
   if (!str) return [];
-  return str.split('/').map(t=>t.trim()).filter(Boolean);
+  return str.split('/').map(t => t.trim()).filter(Boolean);
 }
 
 // サイドバーのタグフィルターボタン生成
