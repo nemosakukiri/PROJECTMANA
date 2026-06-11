@@ -1827,7 +1827,7 @@ function openKarteModal(id) {
       ].filter(g => g.tags.length).map(g => `
         <div style="margin-bottom:0.5rem">
           <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-right:0.4rem">${g.label}</span>
-          ${g.tags.map(t => `<span class="${g.cls}" style="cursor:pointer" onclick="filterKarteByTag('${t}')" title="「${t}」の事案を探す">${t}</span>`).join('')}
+          ${g.tags.map(t => `<span class="${g.cls}" style="cursor:pointer" onclick="filterKarteByTag('${escapeAttr(t)}')" title="「${escapeAttr(t)}」の事案を探す">${t}</span>`).join('')}
         </div>
       `).join('')}
     </div>
@@ -1866,18 +1866,30 @@ function closeKarteModal(e) {
 function filterKarteByTag(tag) {
   // モーダルを閉じる
   document.getElementById('karte-modal').classList.remove('show');
-  // カルテページに移動
-  showPage('karte', document.querySelector('nav a:nth-child(5)'));
-  // 絞り込み実行（全タグフィールドを横断して検索）
-  setTimeout(() => {
-    const filtered = karteData.filter(k =>
-      [k.tags_event, k.tags_structure, k.tags_status, k.tags_evidence]
-        .some(t => (t || '').includes(tag))
-    );
-    renderKartes(filtered);
-    document.getElementById('karte-count-label').textContent =
-      `「${tag}」の事案： ${filtered.length} 件`;
-  }, 100);
+
+  // karteDataが既にあればloadKartesを呼ばずにページ切替だけする
+  // showPage('karte')はloadKartesを呼ぶので使わない
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-karte').classList.add('active');
+  const karteNav = document.querySelector('nav a:nth-child(5)');
+  if (karteNav) karteNav.classList.add('active');
+  window.scrollTo(0, 0);
+
+  // 絞り込み実行
+  const filtered = karteData.filter(k =>
+    [k.tags_event, k.tags_structure, k.tags_status, k.tags_evidence]
+      .some(t => (t || '').includes(tag))
+  );
+  renderKartes(filtered);
+  document.getElementById('karte-count-label').textContent =
+    `「${tag}」の事案： ${filtered.length} 件`;
+}
+
+// onclick属性に埋め込むタグ文字列をエスケープする
+function escapeAttr(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function splitKarteTags(str) {
