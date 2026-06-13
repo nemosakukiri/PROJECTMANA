@@ -1079,6 +1079,41 @@ function goToKartePage(karteId) {
   location.hash = '#/karte/' + encodeURIComponent(karteId);
 }
 
+// ===== 観測DB × カルテ 紐付け状況の確認（事実の集計のみ・推測なし）=====
+function checkKarteLinkage() {
+  if (!dbData.length || !karteData.length) return;
+
+  // 1. 観測DBの記事URL数（空URLは除く）
+  const dbUrls = dbData.map(r => r.url).filter(Boolean);
+
+  // 2. カルテのrelated_urls内URL数（全カルテ分の合計、重複含む）
+  const karteUrls = karteData.flatMap(k =>
+    k.related_urls ? k.related_urls.split('\n').map(u => u.trim()).filter(Boolean) : []
+  );
+
+  // 3 & 4. URL一致／不一致
+  const matched = [];
+  const unmatched = [];
+  dbData.forEach(r => {
+    if (!r.url) { unmatched.push(r); return; }
+    const k = findKarteByUrl(r.url);
+    if (k) matched.push(r); else unmatched.push(r);
+  });
+
+  // 5. related_urlsが空のカルテ
+  const emptyRelatedKartes = karteData.filter(k => !k.related_urls || !k.related_urls.trim());
+
+  console.log('===== カルテ紐付け状況（事実集計） =====');
+  console.log('1. 観測DBの記事URL数:', dbUrls.length);
+  console.log('2. カルテ related_urls 内URL数（延べ）:', karteUrls.length);
+  console.log('3. URL一致している記事数:', matched.length);
+  console.log('4. URL一致していない記事一覧（' + unmatched.length + '件）:');
+  unmatched.forEach(r => console.log('   -', r.date, r.title, '|', r.url || '(URLなし)'));
+  console.log('5. related_urlsが空のカルテ一覧（' + emptyRelatedKartes.length + '件）:');
+  emptyRelatedKartes.forEach(k => console.log('   -', k.id, k.title));
+  console.log('=========================================');
+}
+
 function renderKarteDetailPage(karteId) {
   const container = document.getElementById('kartedetail-content');
   if (!container) return;
@@ -1179,9 +1214,7 @@ function loadDB() {
       buildFilters(dbData);
       updateTicker(dbData);
       renderHomeTagCloud(dbData);
-    })
-    .catch(err => {
-      console.error('DB読み込みエラー:', err.message);
+      checkKarteLinkage();
       const tbody = document.getElementById('db-tbody');
       if (tbody) {
         tbody.innerHTML = `<tr><td colspan="10" style="padding:2rem;text-align:center">
@@ -1805,6 +1838,7 @@ function loadKartes() {
       }
       // 独立カルテページへの直URLアクセスに対応
       handleKarteRoute();
+      checkKarteLinkage();
     })
     .catch(err => {
       console.error('カルテ読み込みエラー:', err.message);
