@@ -10,7 +10,7 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!style\\.css).*)",
       "headers": [
         { "key": "Content-Type", "value": "text/html; charset=utf-8" }
       ]
