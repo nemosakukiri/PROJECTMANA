@@ -84,20 +84,19 @@ function goToKartePage(karteId) {
 }
 
 // ===== 地図ページ /#/map =====
-let _mapInstance = null; // Leafletインスタンスを保持（二重初期化防止）
+let _mapInstance = null;
 
 function renderMapPage() {
   const container = document.getElementById('page-map');
   if (!container) return;
 
-  // dbData 未読み込み時はリトライ
   if (!dbData.length) {
     container.innerHTML = '<div class="karte-detail-loading">観測DBを読み込み中……</div>';
     setTimeout(renderMapPage, 400);
     return;
   }
 
-  // 都道府県ごとの件数集計（region フィールドを使用）
+  // 都道府県ごとの件数集計
   const counts = {};
   dbData.forEach(r => {
     const pref = r.region_pref || r.region || '';
@@ -105,108 +104,95 @@ function renderMapPage() {
     counts[pref] = (counts[pref] || 0) + 1;
   });
 
-  const total   = dbData.length;
+  const total    = dbData.length;
   const maxCount = Math.max(...Object.values(counts), 1);
+  const sorted   = Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
-  // ページ構造を描画（地図コンテナ + 凡例 + 集計表）
-  container.innerHTML = `
-    <div class="karte-detail-header">
-      <div class="page-title">地域別 観測記録マップ</div>
-      <div class="page-subtitle">観測DB ${total}件の地域分布（クリックで絞り込み）</div>
-    </div>
-    <div id="map-container" style="height:500px;width:100%;margin:1rem 0;border:1px solid var(--rule)"></div>
-    <div id="map-legend" style="display:flex;align-items:center;gap:1rem;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);margin-bottom:1.5rem">
-      <span>件数：</span>
-      <span style="display:flex;align-items:center;gap:0.3rem">
-        <span style="display:inline-block;width:16px;height:16px;background:#eef3fa;border:1px solid #85b7eb"></span> 少
-      </span>
-      <span style="display:flex;align-items:center;gap:0.3rem">
-        <span style="display:inline-block;width:16px;height:16px;background:#123a6f"></span> 多
-      </span>
-      <span style="margin-left:auto">地域が取得できていない記事は集計対象外</span>
-    </div>
-    <div id="map-table"></div>
-  `;
+  // 件数一覧HTMLをあらかじめ組み立てる
+  const tableRows = sorted.map(([pref, count]) =>
+    `<div onclick="filterByRegion('${pref}')"
+          style="display:flex;justify-content:space-between;align-items:center;
+                 padding:0.35rem 0.6rem;border:1px solid var(--rule);cursor:pointer;
+                 font-size:0.78rem;transition:all 0.12s"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--rule)';this.style.color='var(--ink)'">
+       <span>${pref}</span>
+       <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light)">${count}件</span>
+     </div>`
+  ).join('');
 
-  // 集計表を描画
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  document.getElementById('map-table').innerHTML = `
-    <div class="section-label" style="margin-bottom:0.8rem">都道府県別 件数一覧</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.3rem">
-      ${sorted.map(([pref, count]) => `
-        <div onclick="filterByRegion('${pref}')"
-             style="display:flex;justify-content:space-between;align-items:center;
-                    padding:0.35rem 0.6rem;border:1px solid var(--rule);cursor:pointer;
-                    font-size:0.78rem;transition:all 0.12s"
-             onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-             onmouseout="this.style.borderColor='var(--rule)';this.style.color='var(--ink)'">
-          <span>${pref}</span>
-          <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light)">${count}</span>
-        </div>
-      `).join('')}
-    </div>
-  `;
+  container.innerHTML =
+    '<div class="karte-detail-header">' +
+      '<div class="page-title">地域別 観測記録マップ</div>' +
+      '<div class="page-subtitle">観測DB ' + total + '件の地域分布（クリックで絞り込み）</div>' +
+    '</div>' +
+    '<div id="map-container" style="height:500px;width:100%;margin:1rem 0;border:1px solid var(--rule)"></div>' +
+    '<div style="display:flex;align-items:center;gap:1rem;font-family:DM Mono,monospace;font-size:0.65rem;color:var(--ink-light);margin-bottom:1.5rem">' +
+      '<span>件数：</span>' +
+      '<span style="display:flex;align-items:center;gap:0.3rem"><span style="display:inline-block;width:16px;height:16px;background:#eef3fa;border:1px solid #85b7eb"></span> 少</span>' +
+      '<span style="display:flex;align-items:center;gap:0.3rem"><span style="display:inline-block;width:16px;height:16px;background:#123a6f"></span> 多</span>' +
+      '<span style="margin-left:auto">地域が取得できていない記事は集計対象外</span>' +
+    '</div>' +
+    '<div class="section-label" style="margin-bottom:0.8rem">都道府県別 件数一覧</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.3rem;margin-bottom:2rem">' +
+      tableRows +
+    '</div>';
 
-  // 既存のLeafletインスタンスを破棄してから再初期化
-  if (_mapInstance) {
-    _mapInstance.remove();
-    _mapInstance = null;
-  }
+  if (_mapInstance) { _mapInstance.remove(); _mapInstance = null; }
 
   const map = L.map('map-container', { zoomControl: true }).setView([36.5, 136], 5);
   _mapInstance = map;
 
-  // タイルレイヤー（OpenStreetMap）
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
     opacity: 0.4
   }).addTo(map);
 
-  // GeoJSON取得・描画
   // 将来はリポジトリ内の /japan.geojson に変更予定
   fetch('https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson')
     .then(r => r.json())
     .then(geojson => {
       L.geoJSON(geojson, {
-        style: feature => {
-          const pref = feature.properties.nam_ja || feature.properties.name || '';
-          const count = counts[pref] || 0;
-          const opacity = count === 0 ? 0.08 : 0.2 + (count / maxCount) * 0.7;
-          return {
-            fillColor:   count === 0 ? '#9a9690' : '#123a6f',
-            fillOpacity: opacity,
-            color:       '#ffffff',
-            weight:      1,
-          };
-        },
-        onEachFeature: (feature, layer) => {
+        style: function(feature) {
           const pref  = feature.properties.nam_ja || feature.properties.name || '';
           const count = counts[pref] || 0;
-          layer.bindTooltip(
-            `<strong>${pref}</strong><br>${count}件`,
-            { sticky: true, className: 'map-tooltip' }
-          );
-          layer.on('click', () => {
-            if (count > 0) filterByRegion(pref);
-          });
+          const opacity = count === 0 ? 0.08 : 0.2 + (count / maxCount) * 0.7;
+          return { fillColor: count === 0 ? '#9a9690' : '#123a6f', fillOpacity: opacity, color: '#ffffff', weight: 1 };
+        },
+        onEachFeature: function(feature, layer) {
+          const pref  = feature.properties.nam_ja || feature.properties.name || '';
+          const count = counts[pref] || 0;
+          layer.bindTooltip('<strong>' + pref + '</strong><br>' + count + '件', { sticky: true, className: 'map-tooltip' });
+          layer.on('click', function() { if (count > 0) filterByRegion(pref); });
           layer.on('mouseover', function() { this.setStyle({ weight: 2, color: '#123a6f' }); });
           layer.on('mouseout',  function() { this.setStyle({ weight: 1, color: '#ffffff' }); });
         }
       }).addTo(map);
     })
-    .catch(() => {
-      document.getElementById('map-container').innerHTML =
-        '<div class="karte-detail-loading">地図データの読み込みに失敗しました（ネットワークを確認してください）</div>';
+    .catch(function() {
+      var el = document.getElementById('map-container');
+      if (el) el.innerHTML = '<div class="karte-detail-loading">地図データの読み込みに失敗しました</div>';
     });
 }
 
-// 地図・集計表から観測DBを地域で絞り込む
+// 地図・件数一覧から観測DBをregionフィールドで直接絞り込む
 function filterByRegion(pref) {
-  showPage('db', document.querySelector('nav a:nth-child(2)'));
-  setTimeout(() => {
-    document.getElementById('db-search').value = pref;
-    filterDB();
-  }, 50);
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-db').classList.add('active');
+  const dbNav = document.querySelector('nav a:nth-child(2)');
+  if (dbNav) dbNav.classList.add('active');
+  window.scrollTo(0, 0);
+  if (/^#\//.test(location.hash)) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+  // region_pref または region フィールドを直接比較（キーワード検索ではない）
+  const filtered = dbData.filter(r => (r.region_pref || r.region || '') === pref);
+  _currentFilteredData = filtered;
+  document.getElementById('db-search').value = '';
+  document.getElementById('db-count-label').textContent = '「' + pref + '」の記事： ' + filtered.length + ' 件';
+  renderDB(filtered);
 }
 
 // ===== タグ一覧ページ /#/tags =====
