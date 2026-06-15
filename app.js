@@ -18,9 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDB();
   loadSurveyVoices();
 
-  // 独立カルテページへのルーティング（直URL対応）
-  window.addEventListener('hashchange', handleKarteRoute);
-  handleKarteRoute();
+  // ハッシュルーティング（直URL対応）
+  window.addEventListener('hashchange', handleHashRoute);
+  handleHashRoute();
 });
 
 // ===== PAGE NAVIGATION =====
@@ -32,32 +32,155 @@ function showPage(name, navEl) {
   window.scrollTo(0, 0);
   if (name === 'essays') loadEssays();
   if (name === 'karte') loadKartes();
-  // カルテ詳細ページ以外に移動した場合はURLハッシュをクリア
-  if (name !== 'kartedetail' && /^#\/karte\//.test(location.hash)) {
+  // ハッシュルーティングページ以外に移動した場合はURLハッシュをクリア
+  if (!['kartedetail','tags','tagdetail'].includes(name) && /^#\//.test(location.hash)) {
     history.replaceState(null, '', location.pathname + location.search);
   }
 }
 
-// ===== 独立カルテページ ルーティング =====
-// URL形式: /#/karte/KARTE-xxxx
-function handleKarteRoute() {
-  const m = location.hash.match(/^#\/karte\/(.+)$/);
-  if (!m) return;
-  const karteId = decodeURIComponent(m[1]);
+// ===== ハッシュルーティング =====
+// /#/tags         → タグ一覧
+// /#/tag/タグ名   → タグ別カルテ一覧
+// /#/karte/ID     → 独立カルテページ（既存）
+function handleHashRoute() {
+  const hash = location.hash;
 
+  if (hash === '#/tags') {
+    _activatePage('page-tags', 'タグから探す');
+    renderTagIndex();
+    return;
+  }
+
+  const tagMatch = hash.match(/^#\/tag\/(.+)$/);
+  if (tagMatch) {
+    const tagName = decodeURIComponent(tagMatch[1]);
+    _activatePage('page-tagdetail', 'タグから探す');
+    renderTagPage(tagName);
+    return;
+  }
+
+  const karteMatch = hash.match(/^#\/karte\/(.+)$/);
+  if (karteMatch) {
+    const karteId = decodeURIComponent(karteMatch[1]);
+    _activatePage('page-kartedetail', '事案カルテ');
+    renderKarteDetailPage(karteId);
+    return;
+  }
+}
+
+// ページ切替の共通処理（ハッシュルーティング用）
+function _activatePage(pageId, navLabel) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-  document.getElementById('page-kartedetail').classList.add('active');
-  const karteNav = document.querySelector('nav a:nth-child(5)');
-  if (karteNav) karteNav.classList.add('active');
+  document.getElementById(pageId).classList.add('active');
+  document.querySelectorAll('nav a').forEach(a => {
+    if (a.textContent.trim() === navLabel) a.classList.add('active');
+  });
   window.scrollTo(0, 0);
-
-  renderKarteDetailPage(karteId);
 }
 
 // 独立カルテページへ遷移する（観測DBの「カルテを見る」ボタンから使用）
 function goToKartePage(karteId) {
   location.hash = '#/karte/' + encodeURIComponent(karteId);
+}
+
+// ===== タグ一覧ページ描画 /#/tags =====
+function renderTagIndex() {
+  const container = document.getElementById('page-tags');
+  if (!container) return;
+  if (!karteData.length) {
+    container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+    setTimeout(renderTagIndex, 300);
+    return;
+  }
+
+  const axes = [
+    { key: 'tags_field',        label: '何の制度に関係していますか？' },
+    { key: 'tags_target',       label: 'あなた（または家族）の状況は？' },
+    { key: 'tags_actor',        label: 'どの機関・誰が関わっていますか？' },
+    { key: 'tags_event_search', label: '何をされましたか？' },
+  ];
+
+  const axesHtml = axes.map(axis => {
+    const counts = {};
+    karteData.forEach(k => {
+      splitKarteTags(k[axis.key] || '').forEach(tag => {
+        if (tag) counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+    const tags = Object.entries(counts)
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1]);
+    if (!tags.length) return '';
+    return `<div style="margin-bottom:2rem">
+      <div class="section-label" style="margin-bottom:0.8rem">${axis.label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.4rem">
+        ${tags.map(([tag, count]) =>
+          `<a href="#/tag/${encodeURIComponent(tag)}" class="tag-explore-btn">
+            ${tag}<span style="font-size:0.6rem;opacity:0.5;margin-left:0.3rem">(${count})</span>
+          </a>`
+        ).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="karte-detail-header">
+      <div class="page-title">タグから探す</div>
+      <div class="page-subtitle">自分の状況に近いタグをクリックしてください</div>
+    </div>
+    <div style="padding:1.5rem 0">${axesHtml}</div>`;
+}
+
+// ===== タグ別カルテ一覧ページ描画 /#/tag/タグ名 =====
+function renderTagPage(tagName) {
+  const container = document.getElementById('page-tagdetail');
+  if (!container) return;
+  if (!karteData.length) {
+    container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+    setTimeout(() => renderTagPage(tagName), 300);
+    return;
+  }
+
+  const allTagFields = [
+    'tags_field', 'tags_target', 'tags_actor', 'tags_event_search',
+    'tags_event', 'tags_structure', 'tags_status', 'tags_evidence'
+  ];
+  const matched = karteData.filter(k =>
+    allTagFields.some(f => splitKarteTags(k[f] || '').includes(tagName))
+  );
+
+  const backLink = `<a href="#/tags" class="karte-detail-back">← タグ一覧へ</a>`;
+
+  const cards = matched.map(k => {
+    const urls = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
+    const structTags = splitKarteTags(k.tags_structure);
+    const eventTags  = splitKarteTags(k.tags_event);
+    return `<div class="karte-card" onclick="location.hash='#/karte/${encodeURIComponent(k.id)}'">
+      <div class="karte-card-top">
+        <span class="karte-card-id">${k.id}</span>
+        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
+        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
+      </div>
+      <div class="karte-card-title">${k.title}</div>
+      ${k.summary ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
+      <div class="karte-card-tags">
+        ${structTags.map(t=>`<span class="db-tag-s">${t}</span>`).join('')}
+        ${eventTags.map(t =>`<span class="db-tag-e">${t}</span>`).join('')}
+      </div>
+      <div class="karte-card-footer"><span>記事 ${urls.length} 件</span></div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="karte-detail-header">
+      ${backLink}
+      <div class="page-title">「${tagName}」のカルテ</div>
+      <div class="page-subtitle">${matched.length} 件</div>
+    </div>
+    <div style="padding:1.5rem 0">
+      ${matched.length ? cards : '<div class="karte-detail-loading">該当するカルテがありません</div>'}
+    </div>`;
 }
 
 // ===== 観測DB × カルテ 紐付け状況の確認（事実の集計のみ・推測なし）=====
@@ -142,7 +265,7 @@ function renderKarteDetailPage(karteId) {
       ].filter(g => g.tags.length).map(g => `
         <div style="margin-bottom:0.5rem">
           <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-right:0.4rem">${g.label}</span>
-          ${g.tags.map(t => `<span class="${g.cls}">${t}</span>`).join('')}
+          ${g.tags.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="${g.cls}" style="text-decoration:none">${t}</a>`).join('')}
         </div>
       `).join('')}
     </div>
@@ -775,7 +898,7 @@ function loadKartes() {
     karteData = demoKartes;
     renderKartes(karteData);
     buildKarteFilters(karteData);
-    handleKarteRoute();
+    handleHashRoute();
     return;
   }
   const url = GAS_API_URL + '?sheet=' + encodeURIComponent(KARTE_SHEET_NAME);
@@ -803,6 +926,10 @@ function loadKartes() {
         created_at:     row['作成日'] || '',
         updated_at:     row['最終更新日'] || '',
         start_date:     row['事案開始日'] || '',
+        tags_field:         row['分野タグ']         || '',
+        tags_target:        row['対象者タグ']        || '',
+        tags_actor:         row['行為者タグ']        || '',
+        tags_event_search:  row['出来事タグ（探索）'] || '',
       })).filter(r => r.id || r.title); // IDまたはタイトルがあれば表示
 
       console.log('カルテ読み込み成功:', karteData.length + '件');
@@ -817,8 +944,8 @@ function loadKartes() {
         console.log('カルテ読み込み完了→DB再描画');
         renderDB(dbData);
       }
-      // 独立カルテページへの直URLアクセスに対応
-      handleKarteRoute();
+      // ハッシュルーティング（直URLアクセスに対応）
+      handleHashRoute();
       checkKarteLinkage();
     })
     .catch(err => {
