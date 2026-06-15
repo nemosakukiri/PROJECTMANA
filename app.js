@@ -218,15 +218,637 @@ function checkKarteLinkage() {
   console.log('=========================================');
 }
 
-function renderKarteDetailPage(karteId) {
-  const container = document.getElementById('kartedetail-content');
-  if (!container) return;
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0f0e0d;
+  --ink-mid:#4a4845;
+  --ink-light:#9a9690;
+  --paper:#faf9f6;
+  --paper-warm:#f3f1ec;
+  --rule:#e0ddd6;
+  --accent:#123a6f;
+  --accent-pale:#eef3fa;
+}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
+a{color:inherit;text-decoration:none}
 
-  // カルテデータがまだ読み込まれていない場合は少し待って再試行
-  if (!karteData || !karteData.length) {
-    container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
-    setTimeout(() => renderKarteDetailPage(karteId), 300);
-    return;
+/* HEADER */
+header{border-bottom:3px solid var(--ink);padding:0 2rem;position:sticky;top:0;background:var(--paper);z-index:100}
+.header-top{display:flex;align-items:baseline;justify-content:space-between;padding:1rem 0 0.5rem}
+.site-name{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;letter-spacing:-0.02em}
+.site-name span{color:var(--accent)}
+.tagline{font-size:0.65rem;font-weight:300;color:var(--ink-mid);letter-spacing:0.1em}
+.header-meta{display:flex;gap:2rem;align-items:center}
+.header-date{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--ink-mid)}
+nav a{font-size:0.7rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1.5px solid transparent;padding-bottom:1px;transition:all 0.15s;margin-left:1.5rem}
+nav a:hover,nav a.active{border-color:var(--accent);color:var(--accent)}
+.ticker{background:var(--ink);color:var(--paper);padding:0.3rem 2rem;font-family:'DM Mono',monospace;font-size:0.65rem;display:flex;gap:1rem;overflow:hidden}
+.ticker-label{color:var(--accent);font-weight:500;flex-shrink:0}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-inner{display:inline-flex;gap:3rem;animation:scroll 25s linear infinite;white-space:nowrap}
+
+/* PAGES */
+.page{display:none;padding:0 2rem 3rem}
+.page.active{display:block}
+
+/* HOME */
+.hero{border-bottom:1px solid var(--rule);padding:2rem 0}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
+.hero-kicker{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.6rem}
+.hero-headline{font-family:'Playfair Display',serif;font-size:2.3rem;font-weight:700;line-height:1.15;letter-spacing:-0.02em;margin-bottom:1rem}
+.hero-body{font-size:0.88rem;line-height:1.9;color:var(--ink-mid);margin-bottom:1.4rem}
+.btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--ink);color:var(--paper);font-size:0.72rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.65rem 1.4rem;cursor:pointer;border:none;transition:background 0.15s;font-family:'Noto Sans JP',sans-serif}
+.btn-primary:hover{background:var(--accent)}
+.btn-outline{display:inline-flex;align-items:center;gap:0.4rem;background:transparent;color:var(--ink);font-size:0.72rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.6rem 1.2rem;cursor:pointer;border:1.5px solid var(--ink);transition:all 0.15s;font-family:'Noto Sans JP',sans-serif}
+.btn-outline:hover{background:var(--ink);color:var(--paper)}
+
+.stats-col{border-left:1px solid var(--rule);padding-left:3rem;display:flex;flex-direction:column;gap:0}
+.stat-card{padding:1.1rem 0;border-bottom:1px solid var(--rule)}
+.stat-card:last-child{border-bottom:none}
+.stat-num{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:900;line-height:1}
+.stat-num sup{font-size:0.9rem;color:var(--accent)}
+.stat-label{font-size:0.7rem;color:var(--ink-mid);font-weight:300;margin-top:0.2rem}
+.stat-change{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-top:0.25rem}
+
+.pillars{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
+.pillar{padding:1.8rem 0;cursor:pointer}
+.pillar:not(:last-child){border-right:1px solid var(--rule);padding-right:2rem}
+.pillar:not(:first-child){padding-left:2rem}
+.pillar:hover .pillar-title{color:var(--accent)}
+.pillar-num{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light);margin-bottom:0.6rem}
+.pillar-badge{display:inline-block;background:var(--accent);color:white;font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;padding:0.12rem 0.4rem;margin-bottom:0.5rem}
+.pillar-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;line-height:1.2;transition:color 0.15s}
+.pillar-desc{font-size:0.78rem;line-height:1.7;color:var(--ink-mid)}
+.pillar-link{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.7rem;font-weight:500;color:var(--accent);margin-top:0.8rem;border-bottom:1px solid var(--accent);padding-bottom:1px}
+
+.home-bottom{display:grid;grid-template-columns:2fr 1fr;gap:3rem;padding:2rem 0}
+.section-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;border-top:3px solid var(--ink);padding-top:0.5rem;margin-bottom:1rem}
+.section-label.red{border-top-color:var(--accent)}
+.section-label.navy{border-top-color:var(--accent)}
+.news-item{display:grid;grid-template-columns:1.5rem 1fr;gap:0.8rem;padding:0.85rem 0;border-bottom:1px solid var(--rule)}
+.news-item:last-child{border-bottom:none}
+.news-num{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);padding-top:0.1rem}
+.news-pref{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);margin-bottom:0.15rem}
+.news-title{font-size:0.83rem;font-weight:500;line-height:1.4;margin-bottom:0.25rem}
+.news-meta{font-size:0.65rem;color:var(--ink-light)}
+
+.voice-panel{background:var(--paper-warm);border:1px solid var(--rule);padding:1.2rem}
+.voice-item{padding:0.65rem 0;border-bottom:1px solid var(--rule);font-size:0.77rem;line-height:1.65;color:var(--ink-mid)}
+.voice-item:last-child{border-bottom:none}
+.voice-pref{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--accent);display:block;margin-bottom:0.15rem}
+
+.db-card-similar{display:none;margin-top:0.8rem;padding:0.8rem;background:var(--paper-warm);border-left:3px solid var(--accent)}
+.db-card-similar.open{display:block}
+.db-similar-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem}
+.db-similar-tags{display:flex;flex-wrap:wrap;gap:0.25rem;margin-bottom:0.6rem}
+.db-similar-tag{font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;background:#e6f1fb;border:1px solid #85b7eb;color:#0c447c}
+.db-similar-score{font-family:'DM Mono',monospace;font-size:0.65rem;margin-bottom:0.6rem}
+.db-similar-score.score-1{color:var(--ink-mid)}
+.db-similar-score.score-2{color:#7a4a10}
+.db-similar-score.score-3{color:var(--accent);font-weight:500}
+.db-similar-cases{display:flex;flex-direction:column;gap:0.3rem}
+.db-similar-case{font-size:0.75rem;color:var(--ink-mid);padding:0.3rem 0;border-bottom:1px solid var(--rule);line-height:1.4}
+.db-similar-case:last-child{border-bottom:none}
+.db-similar-case-region{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);margin-right:0.4rem}
+.db-similar-btn{font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.15rem 0.5rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;margin-top:0.4rem;transition:all 0.12s}
+.db-similar-btn:hover{border-color:var(--accent);color:var(--accent)}
+.db-similar-btn.active{border-color:var(--accent);color:var(--accent);background:#eef3fa}
+
+/* DB PAGE */
+.db-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
+.page-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:0.4rem}
+.page-subtitle{font-size:0.82rem;color:var(--ink-mid)}
+.db-filter-toggle{display:none;width:100%;margin:1rem 0 0;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:500;padding:0.65rem 1rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer;text-align:left}
+.db-layout{display:grid;grid-template-columns:210px 1fr;gap:2.5rem;padding:1.5rem 0;align-items:start}
+.db-sidebar{position:sticky;top:90px}
+.db-filter-block{margin-bottom:1.2rem}
+.db-filter-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;border-top:1px solid var(--rule);padding-top:0.5rem}
+.db-sidebar input,.db-sidebar select{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.6rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none}
+.db-sidebar input:focus,.db-sidebar select:focus{border-color:var(--accent)}
+.db-tag-filter{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.3rem}
+.db-tag-btn{font-family:'DM Mono',monospace;font-size:0.58rem;padding:0.15rem 0.4rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;transition:all 0.12s}
+.db-tag-btn:hover{border-color:var(--accent);color:var(--accent)}
+.db-tag-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.db-filter-reset{width:100%;margin-top:1rem;font-family:'Noto Sans JP',sans-serif;font-size:0.7rem;padding:0.5rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;transition:all 0.12s}
+.db-filter-reset:hover{border-color:var(--ink);color:var(--ink)}
+.db-count{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);padding:0 0 0.8rem;border-bottom:2px solid var(--ink);margin-bottom:1rem}
+.db-card{padding:1rem 0;border-bottom:1px solid var(--rule)}
+.db-card:hover{background:var(--paper-warm);margin:0 -0.5rem;padding:1rem 0.5rem}
+.db-card-top{display:flex;gap:0.6rem;align-items:center;margin-bottom:0.35rem;flex-wrap:wrap}
+.db-card-date{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
+.db-card-region{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);font-weight:500}
+.db-card-field{font-size:0.62rem;padding:0.08rem 0.35rem;background:var(--paper-warm);border:1px solid var(--rule);color:var(--ink-mid)}
+.db-card-sev-high{font-family:'DM Mono',monospace;font-size:0.58rem;color:#8b2020;background:#fdf0f0;border:1px solid #e8a0a0;padding:0.08rem 0.3rem}
+.db-card-sev-mid{font-family:'DM Mono',monospace;font-size:0.58rem;color:#633806;background:#faeeda;border:1px solid #ef9f27;padding:0.08rem 0.3rem}
+.db-card-title{font-size:0.88rem;font-weight:500;line-height:1.4;margin-bottom:0.35rem}
+.db-card-title a{color:var(--ink);border-bottom:1px solid var(--rule)}
+.db-card-title a:hover{color:var(--accent);border-color:var(--accent)}
+.db-card-summary{font-size:0.77rem;color:var(--ink-mid);line-height:1.65;margin-bottom:0.45rem}
+.db-card-tags{display:flex;flex-wrap:wrap;gap:0.22rem}
+.db-tag-e{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#fdf0f0;border:1px solid #e8a0a0;color:#8b2020;cursor:pointer}
+.db-tag-s{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#e6f1fb;border:1px solid #85b7eb;color:#0c447c;cursor:pointer}
+.db-tag-v{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#eaf3de;border:1px solid #97c459;color:#27500a;cursor:pointer}
+.db-tag-t{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#faeeda;border:1px solid #ef9f27;color:#633806;cursor:pointer}
+.db-card-karte-btn{display:inline-flex;align-items:center;gap:0.3rem;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.18rem 0.5rem;border:1px solid var(--accent);color:var(--accent);background:transparent;cursor:pointer;transition:all 0.12s;margin-top:0.4rem}
+.db-card-karte-btn:hover{background:var(--accent);color:#fff}
+.db-card-karte-badge{font-family:'DM Mono',monospace;font-size:0.55rem;padding:0.1rem 0.35rem;background:var(--accent);color:#fff;letter-spacing:0.04em}
+.pref-tag{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent)}
+
+/* SURVEY PAGE */
+.survey-header{padding:2rem 0 1.5rem;border-bottom:1px solid var(--rule)}
+.survey-intro{font-size:0.85rem;line-height:1.9;color:var(--ink-mid);max-width:600px;margin-top:0.8rem}
+.survey-form{max-width:640px;padding:2rem 0}
+.field{margin-bottom:1.8rem}
+.field label{display:block;font-size:0.78rem;font-weight:500;margin-bottom:0.5rem;letter-spacing:0.03em}
+.field-note{font-size:0.68rem;color:var(--ink-light);margin-top:0.25rem}
+.field input,.field select,.field textarea{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;padding:0.7rem 0.9rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none;transition:border-color 0.15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
+.field textarea{resize:vertical;line-height:1.7}
+.radio-group{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.3rem}
+.radio-item{display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;cursor:pointer}
+.radio-item input{width:auto;margin:0}
+.survey-thanks{display:none;text-align:center;padding:3rem 0}
+.survey-thanks h3{font-family:'Playfair Display',serif;font-size:1.6rem;margin-bottom:0.8rem}
+.survey-thanks p{font-size:0.85rem;color:var(--ink-mid);line-height:1.8}
+
+/* ESSAYS PAGE */
+.essays-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
+.essays-grid{display:grid;grid-template-columns:2fr 1fr;gap:3rem;padding:2rem 0}
+.essay-featured{border-bottom:1px solid var(--rule);padding-bottom:2rem;margin-bottom:2rem}
+.essay-kicker{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem}
+.essay-title{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;line-height:1.2;margin-bottom:0.8rem}
+.essay-excerpt{font-size:0.83rem;line-height:1.85;color:var(--ink-mid);margin-bottom:1rem}
+.essay-byline{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light)}
+.essay-list-item{padding:1rem 0;border-bottom:1px solid var(--rule);cursor:pointer}
+.essay-list-item:hover .essay-list-title{color:var(--accent)}
+.essay-list-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:0.3rem;transition:color 0.15s}
+.essay-list-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
+.essay-sidebar{}
+.sidebar-section{margin-bottom:2rem}
+.sidebar-title{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;border-top:2px solid var(--ink);padding-top:0.5rem;margin-bottom:0.8rem}
+.tag-cloud{display:flex;flex-wrap:wrap;gap:0.4rem}
+.tag{font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;transition:all 0.15s}
+.tag:hover{border-color:var(--accent);color:var(--accent)}
+
+footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-content:space-between;align-items:center;margin-top:2rem}
+.footer-name{font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700}
+.footer-copy{font-size:0.62rem;color:var(--ink-light);font-family:'DM Mono',monospace}
+
+/* GUIDE PAGE */
+.guide-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
+.guide-layout{display:grid;grid-template-columns:220px 1fr;gap:3rem;padding:2rem 0;align-items:start}
+.guide-nav{position:sticky;top:100px}
+.guide-nav-item{display:block;font-size:0.78rem;padding:0.55rem 0;border-bottom:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;transition:color 0.15s}
+.guide-nav-item:hover,.guide-nav-item.active{color:var(--accent);font-weight:500}
+.guide-nav-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;padding:0.8rem 0 0.4rem;margin-top:0.5rem}
+.guide-content{}
+.guide-section{margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid var(--rule)}
+.guide-section:last-child{border-bottom:none}
+.guide-section-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;margin-bottom:1.2rem}
+.guide-section-intro{font-size:0.85rem;line-height:1.9;color:var(--ink-mid);margin-bottom:1.5rem}
+.step-list{display:flex;flex-direction:column;gap:1rem}
+.step-item{display:grid;grid-template-columns:2.5rem 1fr;gap:1rem;background:var(--paper-warm);padding:1.2rem;border-left:3px solid var(--ink)}
+.step-item.warning{border-left-color:var(--accent);background:var(--accent-pale,#fdf5f5)}
+.step-num{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--ink-light);line-height:1}
+.step-body{}
+.step-title{font-size:0.85rem;font-weight:700;margin-bottom:0.3rem}
+.step-desc{font-size:0.8rem;line-height:1.75;color:var(--ink-mid)}
+.tip-box{background:var(--paper-warm);border:1px solid var(--rule);border-left:3px solid var(--accent);padding:1rem 1.2rem;margin:1rem 0}
+.tip-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem}
+.tip-text{font-size:0.82rem;line-height:1.75;color:var(--ink-mid)}
+.phrase-list{display:flex;flex-direction:column;gap:0.6rem}
+.phrase-item{background:var(--paper-warm);padding:0.8rem 1rem;border-left:2px solid var(--ink);font-size:0.83rem;line-height:1.6}
+.phrase-bad{border-left-color:var(--ink-light);color:var(--ink-light);text-decoration:line-through}
+.phrase-good{border-left-color:var(--accent);font-weight:500}
+.contact-list{display:flex;flex-direction:column;gap:0.8rem}
+.contact-item{padding:1rem;background:var(--paper-warm);border:1px solid var(--rule)}
+.contact-name{font-weight:700;font-size:0.85rem;margin-bottom:0.2rem}
+.contact-detail{font-size:0.78rem;color:var(--ink-mid);line-height:1.6}
+.contact-tel{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--accent)}
+
+/* QA */
+.qa-tabs{display:flex;gap:0;border-bottom:2px solid var(--ink);margin-bottom:1.5rem}
+.qa-tab{font-size:0.78rem;font-weight:500;padding:0.6rem 1.2rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;letter-spacing:0.03em}
+.qa-tab.active{border-bottom-color:var(--accent);color:var(--accent)}
+.qa-search{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;padding:0.65rem 0.9rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none;margin-bottom:1rem}
+.qa-search:focus{border-color:var(--ink)}
+.qa-list{display:flex;flex-direction:column;gap:0}
+.qa-item{border-bottom:1px solid var(--rule);overflow:hidden}
+.qa-question{padding:1rem 0;cursor:pointer;display:flex;justify-content:space-between;align-items:start;gap:1rem}
+.qa-question:hover .qa-q-text{color:var(--accent)}
+.qa-q-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);flex-shrink:0;padding-top:0.15rem}
+.qa-q-text{font-size:0.85rem;font-weight:500;line-height:1.4;flex:1}
+.qa-arrow{font-size:0.7rem;color:var(--ink-light);flex-shrink:0;transition:transform 0.2s}
+.qa-arrow.open{transform:rotate(180deg)}
+.qa-answer{display:none;padding:0 0 1.2rem 2rem;font-size:0.82rem;line-height:1.85;color:var(--ink-mid)}
+.qa-answer.show{display:block}
+.qa-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);margin-top:0.5rem}
+.qa-post-btn{margin-top:1.5rem}
+.qa-form{background:var(--paper-warm);border:1px solid var(--rule);padding:1.5rem;margin-top:1rem;display:none}
+.qa-form.show{display:block}
+.qa-form .field{margin-bottom:1.2rem}
+.qa-form .field:last-child{margin-bottom:0}
+.qa-status{font-size:0.78rem;padding:0.6rem;text-align:center;display:none}
+.qa-status.checking{color:var(--ink-mid);background:var(--paper-warm);border:1px solid var(--rule)}
+.qa-status.ok{color:#2d6a2d;background:#f0f7f0;border:1px solid #b8d8b8}
+.qa-status.ng{color:var(--accent);background:#fdf0f0;border:1px solid #f0b8b8}
+/* KARTE PAGE */
+.karte-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
+.karte-layout{display:grid;grid-template-columns:200px 1fr;gap:2.5rem;padding:1.5rem 0;align-items:start}
+.karte-sidebar{position:sticky;top:90px}
+.karte-filter-block{margin-bottom:1.2rem}
+.karte-filter-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;border-top:1px solid var(--rule);padding-top:0.5rem}
+.karte-sidebar select{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.6rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none}
+.karte-card{border:1px solid var(--rule);padding:1.4rem;margin-bottom:1rem;cursor:pointer;transition:border-color 0.15s}
+.karte-card:hover{border-color:var(--accent)}
+.karte-card-top{display:flex;gap:0.6rem;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap}
+.karte-card-id{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light)}
+.karte-card-region{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);font-weight:500}
+.karte-card-field{font-size:0.62rem;padding:0.08rem 0.35rem;background:var(--paper-warm);border:1px solid var(--rule);color:var(--ink-mid)}
+.karte-card-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;line-height:1.3;margin-bottom:0.5rem}
+.karte-card-summary{font-size:0.8rem;color:var(--ink-mid);line-height:1.75;margin-bottom:0.6rem}
+.karte-card-progress{font-size:0.75rem;color:var(--ink-mid);border-left:2px solid var(--accent);padding-left:0.6rem;margin-bottom:0.6rem;font-style:italic}
+.karte-card-tags{display:flex;flex-wrap:wrap;gap:0.22rem;margin-bottom:0.6rem}
+.karte-card-footer{display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
+.karte-related{margin-top:0.5rem}
+.karte-related-label{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-bottom:0.3rem}
+.karte-related-link{display:block;font-size:0.72rem;color:var(--accent);border-bottom:1px solid var(--rule);padding:0.2rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* DETAIL MODAL */
+.karte-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto}
+.karte-modal-overlay.show{display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.karte-modal{background:var(--paper);max-width:720px;width:100%;padding:2rem;position:relative}
+.karte-modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-mid)}
+.karte-modal-id{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-bottom:0.5rem}
+.karte-modal-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;line-height:1.2;margin-bottom:1rem}
+.karte-modal-section{margin-bottom:1.2rem;border-top:1px solid var(--rule);padding-top:0.8rem}
+.karte-modal-section-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem}
+.karte-modal-text{font-size:0.85rem;line-height:1.85;color:var(--ink-mid)}
+.karte-modal-progress{font-size:0.82rem;border-left:2px solid var(--accent);padding-left:0.8rem;color:var(--ink-mid);font-style:italic}
+.karte-related-cards{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem}
+.karte-related-card{padding:0.6rem 0.8rem;border:1px solid var(--rule);font-size:0.78rem;cursor:pointer}
+.karte-related-card:hover{border-color:var(--accent);color:var(--accent)}
+
+/* 独立カルテページ */
+.karte-detail-header{padding:1.5rem 0 1rem;border-bottom:1px solid var(--rule)}
+.karte-detail-back{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:var(--ink-mid);cursor:pointer;margin-bottom:0.8rem}
+.karte-detail-back:hover{color:var(--accent)}
+.karte-detail-body{padding:1.5rem 0;max-width:720px}
+.karte-detail-loading{padding:3rem 0;text-align:center;color:var(--ink-light);font-size:0.85rem}
+
+@media (max-width: 768px) {
+
+  /* 全体の横幅制限 */
+  *{box-sizing:border-box}
+  body{overflow-x:hidden}
+
+  /* ヘッダー */
+  header{padding:0 0.8rem}
+  .header-top{flex-direction:column;gap:0.4rem;padding:0.7rem 0 0.4rem}
+  .header-meta{flex-direction:column;gap:0.4rem;align-items:flex-start;width:100%}
+  nav{display:flex;flex-wrap:wrap;gap:0.25rem;width:100%}
+  nav a{margin-left:0;font-size:0.62rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);border-radius:2px}
+  .site-name{font-size:1.4rem}
+  .tagline{font-size:0.58rem}
+  .ticker{padding:0.28rem 0.8rem;font-size:0.58rem}
+
+  /* ページ余白 */
+  .page{padding:0 0.8rem 2rem}
+  main{padding:0 0.8rem}
+
+  /* ヒーロー */
+  .hero-grid{grid-template-columns:1fr;gap:1.2rem}
+  .stats-col{border-left:none;padding-left:0;border-top:1px solid var(--rule);padding-top:0.8rem;display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+  .stat-card{padding:0.6rem 0.4rem;border-bottom:none;border-right:1px solid var(--rule)}
+  .stat-card:last-child{border-right:none}
+  .stat-num{font-size:1.5rem}
+  .hero-headline{font-size:1.45rem;line-height:1.2}
+  .hero-body{font-size:0.82rem}
+
+  /* 4本柱 */
+  .pillars{grid-template-columns:1fr 1fr}
+  .pillar{padding:1rem 0.7rem !important;border-right:none !important;border-bottom:1px solid var(--rule)}
+  .pillar-title{font-size:0.95rem}
+  .pillar-desc{font-size:0.72rem}
+
+  /* ホーム下部 */
+  .home-bottom{grid-template-columns:1fr;gap:1.2rem}
+
+  /* 注目パターン・タグクラウド */
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
+  div[style*="border-left:1px solid var(--rule);"]{border-left:none !important;padding-left:0 !important;border-top:1px solid var(--rule);padding-top:1rem !important}
+
+  /* ===== DBページ ===== */
+  .db-filter-toggle{display:block}
+  .db-layout{grid-template-columns:1fr !important;gap:0.8rem}
+  .db-sidebar{
+    position:static !important;
+    display:none;
+    width:100%;
+    background:var(--paper-warm);
+    border:1px solid var(--rule);
+    padding:1rem;
+    margin-bottom:0.5rem;
+  }
+  .db-sidebar.open{display:block}
+  .db-sidebar input,
+  .db-sidebar select{width:100% !important;font-size:0.88rem;padding:0.55rem 0.7rem}
+  .db-tag-filter{gap:0.3rem}
+  .db-tag-btn{font-size:0.65rem;padding:0.3rem 0.55rem;min-height:32px}
+  .db-filter-toggle{
+    display:block;
+    width:100%;
+    margin:0.8rem 0 0;
+    font-family:'Noto Sans JP',sans-serif;
+    font-size:0.85rem;
+    font-weight:500;
+    padding:0.75rem 1rem;
+    border:1.5px solid var(--ink);
+    background:var(--paper);
+    color:var(--ink);
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .db-card{padding:1rem 0}
+  .db-card:hover{margin:0;padding:1rem 0;background:none}
+  .db-card-title{font-size:0.88rem;line-height:1.45}
+  .db-card-summary{font-size:0.78rem}
+  .db-card-top{gap:0.35rem;flex-wrap:wrap}
+  .db-card-karte-btn{
+    width:100%;
+    justify-content:center;
+    font-size:0.7rem;
+    padding:0.5rem 0.8rem;
+    min-height:36px;
+    margin-top:0.5rem;
+  }
+  .db-main{min-width:0;width:100%;overflow-x:hidden}
+
+  /* カルテモーダル スマホ最適化 */
+  .karte-modal-overlay{padding:0.5rem}
+  .karte-modal{padding:1.2rem;width:100%;max-width:100%}
+  .karte-modal-title{font-size:1.2rem}
+  .karte-modal-close{top:0.8rem;right:0.8rem;font-size:1rem;min-height:36px;min-width:36px}
+  .karte-related-card{padding:0.7rem;min-height:44px}
+
+  /* カルテページ */
+  .karte-layout{grid-template-columns:1fr;gap:0.8rem}
+  .karte-sidebar{position:static}
+  .karte-card{padding:1rem}
+  .karte-card-title{font-size:1rem}
+
+  /* アンケート */
+  .survey-form{padding:1rem 0}
+  .field input,.field select,.field textarea{font-size:0.9rem;padding:0.65rem 0.8rem}
+  .radio-item{font-size:0.85rem;padding:0.2rem 0}
+
+  /* 論考 */
+  .essays-grid{grid-template-columns:1fr}
+  .essay-sidebar{display:none}
+
+  /* 生活保護ガイド */
+  .guide-layout{grid-template-columns:1fr;gap:0.8rem}
+  .guide-nav{position:static;display:flex;flex-wrap:wrap;gap:0.25rem;border-bottom:1px solid var(--rule);padding-bottom:0.8rem;margin-bottom:0.8rem}
+  .guide-nav-item{font-size:0.7rem;padding:0.3rem 0.6rem;border:1px solid var(--rule);display:inline-block;min-height:32px}
+  .guide-nav-label{display:none}
+  .step-item{grid-template-columns:2rem 1fr;gap:0.6rem;padding:0.8rem}
+  .btn-primary,.btn-outline{min-height:44px;font-size:0.82rem}
+
+  /* フッター */
+  footer{flex-direction:column;gap:0.3rem;padding:1rem 0.8rem;text-align:center}
+}
+
+/* ===== スマホ対応 (480px以下) ===== */
+@media (max-width: 480px) {
+  .site-name{font-size:1.2rem}
+  .hero-headline{font-size:1.25rem}
+  .pillars{grid-template-columns:1fr}
+  .stats-col{grid-template-columns:1fr}
+  .stat-card{border-right:none;border-bottom:1px solid var(--rule)}
+  .stat-card:last-child{border-bottom:none}
+  .stat-num{font-size:1.4rem}
+  .page-title{font-size:1.3rem}
+  .btn-primary,.btn-outline{width:100%;justify-content:center;text-align:center;font-size:0.7rem}
+  .guide-section-title{font-size:1.1rem}
+  .db-card-tags{gap:0.18rem}
+  .db-tag-e,.db-tag-s,.db-tag-v,.db-tag-t{font-size:0.55rem;padding:0.06rem 0.28rem}
+}
+/* =====================================================
+   PROJECT MANA — Phase 1 スマホ対応追記
+   既存style.cssの末尾に追記する上書き用スタイル
+   JS・HTML構造には触れない
+   ===================================================== */
+
+/* ----- 独立カルテページ 基本 ----- */
+.karte-detail-body {
+  padding: 1.5rem 0;
+  width: 100%;
+}
+
+/* ----- 関連記事リンク：長いURLの折り返し ----- */
+.karte-related-link {
+  white-space: normal;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* =====================================================
+   768px以下
+   ===================================================== */
+@media (max-width: 768px) {
+
+  /* 独立カルテページ */
+  .karte-detail-body {
+    max-width: 100%;
+    padding: 1rem 0;
+  }
+
+  .karte-detail-back {
+    font-size: 0.8rem;
+    padding: 0.3rem 0;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* カルテ詳細：セクション余白を詰める */
+  .karte-modal-section {
+    margin-bottom: 1rem;
+    padding-top: 0.7rem;
+  }
+
+  .karte-modal-title {
+    font-size: 1.3rem;
+    line-height: 1.3;
+  }
+
+  .karte-modal-text {
+    font-size: 0.83rem;
+    line-height: 1.8;
+  }
+
+  /* タグサイズ統一（読みやすさ優先） */
+  .db-tag-e,
+  .db-tag-s,
+  .db-tag-v,
+  .db-tag-t {
+    font-size: 0.68rem;
+    padding: 0.18rem 0.4rem;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* 観測DBカード：hover時の負マージンによる横スクロール防止 */
+  .db-card:hover {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* 観測DBカード：タグ行の折り返し改善 */
+  .db-card-tags {
+    gap: 0.28rem;
+    row-gap: 0.28rem;
+  }
+
+  /* 観測DB：カード上部の情報行が詰みすぎないよう調整 */
+  .db-card-top {
+    row-gap: 0.3rem;
+  }
+
+  /* カルテ一覧カード */
+  .karte-card-title {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .karte-card-summary {
+    font-size: 0.78rem;
+    line-height: 1.7;
+  }
+
+  /* 独立カルテページ内のタグ */
+  .karte-modal-section .db-tag-e,
+  .karte-modal-section .db-tag-s,
+  .karte-modal-section .db-tag-v,
+  .karte-modal-section .db-tag-t {
+    font-size: 0.68rem;
+    padding: 0.18rem 0.4rem;
+  }
+}
+
+/* =====================================================
+   480px以下
+   ===================================================== */
+@media (max-width: 480px) {
+
+  /* 独立カルテページ */
+  .karte-detail-header {
+    padding: 1rem 0 0.8rem;
+  }
+
+  .karte-detail-body {
+    padding: 0.8rem 0;
+  }
+
+  .karte-modal-id {
+    font-size: 0.6rem;
+  }
+
+  .karte-modal-title {
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .karte-modal-section-label {
+    font-size: 0.58rem;
+  }
+
+  .karte-modal-text {
+    font-size: 0.82rem;
+  }
+
+  /* タグをさらに少し大きく（極小画面での誤タップ防止） */
+  .db-tag-e,
+  .db-tag-s,
+  .db-tag-v,
+  .db-tag-t {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.45rem;
+    min-height: 30px;
+  }
+
+  /* 関連記事リンク：極小画面での行高調整 */
+  .karte-related-link {
+    font-size: 0.7rem;
+    line-height: 1.5;
+    padding: 0.3rem 0;
+  }
+
+  /* DBカードタイトル */
+  .db-card-title {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  /* DBカード要約 */
+  .db-card-summary {
+    font-size: 0.76rem;
+  }
+}
+
+/* ===== 独立カルテページ：元記事リスト ===== */
+.karte-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.karte-source-link {
+  display: block;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.karte-source-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-pale);
+}
+
+.karte-source-title {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.karte-source-meta {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-light);
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .karte-source-link {
+    padding: 0.7rem 0.8rem;
+  }
+  .karte-source-title {
+    font-size: 0.82rem;
+  }
+}
   }
 
   const k = karteData.find(k => k.id === karteId);
