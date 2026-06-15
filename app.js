@@ -145,7 +145,7 @@ function renderMapPage() {
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors',
-    opacity: 0.4
+    opacity: 0.15
   }).addTo(map);
 
   // 将来はリポジトリ内の /japan.geojson に変更予定
