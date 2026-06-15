@@ -416,3 +416,167 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   .db-card-tags{gap:0.18rem}
   .db-tag-e,.db-tag-s,.db-tag-v,.db-tag-t{font-size:0.55rem;padding:0.06rem 0.28rem}
 }
+/* =====================================================
+   PROJECT MANA — Phase 1 スマホ対応追記
+   既存style.cssの末尾に追記する上書き用スタイル
+   JS・HTML構造には触れない
+   ===================================================== */
+
+/* ----- 独立カルテページ 基本 ----- */
+.karte-detail-body {
+  padding: 1.5rem 0;
+  width: 100%;
+}
+
+/* ----- 関連記事リンク：長いURLの折り返し ----- */
+.karte-related-link {
+  white-space: normal;
+  word-break: break-all;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+/* =====================================================
+   768px以下
+   ===================================================== */
+@media (max-width: 768px) {
+
+  /* 独立カルテページ */
+  .karte-detail-body {
+    max-width: 100%;
+    padding: 1rem 0;
+  }
+
+  .karte-detail-back {
+    font-size: 0.8rem;
+    padding: 0.3rem 0;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* カルテ詳細：セクション余白を詰める */
+  .karte-modal-section {
+    margin-bottom: 1rem;
+    padding-top: 0.7rem;
+  }
+
+  .karte-modal-title {
+    font-size: 1.3rem;
+    line-height: 1.3;
+  }
+
+  .karte-modal-text {
+    font-size: 0.83rem;
+    line-height: 1.8;
+  }
+
+  /* タグサイズ統一（読みやすさ優先） */
+  .db-tag-e,
+  .db-tag-s,
+  .db-tag-v,
+  .db-tag-t {
+    font-size: 0.68rem;
+    padding: 0.18rem 0.4rem;
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* 観測DBカード：hover時の負マージンによる横スクロール防止 */
+  .db-card:hover {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* 観測DBカード：タグ行の折り返し改善 */
+  .db-card-tags {
+    gap: 0.28rem;
+    row-gap: 0.28rem;
+  }
+
+  /* 観測DB：カード上部の情報行が詰みすぎないよう調整 */
+  .db-card-top {
+    row-gap: 0.3rem;
+  }
+
+  /* カルテ一覧カード */
+  .karte-card-title {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .karte-card-summary {
+    font-size: 0.78rem;
+    line-height: 1.7;
+  }
+
+  /* 独立カルテページ内のタグ */
+  .karte-modal-section .db-tag-e,
+  .karte-modal-section .db-tag-s,
+  .karte-modal-section .db-tag-v,
+  .karte-modal-section .db-tag-t {
+    font-size: 0.68rem;
+    padding: 0.18rem 0.4rem;
+  }
+}
+
+/* =====================================================
+   480px以下
+   ===================================================== */
+@media (max-width: 480px) {
+
+  /* 独立カルテページ */
+  .karte-detail-header {
+    padding: 1rem 0 0.8rem;
+  }
+
+  .karte-detail-body {
+    padding: 0.8rem 0;
+  }
+
+  .karte-modal-id {
+    font-size: 0.6rem;
+  }
+
+  .karte-modal-title {
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .karte-modal-section-label {
+    font-size: 0.58rem;
+  }
+
+  .karte-modal-text {
+    font-size: 0.82rem;
+  }
+
+  /* タグをさらに少し大きく（極小画面での誤タップ防止） */
+  .db-tag-e,
+  .db-tag-s,
+  .db-tag-v,
+  .db-tag-t {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.45rem;
+    min-height: 30px;
+  }
+
+  /* 関連記事リンク：極小画面での行高調整 */
+  .karte-related-link {
+    font-size: 0.7rem;
+    line-height: 1.5;
+    padding: 0.3rem 0;
+  }
+
+  /* DBカードタイトル */
+  .db-card-title {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  /* DBカード要約 */
+  .db-card-summary {
+    font-size: 0.76rem;
+  }
+}
