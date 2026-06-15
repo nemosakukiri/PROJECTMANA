@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
 
@@ -25,6 +26,7 @@
         <a href="#" onclick="showPage('essays',this)">論考</a>
         <a href="#" onclick="showPage('karte',this)">事案カルテ</a>
         <a href="#/tags">タグから探す</a>
+        <a href="#/map">地図で見る</a>
         <a href="#" onclick="showPage('guide',this)">生活保護の手引き</a>
       </nav>
     </div>
@@ -581,6 +583,9 @@
 <!-- タグ別カルテ一覧ページ -->
 <div class="page" id="page-tagdetail"></div>
 
+<!-- 地図ページ -->
+<div class="page" id="page-map"></div>
+
 <!-- 独立カルテページ -->
 <div class="page" id="page-kartedetail">
   <div class="karte-detail-header">
@@ -600,10 +605,12 @@
 </div>
 
 
+<footer>
   <div class="footer-name">PROJECT MANA</div>
   <div class="footer-copy">独立市民調査プラットフォーム — 京都 — © 2026</div>
 </footer>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/app.js"></script>
 </body>
 </html>
