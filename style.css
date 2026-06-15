@@ -580,3 +580,67 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
     font-size: 0.76rem;
   }
 }
+
+/* ===== 独立カルテページ：元記事リスト ===== */
+.karte-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+
+.karte-source-link {
+  display: block;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.karte-source-link:hover {
+  border-color: var(--accent);
+  background: var(--accent-pale);
+}
+
+.karte-source-title {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.karte-source-meta {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-light);
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .karte-source-link {
+    padding: 0.7rem 0.8rem;
+  }
+  .karte-source-title {
+    font-size: 0.82rem;
+  }
+}
+
+/* ===== 地図ページ ===== */
+.map-tooltip {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  border: 1px solid var(--rule);
+  box-shadow: none;
+}
+
+@media (max-width: 768px) {
+  #map-container {
+    height: 320px !important;
+  }
+}
