@@ -1240,3 +1240,91 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 .term-inline-link:hover {
   color: var(--accent);
 }
+
+/* ===== 法律辞典 ===== */
+
+/* 法律カード（一覧）— term-cardを継承しつつ左線色を変える */
+.law-card {
+  border-left-color: #5a7fa8;
+}
+
+.law-card:hover {
+  border-left-color: var(--accent);
+}
+
+/* 正式名称（short_nameがある場合に正式名称を小さく表示） */
+.law-full-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--ink-light);
+  margin-top: 0.3rem;
+  line-height: 1.5;
+}
+
+/* 制定年 */
+.law-enacted {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-light);
+  margin-top: 0.2rem;
+}
+
+/* ポイントリスト */
+.law-key-points {
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style: none;
+}
+
+.law-key-points li {
+  font-size: 0.83rem;
+  line-height: 1.8;
+  color: var(--ink-mid);
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--rule);
+  position: relative;
+}
+
+.law-key-points li::before {
+  content: '▸';
+  color: var(--accent);
+  position: absolute;
+  left: -1.1rem;
+  font-size: 0.7rem;
+}
+
+.law-key-points li:last-child {
+  border-bottom: none;
+}
+
+/* e-Govリンクボタン */
+.law-egov-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1.1rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: background 0.12s, color 0.12s;
+}
+
+.law-egov-btn:hover {
+  background: var(--accent);
+  color: var(--paper);
+}
+
+@media (max-width: 768px) {
+  .law-egov-btn {
+    font-size: 0.78rem;
+    padding: 0.6rem 0.9rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .law-key-points li {
+    font-size: 0.8rem;
+  }
+}
