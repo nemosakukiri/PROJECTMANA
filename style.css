@@ -876,3 +876,177 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
     font-size: 1.2rem;
   }
 }
+
+/* =====================================================
+   タグページ — 博物館スタイル
+   ===================================================== */
+
+.tag-explore-page {
+  padding: 1.5rem 0;
+}
+
+/* 各軸のセクション */
+.tag-axis-section {
+  padding: 2rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.tag-axis-section:last-of-type {
+  border-bottom: none;
+}
+
+.tag-axis-sub {
+  background: var(--paper-warm);
+  padding: 1.5rem 1.2rem;
+  margin: 0 -1.2rem;
+}
+
+/* セクションヘッダー（アイコン + ラベル + 説明） */
+.tag-axis-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.tag-axis-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.tag-axis-label {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.2rem;
+}
+
+.tag-axis-desc {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-light);
+  letter-spacing: 0.04em;
+}
+
+/* タグボタングループ */
+.tag-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* 主軸タグボタン */
+.tag-museum-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--rule);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.78rem;
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+  background: var(--paper);
+}
+
+.tag-museum-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-pale);
+}
+
+/* 補助軸タグボタン（少し小さめ） */
+.tag-museum-btn-sub {
+  font-size: 0.72rem;
+  padding: 0.3rem 0.65rem;
+  background: transparent;
+}
+
+/* 件数バッジ */
+.tag-museum-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--ink-light);
+}
+
+/* 補助軸の区切りラベル */
+.tag-sub-divider {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-light);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1.5rem 0 0;
+  border-top: 1px solid var(--rule);
+  margin-top: 0.5rem;
+}
+
+/* 観測タグ折りたたみ */
+.tag-observe-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.tag-observe-toggle {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--ink-light);
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  padding: 0.5rem 0;
+  user-select: none;
+  transition: color 0.12s;
+}
+
+.tag-observe-toggle:hover {
+  color: var(--ink);
+}
+
+.tag-observe-toggle.open {
+  color: var(--ink);
+}
+
+.tag-observe-body {
+  display: none;
+  padding-top: 1.2rem;
+}
+
+.tag-observe-body.open {
+  display: block;
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+  .tag-axis-section {
+    padding: 1.5rem 0;
+  }
+
+  .tag-axis-icon {
+    font-size: 1.2rem;
+  }
+
+  .tag-axis-label {
+    font-size: 0.84rem;
+  }
+
+  .tag-museum-btn {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tag-axis-header {
+    gap: 0.7rem;
+  }
+
+  .tag-museum-btn {
+    font-size: 0.68rem;
+    padding: 0.3rem 0.55rem;
+  }
+}
