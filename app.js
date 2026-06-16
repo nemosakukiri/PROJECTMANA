@@ -9,6 +9,7 @@ const SHEET_BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?t
 let dbData = [];
 let surveyData = [];
 let termsData = []; // 用語辞典
+let lawsData  = []; // 法律辞典
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -29,7 +30,7 @@ function showPage(name, navEl) {
   window.scrollTo(0, 0);
   if (name === 'essays') loadEssays();
   if (name === 'karte') loadKartes();
-  if (!['kartedetail','tags','tagdetail','map','terms'].includes(name) && /^#\//.test(location.hash)) {
+  if (!['kartedetail','tags','tagdetail','map','terms','laws'].includes(name) && /^#\//.test(location.hash)) {
     history.replaceState(null, '', location.pathname + location.search);
   }
 }
@@ -44,6 +45,18 @@ function handleHashRoute() {
   if (hash === '#/tags') {
     _activatePage('page-tags', 'タグから探す');
     renderTagIndex();
+    return;
+  }
+
+  if (hash === '#/laws') {
+    _activatePage('page-laws', '法律を調べる');
+    renderLawIndex();
+    return;
+  }
+
+  if (hash === '#/terms') {
+    _activatePage('page-terms', '用語辞典');
+    renderTermIndex();
     return;
   }
 
@@ -63,17 +76,11 @@ function handleHashRoute() {
     return;
   }
 
-  const karteMatch = hash.match(/^#\/karte\/(.+)$/);
-  if (karteMatch) {
-    const karteId = decodeURIComponent(karteMatch[1]);
-    _activatePage('page-kartedetail', '事案カルテ');
-    renderKarteDetailPage(karteId);
-    return;
-  }
-
-  if (hash === '#/terms') {
-    _activatePage('page-terms', '用語辞典');
-    renderTermIndex();
+  const lawMatch = hash.match(/^#\/law\/(.+)$/);
+  if (lawMatch) {
+    const lawId = decodeURIComponent(lawMatch[1]);
+    _activatePage('page-laws', '法律を調べる');
+    renderLawPage(lawId);
     return;
   }
 
@@ -84,8 +91,15 @@ function handleHashRoute() {
     renderTermPage(termId);
     return;
   }
-}
 
+  const karteMatch = hash.match(/^#\/karte\/(.+)$/);
+  if (karteMatch) {
+    const karteId = decodeURIComponent(karteMatch[1]);
+    _activatePage('page-kartedetail', '事案カルテ');
+    renderKarteDetailPage(karteId);
+    return;
+  }
+}
 function _activatePage(pageId, navLabel) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
@@ -98,6 +112,200 @@ function _activatePage(pageId, navLabel) {
 
 function goToKartePage(karteId) {
   location.hash = '#/karte/' + encodeURIComponent(karteId);
+}
+
+// ===== 法律辞典 =====
+
+function loadLaws() {
+  if (lawsData.length) return Promise.resolve(lawsData);
+  return fetch('/laws.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      lawsData = data;
+      return lawsData;
+    })
+    .catch(function(err) {
+      console.error('laws.json読み込みエラー:', err.message);
+      return [];
+    });
+}
+
+// ===== 法律一覧ページ /#/laws =====
+function renderLawIndex(query) {
+  const container = document.getElementById('page-laws');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadLaws().then(function(laws) {
+    if (!laws.length) {
+      container.innerHTML = '<div class="karte-detail-loading">法律データを読み込めませんでした</div>';
+      return;
+    }
+
+    const q       = (query || '').trim();
+    const results = q
+      ? laws.filter(function(l) {
+          return (l.name || '').includes(q) ||
+                 (l.short_name || '').includes(q) ||
+                 (l.reading || '').includes(q) ||
+                 (l.short || '').includes(q) ||
+                 (l.category || '').includes(q);
+        })
+      : laws;
+
+    // カテゴリ別に整理
+    const byCategory = {};
+    results.forEach(function(l) {
+      const cat = l.category || 'その他';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(l);
+    });
+
+    const searchBox =
+      '<div class="term-search-box">'
+      + '<input type="text" id="law-search-input" placeholder="法律名・分野を検索…" value="' + escapeAttr(q) + '"'
+      + ' oninput="renderLawIndex(this.value)"'
+      + ' style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--rule);'
+      + 'font-family:\'Noto Sans JP\',sans-serif;font-size:0.83rem;background:var(--paper);color:var(--ink)">'
+      + '</div>';
+
+    const catHtml = Object.keys(byCategory).map(function(cat) {
+      const items = byCategory[cat].map(function(l) {
+        const dispName = l.short_name || l.name;
+        return '<a href="#/law/' + encodeURIComponent(l.id) + '" class="term-card law-card">'
+          + '<div class="term-card-name">' + dispName + '</div>'
+          + (l.enacted ? '<div class="term-card-reading">' + l.enacted + '</div>' : '')
+          + '<div class="term-card-short">' + (l.short || '') + '</div>'
+          + '</a>';
+      }).join('');
+      return '<div class="term-category-section">'
+        + '<div class="term-category-label">' + cat + '</div>'
+        + '<div class="term-card-grid">' + items + '</div>'
+        + '</div>';
+    }).join('');
+
+    const emptyMsg = results.length === 0
+      ? '<div style="color:var(--ink-light);font-size:0.83rem;padding:2rem 0">「' + escapeAttr(q) + '」に一致する法律が見つかりません</div>'
+      : '';
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<div class="page-title">法律を調べる</div>'
+      + '<div class="page-subtitle">e-Gov法令検索へのリンク集。条文の原文は各法律ページからアクセスできます。</div>'
+      + '</div>'
+      + searchBox
+      + emptyMsg
+      + catHtml;
+
+    const input = document.getElementById('law-search-input');
+    if (input && q) {
+      input.focus();
+      input.setSelectionRange(q.length, q.length);
+    }
+  });
+}
+
+// ===== 法律詳細ページ /#/law/id =====
+function renderLawPage(lawId) {
+  const container = document.getElementById('page-laws');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadLaws().then(function(laws) {
+    const l = laws.find(function(x) { return x.id === lawId; });
+    if (!l) {
+      container.innerHTML =
+        '<div class="karte-detail-header">'
+        + '<a href="#/laws" class="karte-detail-back">← 法律一覧へ</a>'
+        + '</div>'
+        + '<div class="karte-detail-loading">法律が見つかりません</div>';
+      return;
+    }
+
+    const dispName = l.short_name || l.name;
+
+    // ポイントリスト
+    const pointsHtml = (l.key_points || []).length
+      ? '<ul class="law-key-points">'
+        + l.key_points.map(function(p) { return '<li>' + p + '</li>'; }).join('')
+        + '</ul>'
+      : '';
+
+    // 関連用語リンク（terms.jsonへ）
+    const termLinks = (l.related_terms || []).map(function(term) {
+      const matched = termsData.find(function(t) { return t.term === term; });
+      if (matched) {
+        return '<a href="#/term/' + encodeURIComponent(matched.id) + '" class="tag-museum-btn">📖 ' + term + '</a>';
+      }
+      return '<span class="tag-museum-btn tag-museum-btn-sub">' + term + '</span>';
+    }).join('');
+
+    // 関連タグリンク（タグページへ）
+    const tagLinks = (l.related_tags || []).map(function(tag) {
+      return '<a href="#/tag/' + encodeURIComponent(tag) + '" class="tag-museum-btn">' + tag + '</a>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<a href="#/laws" class="karte-detail-back">← 法律一覧へ</a>'
+      + '<div class="term-category-badge">' + (l.category || '') + '</div>'
+      + '<div class="page-title">' + dispName + '</div>'
+      + (l.short_name ? '<div class="law-full-name">' + l.name + '</div>' : '')
+      + (l.reading ? '<div class="term-reading">' + l.reading + '</div>' : '')
+      + (l.enacted ? '<div class="law-enacted">制定：' + l.enacted + '</div>' : '')
+      + '</div>'
+
+      + '<div class="term-detail-body">'
+
+      // 概要（展示キャプション）
+      + '<div class="term-short-panel">' + (l.short || '') + '</div>'
+
+      // 押さえておくべきポイント
+      + (pointsHtml
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">押さえておくべきポイント</div>'
+            + pointsHtml
+            + '</div>'
+          : '')
+
+      // 関連用語（用語辞典へ）
+      + (termLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連用語（用語辞典）</div>'
+            + '<div class="tag-btn-group">' + termLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // 関連タグ（タグページへ）
+      + (tagLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連タグから事案を探す</div>'
+            + '<div class="tag-btn-group">' + tagLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // e-Gov リンク
+      + (l.egov_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">条文を読む</div>'
+            + '<a href="' + l.egov_url + '" target="_blank" rel="noopener" class="law-egov-btn">'
+            + '⚖️ e-Gov法令検索で条文を読む（外部サイト）'
+            + '</a>'
+            + '</div>'
+          : '')
+
+      // 厚労省等リンク
+      + (l.mhlw_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">制度の詳細</div>'
+            + '<a href="' + l.mhlw_url + '" target="_blank" rel="noopener" class="term-source-link">'
+            + '🔗 ' + (l.category || '関連省庁') + 'の解説ページ'
+            + '</a>'
+            + '</div>'
+          : '')
+
+      + '</div>';
+  });
 }
 
 // ===== 用語辞典 =====
@@ -303,6 +511,201 @@ function renderTermPage(termId) {
             + '<a href="' + t.source_url + '" target="_blank" rel="noopener" class="term-source-link">'
             + '🔗 ' + (t.source || t.source_url)
             + '</a>'
+            + '</div>'
+          : '')
+
+      + '</div>';
+  });
+}
+
+
+
+// ===== 法律辞典 =====
+
+function loadLaws() {
+  if (lawsData.length) return Promise.resolve(lawsData);
+  return fetch('/laws.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      lawsData = data;
+      return lawsData;
+    })
+    .catch(function(err) {
+      console.error('laws.json読み込みエラー:', err.message);
+      return [];
+    });
+}
+
+// ===== 法律一覧ページ /#/laws =====
+function renderLawIndex(query) {
+  const container = document.getElementById('page-laws');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadLaws().then(function(laws) {
+    if (!laws.length) {
+      container.innerHTML = '<div class="karte-detail-loading">法律データを読み込めませんでした</div>';
+      return;
+    }
+
+    const q = (query || '').trim();
+    const results = q
+      ? laws.filter(function(l) {
+          return (l.name || '').includes(q) ||
+                 (l.short_name || '').includes(q) ||
+                 (l.reading || '').includes(q) ||
+                 (l.short || '').includes(q) ||
+                 (l.category || '').includes(q);
+        })
+      : laws;
+
+    // カテゴリ別に整理
+    const byCategory = {};
+    results.forEach(function(l) {
+      const cat = l.category || 'その他';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(l);
+    });
+
+    const searchBox =
+      '<div class="term-search-box">'
+      + '<input type="text" id="law-search-input" placeholder="法律名を検索…" value="' + escapeAttr(q) + '"'
+      + ' oninput="renderLawIndex(this.value)"'
+      + ' style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--rule);'
+      + 'font-family:Noto Sans JP,sans-serif;font-size:0.83rem;background:var(--paper);color:var(--ink)">'
+      + '</div>';
+
+    const catHtml = Object.keys(byCategory).map(function(cat) {
+      const items = byCategory[cat].map(function(l) {
+        const displayName = l.short_name || l.name;
+        return '<a href="#/law/' + encodeURIComponent(l.id) + '" class="term-card law-card">'
+          + '<div class="term-card-name">' + displayName + '</div>'
+          + (l.short_name ? '<div class="term-card-reading">' + l.name + '</div>' : '<div class="term-card-reading">' + (l.reading || '') + '</div>')
+          + '<div class="term-card-short">' + (l.short || '') + '</div>'
+          + '</a>';
+      }).join('');
+      return '<div class="term-category-section">'
+        + '<div class="term-category-label">' + cat + '</div>'
+        + '<div class="term-card-grid">' + items + '</div>'
+        + '</div>';
+    }).join('');
+
+    const emptyMsg = results.length === 0
+      ? '<div style="color:var(--ink-light);font-size:0.83rem;padding:2rem 0">「' + escapeAttr(q) + '」に一致する法律が見つかりません</div>'
+      : '';
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<div class="page-title">法律を調べる</div>'
+      + '<div class="page-subtitle">制度の根拠となる法律へのガイド</div>'
+      + '</div>'
+      + searchBox
+      + emptyMsg
+      + catHtml;
+
+    const input = document.getElementById('law-search-input');
+    if (input && q) {
+      input.focus();
+      input.setSelectionRange(q.length, q.length);
+    }
+  });
+}
+
+// ===== 法律詳細ページ /#/law/xxx =====
+function renderLawPage(lawId) {
+  const container = document.getElementById('page-laws');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadLaws().then(function(laws) {
+    const l = laws.find(function(x) { return x.id === lawId; });
+    if (!l) {
+      container.innerHTML =
+        '<div class="karte-detail-header">'
+        + '<a href="#/laws" class="karte-detail-back">← 法律一覧へ</a>'
+        + '</div>'
+        + '<div class="karte-detail-loading">該当する法律が見つかりません</div>';
+      return;
+    }
+
+    const displayName = l.short_name || l.name;
+
+    // ポイントリスト
+    const pointsHtml = (l.key_points || []).length
+      ? '<ul class="law-key-points">'
+        + l.key_points.map(function(p) { return '<li>' + p + '</li>'; }).join('')
+        + '</ul>'
+      : '';
+
+    // 関連用語リンク（terms.jsonへ）
+    const termLinks = (l.related_terms || []).map(function(term) {
+      const t = termsData.find(function(x) { return x.term === term; });
+      if (t) {
+        return '<a href="#/term/' + encodeURIComponent(t.id) + '" class="tag-museum-btn">' + term + '</a>';
+      }
+      return '<span class="tag-museum-btn" style="opacity:0.5">' + term + '</span>';
+    }).join('');
+
+    // 関連タグリンク
+    const tagLinks = (l.related_tags || []).map(function(tag) {
+      return '<a href="#/tag/' + encodeURIComponent(tag) + '" class="tag-museum-btn">' + tag + '</a>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<a href="#/laws" class="karte-detail-back">← 法律一覧へ</a>'
+      + '<div class="term-category-badge">' + (l.category || '') + '</div>'
+      + '<div class="page-title">' + displayName + '</div>'
+      + (l.short_name
+          ? '<div class="law-fullname">' + l.name + '</div>'
+          : '<div class="term-reading">' + (l.reading || '') + '</div>')
+      + (l.enacted ? '<div class="law-enacted">制定：' + l.enacted + '</div>' : '')
+      + '</div>'
+
+      + '<div class="term-detail-body">'
+
+      // 概要（展示キャプション）
+      + '<div class="term-short-panel">' + (l.short || '') + '</div>'
+
+      // 知っておくべきポイント
+      + (pointsHtml
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">知っておくべきポイント</div>'
+            + pointsHtml
+            + '</div>'
+          : '')
+
+      // 関連用語（用語辞典へ）
+      + (termLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連用語</div>'
+            + '<div class="tag-btn-group">' + termLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // 関連タグ（タグページへ）
+      + (tagLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連タグから事案を探す</div>'
+            + '<div class="tag-btn-group">' + tagLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // e-Govリンク
+      + (l.egov_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">条文を読む</div>'
+            + '<a href="' + l.egov_url + '" target="_blank" rel="noopener" class="law-egov-link">'
+            + '📄 e-Gov 法令検索で全文を見る →</a>'
+            + '</div>'
+          : '')
+
+      // 所管省庁リンク
+      + (l.mhlw_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">所管省庁の説明</div>'
+            + '<a href="' + l.mhlw_url + '" target="_blank" rel="noopener" class="term-source-link">'
+            + '🔗 厚生労働省のページを見る</a>'
             + '</div>'
           : '')
 
