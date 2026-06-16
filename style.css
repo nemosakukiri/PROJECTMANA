@@ -1226,3 +1226,17 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
     line-height: 1.75;
   }
 }
+
+/* ===== 用語本文内インラインリンク ===== */
+.term-inline-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: color 0.12s;
+}
+
+.term-inline-link:hover {
+  color: var(--accent);
+}
