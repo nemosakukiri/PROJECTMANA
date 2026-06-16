@@ -1050,3 +1050,179 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
     padding: 0.3rem 0.55rem;
   }
 }
+
+/* =====================================================
+   用語辞典 — 展示解説パネルスタイル
+   ===================================================== */
+
+/* 検索ボックス */
+.term-search-box {
+  margin-bottom: 2rem;
+}
+
+/* カテゴリセクション */
+.term-category-section {
+  margin-bottom: 2.5rem;
+}
+
+.term-category-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* 用語カードグリッド */
+.term-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.8rem;
+}
+
+/* 用語カード（一覧用） */
+.term-card {
+  display: block;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color 0.12s, background 0.12s;
+  background: var(--paper);
+}
+
+.term-card:hover {
+  border-left-color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-pale, #f0f4fa);
+}
+
+.term-card-name {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+  color: var(--ink);
+}
+
+.term-card-reading {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--ink-light);
+  margin-bottom: 0.5rem;
+}
+
+.term-card-short {
+  font-size: 0.75rem;
+  line-height: 1.65;
+  color: var(--ink-mid);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 用語詳細ページ */
+.term-detail-body {
+  padding: 1.5rem 0;
+}
+
+/* 展示キャプション（短い説明） */
+.term-short-panel {
+  font-size: 1rem;
+  line-height: 1.85;
+  color: var(--ink);
+  padding: 1.2rem 1.5rem;
+  border-left: 4px solid var(--accent);
+  background: var(--accent-pale, #f0f4fa);
+  margin-bottom: 1.5rem;
+}
+
+/* よみがな */
+.term-reading {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--ink-light);
+  letter-spacing: 0.06em;
+  margin-top: 0.3rem;
+  margin-bottom: 0.5rem;
+}
+
+/* カテゴリバッジ */
+.term-category-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  border: 1px solid var(--rule);
+  padding: 0.15rem 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+/* 関連カルテへの導線 */
+.term-karte-link {
+  display: block;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  text-decoration: none;
+  color: var(--ink-mid);
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.term-karte-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* 公式情報リンク */
+.term-source-link {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--ink-mid);
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.1rem;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.term-source-link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+  .term-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .term-short-panel {
+    font-size: 0.9rem;
+    padding: 1rem 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .term-card {
+    padding: 0.8rem 0.9rem;
+  }
+
+  .term-card-name {
+    font-size: 0.85rem;
+  }
+
+  .term-short-panel {
+    font-size: 0.85rem;
+    line-height: 1.75;
+  }
+}
