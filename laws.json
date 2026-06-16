@@ -1,0 +1,184 @@
+[
+  {
+    "id": "seikatsu-hogo-ho",
+    "name": "生活保護法",
+    "reading": "せいかつほごほう",
+    "enacted": "1950年",
+    "category": "生活保護",
+    "short": "生活に困窮するすべての国民に対し、最低限度の生活を保障し、自立を助長することを目的とする法律。",
+    "key_points": [
+      "申請に基づき保護を開始する（申請主義）",
+      "申請から原則14日以内、最長30日以内に可否を決定しなければならない",
+      "正当な理由なく申請を拒否することは違法",
+      "不服がある場合は都道府県知事へ審査請求できる"
+    ],
+    "related_terms": ["生活保護", "水際作戦", "扶養照会", "生活保護の審査・決定", "ケースワーカー", "福祉事務所"],
+    "related_tags": ["生活保護", "申請を断られた", "長期間放置された", "扶養照会を強いられた"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=325AC0000000144",
+    "mhlw_url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/seikatsuhogo/"
+  },
+  {
+    "id": "shogaisha-sogo-shien-ho",
+    "name": "障害者の日常生活及び社会生活を総合的に支援するための法律",
+    "short_name": "障害者総合支援法",
+    "reading": "しょうがいしゃそうごうしえんほう",
+    "enacted": "2005年（旧・障害者自立支援法）、2012年改正",
+    "category": "障害福祉",
+    "short": "障害者が基本的人権を持つ個人として尊厳ある生活を送れるよう、日常生活・社会生活の支援を総合的に行うことを定めた法律。",
+    "key_points": [
+      "身体・知的・精神・難病の障害者を対象とする",
+      "障害支援区分の認定を受けることでサービスを利用できる",
+      "支給量の決定は市区町村が行う",
+      "不服がある場合は都道府県審査請求が可能"
+    ],
+    "related_terms": ["障害福祉サービス", "障害支援区分", "不服申立て（審査請求）"],
+    "related_tags": ["障害福祉", "障害者", "支給を止められた", "審査機関"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=424AC0000000123",
+    "mhlw_url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/shougaishahoken/"
+  },
+  {
+    "id": "kaigo-hoken-ho",
+    "name": "介護保険法",
+    "reading": "かいごほけんほう",
+    "enacted": "1997年",
+    "category": "介護",
+    "short": "加齢に伴う疾病等により要介護状態となった人が、尊厳を保持しその能力に応じた自立した日常生活を営めるよう、必要な保険給付を行うことを定めた法律。",
+    "key_points": [
+      "40歳以上の国民が被保険者となる",
+      "要介護認定（要支援1〜2・要介護1〜5）を受けることでサービスを利用できる",
+      "認定調査は市区町村が行い、介護認定審査会が審査する",
+      "認定結果に不服がある場合は介護保険審査会へ審査請求できる"
+    ],
+    "related_terms": ["介護保険", "要介護認定", "不服申立て（審査請求）"],
+    "related_tags": ["介護保険", "高齢者", "審査機関"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=409AC0000000123",
+    "mhlw_url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/hukushi_kaigo/kaigo_koureisha/"
+  },
+  {
+    "id": "jido-fukushi-ho",
+    "name": "児童福祉法",
+    "reading": "じどうふくしほう",
+    "enacted": "1947年",
+    "category": "児童・子育て",
+    "short": "すべての児童が心身ともに健やかに生まれ育つよう、児童の福祉を積極的に増進することを定めた法律。保育・養護・障害児支援の根拠法。",
+    "key_points": [
+      "18歳未満を「児童」として保護・支援の対象とする",
+      "児童虐待が疑われる場合の通告義務を定める",
+      "保育所・児童養護施設・障害児通所支援の根拠となる",
+      "児童相談所の設置・権限の根拠法"
+    ],
+    "related_terms": ["児童福祉"],
+    "related_tags": ["児童福祉", "子ども・家族"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=322AC0000000164",
+    "mhlw_url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kodomo/"
+  },
+  {
+    "id": "gyosei-tetsuzuki-ho",
+    "name": "行政手続法",
+    "reading": "ぎょうせいてつづきほう",
+    "enacted": "1993年",
+    "category": "行政手続き",
+    "short": "行政機関が処分・行政指導・届出などを行う際の手続きを定めた法律。処分の理由提示・不利益処分の事前手続きなどを義務付ける。",
+    "key_points": [
+      "申請に対する処分は審査基準を定め公にすることが義務",
+      "不利益処分を行う前に原則として理由を示さなければならない",
+      "行政指導は任意であり、従わないことを理由に不利益扱いしてはならない",
+      "処分の理由が不十分な場合は取消しの根拠となりうる"
+    ],
+    "related_terms": ["行政の不作為", "情報公開請求", "不服申立て（審査請求）"],
+    "related_tags": ["説明を拒否された", "情報を隠された", "説明責任"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=405AC0000000088",
+    "mhlw_url": ""
+  },
+  {
+    "id": "gyosei-fufuku-shinsa-ho",
+    "name": "行政不服審査法",
+    "reading": "ぎょうせいふふくしんさほう",
+    "enacted": "1962年（2014年全面改正）",
+    "category": "行政手続き",
+    "short": "行政庁の違法・不当な処分に対し、国民が不服を申し立てる手続きを定めた法律。審査請求・再調査の請求・再審査請求の3種類がある。",
+    "key_points": [
+      "処分を知った日の翌日から3ヶ月以内に審査請求できる",
+      "審査請求先は処分庁の上級行政庁（生活保護は都道府県知事など）",
+      "審査請求中でも処分の執行停止を申し立てられる場合がある",
+      "棄却された場合は行政訴訟（取消訴訟）へ進むことができる"
+    ],
+    "related_terms": ["不服申立て（審査請求）", "行政の不作為"],
+    "related_tags": ["係争中", "審査機関", "申請を断られた"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=426AC0000000068",
+    "mhlw_url": ""
+  },
+  {
+    "id": "joho-kokai-ho",
+    "name": "行政機関の保有する情報の公開に関する法律",
+    "short_name": "情報公開法",
+    "reading": "じょうほうこうかいほう",
+    "enacted": "1999年",
+    "category": "情報公開",
+    "short": "行政機関が保有する情報の公開を求める権利と手続きを定めた法律。誰でも行政文書の開示を請求できる。",
+    "key_points": [
+      "何人も行政文書の開示を請求できる（日本国籍不問）",
+      "開示請求から30日以内（延長あり）に開示・不開示の決定が必要",
+      "不開示決定や一部黒塗りに不服がある場合は審査請求または情報公開訴訟が可能",
+      "各自治体は独自の情報公開条例を持つ"
+    ],
+    "related_terms": ["情報公開請求", "行政文書", "不服申立て（審査請求）"],
+    "related_tags": ["情報公開", "情報を隠された", "記録を改ざんされた"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=411AC0000000042",
+    "mhlw_url": ""
+  },
+  {
+    "id": "kokuminkenkouhoken-ho",
+    "name": "国民健康保険法",
+    "reading": "こくみんけんこうほけんほう",
+    "enacted": "1958年",
+    "category": "医療",
+    "short": "被用者保険（会社の健康保険）に加入していない人を対象に、医療保険を提供することを定めた法律。",
+    "key_points": [
+      "自営業者・非正規雇用者・無職者などが対象",
+      "保険料は前年の所得に基づいて算定される",
+      "低所得者向けの保険料軽減・減免制度がある",
+      "保険証がなくても緊急時は医療を受けられる"
+    ],
+    "related_terms": ["国民健康保険"],
+    "related_tags": ["国民健康保険", "医療扶助"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=333AC0000000192",
+    "mhlw_url": "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/iryouhoken/"
+  },
+  {
+    "id": "shakai-fukushi-ho",
+    "name": "社会福祉法",
+    "reading": "しゃかいふくしほう",
+    "enacted": "1951年（旧・社会福祉事業法）",
+    "category": "生活保護",
+    "short": "社会福祉事業の全分野における共通的基本事項を定めた法律。福祉事務所・社会福祉協議会・社会福祉法人の根拠法。",
+    "key_points": [
+      "福祉事務所の設置・業務を定める",
+      "ケースワーカーの配置基準（被保護世帯80世帯に1人）を定める",
+      "社会福祉法人の認可・監督の根拠法",
+      "地域福祉計画の策定を市区町村に求める"
+    ],
+    "related_terms": ["ケースワーカー", "福祉事務所"],
+    "related_tags": ["福祉事務所", "ケースワーカー"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=326AC0000000045",
+    "mhlw_url": ""
+  },
+  {
+    "id": "gyosei-jiken-sosho-ho",
+    "name": "行政事件訴訟法",
+    "reading": "ぎょうせいじけんそしょうほう",
+    "enacted": "1962年",
+    "category": "行政手続き",
+    "short": "行政庁の処分・不作為に対して裁判所に訴訟を提起する手続きを定めた法律。取消訴訟・義務付け訴訟・不作為違法確認訴訟などがある。",
+    "key_points": [
+      "処分の取消しを求める「取消訴訟」が代表的",
+      "申請を拒否した処分や応答しない不作為に対し「義務付け訴訟」が可能",
+      "取消訴訟は原則として処分を知った日から6ヶ月以内に提起する",
+      "審査請求と行政訴訟は並行して行うことも選択できる"
+    ],
+    "related_terms": ["不服申立て（審査請求）", "行政の不作為"],
+    "related_tags": ["係争中", "審査機関"],
+    "egov_url": "https://elaws.e-gov.go.jp/document?lawid=337AC0000000139",
+    "mhlw_url": ""
+  }
+]
