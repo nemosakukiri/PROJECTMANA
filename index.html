@@ -13,7 +13,7 @@
 
 <header>
   <div class="header-top">
-    <div>
+    <div onclick="showPage('home',document.querySelector('nav a:nth-child(1)'))" style="cursor:pointer">
       <div class="site-name">PROJECT <span>MANA</span></div>
       <div class="tagline">社会の構造を観測する百葉箱</div>
     </div>
@@ -40,30 +40,53 @@
 <!-- HOME -->
 <div class="page active" id="page-home">
   <section class="hero">
-    <div class="hero-grid">
-      <div>
-        <div class="hero-kicker">PROJECT MANA — ステートメント</div>
-        <h1 class="hero-headline">制度はある。<br>実装されていないだけだ。</h1>
-        <p class="hero-body">PROJECT MANAは、行政・福祉・制度運用の現場で繰り返し現れる出来事を記録し、その背後にある構造的パターンを観測するための市民アーカイブです。</p>
-        <button class="btn-primary" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))">DBを見に行く →</button>
-        <button class="btn-primary" onclick="showPage('essays',document.querySelector('nav a:nth-child(4)'))">論考を読む →</button>
+    <div class="hero-museum">
+      <div class="hero-museum-kicker">PROJECT MANA — 市民の観測アーカイブ</div>
+      <h1 class="hero-museum-title">制度はある。<br>実装されていないだけだ。</h1>
+      <p class="hero-museum-desc">行政・福祉・制度運用の現場で繰り返し現れる出来事を記録し、その背後にある構造的パターンを観測する市民アーカイブです。</p>
+
+      <!-- 探索ボタン4つ -->
+      <div class="hero-explore-grid">
+        <a href="#/map" class="hero-explore-btn">
+          <span class="hero-explore-icon">🗾</span>
+          <span class="hero-explore-label">地図から探す</span>
+          <span class="hero-explore-sub">都道府県別に見る</span>
+        </a>
+        <a href="#/tags" class="hero-explore-btn">
+          <span class="hero-explore-icon">🏷</span>
+          <span class="hero-explore-label">タグから探す</span>
+          <span class="hero-explore-sub">状況・分野・行為者</span>
+        </a>
+        <a href="#" onclick="showPage('karte',document.querySelector('nav a:nth-child(5)'))" class="hero-explore-btn">
+          <span class="hero-explore-icon">📋</span>
+          <span class="hero-explore-label">カルテから探す</span>
+          <span class="hero-explore-sub">事案ごとの記録</span>
+        </a>
+        <a href="#" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))" class="hero-explore-btn">
+          <span class="hero-explore-icon">📰</span>
+          <span class="hero-explore-label">観測DBを見る</span>
+          <span class="hero-explore-sub">全記事一覧</span>
+        </a>
       </div>
-      <div class="stats-col">
-        <div class="stat-card">
-          <div class="stat-num" id="db-count-stat">—<sup>件</sup></div>
-          <div class="stat-label">収録済み観測レコード</div>
-          <div class="stat-change" id="db-count-sub">データ読み込み中</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="survey-count-stat">—<sup>件</sup></div>
-          <div class="stat-label">市民の声（回答数）</div>
-          <div class="stat-change" id="survey-count-sub">データ読み込み中</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num">47<sup>都道府県</sup></div>
-          <div class="stat-label">収録自治体カバレッジ</div>
-          <div class="stat-change">全国対応</div>
-        </div>
+
+      <!-- 観測状況（クリックで各ページへ） -->
+      <div class="hero-stats-row">
+        <a href="#" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))" class="hero-stat-item">
+          <span class="hero-stat-num" id="home-db-count">—</span>
+          <span class="hero-stat-label">観測記録</span>
+        </a>
+        <a href="#" onclick="showPage('karte',document.querySelector('nav a:nth-child(5)'))" class="hero-stat-item">
+          <span class="hero-stat-num" id="home-karte-count">—</span>
+          <span class="hero-stat-label">事案カルテ</span>
+        </a>
+        <a href="#/map" class="hero-stat-item">
+          <span class="hero-stat-num">47<small>都道府県</small></span>
+          <span class="hero-stat-label">対象地域</span>
+        </a>
+        <a href="#/tags" class="hero-stat-item">
+          <span class="hero-stat-num" id="home-tag-count">—</span>
+          <span class="hero-stat-label">探索タグ</span>
+        </a>
       </div>
     </div>
   </section>
