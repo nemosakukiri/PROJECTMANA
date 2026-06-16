@@ -102,6 +102,38 @@ function goToKartePage(karteId) {
 
 // ===== 用語辞典 =====
 
+// テキスト内の登録済み用語を /#/term/xxx へのリンクに置き換える
+// 対象：用語辞典の detail フィールドのみ（プレーンテキスト前提）
+// - 長い用語から先に処理（「生活保護受給者」を「生活保護」より先に）
+// - 現在表示中の用語（currentTermId）はスキップ
+function autoLinkTerms(text, currentTermId) {
+  if (!text || !termsData.length) return text;
+
+  // 文字数の長い順にソート
+  const sorted = termsData
+    .filter(function(t) { return t.id !== currentTermId; })
+    .sort(function(a, b) { return b.term.length - a.term.length; });
+
+  // プレーンテキストを部分ごとに分割して処理
+  // 置換済みの <a> タグ部分は再処理しないよう、文字列を分割しながら進む
+  sorted.forEach(function(t) {
+    var parts = [];
+    var remaining = text;
+    var idx;
+    while ((idx = remaining.indexOf(t.term)) !== -1) {
+      // 用語の前の部分はそのまま保持
+      parts.push(remaining.slice(0, idx));
+      // 用語をリンクに置き換え
+      parts.push('<a href="#/term/' + encodeURIComponent(t.id) + '" class="term-inline-link">' + t.term + '</a>');
+      remaining = remaining.slice(idx + t.term.length);
+    }
+    parts.push(remaining);
+    text = parts.join('');
+  });
+
+  return text;
+}
+
 // terms.jsonを読み込む（初回のみ。以降はメモリから返す）
 function loadTerms() {
   if (termsData.length) return Promise.resolve(termsData);
@@ -240,11 +272,11 @@ function renderTermPage(termId) {
       // 短い説明（展示キャプション）
       + '<div class="term-short-panel">' + (t.short || '') + '</div>'
 
-      // 詳しい説明
+      // 詳しい説明（登録済み用語を自動リンク化）
       + (t.detail
           ? '<div class="karte-modal-section">'
             + '<div class="karte-modal-section-label">詳しい説明</div>'
-            + '<div class="karte-modal-text">' + t.detail + '</div>'
+            + '<div class="karte-modal-text">' + autoLinkTerms(t.detail, t.id) + '</div>'
             + '</div>'
           : '')
 
