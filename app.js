@@ -46,9 +46,11 @@ function handleHashRoute() {
     return;
   }
 
-  if (hash === '#/map') {
+  const mapMatch = hash.match(/^#\/map(\?pref=(.+))?$/);
+  if (mapMatch) {
+    const highlightPref = mapMatch[2] ? decodeURIComponent(mapMatch[2]) : null;
     _activatePage('page-map', '地図で見る');
-    renderMapPage();
+    renderMapPage(highlightPref);
     return;
   }
 
@@ -86,13 +88,13 @@ function goToKartePage(karteId) {
 // ===== 地図ページ /#/map =====
 let _mapInstance = null;
 
-function renderMapPage() {
+function renderMapPage(highlightPref) {
   const container = document.getElementById('page-map');
   if (!container) return;
 
   if (!dbData.length) {
     container.innerHTML = '<div class="karte-detail-loading">観測DBを読み込み中……</div>';
-    setTimeout(renderMapPage, 400);
+    setTimeout(function(){ renderMapPage(highlightPref); }, 400);
     return;
   }
 
@@ -164,8 +166,17 @@ function renderMapPage() {
           const count = counts[pref] || 0;
           layer.bindTooltip('<strong>' + pref + '</strong><br>' + count + '件', { sticky: true, className: 'map-tooltip' });
           layer.on('click', function() { if (count > 0) filterByRegion(pref); });
-          layer.on('mouseover', function() { this.setStyle({ weight: 2, color: '#123a6f' }); });
-          layer.on('mouseout',  function() { this.setStyle({ weight: 1, color: '#ffffff' }); });
+          layer.on('mouseover', function() {
+            if (pref !== highlightPref) this.setStyle({ weight: 2, color: '#123a6f' });
+          });
+          layer.on('mouseout', function() {
+            if (pref !== highlightPref) this.setStyle({ weight: 1, color: '#ffffff' });
+          });
+          // カルテ詳細から遷移した場合に該当都道府県を強調表示
+          if (highlightPref && pref === highlightPref) {
+            layer.setStyle({ weight: 3, color: '#e05a00', fillColor: '#e05a00', fillOpacity: 0.6 });
+            layer.bringToFront();
+          }
         }
       }).addTo(map);
     })
@@ -205,73 +216,135 @@ function renderTagIndex() {
     return;
   }
 
-  // 探索タグ4軸
-  const exploreAxes = [
-    { key: 'tags_field',        label: '何の制度に関係していますか？' },
-    { key: 'tags_target',       label: 'あなた（または家族）の状況は？' },
-    { key: 'tags_actor',        label: 'どの機関・誰が関わっていますか？' },
-    { key: 'tags_event_search', label: '何をされましたか？' },
-    { key: 'region_pref',        label: 'どの地域の事案ですか？' },
+  // 主探索軸（5軸）: 分野・対象者・行為者・出来事・地域
+  const mainAxes = [
+    { key: 'tags_field',        icon: '📋', label: '分野から探す',      desc: '関係する制度・行政分野' },
+    { key: 'tags_target',       icon: '👤', label: '対象者から探す',    desc: 'あなた自身や家族の状況' },
+    { key: 'tags_actor',        icon: '🏛', label: '行為者から探す',    desc: '関わった機関や担当者' },
+    { key: 'tags_event_search', icon: '⚡', label: '出来事から探す',    desc: '何をされたか・何が起きたか' },
+    { key: 'region_pref',       icon: '🗾', label: '地域から探す',      desc: '都道府県・地方自治体' },
   ];
 
-  // 既存観測タグ4軸（フォールバック用・常時表示）
+  // 補助探索軸: 状態タグのみ（前面に出しすぎず補助として）
+  const subAxes = [
+    { key: 'tags_status', icon: '🔖', label: '現在の状況から探す', desc: '疑惑段階・係争中・是正済みなど' },
+  ];
+
+  // 既存観測タグ（最下部に折りたたみ表示）
   const observeAxes = [
-    { key: 'tags_event',     label: '出来事タグ（観測）' },
-    { key: 'tags_structure', label: '構造タグ（観測）' },
-    { key: 'tags_status',    label: '状態タグ（観測）' },
-    { key: 'tags_evidence',  label: '根拠タグ（観測）' },
+    { key: 'tags_event',     label: '出来事タグ（観測軸）' },
+    { key: 'tags_structure', label: '構造タグ（観測軸）' },
+    { key: 'tags_evidence',  label: '根拠タグ（観測軸）' },
   ];
 
-  // 探索タグが1件でも付与されているか
+  // タグ集計
+  function countTags(key) {
+    const counts = {};
+    karteData.forEach(k => {
+      splitKarteTags(k[key] || '').forEach(tag => {
+        if (tag) counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+    return Object.entries(counts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  }
+
+  // 主軸HTML（博物館的・セクション区切り）
+  function buildMainAxisHtml(axis) {
+    const tags = countTags(axis.key);
+    if (!tags.length) return '';
+    return '<div class="tag-axis-section">'
+      + '<div class="tag-axis-header">'
+      +   '<span class="tag-axis-icon">' + axis.icon + '</span>'
+      +   '<div>'
+      +     '<div class="tag-axis-label">' + axis.label + '</div>'
+      +     '<div class="tag-axis-desc">' + axis.desc + '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="tag-btn-group">'
+      + tags.map(function(t) {
+          return '<a href="#/tag/' + encodeURIComponent(t[0]) + '" class="tag-museum-btn">'
+            + t[0]
+            + '<span class="tag-museum-count">' + t[1] + '</span>'
+            + '</a>';
+        }).join('')
+      + '</div>'
+      + '</div>';
+  }
+
+  // 補助軸HTML（コンパクト）
+  function buildSubAxisHtml(axis) {
+    const tags = countTags(axis.key);
+    if (!tags.length) return '';
+    return '<div class="tag-axis-section tag-axis-sub">'
+      + '<div class="tag-axis-header">'
+      +   '<span class="tag-axis-icon">' + axis.icon + '</span>'
+      +   '<div>'
+      +     '<div class="tag-axis-label">' + axis.label + '</div>'
+      +     '<div class="tag-axis-desc">' + axis.desc + '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="tag-btn-group">'
+      + tags.map(function(t) {
+          return '<a href="#/tag/' + encodeURIComponent(t[0]) + '" class="tag-museum-btn tag-museum-btn-sub">'
+            + t[0]
+            + '<span class="tag-museum-count">' + t[1] + '</span>'
+            + '</a>';
+        }).join('')
+      + '</div>'
+      + '</div>';
+  }
+
+  // 観測タグHTML（折りたたみ）
+  function buildObserveAxisHtml(axis) {
+    const tags = countTags(axis.key);
+    if (!tags.length) return '';
+    return '<div style="margin-bottom:1.2rem">'
+      + '<div style="font-family:DM Mono,monospace;font-size:0.6rem;color:var(--ink-light);margin-bottom:0.5rem;letter-spacing:0.06em">' + axis.label + '</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:0.3rem">'
+      + tags.map(function(t) {
+          return '<a href="#/tag/' + encodeURIComponent(t[0]) + '" class="tag-explore-btn" style="font-size:0.62rem;padding:0.15rem 0.4rem">'
+            + t[0]
+            + '<span style="font-size:0.55rem;opacity:0.5;margin-left:0.25rem">(' + t[1] + ')</span>'
+            + '</a>';
+        }).join('')
+      + '</div>'
+      + '</div>';
+  }
+
   const hasExplore = karteData.some(k =>
     k.tags_field || k.tags_target || k.tags_actor || k.tags_event_search
   );
 
-  function buildAxisHtml(axis) {
-    const counts = {};
-    karteData.forEach(k => {
-      splitKarteTags(k[axis.key] || '').forEach(tag => {
-        if (tag) counts[tag] = (counts[tag] || 0) + 1;
-      });
-    });
-    const tags = Object.entries(counts)
-      .filter(([, n]) => n > 0)
-      .sort((a, b) => b[1] - a[1]);
-    if (!tags.length) return '';
-    return `<div style="margin-bottom:2rem">
-      <div class="section-label" style="margin-bottom:0.8rem">${axis.label}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.4rem">
-        ${tags.map(([tag, count]) =>
-          `<a href="#/tag/${encodeURIComponent(tag)}" class="tag-explore-btn">${tag}<span style="font-size:0.6rem;opacity:0.5;margin-left:0.3rem">(${count})</span></a>`
-        ).join('')}
-      </div>
-    </div>`;
-  }
-
-  const exploreHtml = exploreAxes.map(buildAxisHtml).join('');
-  const observeHtml = observeAxes.map(buildAxisHtml).join('');
+  const mainHtml   = mainAxes.map(buildMainAxisHtml).join('');
+  const subHtml    = subAxes.map(buildSubAxisHtml).join('');
+  const observeHtml = observeAxes.map(buildObserveAxisHtml).join('');
 
   const fallbackNote = !hasExplore
-    ? `<div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);margin-bottom:1.5rem;padding:0.5rem 0.8rem;border-left:2px solid var(--rule)">探索タグは順次付与中です。</div>`
+    ? '<div style="font-family:DM Mono,monospace;font-size:0.65rem;color:var(--ink-light);margin-bottom:1.5rem;padding:0.5rem 0.8rem;border-left:2px solid var(--rule)">探索タグは順次付与中です。現在は観測タグから探せます。</div>'
     : '';
 
-  const observeSection = observeHtml
-    ? `<div style="margin-top:2rem;padding-top:2rem;border-top:1px solid var(--rule)">
-        <div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);margin-bottom:1.5rem;letter-spacing:0.08em;text-transform:uppercase">現在の観測タグ</div>
-        ${observeHtml}
-      </div>`
-    : '';
+  container.innerHTML =
+    '<div class="karte-detail-header">'
+    + '<div class="page-title">アーカイブを探索する</div>'
+    + '<div class="page-subtitle">分野・対象者・地域など様々な入口から記録を探せます</div>'
+    + '</div>'
+    + '<div class="tag-explore-page">'
+    + fallbackNote
+    + (mainHtml || '<div style="color:var(--ink-light);font-size:0.83rem;margin-bottom:2rem">探索タグを付与中です。下の観測タグから探せます。</div>')
+    + (subHtml ? '<div class="tag-sub-divider">補助的な絞り込み</div>' + subHtml : '')
+    + (observeHtml
+        ? '<div class="tag-observe-section">'
+          + '<div class="tag-observe-toggle" onclick="toggleObserveTags(this)">'
+          + '観測タグ（分析軸）を見る ▼</div>'
+          + '<div class="tag-observe-body">' + observeHtml + '</div>'
+          + '</div>'
+        : '')
+    + '</div>';
+}
 
-  container.innerHTML = `
-    <div class="karte-detail-header">
-      <div class="page-title">タグから探す</div>
-      <div class="page-subtitle">自分の状況に近いタグをクリックしてください</div>
-    </div>
-    <div style="padding:1.5rem 0">
-      ${fallbackNote}
-      ${exploreHtml || '<div style="color:var(--ink-light);font-size:0.83rem;margin-bottom:2rem">探索タグを付与中です。下の観測タグから探せます。</div>'}
-      ${observeSection}
-    </div>`;
+function toggleObserveTags(el) {
+  el.nextElementSibling.classList.toggle('open');
+  el.classList.toggle('open');
 }
 
 // ===== タグ別カルテ一覧 /#/tag/タグ名 =====
@@ -357,12 +430,19 @@ function renderKarteDetailPage(karteId) {
     </a>`;
   }).join('');
 
+  const regionPref = k.region_pref || k.region || '';
+
   container.innerHTML = `
     <div class="karte-modal-id">${k.id}</div>
     <div class="karte-modal-title">${k.title}</div>
     <div class="karte-card-top" style="margin-bottom:1rem">
-      ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
-      ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
+      ${regionPref
+        ? `<a href="#/map?pref=${encodeURIComponent(regionPref)}"
+              class="karte-card-region"
+              style="text-decoration:none;cursor:pointer"
+              title="${regionPref}の地図を見る">🗾 ${regionPref}</a>`
+        : ''}
+      ${k.field ? `<span class="karte-card-field">${k.field}</span>` : ''}
     </div>
 
     <div class="karte-modal-section">
@@ -746,8 +826,12 @@ function buildFilters(data) {
 }
 
 function updateStats() {
-  document.getElementById('db-count-stat').innerHTML = dbData.length + '<sup>件</sup>';
+  const dbCount = dbData.length;
+  document.getElementById('db-count-stat').innerHTML = dbCount + '<sup>件</sup>';
   document.getElementById('db-count-sub').textContent = '▲ AI自動収集・毎日更新';
+  // ホームの統計行
+  const homeDb = document.getElementById('home-db-count');
+  if (homeDb) homeDb.textContent = dbCount + '件';
 }
 
 function renderHomeNews(data) {
@@ -988,6 +1072,18 @@ function loadKartes() {
         tags_event_search: row['出来事タグ（探索）'] || '',
       })).filter(r => r.id || r.title);
       console.log('カルテ読み込み成功:', karteData.length + '件');
+      // ホームのカルテ件数・タグ件数を更新
+      const homeKarte = document.getElementById('home-karte-count');
+      if (homeKarte) homeKarte.textContent = karteData.length + '件';
+      const allTags = new Set();
+      karteData.forEach(k => {
+        ['tags_field','tags_target','tags_actor','tags_event_search',
+         'tags_event','tags_structure','tags_status','tags_evidence'].forEach(f => {
+          splitKarteTags(k[f] || '').forEach(t => allTags.add(t));
+        });
+      });
+      const homeTag = document.getElementById('home-tag-count');
+      if (homeTag) homeTag.textContent = allTags.size + '種';
       renderKartes(karteData);
       buildKarteFilters(karteData);
       if (dbData.length) renderDB(dbData);
