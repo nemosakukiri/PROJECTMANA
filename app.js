@@ -8,6 +8,7 @@ const SHEET_BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?t
 // ===== STATE =====
 let dbData = [];
 let surveyData = [];
+let termsData = []; // 用語辞典
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,7 +29,7 @@ function showPage(name, navEl) {
   window.scrollTo(0, 0);
   if (name === 'essays') loadEssays();
   if (name === 'karte') loadKartes();
-  if (!['kartedetail','tags','tagdetail','map'].includes(name) && /^#\//.test(location.hash)) {
+  if (!['kartedetail','tags','tagdetail','map','terms'].includes(name) && /^#\//.test(location.hash)) {
     history.replaceState(null, '', location.pathname + location.search);
   }
 }
@@ -69,6 +70,20 @@ function handleHashRoute() {
     renderKarteDetailPage(karteId);
     return;
   }
+
+  if (hash === '#/terms') {
+    _activatePage('page-terms', '用語辞典');
+    renderTermIndex();
+    return;
+  }
+
+  const termMatch = hash.match(/^#\/term\/(.+)$/);
+  if (termMatch) {
+    const termId = decodeURIComponent(termMatch[1]);
+    _activatePage('page-terms', '用語辞典');
+    renderTermPage(termId);
+    return;
+  }
 }
 
 function _activatePage(pageId, navLabel) {
@@ -83,6 +98,184 @@ function _activatePage(pageId, navLabel) {
 
 function goToKartePage(karteId) {
   location.hash = '#/karte/' + encodeURIComponent(karteId);
+}
+
+// ===== 用語辞典 =====
+
+// terms.jsonを読み込む（初回のみ。以降はメモリから返す）
+function loadTerms() {
+  if (termsData.length) return Promise.resolve(termsData);
+  return fetch('/terms.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      termsData = data;
+      return termsData;
+    })
+    .catch(function(err) {
+      console.error('terms.json読み込みエラー:', err.message);
+      return [];
+    });
+}
+
+// 部分一致検索（term・reading・short・category を対象）
+function searchTerms(query) {
+  if (!query || !termsData.length) return [];
+  const q = query.trim().toLowerCase();
+  return termsData.filter(function(t) {
+    return (
+      t.term.toLowerCase().includes(q) ||
+      (t.reading || '').includes(q) ||
+      (t.short || '').toLowerCase().includes(q) ||
+      (t.category || '').toLowerCase().includes(q)
+    );
+  });
+}
+
+// ===== 用語一覧ページ /#/terms =====
+function renderTermIndex(query) {
+  const container = document.getElementById('page-terms');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadTerms().then(function(terms) {
+    if (!terms.length) {
+      container.innerHTML = '<div class="karte-detail-loading">用語辞典を読み込めませんでした</div>';
+      return;
+    }
+
+    const q       = (query || '').trim();
+    const results = q ? searchTerms(q) : terms;
+
+    // カテゴリ別に整理
+    const byCategory = {};
+    results.forEach(function(t) {
+      const cat = t.category || 'その他';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(t);
+    });
+
+    const searchBox =
+      '<div class="term-search-box">'
+      + '<input type="text" id="term-search-input" placeholder="用語を検索…" value="' + escapeAttr(q) + '"'
+      + ' oninput="renderTermIndex(this.value)"'
+      + ' style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--rule);'
+      + 'font-family:\'Noto Sans JP\',sans-serif;font-size:0.83rem;background:var(--paper);color:var(--ink)">'
+      + '</div>';
+
+    const catHtml = Object.keys(byCategory).map(function(cat) {
+      const items = byCategory[cat].map(function(t) {
+        return '<a href="#/term/' + encodeURIComponent(t.id) + '" class="term-card">'
+          + '<div class="term-card-name">' + t.term + '</div>'
+          + '<div class="term-card-reading">' + (t.reading || '') + '</div>'
+          + '<div class="term-card-short">' + (t.short || '') + '</div>'
+          + '</a>';
+      }).join('');
+      return '<div class="term-category-section">'
+        + '<div class="term-category-label">' + cat + '</div>'
+        + '<div class="term-card-grid">' + items + '</div>'
+        + '</div>';
+    }).join('');
+
+    const emptyMsg = results.length === 0
+      ? '<div style="color:var(--ink-light);font-size:0.83rem;padding:2rem 0">「' + escapeAttr(q) + '」に一致する用語が見つかりません</div>'
+      : '';
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<div class="page-title">用語辞典</div>'
+      + '<div class="page-subtitle">制度・行政用語の展示解説パネル</div>'
+      + '</div>'
+      + searchBox
+      + emptyMsg
+      + catHtml;
+
+    // 検索ボックスにフォーカスを戻す
+    const input = document.getElementById('term-search-input');
+    if (input && q) {
+      input.focus();
+      input.setSelectionRange(q.length, q.length);
+    }
+  });
+}
+
+// ===== 用語詳細ページ /#/term/id =====
+function renderTermPage(termId) {
+  const container = document.getElementById('page-terms');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadTerms().then(function(terms) {
+    const t = terms.find(function(x) { return x.id === termId; });
+    if (!t) {
+      container.innerHTML =
+        '<div class="karte-detail-header">'
+        + '<a href="#/terms" class="karte-detail-back">← 用語一覧へ</a>'
+        + '</div>'
+        + '<div class="karte-detail-loading">用語が見つかりません</div>';
+      return;
+    }
+
+    // 関連タグリンク
+    const tagLinks = (t.related_tags || []).map(function(tag) {
+      return '<a href="#/tag/' + encodeURIComponent(tag) + '" class="tag-museum-btn">' + tag + '</a>';
+    }).join('');
+
+    // 関連カルテへの導線（filterKarteByTagを使用）
+    const karteLinks = (t.related_karte_tags || []).map(function(tag) {
+      return '<a href="#/tag/' + encodeURIComponent(tag) + '" class="term-karte-link">'
+        + '📋 「' + tag + '」の事案カルテを見る'
+        + '</a>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<a href="#/terms" class="karte-detail-back">← 用語一覧へ</a>'
+      + '<div class="term-category-badge">' + (t.category || '') + '</div>'
+      + '<div class="page-title">' + t.term + '</div>'
+      + '<div class="term-reading">' + (t.reading || '') + '</div>'
+      + '</div>'
+
+      + '<div class="term-detail-body">'
+
+      // 短い説明（展示キャプション）
+      + '<div class="term-short-panel">' + (t.short || '') + '</div>'
+
+      // 詳しい説明
+      + (t.detail
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">詳しい説明</div>'
+            + '<div class="karte-modal-text">' + t.detail + '</div>'
+            + '</div>'
+          : '')
+
+      // 関連タグ
+      + (tagLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連タグから事案を探す</div>'
+            + '<div class="tag-btn-group">' + tagLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // 関連カルテ
+      + (karteLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連カルテ</div>'
+            + karteLinks
+            + '</div>'
+          : '')
+
+      // 公式情報リンク
+      + (t.source_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">公式情報</div>'
+            + '<a href="' + t.source_url + '" target="_blank" rel="noopener" class="term-source-link">'
+            + '🔗 ' + (t.source || t.source_url)
+            + '</a>'
+            + '</div>'
+          : '')
+
+      + '</div>';
+  });
 }
 
 // ===== 地図ページ /#/map =====
