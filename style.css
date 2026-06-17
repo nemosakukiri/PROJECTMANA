@@ -1838,8 +1838,8 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 /* カルテ詳細ページだけ全幅化（他ページのpadding: 0 2remは維持）*/
 #page-kartedetail {
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 
 @media (max-width: 768px) {
@@ -1856,7 +1856,7 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 .kp {
   display: grid;
-  grid-template-columns: 196px 1fr;
+  grid-template-columns: 240px 1fr;
   background: #f9f6ef;
   border: 0.5px solid #b8b0a0;
   max-width: 1280px;
@@ -1873,12 +1873,12 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 .kp-head {
   background: #123a6f;
-  padding: 1rem 1rem .9rem;
+  padding: 1.4rem 1.2rem 1.2rem;
   text-align: center;
 }
 
 .kp-no-label {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .16em;
   text-transform: uppercase;
   color: #8ab4e0;
@@ -1886,7 +1886,7 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 }
 
 .kp-no {
-  font-size: 21px;
+  font-size: 28px;
   font-weight: 500;
   color: #f9f6ef;
   font-family: 'DM Mono', monospace;
@@ -1894,21 +1894,21 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 }
 
 .kp-id {
-  font-size: 9px;
+  font-size: 10.5px;
   color: #8ab4e0;
   margin-top: 4px;
   font-family: 'DM Mono', monospace;
 }
 
 .kp-meta {
-  padding: .75rem 1rem;
+  padding: .9rem 1.2rem;
   border-bottom: 0.5px solid #c8c0b0;
 }
 
 .kp-meta:last-child { border-bottom: none; }
 
 .kp-ml {
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: #123a6f;
@@ -1917,14 +1917,14 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 }
 
 .kp-mv {
-  font-size: 12.5px;
+  font-size: 14px;
   color: #1a1816;
   line-height: 1.55;
   font-weight: 500;
 }
 
 .kp-mv-s {
-  font-size: 11.5px;
+  font-size: 13px;
   color: #3a3530;
   line-height: 1.55;
 }
@@ -1972,14 +1972,14 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 .kp-title-band {
   grid-column: 1 / -1;
   background: #123a6f;
-  padding: .8rem 1.1rem;
+  padding: 1.1rem 1.4rem;
   display: flex;
   align-items: baseline;
   gap: .8rem;
 }
 
 .kp-title-band h1 {
-  font-size: 14.5px;
+  font-size: 18px;
   font-weight: 500;
   color: #f9f6ef;
   line-height: 1.5;
@@ -1999,13 +1999,13 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 /* 出来事タグ（主役・全幅・強調） */
 .kp-event-block {
   grid-column: 1 / -1;
-  padding: 1rem 1.1rem;
+  padding: 1.2rem 1.4rem;
   border-bottom: 0.5px solid #b8b0a0;
   background: #fdf8ee;
 }
 
 .kp-event-label {
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: #123a6f;
@@ -2016,8 +2016,8 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 .kp-chips-lg { display: flex; flex-wrap: wrap; gap: 5px; }
 
 .kp-chip-e {
-  font-size: 11.5px;
-  padding: 4px 9px;
+  font-size: 13px;
+  padding: 6px 12px;
   background: #fff8e6;
   color: #5a3c0a;
   border: 1px solid #d4a84a;
@@ -2031,7 +2031,7 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 /* 観測メモ・観測所見（2列） */
 .kp-cell {
-  padding: .85rem 1.1rem;
+  padding: 1rem 1.4rem;
   border-right: 0.5px solid #c8c0b0;
   border-bottom: 0.5px solid #c8c0b0;
 }
@@ -2040,12 +2040,12 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 .kp-cell-full {
   grid-column: 1 / -1;
-  padding: .85rem 1.1rem;
+  padding: 1rem 1.4rem;
   border-bottom: 0.5px solid #c8c0b0;
 }
 
 .kp-cl {
-  font-size: 10px;
+  font-size: 11.5px;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: #123a6f;
@@ -2054,13 +2054,13 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 }
 
 .kp-cb {
-  font-size: 12.5px;
+  font-size: 14px;
   line-height: 1.85;
   color: #1a1816;
 }
 
 .kp-cb-sub {
-  font-size: 12px;
+  font-size: 13.5px;
   line-height: 1.85;
   color: #2e2c26;
   padding-left: .6rem;
@@ -2070,13 +2070,13 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 /* 構造パターン（控えめ・補助） */
 .kp-struct-block {
   grid-column: 1 / -1;
-  padding: .6rem 1.1rem;
+  padding: .75rem 1.4rem;
   border-bottom: 0.5px solid #c8c0b0;
   background: #f4f0e8;
 }
 
 .kp-struct-label {
-  font-size: 9px;
+  font-size: 11px;
   letter-spacing: .1em;
   text-transform: uppercase;
   color: #7a8898;
@@ -2112,13 +2112,13 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 .kp-src-item:hover { border-left-color: #3a6aaf; }
 
 .kp-src-t {
-  font-size: 12px;
+  font-size: 13.5px;
   color: #1a1816;
   line-height: 1.45;
 }
 
 .kp-src-m {
-  font-size: 9.5px;
+  font-size: 11px;
   color: #6a6252;
   font-family: 'DM Mono', monospace;
 }
@@ -2126,7 +2126,7 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 /* フッター */
 .kp-foot {
   grid-column: 1 / -1;
-  padding: .55rem 1.1rem;
+  padding: .7rem 1.4rem;
   background: #dce8f5;
   border-top: 0.5px solid #b8b0a0;
   display: flex;
@@ -2135,7 +2135,7 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 }
 
 .kp-fi {
-  font-size: 9.5px;
+  font-size: 11px;
   color: #123a6f;
   letter-spacing: .06em;
   font-family: 'DM Mono', monospace;
