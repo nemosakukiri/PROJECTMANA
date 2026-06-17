@@ -1308,8 +1308,10 @@ function renderDB(data) {
                 r.severity === '中' ? `<span class="db-card-sev-mid">中</span>` : '';
     const hasAnyTag = eventTags.length || structTags.length || evidTags.length || statusTags.length;
     const relatedKarte = findKarteByUrl(r.url);
+    // idxではなくURLのハッシュ値でカードIDを生成（フィルタ後のズレを防止）
+    const cardId = 'card-' + idx + '-' + (r.url || r.title || '').replace(/[^a-zA-Z0-9]/g, '').slice(-8);
 
-    return `<div class="db-card" id="card-${idx}">
+    return `<div class="db-card" id="${cardId}">
       <div class="db-card-top">
         <span class="db-card-date">${r.date}</span>
         ${r.region ? `<span class="db-card-region">${r.region}${r.municipality ? ' / ' + r.municipality : ''}</span>` : ''}
@@ -1320,16 +1322,16 @@ function renderDB(data) {
       <div class="db-card-title">
         ${r.url ? `<a href="${r.url}" target="_blank">${r.title}</a>` : r.title}
       </div>
-      ${relatedKarte ? `<button class="db-card-karte-btn" onclick="openKarteFromDB('${relatedKarte.id}')">📋 事案カルテを見る：${relatedKarte.title}</button>` : ''}
+      ${relatedKarte ? `<button class="db-card-karte-btn" onclick="event.stopPropagation();goToKartePage('${relatedKarte.id}')">📋 事案カルテを見る：${relatedKarte.title}</button>` : ''}
       ${r.summary ? `<div class="db-card-summary">${r.summary}</div>` : ''}
       <div class="db-card-tags">
-        ${eventTags.map(t=>`<span class="db-tag-e" onclick="addTagFilter('event','${t}')">${t}</span>`).join('')}
-        ${structTags.map(t=>`<span class="db-tag-s" onclick="addTagFilter('structure','${t}')">${t}</span>`).join('')}
-        ${evidTags.map(t=>`<span class="db-tag-v" onclick="addTagFilter('evidence','${t}')">${t}</span>`).join('')}
-        ${statusTags.map(t=>`<span class="db-tag-t" onclick="addTagFilter('status','${t}')">${t}</span>`).join('')}
+        ${eventTags.map(t=>`<span class="db-tag-e" onclick="event.stopPropagation();addTagFilter('event','${t}')">${t}</span>`).join('')}
+        ${structTags.map(t=>`<span class="db-tag-s" onclick="event.stopPropagation();addTagFilter('structure','${t}')">${t}</span>`).join('')}
+        ${evidTags.map(t=>`<span class="db-tag-v" onclick="event.stopPropagation();addTagFilter('evidence','${t}')">${t}</span>`).join('')}
+        ${statusTags.map(t=>`<span class="db-tag-t" onclick="event.stopPropagation();addTagFilter('status','${t}')">${t}</span>`).join('')}
       </div>
-      ${hasAnyTag ? `<button class="db-similar-btn" id="similar-btn-${idx}" onclick="toggleSimilar(${idx})">共通する構造を探す</button>` : ''}
-      <div class="db-card-similar" id="similar-${idx}"></div>
+      ${hasAnyTag ? `<button class="db-similar-btn" id="similar-btn-${cardId}" onclick="event.stopPropagation();toggleSimilar('${cardId}')">共通する構造を探す</button>` : ''}
+      <div class="db-card-similar" id="similar-${cardId}"></div>
     </div>`;
   }).join('');
 }
@@ -1545,9 +1547,10 @@ function scoreLabel(count) {
   return null;
 }
 
-function toggleSimilar(idx) {
-  const panel = document.getElementById('similar-' + idx);
-  const btn   = document.getElementById('similar-btn-' + idx);
+function toggleSimilar(cardId) {
+  const panel = document.getElementById('similar-' + cardId);
+  const btn   = document.getElementById('similar-btn-' + cardId);
+  if (!panel || !btn) return;
   const isOpen = panel.classList.contains('open');
   if (isOpen) {
     panel.classList.remove('open');
@@ -1555,7 +1558,13 @@ function toggleSimilar(idx) {
     btn.textContent = '共通する構造を探す';
     return;
   }
-  const target = getCurrentFilteredData()[idx];
+  // data-url属性からURLを取得してdbDataを逆引き
+  const cardEl = panel.closest('.db-card');
+  const articleUrl = cardEl ? cardEl.querySelector('.db-card-title a')?.href : null;
+  const normalizedTarget = articleUrl ? normalizeUrl(articleUrl) : null;
+  const target = normalizedTarget
+    ? dbData.find(r => normalizeUrl(r.url) === normalizedTarget)
+    : null;
   if (!target) return;
   const targetTags = new Set(getComparableTags(target));
   if (targetTags.size === 0) {
