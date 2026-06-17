@@ -6,6 +6,7 @@
 <title>PROJECT MANA — 市民のための行政監視プラットフォーム</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/logo-favicon.svg">
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
@@ -13,9 +14,12 @@
 
 <header>
   <div class="header-top">
-    <div onclick="showPage('home',document.querySelector('nav a:nth-child(1)'))" style="cursor:pointer">
-      <div class="site-name">PROJECT <span>MANA</span></div>
-      <div class="tagline">社会の構造を観測する百葉箱</div>
+    <div onclick="showPage('home',document.querySelector('nav a:nth-child(1)'))" style="cursor:pointer;display:flex;align-items:center;gap:1.2rem">
+      <img src="/logo.svg" alt="PROJECT MANA" class="site-logo">
+      <div>
+        <div class="site-name">PROJECT <span>MANA</span></div>
+        <div class="tagline">社会の構造を観測する百葉箱</div>
+      </div>
     </div>
     <div class="header-meta">
       <div class="header-date" id="hdate"></div>
