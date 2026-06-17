@@ -1054,50 +1054,108 @@ function renderKarteDetailPage(karteId) {
     const title   = article ? article.title : null;
     const date    = article ? article.date  : null;
     const region  = article ? (article.region || '') : null;
-    return `<a class="karte-source-link" href="${u}" target="_blank" rel="noopener">
-      <span class="karte-source-title">${title || u}</span>
-      ${date || region ? `<span class="karte-source-meta">${[date, region].filter(Boolean).join(' — ')}</span>` : ''}
+    return `<a class="kn-source-link" href="${u}" target="_blank" rel="noopener">
+      <span class="kn-source-title">${title || u}</span>
+      ${date || region ? `<span class="kn-source-meta">${[date, region].filter(Boolean).join(' — ')}</span>` : ''}
     </a>`;
   }).join('');
 
   const regionPref = k.region_pref || k.region || '';
 
+  // カルテIDから番号部分だけ抽出（KARTE-0296 → 0296）
+  const karteNum = k.id ? k.id.replace(/^KARTE-/, '') : k.id;
+
+  // タグ4軸
+  const tagGroups = [
+    { label: '出来事', tags: splitKarteTags(k.tags_event),     cls: 'db-tag-e' },
+    { label: '状態',   tags: splitKarteTags(k.tags_status),    cls: 'db-tag-t' },
+    { label: '根拠',   tags: splitKarteTags(k.tags_evidence),  cls: 'db-tag-v' },
+    { label: '構造',   tags: splitKarteTags(k.tags_structure), cls: 'db-tag-s' },
+  ].filter(g => g.tags.length);
+
   container.innerHTML = `
-    <div class="karte-modal-id">${k.id}</div>
-    <div class="karte-modal-title">${k.title}</div>
-    <div class="karte-card-top" style="margin-bottom:1rem">
-      ${regionPref
-        ? `<a href="#/map?pref=${encodeURIComponent(regionPref)}"
-              class="karte-card-region"
-              style="text-decoration:none;cursor:pointer"
-              title="${regionPref}の地図を見る">🗾 ${regionPref}</a>`
-        : ''}
-      ${k.field ? `<span class="karte-card-field">${k.field}</span>` : ''}
-    </div>
+    <div class="kn-wrap">
 
-    <div class="karte-modal-section">
-      <div class="karte-modal-section-label">概要</div>
-      <div class="karte-modal-text">${k.summary || ''}</div>
-    </div>
-
-    ${urls.length ? `<div class="karte-modal-section">
-      <div class="karte-modal-section-label">元記事 (${urls.length}件)</div>
-      <div class="karte-source-list">${relatedArticlesHtml}</div>
-    </div>` : ''}
-
-    <div class="karte-modal-section">
-      <div class="karte-modal-section-label">タグ</div>
-      ${[
-        {label:'出来事', tags: splitKarteTags(k.tags_event),     cls:'db-tag-e'},
-        {label:'状態',   tags: splitKarteTags(k.tags_status),    cls:'db-tag-t'},
-        {label:'根拠',   tags: splitKarteTags(k.tags_evidence),  cls:'db-tag-v'},
-        {label:'構造',   tags: splitKarteTags(k.tags_structure), cls:'db-tag-s'},
-      ].filter(g => g.tags.length).map(g => `
-        <div style="margin-bottom:0.5rem">
-          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-right:0.4rem">${g.label}</span>
-          ${g.tags.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="${g.cls}" style="text-decoration:none">${t}</a>`).join('')}
+      <!-- ラベル行：No. + 地域・分野 -->
+      <div class="kn-label-row">
+        <div class="kn-stamp">観測記録 No.${karteNum}</div>
+        <div class="kn-meta-badges">
+          ${regionPref
+            ? `<a href="#/map?pref=${encodeURIComponent(regionPref)}"
+                  class="kn-badge kn-badge-region"
+                  title="${regionPref}の地図を見る">🗾 ${regionPref}</a>`
+            : ''}
+          ${k.field ? `<span class="kn-badge kn-badge-field">${k.field}</span>` : ''}
+          ${k.start_date ? `<span class="kn-badge kn-badge-date">事案開始 ${k.start_date}</span>` : ''}
         </div>
-      `).join('')}
+      </div>
+
+      <!-- 事案名 -->
+      <h1 class="kn-title">${k.title}</h1>
+
+      <!-- 罫線区切り -->
+      <div class="kn-rule"></div>
+
+      <!-- 観測メモ（概要） -->
+      ${k.summary ? `
+      <div class="kn-section">
+        <div class="kn-section-label">観測メモ</div>
+        <div class="kn-section-body kn-memo">${k.summary}</div>
+      </div>` : ''}
+
+      <!-- 経過 -->
+      ${k.progress ? `
+      <div class="kn-section">
+        <div class="kn-section-label">経過</div>
+        <div class="kn-section-body">${k.progress}</div>
+      </div>` : ''}
+
+      <!-- MANAコメント -->
+      ${k.mana_comment ? `
+      <div class="kn-section">
+        <div class="kn-section-label">MANAコメント</div>
+        <div class="kn-section-body kn-comment">${k.mana_comment}</div>
+      </div>` : ''}
+
+      <!-- 観測タグ -->
+      ${tagGroups.length ? `
+      <div class="kn-section">
+        <div class="kn-section-label">観測タグ</div>
+        <div class="kn-tag-groups">
+          ${tagGroups.map(g => `
+            <div class="kn-tag-row">
+              <span class="kn-tag-axis">${g.label}</span>
+              <div class="kn-tag-list">
+                ${g.tags.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="${g.cls}" style="text-decoration:none">${t}</a>`).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- 地域リンク -->
+      ${regionPref ? `
+      <div class="kn-section">
+        <div class="kn-section-label">地域の事案を見る</div>
+        <a href="#/map?pref=${encodeURIComponent(regionPref)}" class="kn-region-link">
+          🗾 ${regionPref}の観測地図を開く
+        </a>
+      </div>` : ''}
+
+      <!-- 観測ソース -->
+      ${urls.length ? `
+      <div class="kn-section">
+        <div class="kn-section-label">観測ソース（${urls.length}件）</div>
+        <div class="kn-source-list">${relatedArticlesHtml}</div>
+      </div>` : ''}
+
+      <!-- フッターメタ -->
+      <div class="kn-footer-meta">
+        <span>${k.id}</span>
+        ${k.updated_at ? `<span>最終更新 ${k.updated_at.slice(0,10)}</span>` : ''}
+        ${k.created_at ? `<span>作成 ${k.created_at.slice(0,10)}</span>` : ''}
+      </div>
+
     </div>
   `;
 }
