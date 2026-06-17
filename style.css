@@ -985,39 +985,59 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   margin-top: 0.5rem;
 }
 
-/* 観測タグ折りたたみ */
+/* 観測タグセクション — カード型・常時展開 */
 .tag-observe-section {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--rule);
+  margin-top: 2.5rem;
+  padding: 1.8rem 1.6rem;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--ink);
+  background: var(--paper-warm, #f7f5f0);
 }
 
-.tag-observe-toggle {
+.tag-observe-header {
+  margin-bottom: 1.6rem;
+}
+
+.tag-observe-title {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.tag-observe-desc {
   font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
+  color: var(--ink-mid);
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+}
+
+.tag-observe-axes {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.tag-observe-axis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tag-observe-axis-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
   color: var(--ink-light);
-  cursor: pointer;
-  letter-spacing: 0.06em;
-  padding: 0.5rem 0;
-  user-select: none;
-  transition: color 0.12s;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-.tag-observe-toggle:hover {
-  color: var(--ink);
-}
-
-.tag-observe-toggle.open {
-  color: var(--ink);
-}
-
-.tag-observe-body {
-  display: none;
-  padding-top: 1.2rem;
-}
-
-.tag-observe-body.open {
-  display: block;
+@media (max-width: 768px) {
+  .tag-observe-section {
+    padding: 1.2rem 1rem;
+  }
 }
 
 /* スマホ対応 */
