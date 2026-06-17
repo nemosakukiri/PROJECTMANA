@@ -2140,3 +2140,14 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   flex-wrap: wrap;
   gap: 4px;
 }
+
+/* 観測メモ：全文表示（min-height解除・切れない） */
+.kp2-memo-body {
+  min-height: unset !important;
+  font-style: normal !important;
+  font-size: 12.5px;
+  line-height: 1.85;
+  color: #2e2c26;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
