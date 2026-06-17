@@ -1834,3 +1834,323 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
     padding: 0.7rem 0.8rem;
   }
 }
+
+/* =====================================================
+   カルテ詳細 — プロフィール型レイアウト（kp-*）
+   kn-* クラスと共存。他ページには影響しない。
+   ===================================================== */
+
+.kp-wrap {
+  background: #f9f6ef;
+  border: 0.5px solid #c4bead;
+  max-width: 860px;
+}
+
+/* ヘッダー帯 */
+.kp-head {
+  padding: 1.1rem 1.4rem 1rem;
+  border-bottom: 1px solid #c4bead;
+  background: #f0ead8;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.kp-head-left { flex: 1; }
+
+.kp-no-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9a9080;
+  margin-bottom: 5px;
+}
+
+.kp-no {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e1c16;
+  letter-spacing: 0.06em;
+  border-bottom: 1.5px solid #1e1c16;
+  display: inline-block;
+  padding-bottom: 2px;
+  margin-bottom: 0.6rem;
+}
+
+.kp-title {
+  font-size: clamp(0.98rem, 2.5vw, 1.15rem);
+  font-weight: 700;
+  line-height: 1.55;
+  color: #1a1816;
+}
+
+.kp-head-right {
+  flex-shrink: 0;
+  padding-top: 0.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.kp-status-pill {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border: 0.5px solid #c4bead;
+  color: #4a4438;
+  background: #f9f6ef;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* プロフィールグリッド */
+.kp-profile {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid #c4bead;
+}
+
+.kp-pitem {
+  padding: 0.75rem 1rem;
+  border-right: 0.5px solid #d4cebe;
+  border-bottom: 0.5px solid #d4cebe;
+}
+
+.kp-pitem:nth-child(3n) {
+  border-right: none;
+}
+
+.kp-pitem-full {
+  grid-column: 1 / -1;
+  border-right: none;
+}
+
+.kp-pitem-last {
+  border-bottom: none;
+}
+
+.kp-pl {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9a9080;
+  margin-bottom: 0.4rem;
+}
+
+.kp-pv {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.kp-pv-text {
+  font-size: 0.84rem;
+  color: #1e1c16;
+  line-height: 1.5;
+}
+
+.kp-pv-s {
+  display: block;
+  font-size: 0.75rem;
+  color: #6a6252;
+  margin-top: 2px;
+}
+
+.kp-link-val {
+  font-size: 0.84rem;
+  color: #1e1c16;
+  text-decoration: none;
+  border-bottom: 1px solid #c4bead;
+}
+
+.kp-link-val:hover { color: #5a6a8a; border-color: #5a6a8a; }
+
+.kp-empty {
+  font-size: 0.78rem;
+  color: #bbb4a4;
+}
+
+/* タグチップ */
+.kp-chip {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1.4;
+  transition: opacity 0.12s;
+}
+
+.kp-chip:hover { opacity: 0.75; }
+
+.kp-chip-e       { background: #fdf6e3; color: #7a6020; border: 0.5px solid #d4b87a; }
+.kp-chip-s       { background: #ecf2fa; color: #1a4878; border: 0.5px solid #8ab4e0; }
+.kp-chip-v       { background: #eef6e8; color: #2a6018; border: 0.5px solid #88c070; }
+.kp-chip-neutral { background: #f9f6ef; color: #4a4438; border: 0.5px solid #c4bead; }
+
+/* 観測メモ・経過・ソース */
+.kp-body {
+  padding: 0.95rem 1.4rem;
+  border-bottom: 0.5px solid #d4cebe;
+}
+
+.kp-body-last {
+  border-bottom: none;
+}
+
+.kp-bl {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9a9080;
+  margin-bottom: 0.55rem;
+}
+
+.kp-bb {
+  font-size: 0.9rem;
+  line-height: 1.95;
+  color: #2e2c26;
+  padding-left: 0.8rem;
+  border-left: 2px solid #c4bead;
+}
+
+.kp-bb-comment {
+  background: #fdfaf2;
+  border-left-color: #b8a880;
+  padding: 0.75rem 1rem;
+}
+
+/* 観測ソース */
+.kp-src-list { display: flex; flex-direction: column; gap: 6px; }
+
+.kp-src-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0.5rem 0.75rem;
+  border-left: 2px solid #c4bead;
+  text-decoration: none;
+  transition: border-color 0.12s;
+}
+
+.kp-src-item:hover { border-left-color: #5a6a8a; }
+
+.kp-src-title {
+  font-size: 0.86rem;
+  color: #2e2c26;
+  line-height: 1.5;
+}
+
+.kp-src-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: #9a9080;
+}
+
+/* フッター */
+.kp-foot {
+  padding: 0.6rem 1.4rem;
+  background: #ede8d8;
+  border-top: 0.5px solid #c4bead;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+}
+
+.kp-fi {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: #8a8070;
+  letter-spacing: 0.06em;
+}
+
+/* ===== スマホ対応 ===== */
+@media (max-width: 768px) {
+  .kp-head {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .kp-head-right {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* プロフィールを2列 */
+  .kp-profile {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .kp-pitem:nth-child(3n) {
+    border-right: 0.5px solid #d4cebe;
+  }
+
+  .kp-pitem:nth-child(2n) {
+    border-right: none;
+  }
+
+  .kp-chip {
+    font-size: 0.82rem;
+    padding: 5px 10px;
+  }
+
+  .kp-bb {
+    font-size: 0.88rem;
+  }
+
+  .kp-src-title {
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 1列に折りたたみ */
+  .kp-profile {
+    grid-template-columns: 1fr;
+  }
+
+  .kp-pitem {
+    border-right: none !important;
+  }
+
+  .kp-pitem-full {
+    border-right: none;
+  }
+
+  /* タグチップをさらに押しやすく */
+  .kp-chip {
+    font-size: 0.88rem;
+    padding: 6px 12px;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .kp-head {
+    padding: 0.9rem 1rem;
+  }
+
+  .kp-pitem {
+    padding: 0.65rem 1rem;
+  }
+
+  .kp-body {
+    padding: 0.85rem 1rem;
+  }
+
+  .kp-bb {
+    font-size: 0.9rem;
+    line-height: 1.9;
+  }
+
+  .kp-src-title {
+    font-size: 0.9rem;
+  }
+}
