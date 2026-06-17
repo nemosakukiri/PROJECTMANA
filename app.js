@@ -818,7 +818,8 @@ function renderMapPage(highlightPref) {
 function filterByRegion(pref) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-  document.getElementById('page-db').classList.add('active');
+  const pageDb = document.getElementById('page-db');
+  if (pageDb) pageDb.classList.add('active');
   const dbNav = document.querySelector('nav a:nth-child(2)');
   if (dbNav) dbNav.classList.add('active');
   window.scrollTo(0, 0);
@@ -826,11 +827,12 @@ function filterByRegion(pref) {
     history.replaceState(null, '', location.pathname + location.search);
   }
 
-  // region_pref または region フィールドを直接比較（キーワード検索ではない）
   const filtered = dbData.filter(r => (r.region_pref || r.region || '') === pref);
   _currentFilteredData = filtered;
-  document.getElementById('db-search').value = '';
-  document.getElementById('db-count-label').textContent = '「' + pref + '」の記事： ' + filtered.length + ' 件';
+  const searchEl = document.getElementById('db-search');
+  if (searchEl) searchEl.value = '';
+  const countEl = document.getElementById('db-count-label');
+  if (countEl) countEl.textContent = '「' + pref + '」の記事： ' + filtered.length + ' 件';
   renderDB(filtered);
 }
 
@@ -1360,11 +1362,13 @@ function renderDB(data) {
 
   if (!data.length) {
     container.innerHTML = '<div class="db-empty">該当するデータがありません</div>';
-    document.getElementById('db-count-label').textContent = '';
+    const cl0 = document.getElementById('db-count-label');
+    if (cl0) cl0.textContent = '';
     return;
   }
 
-  document.getElementById('db-count-label').textContent = data.length + ' 件表示中';
+  const cl = document.getElementById('db-count-label');
+  if (cl) cl.textContent = data.length + ' 件表示中';
 
   container.innerHTML = data.map((r, idx) => {
     const eventTags  = splitTags(r.tags_event);
