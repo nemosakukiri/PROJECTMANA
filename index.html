@@ -48,27 +48,62 @@
       <p class="hero-museum-desc">行政・福祉・制度運用の現場で繰り返し現れる出来事を記録し、その背後にある構造的パターンを観測する市民アーカイブです。</p>
 
       <!-- 探索ボタン4つ -->
-      <div class="hero-explore-grid">
-        <a href="#/map" class="hero-explore-btn">
-          <span class="hero-explore-icon">🗾</span>
-          <span class="hero-explore-label">地図から探す</span>
-          <span class="hero-explore-sub">都道府県別に見る</span>
-        </a>
-        <a href="#/tags" class="hero-explore-btn">
-          <span class="hero-explore-icon">🏷</span>
-          <span class="hero-explore-label">タグから探す</span>
-          <span class="hero-explore-sub">状況・分野・行為者</span>
-        </a>
-        <a href="#" onclick="showPage('karte',document.querySelector('nav a:nth-child(5)'))" class="hero-explore-btn">
-          <span class="hero-explore-icon">📋</span>
-          <span class="hero-explore-label">カルテから探す</span>
-          <span class="hero-explore-sub">事案ごとの記録</span>
-        </a>
-        <a href="#" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))" class="hero-explore-btn">
-          <span class="hero-explore-icon">📰</span>
-          <span class="hero-explore-label">観測DBを見る</span>
-          <span class="hero-explore-sub">全記事一覧</span>
-        </a>
+      <!-- 3ブロック構成の探索入口 -->
+      <div class="home-blocks">
+
+        <div class="home-block">
+          <div class="home-block-label">観測する</div>
+          <div class="home-block-grid home-block-grid-3">
+            <a href="#" onclick="showPage('karte',document.querySelector('nav a:nth-child(5)'))" class="home-block-btn">
+              <span class="home-block-icon">📋</span>
+              <span class="home-block-name">事案カルテ</span>
+              <span class="home-block-sub">記録された事案</span>
+            </a>
+            <a href="#" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))" class="home-block-btn">
+              <span class="home-block-icon">📰</span>
+              <span class="home-block-name">観測DB</span>
+              <span class="home-block-sub">全収録記事</span>
+            </a>
+            <a href="#/tags" class="home-block-btn">
+              <span class="home-block-icon">🏷</span>
+              <span class="home-block-name">タグから探す</span>
+              <span class="home-block-sub">分野・対象・行為者</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="home-block">
+          <div class="home-block-label">調べる</div>
+          <div class="home-block-grid home-block-grid-2">
+            <a href="#/terms" class="home-block-btn">
+              <span class="home-block-icon">📚</span>
+              <span class="home-block-name">用語辞典</span>
+              <span class="home-block-sub">制度用語を調べる</span>
+            </a>
+            <a href="#/laws" class="home-block-btn">
+              <span class="home-block-icon">⚖️</span>
+              <span class="home-block-name">法律辞典</span>
+              <span class="home-block-sub">根拠法を調べる</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="home-block">
+          <div class="home-block-label">知る</div>
+          <div class="home-block-grid home-block-grid-2">
+            <a href="#" onclick="showPage('about',null)" class="home-block-btn">
+              <span class="home-block-icon">ℹ️</span>
+              <span class="home-block-name">PROJECT MANAについて</span>
+              <span class="home-block-sub">このサイトとは</span>
+            </a>
+            <a href="#" onclick="showPage('citation',null)" class="home-block-btn">
+              <span class="home-block-icon">📜</span>
+              <span class="home-block-name">利用と引用について</span>
+              <span class="home-block-sub">著作権・CC BY 4.0</span>
+            </a>
+          </div>
+        </div>
+
       </div>
 
       <!-- 観測状況（クリックで各ページへ） -->
@@ -616,6 +651,88 @@
 
 <!-- 法律辞典ページ -->
 <div class="page" id="page-laws"></div>
+
+<!-- PROJECT MANAについてページ -->
+<div class="page" id="page-about">
+  <div class="karte-detail-header">
+    <div class="page-title">PROJECT MANAについて</div>
+  </div>
+  <div class="static-page-body">
+
+    <div class="static-section">
+      <div class="static-section-label">このサイトは何か</div>
+      <p>PROJECT MANAは、行政・福祉・制度運用の現場で繰り返し起きている出来事を記録し、その背後にある構造的パターンを観測するための市民アーカイブです。</p>
+      <p>「制度はある。実装されていないだけだ。」という観点から、申請妨害・長期放置・記録改ざん・情報非公開など、制度が機能しない現場の事実を収集・分類・公開しています。</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">百葉箱と博物館</div>
+      <p>MANAは「百葉箱」と「博物館」の両方の性格を持っています。百葉箱が気象を観測するように、MANAは社会の構造を観測します。そして博物館が標本を分類・展示するように、MANAは収集した事案を整理・探索できる形で公開します。</p>
+      <p>記録することが目的であり、告発や運動の場ではありません。利用者が自分で調べ、自分で判断するための情報基盤を目指しています。</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">何を収録しているか</div>
+      <p>報道記事・行政資料・議会議事録・裁判例・当事者証言などをもとに、以下を収録しています。</p>
+      <ul class="static-list">
+        <li><strong>観測DB</strong>：全国の行政・福祉・制度に関する記事をAIが毎日自動収集・分類したデータベース</li>
+        <li><strong>事案カルテ</strong>：個々の事案を地域・分野・タグで整理した記録票</li>
+        <li><strong>用語辞典</strong>：制度用語の解説パネル（カルテやDBを読む際の参照用）</li>
+        <li><strong>法律辞典</strong>：関連法律のe-Govリンク集</li>
+      </ul>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">運営について</div>
+      <p>PROJECT MANAは京都を拠点とする独立市民調査プラットフォームです。特定の政党・団体・企業とは関係がありません。</p>
+      <p>誤りの指摘・情報提供・掲載に関するお問い合わせは、サイト内のアンケートからご連絡ください。</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- 利用と引用についてページ -->
+<div class="page" id="page-citation">
+  <div class="karte-detail-header">
+    <div class="page-title">利用と引用について</div>
+  </div>
+  <div class="static-page-body">
+
+    <div class="static-section">
+      <div class="static-section-label">PROJECT MANAは記事転載サイトではありません</div>
+      <p>PROJECT MANAは、報道記事・行政資料・公的情報をもとに事案を整理・分類・構造化したアーカイブです。記事の全文転載は行っておらず、原典を尊重し、可能な限り元記事・元資料へのリンクを掲載しています。</p>
+      <p>報道記事・行政資料等の著作権は、それぞれの権利者（報道機関・行政機関等）に帰属します。</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">PROJECT MANA独自コンテンツのライセンス</div>
+      <p>以下のコンテンツはPROJECT MANAが独自に作成したものであり、<strong>CC BY 4.0（クリエイティブ・コモンズ 表示 4.0 国際）</strong>のもとで公開します。</p>
+      <ul class="static-list">
+        <li>事案カルテ（タイトル・概要・経過・タグ等）</li>
+        <li>タグ体系（出来事タグ・構造タグ・探索タグ等）</li>
+        <li>用語辞典の解説文</li>
+        <li>法律辞典のポイント解説文</li>
+        <li>MANAコメント・構造メモ</li>
+      </ul>
+      <p>CC BY 4.0では、出典を明記すれば営利・非営利を問わず自由に複製・改変・再配布できます。</p>
+      <a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener" class="static-external-link">CC BY 4.0 ライセンス全文（Creative Commons）→</a>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">引用・転載時のお願い</div>
+      <p>PROJECT MANA独自コンテンツを引用・転載する場合は、出典として以下の形式で明記してください。</p>
+      <div class="static-cite-example">出典：PROJECT MANA（projectmana-lime.vercel.app）</div>
+      <p>学術論文・報告書・記事等での引用も歓迎します。引用箇所・用途をお知らせいただけると参考になります（任意）。</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">免責事項</div>
+      <p>PROJECT MANAは情報の正確性に努めていますが、収録内容の完全性・最新性を保証するものではありません。制度・法律に関する情報は、必ず公式情報・専門家にご確認ください。</p>
+      <p>特に用語辞典・法律辞典の解説は参照用であり、法的アドバイスではありません。</p>
+    </div>
+
+  </div>
+</div>
 
 <!-- 独立カルテページ -->
 <div class="page" id="page-kartedetail">
