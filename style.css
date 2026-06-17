@@ -274,6 +274,7 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 .karte-detail-back{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:var(--ink-mid);cursor:pointer;margin-bottom:0.8rem}
 .karte-detail-back:hover{color:var(--accent)}
 .karte-detail-body{padding:1.5rem 0;max-width:720px}
+#page-kartedetail .karte-detail-body{max-width:100%;padding:1.5rem 0}
 .karte-detail-loading{padding:3rem 0;text-align:center;color:var(--ink-light);font-size:0.85rem}
 
 @media (max-width: 768px) {
@@ -1835,6 +1836,19 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   }
 }
 
+/* カルテ詳細ページだけ全幅化（他ページのpadding: 0 2remは維持）*/
+#page-kartedetail {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (max-width: 768px) {
+  #page-kartedetail {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+}
+
 /* =====================================================
    カルテ詳細 — プロフィール型レイアウト（kp-*）
    kn-* クラスと共存。他ページには影響しない。
@@ -1843,7 +1857,8 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 .kp-wrap {
   background: #f9f6ef;
   border: 0.5px solid #c4bead;
-  max-width: 860px;
+  max-width: 1280px;
+  width: 100%;
 }
 
 /* ヘッダー帯 */
@@ -1861,11 +1876,12 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 .kp-no-label {
   font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #9a9080;
+  color: #6a6252;
   margin-bottom: 5px;
+  font-weight: 600;
 }
 
 .kp-no {
@@ -1935,11 +1951,12 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 .kp-pl {
   font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #9a9080;
-  margin-bottom: 0.4rem;
+  color: #5a5248;
+  margin-bottom: 0.45rem;
+  font-weight: 600;
 }
 
 .kp-pv {
@@ -1950,15 +1967,15 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 }
 
 .kp-pv-text {
-  font-size: 0.84rem;
+  font-size: 0.9rem;
   color: #1e1c16;
   line-height: 1.5;
 }
 
 .kp-pv-s {
   display: block;
-  font-size: 0.75rem;
-  color: #6a6252;
+  font-size: 0.8rem;
+  color: #4a4438;
   margin-top: 2px;
 }
 
@@ -2006,11 +2023,12 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 .kp-bl {
   font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #9a9080;
-  margin-bottom: 0.55rem;
+  color: #5a5248;
+  margin-bottom: 0.6rem;
+  font-weight: 600;
 }
 
 .kp-bb {
@@ -2066,8 +2084,8 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 
 .kp-fi {
   font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: #8a8070;
+  font-size: 0.65rem;
+  color: #6a6252;
   letter-spacing: 0.06em;
 }
 
