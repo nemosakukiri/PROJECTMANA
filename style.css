@@ -1583,3 +1583,254 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
     height: 30px;
   }
 }
+
+/* =====================================================
+   カルテ詳細 — 観測記録ノートスタイル（kn-*）
+   他ページには影響しない独立クラス体系
+   ===================================================== */
+
+.kn-wrap {
+  max-width: 720px;
+  padding: 0.5rem 0 3rem;
+}
+
+/* ラベル行 */
+.kn-label-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
+/* スタンプ風ラベル */
+.kn-stamp {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: var(--ink);
+  padding: 0.3rem 0.7rem;
+  display: inline-block;
+  line-height: 1.4;
+}
+
+/* メタバッジ群 */
+.kn-meta-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.kn-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--rule);
+  color: var(--ink-mid);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.kn-badge-region {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.kn-badge-field {
+  background: var(--paper-warm, #f7f5f0);
+}
+
+.kn-badge-date {
+  color: var(--ink-light);
+}
+
+/* 事案タイトル */
+.kn-title {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(1.1rem, 3vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--ink);
+  margin: 0 0 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+/* 罫線 */
+.kn-rule {
+  border: none;
+  border-top: 2px solid var(--ink);
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.kn-rule::after {
+  content: '';
+  display: block;
+  border-top: 1px solid var(--rule);
+  margin-top: 4px;
+}
+
+/* セクション共通 */
+.kn-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.8rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.kn-section:last-of-type {
+  border-bottom: none;
+}
+
+.kn-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-light);
+  margin-bottom: 0.75rem;
+}
+
+.kn-section-body {
+  font-size: 0.92rem;
+  line-height: 1.95;
+  color: var(--ink-mid);
+}
+
+/* 観測メモ：左罫線付き */
+.kn-memo {
+  padding-left: 1rem;
+  border-left: 3px solid var(--rule);
+}
+
+/* MANAコメント：付箋風 */
+.kn-comment {
+  background: #fdfbf5;
+  border: 1px solid #ddd8c4;
+  border-left: 4px solid #b8a97a;
+  padding: 0.9rem 1rem;
+  font-size: 0.88rem;
+  line-height: 1.9;
+}
+
+/* タグ軸グループ */
+.kn-tag-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.kn-tag-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.kn-tag-axis {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--ink-light);
+  letter-spacing: 0.06em;
+  padding-top: 0.18rem;
+  white-space: nowrap;
+  min-width: 2.8rem;
+}
+
+.kn-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* 地域リンク */
+.kn-region-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 0.1rem;
+  transition: opacity 0.12s;
+}
+
+.kn-region-link:hover {
+  opacity: 0.7;
+}
+
+/* 観測ソース */
+.kn-source-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kn-source-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule);
+  text-decoration: none;
+  transition: border-color 0.12s;
+}
+
+.kn-source-link:hover {
+  border-left-color: var(--accent);
+}
+
+.kn-source-title {
+  font-size: 0.84rem;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.kn-source-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-light);
+}
+
+/* フッターメタ */
+.kn-footer-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--ink-light);
+  letter-spacing: 0.06em;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+}
+
+/* スマホ対応 */
+@media (max-width: 768px) {
+  .kn-label-row {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .kn-title {
+    font-size: 1.05rem;
+  }
+
+  .kn-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .kn-comment {
+    padding: 0.7rem 0.8rem;
+  }
+}
