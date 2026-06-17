@@ -969,8 +969,9 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
 /* 件数バッジ */
 .tag-museum-count {
   font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  color: var(--ink-light);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-mid);
 }
 
 /* 補助軸の区切りラベル */
