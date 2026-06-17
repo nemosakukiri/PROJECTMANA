@@ -1105,13 +1105,16 @@ function renderKarteDetailPage(karteId) {
         <span class="kp2-dl">分野</span>
         <span class="kp2-dv">${k.field || '—'}</span>
         ${tagsStatus.length ? `<span class="kp2-dl">状態</span><span class="kp2-dv">${tagsStatus[0]}</span>` : ''}
+        ${k.start_date ? `<span class="kp2-dl">事案開始</span><span class="kp2-dv">${k.start_date}</span>` : ''}
+        <span class="kp2-dl">根拠記事</span>
+        <span class="kp2-dv">${urls.length}件</span>
       </div>
 
       ${tagsTarget.length ? `<div class="kp2-demo-sec"><div class="kp2-dsl">対象者：</div><div class="kp2-dsv">${tagsTarget.join('、')}</div></div>` : ''}
       ${tagsActor.length  ? `<div class="kp2-demo-sec"><div class="kp2-dsl">行為者：</div><div class="kp2-dsv">${tagsActor.join('<br>')}</div></div>` : ''}
-      ${k.start_date ? `<div class="kp2-demo-sec"><div class="kp2-dsl">事案開始：</div><div class="kp2-dsv">${k.start_date}</div></div>` : ''}
-      ${tagsEvidence.length ? `<div class="kp2-demo-sec"><div class="kp2-dsl">根拠：</div><div class="kp2-dsv">${tagsEvidence.join(' / ')}</div></div>` : ''}
+      ${tagsEvidence.length ? `<div class="kp2-demo-sec"><div class="kp2-dsl">根拠種別：</div><div class="kp2-dsv">${tagsEvidence.join(' / ')}</div></div>` : ''}
       <div class="kp2-demo-sec"><div class="kp2-dsl">カルテID：</div><div class="kp2-dsv">${k.id}</div></div>
+      ${k.updated_at ? `<div class="kp2-demo-sec"><div class="kp2-dsl">最終更新：</div><div class="kp2-dsv">${k.updated_at.slice(0,10)}</div></div>` : ''}
 
     </div>
 
@@ -1131,8 +1134,11 @@ function renderKarteDetailPage(karteId) {
           <div class="kp2-panel-body">${chipsHtml(tagsEvent, 'kp2-chip-e')}</div>
         </div>` : ''}
 
-        <!-- 観測メモ / 関連カルテ（主役として確保） -->
-        ${panel('観測メモ', k.summary || '未記録', !k.summary)}
+        <!-- 観測メモ（全文・切れない）/ 関連カルテ -->
+        <div class="kp2-panel kp2-panel-memo">
+          <div class="kp2-panel-head"><div class="kp2-panel-label">観測メモ：</div></div>
+          <div class="kp2-panel-body kp2-memo-body">${k.summary || '<span class="kp2-empty">未記録</span>'}</div>
+        </div>
 
         <div class="kp2-panel kp2-panel-karte">
           <div class="kp2-panel-head"><div class="kp2-panel-label">関連カルテ：</div></div>
@@ -1264,8 +1270,8 @@ function loadSurveyVoices() {
         date: row.c[6]?.v || ''
       })).filter(r => r.detail);
       renderHomeVoices(surveyData.slice(-3).reverse());
-      document.getElementById('survey-count-stat').innerHTML = surveyData.length + '<sup>件</sup>';
-      document.getElementById('survey-count-sub').textContent = '▲ 随時更新';
+      const scs = document.getElementById('survey-count-stat'); if(scs) scs.innerHTML = surveyData.length + '<sup>件</sup>';
+      const scb = document.getElementById('survey-count-sub'); if(scb) scb.textContent = '▲ 随時更新';
     })
     .catch(() => renderHomeVoices(demoVoices()));
 }
@@ -1535,8 +1541,8 @@ function buildFilters(data) {
 
 function updateStats() {
   const dbCount = dbData.length;
-  document.getElementById('db-count-stat').innerHTML = dbCount + '<sup>件</sup>';
-  document.getElementById('db-count-sub').textContent = '▲ AI自動収集・毎日更新';
+  const dcs = document.getElementById('db-count-stat'); if(dcs) dcs.innerHTML = dbCount + '<sup>件</sup>';
+  const dcb = document.getElementById('db-count-sub'); if(dcb) dcb.textContent = '▲ AI自動収集・毎日更新';
   // ホームの統計行
   const homeDb = document.getElementById('home-db-count');
   if (homeDb) homeDb.textContent = dbCount + '件';
@@ -1556,7 +1562,7 @@ function renderHomeNews(data) {
 }
 
 function renderHomeVoices(data) {
-  document.getElementById('home-voices').innerHTML = data.map(v => `
+  const hv = document.getElementById('home-voices'); if(hv) hv.innerHTML = data.map(v => `
     <div class="voice-item">
       <span class="voice-pref">${v.pref}</span>
       「${v.detail.slice(0, 60)}${v.detail.length > 60 ? '……' : ''}」
@@ -1567,7 +1573,7 @@ function renderHomeVoices(data) {
 function updateTicker(data) {
   const items = data.slice(0, 6).map(r => `${r.region||r.prefecture||''}・${r.title}`).join('　　');
   const doubled = items + '　　　　' + items;
-  document.getElementById('ticker-text').textContent = doubled;
+  const tt = document.getElementById('ticker-text'); if(tt) tt.textContent = doubled;
 }
 
 // ===== SURVEY =====
@@ -1700,7 +1706,7 @@ function renderHomeTagCloud(data) {
   });
   const sorted = Object.entries(tagCount).sort((a,b) => b[1]-a[1]).slice(0, 24);
   const max = sorted[0]?.[1] || 1;
-  document.getElementById('home-tag-cloud').innerHTML = sorted.map(([tag, count]) => {
+  const htc = document.getElementById('home-tag-cloud'); if(htc) htc.innerHTML = sorted.map(([tag, count]) => {
     const size    = 0.62 + (count / max) * 0.22;
     const opacity = 0.5  + (count / max) * 0.5;
     return `<span onclick="filterByTag('${tag}')" style="font-family:'DM Mono',monospace;font-size:${size}rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;opacity:${opacity};transition:all 0.15s;display:inline-block;margin:0.15rem" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--rule)';this.style.color='var(--ink-mid)'">${tag}<span style="font-size:0.52rem;opacity:0.5;margin-left:0.2rem">${count}</span></span>`;
@@ -1879,7 +1885,7 @@ function openKarteModal(id) {
   ).slice(0, 5);
   const urls = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
 
-  document.getElementById('karte-modal-content').innerHTML = `
+  const kmc = document.getElementById('karte-modal-content'); if(kmc) kmc.innerHTML = `
     <div class="karte-modal-id">${k.id}</div>
     <div class="karte-modal-title">${k.title}</div>
     <div class="karte-card-top" style="margin-bottom:1rem">
@@ -1994,7 +2000,7 @@ function loadEssays() {
 
 function renderEssays(data) {
   const list = document.getElementById('essay-list');
-  document.getElementById('essay-count').textContent = data.length + ' 件';
+  const ec = document.getElementById('essay-count'); if(ec) ec.textContent = data.length + ' 件';
   if (!data.length) { list.innerHTML = '<div style="padding:2rem 0;color:var(--ink-light);font-size:0.83rem">該当する論考がありません</div>'; return; }
   const featured = data.find(e => e.featured === '1');
   const rest = data.filter(e => e !== featured);
@@ -2039,7 +2045,7 @@ function buildEssayFilters(data) {
   const tags = [...new Set(data.flatMap(e=>(e.tags||'').split(' / ').map(t=>t.trim()).filter(Boolean)))].sort();
   const sel = document.getElementById('essay-tag-filter');
   tags.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sel.appendChild(o);});
-  document.getElementById('essay-tag-cloud').innerHTML = tags.map(t=>
+  const etc = document.getElementById('essay-tag-cloud'); if(etc) etc.innerHTML = tags.map(t=>
     `<span class="tag" onclick="filterEssayByTag('${t}')" style="cursor:pointer">${t}</span>`
   ).join('');
 }
