@@ -1048,142 +1048,151 @@ function renderKarteDetailPage(karteId) {
 
   const urls = k.related_urls ? k.related_urls.split('\n').map(u => u.trim()).filter(Boolean) : [];
 
-  // dbDataからURL逆引き（タイトル・日付取得）
   const sourcesHtml = urls.map(u => {
     const article = dbData.find(r => normalizeUrl(r.url) === normalizeUrl(u));
-    const title   = article ? article.title : null;
-    const date    = article ? article.date  : null;
-    const region  = article ? (article.region || '') : null;
+    const title  = article ? article.title : null;
+    const date   = article ? article.date  : null;
+    const region = article ? (article.region || '') : null;
     return `<a class="kp-src-item" href="${u}" target="_blank" rel="noopener">
-      <span class="kp-src-title">${title || u}</span>
-      ${date || region ? `<span class="kp-src-meta">${[date, region].filter(Boolean).join(' — ')}</span>` : ''}
+      <span class="kp-src-t">${title || u}</span>
+      ${date || region ? `<span class="kp-src-m">${[date, region].filter(Boolean).join(' — ')}</span>` : ''}
     </a>`;
   }).join('');
 
   const regionPref = k.region_pref || k.region || '';
   const karteNum   = k.id ? k.id.replace(/^KARTE-/, '') : k.id;
 
-  // タグ各軸
   const tagsEvent     = splitKarteTags(k.tags_event);
   const tagsStructure = splitKarteTags(k.tags_structure);
   const tagsStatus    = splitKarteTags(k.tags_status);
   const tagsEvidence  = splitKarteTags(k.tags_evidence);
-  const tagsField     = splitKarteTags(k.tags_field     || k.field || '');
-  const tagsTarget    = splitKarteTags(k.tags_target    || '');
-  const tagsActor     = splitKarteTags(k.tags_actor     || '');
+  const tagsTarget    = splitKarteTags(k.tags_target || '');
+  const tagsActor     = splitKarteTags(k.tags_actor  || '');
 
-  function tagChips(tags, cls) {
-    if (!tags.length) return '<span class="kp-empty">—</span>';
+  function chips(tags, cls) {
     return tags.map(t =>
-      `<a href="#/tag/${encodeURIComponent(t)}" class="kp-chip ${cls}">${t}</a>`
+      `<a href="#/tag/${encodeURIComponent(t)}" class="${cls}">${t}</a>`
     ).join('');
   }
 
-  function profileRow(label, content) {
-    return `<div class="kp-pitem">
-      <div class="kp-pl">${label}</div>
-      <div class="kp-pv">${content}</div>
-    </div>`;
-  }
+  container.innerHTML = `<div class="kp">
 
-  container.innerHTML = `
-    <div class="kp-wrap">
-
-      <!-- ヘッダー帯 -->
+    <!-- 左：プロフィール -->
+    <div class="kp-left">
       <div class="kp-head">
-        <div class="kp-head-left">
-          <div class="kp-no-label">観測記録</div>
-          <div class="kp-no">No.${karteNum}</div>
-          <h1 class="kp-title">${k.title}</h1>
+        <div class="kp-no-label">観測記録</div>
+        <div class="kp-no">No.${karteNum}</div>
+        <div class="kp-id">${k.id}</div>
+      </div>
+
+      <div class="kp-meta">
+        <div class="kp-ml">地域</div>
+        ${regionPref
+          ? `<div class="kp-mv"><a href="#/map?pref=${encodeURIComponent(regionPref)}" style="color:#1a1816;text-decoration:none;border-bottom:1px solid #c8c0b0">${regionPref}</a></div>
+             ${k.region_city ? `<div class="kp-mv-s">${k.region_city}</div>` : ''}`
+          : '<div class="kp-mv-s" style="color:#b8b0a0">—</div>'}
+      </div>
+
+      <div class="kp-meta">
+        <div class="kp-ml">分野</div>
+        <div class="kp-mv">${k.field || '<span style="color:#b8b0a0">—</span>'}</div>
+      </div>
+
+      ${tagsTarget.length ? `
+      <div class="kp-meta">
+        <div class="kp-ml">対象者</div>
+        <div class="kp-chips">${chips(tagsTarget, 'kp-chip-n')}</div>
+      </div>` : ''}
+
+      ${tagsActor.length ? `
+      <div class="kp-meta">
+        <div class="kp-ml">行為者</div>
+        <div class="kp-chips">${chips(tagsActor, 'kp-chip-n')}</div>
+      </div>` : ''}
+
+      ${k.start_date ? `
+      <div class="kp-meta">
+        <div class="kp-ml">事案開始</div>
+        <div class="kp-mv-s">${k.start_date}</div>
+      </div>` : ''}
+
+      ${tagsStatus.length ? `
+      <div class="kp-meta">
+        <div class="kp-ml">状態</div>
+        <div class="kp-chips">
+          ${tagsStatus.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="kp-pill" style="text-decoration:none">${t}</a>`).join('')}
         </div>
-        ${tagsStatus.length
-          ? `<div class="kp-head-right">
-              ${tagsStatus.map(t =>
-                `<a href="#/tag/${encodeURIComponent(t)}" class="kp-status-pill">${t}</a>`
-              ).join('')}
-            </div>`
-          : ''}
+      </div>` : ''}
+
+      ${tagsEvidence.length ? `
+      <div class="kp-meta">
+        <div class="kp-ml">根拠</div>
+        <div class="kp-chips">${chips(tagsEvidence, 'kp-chip-v')}</div>
+      </div>` : ''}
+
+    </div>
+
+    <!-- 右：観測内容 -->
+    <div class="kp-right">
+
+      <!-- 事案名帯 -->
+      <div class="kp-title-band">
+        <h1>${k.title}</h1>
+        ${tagsStatus.length ? `<span class="kp-status">${tagsStatus[0]}</span>` : ''}
       </div>
 
-      <!-- プロフィールグリッド（主役） -->
-      <div class="kp-profile">
+      <!-- 出来事タグ（主役） -->
+      ${tagsEvent.length ? `
+      <div class="kp-event-block">
+        <div class="kp-event-label">観測された出来事</div>
+        <div class="kp-chips-lg">${chips(tagsEvent, 'kp-chip-e')}</div>
+      </div>` : ''}
 
-        <!-- 行1: 地域 / 分野 / 事案開始 -->
-        ${profileRow('地域',
-          regionPref
-            ? `<a href="#/map?pref=${encodeURIComponent(regionPref)}" class="kp-link-val">${regionPref}</a>`
-              + (k.region_city ? `<span class="kp-pv-s">${k.region_city}</span>` : '')
-            : '<span class="kp-empty">—</span>'
-        )}
-        ${profileRow('分野',
-          k.field ? `<span class="kp-pv-text">${k.field}</span>` : '<span class="kp-empty">—</span>'
-        )}
-        ${profileRow('事案開始',
-          k.start_date ? `<span class="kp-pv-text">${k.start_date}</span>` : '<span class="kp-empty">—</span>'
-        )}
-
-        <!-- 行2: 対象者 / 行為者 / 根拠 -->
-        ${profileRow('対象者', tagChips(tagsTarget, 'kp-chip-neutral'))}
-        ${profileRow('行為者', tagChips(tagsActor,  'kp-chip-neutral'))}
-        ${profileRow('根拠',   tagChips(tagsEvidence, 'kp-chip-v'))}
-
-        <!-- 出来事（全幅） -->
-        ${tagsEvent.length ? `
-        <div class="kp-pitem kp-pitem-full">
-          <div class="kp-pl">出来事</div>
-          <div class="kp-pv">${tagChips(tagsEvent, 'kp-chip-e')}</div>
-        </div>` : ''}
-
-        <!-- 構造パターン（全幅） -->
-        ${tagsStructure.length ? `
-        <div class="kp-pitem kp-pitem-full kp-pitem-last">
-          <div class="kp-pl">構造パターン</div>
-          <div class="kp-pv">${tagChips(tagsStructure, 'kp-chip-s')}</div>
-        </div>` : ''}
-
-      </div>
-
-      <!-- 観測メモ -->
+      <!-- 観測メモ・観測所見 -->
       ${k.summary ? `
-      <div class="kp-body">
-        <div class="kp-bl">観測メモ</div>
-        <div class="kp-bb">${k.summary}</div>
+      <div class="kp-cell">
+        <div class="kp-cl">観測メモ</div>
+        <div class="kp-cb">${k.summary}</div>
       </div>` : ''}
 
-      <!-- 経過 -->
-      ${k.progress ? `
-      <div class="kp-body">
-        <div class="kp-bl">経過</div>
-        <div class="kp-bb">${k.progress}</div>
-      </div>` : ''}
-
-      <!-- MANAコメント -->
       ${k.mana_comment ? `
-      <div class="kp-body">
-        <div class="kp-bl">MANAコメント</div>
-        <div class="kp-bb kp-bb-comment">${k.mana_comment}</div>
+      <div class="kp-cell">
+        <div class="kp-cl">観測所見</div>
+        <div class="kp-cb-sub">${k.mana_comment}</div>
+      </div>` : ''}
+
+      ${k.progress ? `
+      <div class="kp-cell-full">
+        <div class="kp-cl">経過</div>
+        <div class="kp-cb">${k.progress}</div>
+      </div>` : ''}
+
+      <!-- 構造パターン（控えめ） -->
+      ${tagsStructure.length ? `
+      <div class="kp-struct-block">
+        <div class="kp-struct-label">構造パターン（分析補助）</div>
+        <div class="kp-chips">${chips(tagsStructure, 'kp-chip-s')}</div>
       </div>` : ''}
 
       <!-- 観測ソース -->
       ${urls.length ? `
-      <div class="kp-body kp-body-last">
-        <div class="kp-bl">観測ソース（${urls.length}件）</div>
-        <div class="kp-src-list">${sourcesHtml}</div>
+      <div class="kp-cell-full">
+        <div class="kp-cl">観測ソース（${urls.length}件）</div>
+        ${sourcesHtml}
       </div>` : ''}
 
       <!-- フッター -->
       <div class="kp-foot">
         <span class="kp-fi">${k.id}</span>
-        ${k.updated_at ? `<span class="kp-fi">最終更新 ${k.updated_at.slice(0,10)}</span>` : ''}
+        <span class="kp-fi">PROJECT MANA</span>
+        ${k.updated_at ? `<span class="kp-fi">${k.updated_at.slice(0,10)}更新</span>` : ''}
         ${k.created_at ? `<span class="kp-fi">作成 ${k.created_at.slice(0,10)}</span>` : ''}
         <span class="kp-fi">CC BY 4.0</span>
       </div>
 
     </div>
-  `;
+  </div>`;
 }
-
-// ===== 観測DB × カルテ 紐付け状況確認 =====
 function checkKarteLinkage() {
   if (!dbData.length || !karteData.length) return;
   const dbUrls = dbData.map(r => r.url).filter(Boolean);
