@@ -1416,12 +1416,17 @@ function findKarteByUrl(articleUrl) {
   if (!articleUrl) return null;
   if (!karteData || !karteData.length) return null;
   const normalized = normalizeUrl(articleUrl);
-  return karteData.find(k => {
+  const allMatched = karteData.filter(k => {
     const urls = k.related_urls;
     if (!urls) return false;
     const urlList = Array.isArray(urls) ? urls : String(urls).split('\n');
     return urlList.map(u => normalizeUrl(u)).includes(normalized);
-  }) || null;
+  });
+  if (allMatched.length > 1) {
+    console.warn('[findKarteByUrl] 重複URL検出:', normalized,
+      '→', allMatched.map(k => k.id).join(', '));
+  }
+  return allMatched[0] || null;
 }
 
 function splitTags(str) {
@@ -1815,15 +1820,7 @@ function renderKartes(data) {
     const structTags = splitKarteTags(k.tags_structure);
     const eventTags  = splitKarteTags(k.tags_event);
     const statusTags = splitKarteTags(k.tags_status);
-    return `<div class="karte-card" onclick="openKarteModal('${k.id}')">
-      <div class="karte-card-top">
-        <span class="karte-card-id">${k.id}</span>
-        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
-        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
-        ${statusTags[0] ? `<span class="db-tag-t">${statusTags[0]}</span>` : ''}
-      </div>
-      <div class="karte-card-title">${k.title}</div>
-      ${k.summary  ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
+    return `<div class="karte-card" onclick="goToKartePage('${k.id}')">\n      <div class="karte-card-top">\n        <span class="karte-card-id">${k.id}</span>\n        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}\n        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}\n        ${statusTags[0] ? `<span class="db-tag-t">${statusTags[0]}</span>` : ''}\n      </div>\n      <div class="karte-card-title">${k.title}</div>\n      ${k.summary  ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
       ${k.progress ? `<div class="karte-card-progress">${k.progress}</div>` : ''}
       <div class="karte-card-tags">
         ${structTags.map(t => `<span class="db-tag-s">${t}</span>`).join('')}
@@ -1918,7 +1915,7 @@ function openKarteModal(id) {
     ${related.length ? `<div class="karte-modal-section">
       <div class="karte-modal-section-label">共通構造タグを持つ関連事案</div>
       <div class="karte-related-cards">
-        ${related.map(r => `<div class="karte-related-card" onclick="openKarteModal('${r.id}')">
+        ${related.map(r => `<div class="karte-related-card" onclick="goToKartePage('${r.id}')">
           <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent)">${r.region} / ${r.field}</span>
           <div style="font-weight:500;margin-top:0.2rem">${r.title}</div>
         </div>`).join('')}
