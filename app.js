@@ -922,17 +922,17 @@ function renderTagIndex() {
       + '</div>';
   }
 
-  // 観測タグHTML（折りたたみ）
+  // 観測タグHTML（カード型・常時展開）
   function buildObserveAxisHtml(axis) {
     const tags = countTags(axis.key);
     if (!tags.length) return '';
-    return '<div style="margin-bottom:1.2rem">'
-      + '<div style="font-family:DM Mono,monospace;font-size:0.6rem;color:var(--ink-light);margin-bottom:0.5rem;letter-spacing:0.06em">' + axis.label + '</div>'
-      + '<div style="display:flex;flex-wrap:wrap;gap:0.3rem">'
+    return '<div class="tag-observe-axis">'
+      + '<div class="tag-observe-axis-label">' + axis.label + '</div>'
+      + '<div class="tag-btn-group">'
       + tags.map(function(t) {
-          return '<a href="#/tag/' + encodeURIComponent(t[0]) + '" class="tag-explore-btn" style="font-size:0.62rem;padding:0.15rem 0.4rem">'
+          return '<a href="#/tag/' + encodeURIComponent(t[0]) + '" class="tag-museum-btn tag-museum-btn-sub">'
             + t[0]
-            + '<span style="font-size:0.55rem;opacity:0.5;margin-left:0.25rem">(' + t[1] + ')</span>'
+            + '<span class="tag-museum-count">' + t[1] + '</span>'
             + '</a>';
         }).join('')
       + '</div>'
@@ -962,9 +962,11 @@ function renderTagIndex() {
     + (subHtml ? '<div class="tag-sub-divider">補助的な絞り込み</div>' + subHtml : '')
     + (observeHtml
         ? '<div class="tag-observe-section">'
-          + '<div class="tag-observe-toggle" onclick="toggleObserveTags(this)">'
-          + '観測タグ（分析軸）を見る ▼</div>'
-          + '<div class="tag-observe-body">' + observeHtml + '</div>'
+          + '<div class="tag-observe-header">'
+          +   '<div class="tag-observe-title">観測タグから探す</div>'
+          +   '<div class="tag-observe-desc">出来事・構造・状態・根拠の4軸で記録を分類しています。MANAの分析視点から探索できます。</div>'
+          + '</div>'
+          + '<div class="tag-observe-axes">' + observeHtml + '</div>'
           + '</div>'
         : '')
     + '</div>';
