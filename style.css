@@ -1,2174 +1,2201 @@
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --ink:#0f0e0d;
-  --ink-mid:#2e2d2b;
-  --ink-light:#6b6764;
-  --paper:#faf9f6;
-  --paper-warm:#f3f1ec;
-  --rule:#e0ddd6;
-  --accent:#123a6f;
-  --accent-pale:#eef3fa;
-}
-body{font-family:'Noto Sans JP',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
-a{color:inherit;text-decoration:none}
-
-/* HEADER */
-header{border-bottom:3px solid var(--ink);padding:0 2rem;position:sticky;top:0;background:var(--paper);z-index:100}
-.header-top{display:flex;align-items:baseline;justify-content:space-between;padding:1rem 0 0.5rem}
-.site-name{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;letter-spacing:-0.02em}
-.site-name span{color:var(--accent)}
-.tagline{font-size:0.88rem;font-weight:400;color:var(--ink-mid);letter-spacing:0.06em}
-.header-meta{display:flex;gap:2rem;align-items:center}
-.header-date{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--ink-mid)}
-nav a{font-size:0.7rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1.5px solid transparent;padding-bottom:1px;transition:all 0.15s;margin-left:1.5rem}
-nav a:hover,nav a.active{border-color:var(--accent);color:var(--accent)}
-.ticker{background:var(--ink);color:var(--paper);padding:0.3rem 2rem;font-family:'DM Mono',monospace;font-size:0.65rem;display:flex;gap:1rem;overflow:hidden}
-.ticker-label{color:var(--accent);font-weight:500;flex-shrink:0}
-@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.ticker-inner{display:inline-flex;gap:3rem;animation:scroll 25s linear infinite;white-space:nowrap}
-
-/* PAGES */
-.page{display:none;padding:0 2rem 3rem}
-.page.active{display:block}
-
-/* HOME */
-.hero{border-bottom:1px solid var(--rule);padding:2rem 0}
-.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
-.hero-kicker{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.6rem}
-.hero-headline{font-family:'Playfair Display',serif;font-size:2.3rem;font-weight:700;line-height:1.15;letter-spacing:-0.02em;margin-bottom:1rem}
-.hero-body{font-size:0.92rem;line-height:1.95;color:var(--ink-mid);margin-bottom:1.4rem}
-.btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--ink);color:var(--paper);font-size:0.72rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.65rem 1.4rem;cursor:pointer;border:none;transition:background 0.15s;font-family:'Noto Sans JP',sans-serif}
-.btn-primary:hover{background:var(--accent)}
-.btn-outline{display:inline-flex;align-items:center;gap:0.4rem;background:transparent;color:var(--ink);font-size:0.72rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.6rem 1.2rem;cursor:pointer;border:1.5px solid var(--ink);transition:all 0.15s;font-family:'Noto Sans JP',sans-serif}
-.btn-outline:hover{background:var(--ink);color:var(--paper)}
-
-.stats-col{border-left:1px solid var(--rule);padding-left:3rem;display:flex;flex-direction:column;gap:0}
-.stat-card{padding:1.1rem 0;border-bottom:1px solid var(--rule)}
-.stat-card:last-child{border-bottom:none}
-.stat-num{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:900;line-height:1}
-.stat-num sup{font-size:0.9rem;color:var(--accent)}
-.stat-label{font-size:0.7rem;color:var(--ink-mid);font-weight:300;margin-top:0.2rem}
-.stat-change{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-top:0.25rem}
-
-.pillars{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
-.pillar{padding:1.8rem 0;cursor:pointer}
-.pillar:not(:last-child){border-right:1px solid var(--rule);padding-right:2rem}
-.pillar:not(:first-child){padding-left:2rem}
-.pillar:hover .pillar-title{color:var(--accent)}
-.pillar-num{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light);margin-bottom:0.6rem}
-.pillar-badge{display:inline-block;background:var(--accent);color:white;font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;padding:0.12rem 0.4rem;margin-bottom:0.5rem}
-.pillar-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;line-height:1.2;transition:color 0.15s}
-.pillar-desc{font-size:0.92rem;line-height:1.85;color:var(--ink-mid)}
-.pillar-link{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.7rem;font-weight:500;color:var(--accent);margin-top:0.8rem;border-bottom:1px solid var(--accent);padding-bottom:1px}
-
-.home-bottom{display:grid;grid-template-columns:2fr 1fr;gap:3rem;padding:2rem 0}
-.section-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;border-top:3px solid var(--ink);padding-top:0.5rem;margin-bottom:1rem}
-.section-label.red{border-top-color:var(--accent)}
-.section-label.navy{border-top-color:var(--accent)}
-.news-item{display:grid;grid-template-columns:1.5rem 1fr;gap:0.8rem;padding:0.85rem 0;border-bottom:1px solid var(--rule)}
-.news-item:last-child{border-bottom:none}
-.news-num{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);padding-top:0.1rem}
-.news-pref{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);margin-bottom:0.15rem}
-.news-title{font-size:0.83rem;font-weight:500;line-height:1.4;margin-bottom:0.25rem}
-.news-meta{font-size:0.72rem;color:var(--ink-light)}
-
-.voice-panel{background:var(--paper-warm);border:1px solid var(--rule);padding:1.2rem}
-.voice-item{padding:0.65rem 0;border-bottom:1px solid var(--rule);font-size:0.84rem;line-height:1.7;color:var(--ink-mid)}
-.voice-item:last-child{border-bottom:none}
-.voice-pref{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--accent);display:block;margin-bottom:0.15rem}
-
-.db-card-similar{display:none;margin-top:0.8rem;padding:0.8rem;background:var(--paper-warm);border-left:3px solid var(--accent)}
-.db-card-similar.open{display:block}
-.db-similar-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem}
-.db-similar-tags{display:flex;flex-wrap:wrap;gap:0.25rem;margin-bottom:0.6rem}
-.db-similar-tag{font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;background:#e6f1fb;border:1px solid #85b7eb;color:#0c447c}
-.db-similar-score{font-family:'DM Mono',monospace;font-size:0.65rem;margin-bottom:0.6rem}
-.db-similar-score.score-1{color:var(--ink-mid)}
-.db-similar-score.score-2{color:#7a4a10}
-.db-similar-score.score-3{color:var(--accent);font-weight:500}
-.db-similar-cases{display:flex;flex-direction:column;gap:0.3rem}
-.db-similar-case{font-size:0.75rem;color:var(--ink-mid);padding:0.3rem 0;border-bottom:1px solid var(--rule);line-height:1.4}
-.db-similar-case:last-child{border-bottom:none}
-.db-similar-case-region{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);margin-right:0.4rem}
-.db-similar-btn{font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.15rem 0.5rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;margin-top:0.4rem;transition:all 0.12s}
-.db-similar-btn:hover{border-color:var(--accent);color:var(--accent)}
-.db-similar-btn.active{border-color:var(--accent);color:var(--accent);background:#eef3fa}
-
-/* DB PAGE */
-.db-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
-.page-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:0.4rem}
-.page-subtitle{font-size:0.95rem;color:var(--ink-mid);line-height:1.75}
-.db-filter-toggle{display:none;width:100%;margin:1rem 0 0;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:500;padding:0.65rem 1rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer;text-align:left}
-.db-layout{display:grid;grid-template-columns:210px 1fr;gap:2.5rem;padding:1.5rem 0;align-items:start}
-.db-sidebar{position:sticky;top:90px}
-.db-filter-block{margin-bottom:1.2rem}
-.db-filter-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;border-top:1px solid var(--rule);padding-top:0.5rem}
-.db-sidebar input,.db-sidebar select{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.6rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none}
-.db-sidebar input:focus,.db-sidebar select:focus{border-color:var(--accent)}
-.db-tag-filter{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.3rem}
-.db-tag-btn{font-family:'DM Mono',monospace;font-size:0.58rem;padding:0.15rem 0.4rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;transition:all 0.12s}
-.db-tag-btn:hover{border-color:var(--accent);color:var(--accent)}
-.db-tag-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.db-filter-reset{width:100%;margin-top:1rem;font-family:'Noto Sans JP',sans-serif;font-size:0.7rem;padding:0.5rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;transition:all 0.12s}
-.db-filter-reset:hover{border-color:var(--ink);color:var(--ink)}
-.db-count{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);padding:0 0 0.8rem;border-bottom:2px solid var(--ink);margin-bottom:1rem}
-.db-card{padding:1rem 0;border-bottom:1px solid var(--rule)}
-.db-card:hover{background:var(--paper-warm);margin:0 -0.5rem;padding:1rem 0.5rem}
-.db-card-top{display:flex;gap:0.6rem;align-items:center;margin-bottom:0.35rem;flex-wrap:wrap}
-.db-card-date{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
-.db-card-region{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);font-weight:500}
-.db-card-field{font-size:0.62rem;padding:0.08rem 0.35rem;background:var(--paper-warm);border:1px solid var(--rule);color:var(--ink-mid)}
-.db-card-sev-high{font-family:'DM Mono',monospace;font-size:0.58rem;color:#8b2020;background:#fdf0f0;border:1px solid #e8a0a0;padding:0.08rem 0.3rem}
-.db-card-sev-mid{font-family:'DM Mono',monospace;font-size:0.58rem;color:#633806;background:#faeeda;border:1px solid #ef9f27;padding:0.08rem 0.3rem}
-.db-card-title{font-size:0.88rem;font-weight:500;line-height:1.4;margin-bottom:0.35rem}
-.db-card-title a{color:var(--ink);border-bottom:1px solid var(--rule)}
-.db-card-title a:hover{color:var(--accent);border-color:var(--accent)}
-.db-card-summary{font-size:0.92rem;color:var(--ink-mid);line-height:1.8;margin-bottom:0.45rem}
-.db-card-tags{display:flex;flex-wrap:wrap;gap:0.22rem}
-.db-tag-e{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#fdf0f0;border:1px solid #e8a0a0;color:#8b2020;cursor:pointer}
-.db-tag-s{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#e6f1fb;border:1px solid #85b7eb;color:#0c447c;cursor:pointer}
-.db-tag-v{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#eaf3de;border:1px solid #97c459;color:#27500a;cursor:pointer}
-.db-tag-t{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#faeeda;border:1px solid #ef9f27;color:#633806;cursor:pointer}
-.db-card-karte-btn{display:inline-flex;align-items:center;gap:0.3rem;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.18rem 0.5rem;border:1px solid var(--accent);color:var(--accent);background:transparent;cursor:pointer;transition:all 0.12s;margin-top:0.4rem}
-.db-card-karte-btn:hover{background:var(--accent);color:#fff}
-.db-card-karte-badge{font-family:'DM Mono',monospace;font-size:0.55rem;padding:0.1rem 0.35rem;background:var(--accent);color:#fff;letter-spacing:0.04em}
-.pref-tag{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent)}
-
-/* SURVEY PAGE */
-.survey-header{padding:2rem 0 1.5rem;border-bottom:1px solid var(--rule)}
-.survey-intro{font-size:0.85rem;line-height:1.9;color:var(--ink-mid);max-width:600px;margin-top:0.8rem}
-.survey-form{max-width:640px;padding:2rem 0}
-.field{margin-bottom:1.8rem}
-.field label{display:block;font-size:0.78rem;font-weight:500;margin-bottom:0.5rem;letter-spacing:0.03em}
-.field-note{font-size:0.68rem;color:var(--ink-light);margin-top:0.25rem}
-.field input,.field select,.field textarea{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;padding:0.7rem 0.9rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none;transition:border-color 0.15s}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
-.field textarea{resize:vertical;line-height:1.7}
-.radio-group{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.3rem}
-.radio-item{display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;cursor:pointer}
-.radio-item input{width:auto;margin:0}
-.survey-thanks{display:none;text-align:center;padding:3rem 0}
-.survey-thanks h3{font-family:'Playfair Display',serif;font-size:1.6rem;margin-bottom:0.8rem}
-.survey-thanks p{font-size:0.85rem;color:var(--ink-mid);line-height:1.8}
-
-/* ESSAYS PAGE */
-.essays-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
-.essays-grid{display:grid;grid-template-columns:2fr 1fr;gap:3rem;padding:2rem 0}
-.essay-featured{border-bottom:1px solid var(--rule);padding-bottom:2rem;margin-bottom:2rem}
-.essay-kicker{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem}
-.essay-title{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;line-height:1.2;margin-bottom:0.8rem}
-.essay-excerpt{font-size:0.88rem;line-height:1.9;color:var(--ink-mid);margin-bottom:1rem}
-.essay-byline{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light)}
-.essay-list-item{padding:1rem 0;border-bottom:1px solid var(--rule);cursor:pointer}
-.essay-list-item:hover .essay-list-title{color:var(--accent)}
-.essay-list-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:0.3rem;transition:color 0.15s}
-.essay-list-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
-.essay-sidebar{}
-.sidebar-section{margin-bottom:2rem}
-.sidebar-title{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;border-top:2px solid var(--ink);padding-top:0.5rem;margin-bottom:0.8rem}
-.tag-cloud{display:flex;flex-wrap:wrap;gap:0.4rem}
-.tag{font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;transition:all 0.15s}
-.tag:hover{border-color:var(--accent);color:var(--accent)}
-
-footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-content:space-between;align-items:center;margin-top:2rem}
-.footer-name{font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700}
-.footer-copy{font-size:0.62rem;color:var(--ink-light);font-family:'DM Mono',monospace}
-
-/* GUIDE PAGE */
-.guide-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
-.guide-layout{display:grid;grid-template-columns:220px 1fr;gap:3rem;padding:2rem 0;align-items:start}
-.guide-nav{position:sticky;top:100px}
-.guide-nav-item{display:block;font-size:0.78rem;padding:0.55rem 0;border-bottom:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;transition:color 0.15s}
-.guide-nav-item:hover,.guide-nav-item.active{color:var(--accent);font-weight:500}
-.guide-nav-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;padding:0.8rem 0 0.4rem;margin-top:0.5rem}
-.guide-content{}
-.guide-section{margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid var(--rule)}
-.guide-section:last-child{border-bottom:none}
-.guide-section-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;margin-bottom:1.2rem}
-.guide-section-intro{font-size:0.9rem;line-height:1.95;color:var(--ink-mid);margin-bottom:1.5rem}
-.step-list{display:flex;flex-direction:column;gap:1rem}
-.step-item{display:grid;grid-template-columns:2.5rem 1fr;gap:1rem;background:var(--paper-warm);padding:1.2rem;border-left:3px solid var(--ink)}
-.step-item.warning{border-left-color:var(--accent);background:var(--accent-pale,#fdf5f5)}
-.step-num{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--ink-light);line-height:1}
-.step-body{}
-.step-title{font-size:0.85rem;font-weight:700;margin-bottom:0.3rem}
-.step-desc{font-size:0.86rem;line-height:1.8;color:var(--ink-mid)}
-.tip-box{background:var(--paper-warm);border:1px solid var(--rule);border-left:3px solid var(--accent);padding:1rem 1.2rem;margin:1rem 0}
-.tip-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem}
-.tip-text{font-size:0.82rem;line-height:1.75;color:var(--ink-mid)}
-.phrase-list{display:flex;flex-direction:column;gap:0.6rem}
-.phrase-item{background:var(--paper-warm);padding:0.8rem 1rem;border-left:2px solid var(--ink);font-size:0.83rem;line-height:1.6}
-.phrase-bad{border-left-color:var(--ink-light);color:var(--ink-light);text-decoration:line-through}
-.phrase-good{border-left-color:var(--accent);font-weight:500}
-.contact-list{display:flex;flex-direction:column;gap:0.8rem}
-.contact-item{padding:1rem;background:var(--paper-warm);border:1px solid var(--rule)}
-.contact-name{font-weight:700;font-size:0.85rem;margin-bottom:0.2rem}
-.contact-detail{font-size:0.78rem;color:var(--ink-mid);line-height:1.6}
-.contact-tel{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--accent)}
-
-/* QA */
-.qa-tabs{display:flex;gap:0;border-bottom:2px solid var(--ink);margin-bottom:1.5rem}
-.qa-tab{font-size:0.78rem;font-weight:500;padding:0.6rem 1.2rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;letter-spacing:0.03em}
-.qa-tab.active{border-bottom-color:var(--accent);color:var(--accent)}
-.qa-search{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;padding:0.65rem 0.9rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none;margin-bottom:1rem}
-.qa-search:focus{border-color:var(--ink)}
-.qa-list{display:flex;flex-direction:column;gap:0}
-.qa-item{border-bottom:1px solid var(--rule);overflow:hidden}
-.qa-question{padding:1rem 0;cursor:pointer;display:flex;justify-content:space-between;align-items:start;gap:1rem}
-.qa-question:hover .qa-q-text{color:var(--accent)}
-.qa-q-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);flex-shrink:0;padding-top:0.15rem}
-.qa-q-text{font-size:0.85rem;font-weight:500;line-height:1.4;flex:1}
-.qa-arrow{font-size:0.7rem;color:var(--ink-light);flex-shrink:0;transition:transform 0.2s}
-.qa-arrow.open{transform:rotate(180deg)}
-.qa-answer{display:none;padding:0 0 1.2rem 2rem;font-size:0.88rem;line-height:1.9;color:var(--ink-mid)}
-.qa-answer.show{display:block}
-.qa-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);margin-top:0.5rem}
-.qa-post-btn{margin-top:1.5rem}
-.qa-form{background:var(--paper-warm);border:1px solid var(--rule);padding:1.5rem;margin-top:1rem;display:none}
-.qa-form.show{display:block}
-.qa-form .field{margin-bottom:1.2rem}
-.qa-form .field:last-child{margin-bottom:0}
-.qa-status{font-size:0.78rem;padding:0.6rem;text-align:center;display:none}
-.qa-status.checking{color:var(--ink-mid);background:var(--paper-warm);border:1px solid var(--rule)}
-.qa-status.ok{color:#2d6a2d;background:#f0f7f0;border:1px solid #b8d8b8}
-.qa-status.ng{color:var(--accent);background:#fdf0f0;border:1px solid #f0b8b8}
-/* KARTE PAGE */
-.karte-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
-.karte-layout{display:grid;grid-template-columns:200px 1fr;gap:2.5rem;padding:1.5rem 0;align-items:start}
-.karte-sidebar{position:sticky;top:90px}
-.karte-filter-block{margin-bottom:1.2rem}
-.karte-filter-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;border-top:1px solid var(--rule);padding-top:0.5rem}
-.karte-sidebar select{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.6rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none}
-.karte-card{border:1px solid var(--rule);padding:1.4rem;margin-bottom:1rem;cursor:pointer;transition:border-color 0.15s}
-.karte-card:hover{border-color:var(--accent)}
-.karte-card-top{display:flex;gap:0.6rem;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap}
-.karte-card-id{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light)}
-.karte-card-region{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);font-weight:500}
-.karte-card-field{font-size:0.62rem;padding:0.08rem 0.35rem;background:var(--paper-warm);border:1px solid var(--rule);color:var(--ink-mid)}
-.karte-card-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;line-height:1.3;margin-bottom:0.5rem}
-.karte-card-summary{font-size:0.8rem;color:var(--ink-mid);line-height:1.75;margin-bottom:0.6rem}
-.karte-card-progress{font-size:0.75rem;color:var(--ink-mid);border-left:2px solid var(--accent);padding-left:0.6rem;margin-bottom:0.6rem;font-style:italic}
-.karte-card-tags{display:flex;flex-wrap:wrap;gap:0.22rem;margin-bottom:0.6rem}
-.karte-card-footer{display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
-.karte-related{margin-top:0.5rem}
-.karte-related-label{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-bottom:0.3rem}
-.karte-related-link{display:block;font-size:0.72rem;color:var(--accent);border-bottom:1px solid var(--rule);padding:0.2rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* DETAIL MODAL */
-.karte-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto}
-.karte-modal-overlay.show{display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
-.karte-modal{background:var(--paper);max-width:720px;width:100%;padding:2rem;position:relative}
-.karte-modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-mid)}
-.karte-modal-id{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-bottom:0.5rem}
-.karte-modal-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;line-height:1.2;margin-bottom:1rem}
-.karte-modal-section{margin-bottom:1.2rem;border-top:1px solid var(--rule);padding-top:0.8rem}
-.karte-modal-section-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem}
-.karte-modal-text{font-size:0.85rem;line-height:1.85;color:var(--ink-mid)}
-.karte-modal-progress{font-size:0.82rem;border-left:2px solid var(--accent);padding-left:0.8rem;color:var(--ink-mid);font-style:italic}
-.karte-related-cards{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem}
-.karte-related-card{padding:0.6rem 0.8rem;border:1px solid var(--rule);font-size:0.78rem;cursor:pointer}
-.karte-related-card:hover{border-color:var(--accent);color:var(--accent)}
-
-/* 独立カルテページ */
-.karte-detail-header{padding:1.5rem 0 1rem;border-bottom:1px solid var(--rule)}
-.karte-detail-back{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:var(--ink-mid);cursor:pointer;margin-bottom:0.8rem}
-.karte-detail-back:hover{color:var(--accent)}
-.karte-detail-body{padding:1.5rem 0;max-width:720px}
-#page-kartedetail .karte-detail-body{max-width:100%;padding:1.5rem 0}
-.karte-detail-loading{padding:3rem 0;text-align:center;color:var(--ink-light);font-size:0.85rem}
-
-@media (max-width: 768px) {
-
-  /* 全体の横幅制限 */
-  *{box-sizing:border-box}
-  body{overflow-x:hidden}
-
-  /* ヘッダー */
-  header{padding:0 0.8rem}
-  .header-top{flex-direction:column;gap:0.4rem;padding:0.7rem 0 0.4rem}
-  .header-meta{flex-direction:column;gap:0.4rem;align-items:flex-start;width:100%}
-  nav{display:flex;flex-wrap:wrap;gap:0.25rem;width:100%}
-  nav a{margin-left:0;font-size:0.62rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);border-radius:2px}
-  .site-name{font-size:1.4rem}
-  .tagline{font-size:0.78rem}
-  .ticker{padding:0.28rem 0.8rem;font-size:0.58rem}
-
-  /* ページ余白 */
-  .page{padding:0 0.8rem 2rem}
-  main{padding:0 0.8rem}
-
-  /* ヒーロー */
-  .hero-grid{grid-template-columns:1fr;gap:1.2rem}
-  .stats-col{border-left:none;padding-left:0;border-top:1px solid var(--rule);padding-top:0.8rem;display:grid;grid-template-columns:repeat(3,1fr);gap:0}
-  .stat-card{padding:0.6rem 0.4rem;border-bottom:none;border-right:1px solid var(--rule)}
-  .stat-card:last-child{border-right:none}
-  .stat-num{font-size:1.5rem}
-  .hero-headline{font-size:1.45rem;line-height:1.2}
-  .hero-body{font-size:0.82rem}
-
-  /* 4本柱 */
-  .pillars{grid-template-columns:1fr 1fr}
-  .pillar{padding:1rem 0.7rem !important;border-right:none !important;border-bottom:1px solid var(--rule)}
-  .pillar-title{font-size:0.95rem}
-  .pillar-desc{font-size:0.84rem}
-
-  /* ホーム下部 */
-  .home-bottom{grid-template-columns:1fr;gap:1.2rem}
-
-  /* 注目パターン・タグクラウド */
-  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
-  div[style*="border-left:1px solid var(--rule);"]{border-left:none !important;padding-left:0 !important;border-top:1px solid var(--rule);padding-top:1rem !important}
-
-  /* ===== DBページ ===== */
-  .db-filter-toggle{display:block}
-  .db-layout{grid-template-columns:1fr !important;gap:0.8rem}
-  .db-sidebar{
-    position:static !important;
-    display:none;
-    width:100%;
-    background:var(--paper-warm);
-    border:1px solid var(--rule);
-    padding:1rem;
-    margin-bottom:0.5rem;
-  }
-  .db-sidebar.open{display:block}
-  .db-sidebar input,
-  .db-sidebar select{width:100% !important;font-size:0.88rem;padding:0.55rem 0.7rem}
-  .db-tag-filter{gap:0.3rem}
-  .db-tag-btn{font-size:0.65rem;padding:0.3rem 0.55rem;min-height:32px}
-  .db-filter-toggle{
-    display:block;
-    width:100%;
-    margin:0.8rem 0 0;
-    font-family:'Noto Sans JP',sans-serif;
-    font-size:0.85rem;
-    font-weight:500;
-    padding:0.75rem 1rem;
-    border:1.5px solid var(--ink);
-    background:var(--paper);
-    color:var(--ink);
-    cursor:pointer;
-    text-align:left;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-  }
-  .db-card{padding:1rem 0}
-  .db-card:hover{margin:0;padding:1rem 0;background:none}
-  .db-card-title{font-size:0.88rem;line-height:1.45}
-  .db-card-summary{font-size:0.86rem}
-  .db-card-top{gap:0.35rem;flex-wrap:wrap}
-  .db-card-karte-btn{
-    width:100%;
-    justify-content:center;
-    font-size:0.7rem;
-    padding:0.5rem 0.8rem;
-    min-height:36px;
-    margin-top:0.5rem;
-  }
-  .db-main{min-width:0;width:100%;overflow-x:hidden}
-
-  /* カルテモーダル スマホ最適化 */
-  .karte-modal-overlay{padding:0.5rem}
-  .karte-modal{padding:1.2rem;width:100%;max-width:100%}
-  .karte-modal-title{font-size:1.2rem}
-  .karte-modal-close{top:0.8rem;right:0.8rem;font-size:1rem;min-height:36px;min-width:36px}
-  .karte-related-card{padding:0.7rem;min-height:44px}
-
-  /* カルテページ */
-  .karte-layout{grid-template-columns:1fr;gap:0.8rem}
-  .karte-sidebar{position:static}
-  .karte-card{padding:1rem}
-  .karte-card-title{font-size:1rem}
-
-  /* アンケート */
-  .survey-form{padding:1rem 0}
-  .field input,.field select,.field textarea{font-size:0.9rem;padding:0.65rem 0.8rem}
-  .radio-item{font-size:0.85rem;padding:0.2rem 0}
-
-  /* 論考 */
-  .essays-grid{grid-template-columns:1fr}
-  .essay-sidebar{display:none}
-
-  /* 生活保護ガイド */
-  .guide-layout{grid-template-columns:1fr;gap:0.8rem}
-  .guide-nav{position:static;display:flex;flex-wrap:wrap;gap:0.25rem;border-bottom:1px solid var(--rule);padding-bottom:0.8rem;margin-bottom:0.8rem}
-  .guide-nav-item{font-size:0.7rem;padding:0.3rem 0.6rem;border:1px solid var(--rule);display:inline-block;min-height:32px}
-  .guide-nav-label{display:none}
-  .step-item{grid-template-columns:2rem 1fr;gap:0.6rem;padding:0.8rem}
-  .btn-primary,.btn-outline{min-height:44px;font-size:0.82rem}
-
-  /* フッター */
-  footer{flex-direction:column;gap:0.3rem;padding:1rem 0.8rem;text-align:center}
-}
-
-/* ===== スマホ対応 (480px以下) ===== */
-@media (max-width: 480px) {
-  .site-name{font-size:1.2rem}
-  .hero-headline{font-size:1.25rem}
-  .pillars{grid-template-columns:1fr}
-  .stats-col{grid-template-columns:1fr}
-  .stat-card{border-right:none;border-bottom:1px solid var(--rule)}
-  .stat-card:last-child{border-bottom:none}
-  .stat-num{font-size:1.4rem}
-  .page-title{font-size:1.3rem}
-  .btn-primary,.btn-outline{width:100%;justify-content:center;text-align:center;font-size:0.7rem}
-  .guide-section-title{font-size:1.1rem}
-  .db-card-tags{gap:0.18rem}
-  .db-tag-e,.db-tag-s,.db-tag-v,.db-tag-t{font-size:0.55rem;padding:0.06rem 0.28rem}
-}
-/* =====================================================
-   PROJECT MANA — Phase 1 スマホ対応追記
-   既存style.cssの末尾に追記する上書き用スタイル
-   JS・HTML構造には触れない
-   ===================================================== */
-
-/* ----- 独立カルテページ 基本 ----- */
-.karte-detail-body {
-  padding: 1.5rem 0;
-  width: 100%;
-}
-
-/* ----- 関連記事リンク：長いURLの折り返し ----- */
-.karte-related-link {
-  white-space: normal;
-  word-break: break-all;
-  overflow: hidden;
-  text-overflow: clip;
-}
-
-/* =====================================================
-   768px以下
-   ===================================================== */
-@media (max-width: 768px) {
-
-  /* 独立カルテページ */
-  .karte-detail-body {
-    max-width: 100%;
-    padding: 1rem 0;
-  }
-
-  .karte-detail-back {
-    font-size: 0.8rem;
-    padding: 0.3rem 0;
-    min-height: 36px;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* カルテ詳細：セクション余白を詰める */
-  .karte-modal-section {
-    margin-bottom: 1rem;
-    padding-top: 0.7rem;
-  }
-
-  .karte-modal-title {
-    font-size: 1.3rem;
-    line-height: 1.3;
-  }
-
-  .karte-modal-text {
-    font-size: 0.83rem;
-    line-height: 1.8;
-  }
-
-  /* タグサイズ統一（読みやすさ優先） */
-  .db-tag-e,
-  .db-tag-s,
-  .db-tag-v,
-  .db-tag-t {
-    font-size: 0.68rem;
-    padding: 0.18rem 0.4rem;
-    min-height: 28px;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* 観測DBカード：hover時の負マージンによる横スクロール防止 */
-  .db-card:hover {
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  /* 観測DBカード：タグ行の折り返し改善 */
-  .db-card-tags {
-    gap: 0.28rem;
-    row-gap: 0.28rem;
-  }
-
-  /* 観測DB：カード上部の情報行が詰みすぎないよう調整 */
-  .db-card-top {
-    row-gap: 0.3rem;
-  }
-
-  /* カルテ一覧カード */
-  .karte-card-title {
-    font-size: 1rem;
-    line-height: 1.35;
-  }
-
-  .karte-card-summary {
-    font-size: 0.78rem;
-    line-height: 1.7;
-  }
-
-  /* 独立カルテページ内のタグ */
-  .karte-modal-section .db-tag-e,
-  .karte-modal-section .db-tag-s,
-  .karte-modal-section .db-tag-v,
-  .karte-modal-section .db-tag-t {
-    font-size: 0.68rem;
-    padding: 0.18rem 0.4rem;
-  }
-}
-
-/* =====================================================
-   480px以下
-   ===================================================== */
-@media (max-width: 480px) {
-
-  /* 独立カルテページ */
-  .karte-detail-header {
-    padding: 1rem 0 0.8rem;
-  }
-
-  .karte-detail-body {
-    padding: 0.8rem 0;
-  }
-
-  .karte-modal-id {
-    font-size: 0.6rem;
-  }
-
-  .karte-modal-title {
-    font-size: 1.15rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .karte-modal-section-label {
-    font-size: 0.58rem;
-  }
-
-  .karte-modal-text {
-    font-size: 0.82rem;
-  }
-
-  /* タグをさらに少し大きく（極小画面での誤タップ防止） */
-  .db-tag-e,
-  .db-tag-s,
-  .db-tag-v,
-  .db-tag-t {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.45rem;
-    min-height: 30px;
-  }
-
-  /* 関連記事リンク：極小画面での行高調整 */
-  .karte-related-link {
-    font-size: 0.7rem;
-    line-height: 1.5;
-    padding: 0.3rem 0;
-  }
-
-  /* DBカードタイトル */
-  .db-card-title {
-    font-size: 0.85rem;
-    line-height: 1.45;
-  }
-
-  /* DBカード要約 */
-  .db-card-summary {
-    font-size: 0.76rem;
-  }
-}
-
-/* ===== 独立カルテページ：元記事リスト ===== */
-.karte-source-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.3rem;
-}
-
-.karte-source-link {
-  display: block;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--accent);
-  text-decoration: none;
-  color: var(--ink);
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.karte-source-link:hover {
-  border-color: var(--accent);
-  background: var(--accent-pale);
-}
-
-.karte-source-title {
-  display: block;
-  font-size: 0.83rem;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--ink);
-  word-break: break-all;
-}
-
-.karte-source-meta {
-  display: block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  margin-top: 0.25rem;
-}
-
-@media (max-width: 768px) {
-  .karte-source-link {
-    padding: 0.7rem 0.8rem;
-  }
-  .karte-source-title {
-    font-size: 0.82rem;
-  }
-}
-
-/* ===== 地図ページ ===== */
-.map-tooltip {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  border: 1px solid var(--rule);
-  box-shadow: none;
-}
-
-@media (max-width: 768px) {
-  #map-container {
-    height: 320px !important;
-  }
-}
-
-/* =====================================================
-   ホームページ リデザイン — 博物館スタイル
-   ===================================================== */
-
-/* hero全体 */
-.hero-museum {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 5rem 0 3rem;   /* 上下余白を拡大 */
-  text-align: center;
-}
-
-/* kicker：上部の小さいラベル */
-.hero-museum-kicker {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;   /* スペーシングを広げて上品に */
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 1.6rem;    /* タイトルとの余白を拡大 */
-}
-
-/* メインタイトル */
-.hero-museum-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(2.2rem, 6vw, 4.2rem);  /* 最小2.2rem・最大4.2remに拡大 */
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  margin-bottom: 1.6rem;    /* 余白を拡大 */
-}
-
-/* 説明文 */
-.hero-museum-desc {
-  font-size: 1.0rem;
-  line-height: 2.1;
-  color: var(--ink-mid);
-  max-width: 580px;
-  width: 100%;               /* スマホで横はみ出し防止 */
-  margin: 0 auto 3.2rem;    /* 下余白を拡大 */
-}
-
-/* 探索ボタン4つ */
-.hero-explore-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.8rem;
-  margin-bottom: 3rem;      /* 統計行との余白を拡大 */
-}
-
-.hero-explore-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem 1rem;       /* 1.4rem → 2rem に拡大 */
-  border: 1px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-  transition: border-color 0.15s, background 0.15s;
-  cursor: pointer;
-  background: transparent;
-}
-
-.hero-explore-btn:hover {
-  border-color: var(--accent);
-  background: var(--accent-pale, #f0f4fa);
-}
-
-.hero-explore-icon {
-  font-size: 1.8rem;        /* 1.6rem → 1.8rem */
-  margin-bottom: 0.6rem;
-  line-height: 1;
-}
-
-.hero-explore-label {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.88rem;       /* 0.82rem → 0.88rem */
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-}
-
-.hero-explore-sub {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.72rem;
-  color: var(--ink-light);
-}
-
-/* 統計行 */
-.hero-stats-row {
-  display: flex;
-  justify-content: center;
-  gap: 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  padding: 1.6rem 0;        /* 1.2rem → 1.6rem */
-  margin-bottom: 0;
-}
-
-.hero-stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 2.5rem;        /* 2rem → 2.5rem */
-  border-right: 1px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-  transition: color 0.15s;
-  cursor: pointer;
-}
-
-.hero-stat-item:last-child {
-  border-right: none;
-}
-
-.hero-stat-item:hover {
-  color: var(--accent);
-}
-
-.hero-stat-num {
-  font-family: 'DM Mono', monospace;
-  font-size: 1.8rem;        /* 1.4rem → 1.8rem */
-  font-weight: 700;
-  line-height: 1.1;
-  margin-bottom: 0.35rem;
-  color: var(--ink);
-}
-
-.hero-stat-num small {
-  font-size: 0.6rem;
-  font-weight: 400;
-  color: var(--ink-light);
-  margin-left: 0.2rem;
-}
-
-.hero-stat-item:hover .hero-stat-num {
-  color: var(--accent);
-}
-
-.hero-stat-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  letter-spacing: 0.08em;
-}
-
-/* ===== スマホ対応 ===== */
-@media (max-width: 768px) {
-  .hero-museum {
-    padding: 2.5rem 0 1.8rem;   /* スマホでは余白を抑制 */
-  }
-
-  .hero-museum-title {
-    font-size: clamp(1.8rem, 8vw, 2.6rem);  /* スマホ最小1.8rem */
-  }
-
-  .hero-explore-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .hero-explore-btn {
-    padding: 1.5rem 0.8rem;     /* スマホでは少し詰める */
-  }
-
-  .hero-stats-row {
-    flex-wrap: wrap;
-    gap: 0;
-    padding: 0;
-  }
-
-  .hero-stat-item {
-    width: 50%;
-    padding: 1rem 0;
-    border-right: none;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .hero-stat-item:nth-child(1),
-  .hero-stat-item:nth-child(2) {
-    border-right: 1px solid var(--rule);
-  }
-
-  .hero-stat-item:nth-last-child(-n+2) {
-    border-bottom: none;
-  }
-
-  .hero-stat-num {
-    font-size: 1.4rem;          /* スマホでは数字を抑制 */
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-museum {
-    padding: 2rem 0 1.5rem;
-  }
-
-  .hero-museum-title {
-    font-size: clamp(1.6rem, 9vw, 2.2rem);  /* 極小画面でも折り返し安全 */
-  }
-
-  .hero-museum-desc {
-    font-size: 0.84rem;
-    line-height: 1.85;
-  }
-
-  .hero-explore-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .hero-explore-btn {
-    padding: 1.2rem 0.5rem;
-  }
-
-  .hero-explore-icon {
-    font-size: 1.4rem;
-  }
-
-  .hero-explore-label {
-    font-size: 0.8rem;
-  }
-
-  /* 極小画面ではサブテキストを非表示（ボタンが詰まらないよう） */
-  .hero-explore-sub {
-    display: none;
-  }
-
-  .hero-stat-num {
-    font-size: 1.2rem;
-  }
-}
-
-/* =====================================================
-   タグページ — 博物館スタイル
-   ===================================================== */
-
-.tag-explore-page {
-  padding: 1.5rem 0;
-}
-
-/* 各軸のセクション */
-.tag-axis-section {
-  padding: 2rem 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.tag-axis-section:last-of-type {
-  border-bottom: none;
-}
-
-.tag-axis-sub {
-  background: var(--paper-warm);
-  padding: 1.5rem 1.2rem;
-  margin: 0 -1.2rem;
-}
-
-/* セクションヘッダー（アイコン + ラベル + 説明） */
-.tag-axis-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
-}
-
-.tag-axis-icon {
-  font-size: 1.4rem;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-top: 0.1rem;
-}
-
-.tag-axis-label {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 0.2rem;
-}
-
-.tag-axis-desc {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  letter-spacing: 0.04em;
-}
-
-/* タグボタングループ */
-.tag-btn-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-/* 主軸タグボタン */
-.tag-museum-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.8rem;
-  border: 1px solid var(--rule);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.78rem;
-  color: var(--ink);
-  text-decoration: none;
-  transition: border-color 0.12s, color 0.12s, background 0.12s;
-  background: var(--paper);
-}
-
-.tag-museum-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-pale);
-}
-
-/* 補助軸タグボタン（少し小さめ） */
-.tag-museum-btn-sub {
-  font-size: 0.72rem;
-  padding: 0.3rem 0.65rem;
-  background: transparent;
-}
-
-/* 件数バッジ */
-.tag-museum-count {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--ink-mid);
-}
-
-/* 補助軸の区切りラベル */
-.tag-sub-divider {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 1.5rem 0 0;
-  border-top: 1px solid var(--rule);
-  margin-top: 0.5rem;
-}
-
-/* 観測タグセクション — カード型・常時展開 */
-.tag-observe-section {
-  margin-top: 2.5rem;
-  padding: 1.8rem 1.6rem;
-  border: 1px solid var(--rule);
-  border-left: 4px solid var(--ink);
-  background: var(--paper-warm, #f7f5f0);
-}
-
-.tag-observe-header {
-  margin-bottom: 1.6rem;
-}
-
-.tag-observe-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 0.5rem;
-}
-
-.tag-observe-desc {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  color: var(--ink-mid);
-  line-height: 1.7;
-  letter-spacing: 0.02em;
-}
-
-.tag-observe-axes {
-  display: flex;
-  flex-direction: column;
-  gap: 1.4rem;
-}
-
-.tag-observe-axis {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.tag-observe-axis-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  color: var(--ink-light);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-@media (max-width: 768px) {
-  .tag-observe-section {
-    padding: 1.2rem 1rem;
-  }
-}
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .tag-axis-section {
-    padding: 1.5rem 0;
-  }
-
-  .tag-axis-icon {
-    font-size: 1.2rem;
-  }
-
-  .tag-axis-label {
-    font-size: 0.84rem;
-  }
-
-  .tag-museum-btn {
-    font-size: 0.72rem;
-    padding: 0.35rem 0.65rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .tag-axis-header {
-    gap: 0.7rem;
-  }
-
-  .tag-museum-btn {
-    font-size: 0.68rem;
-    padding: 0.3rem 0.55rem;
-  }
-}
-
-/* =====================================================
-   用語辞典 — 展示解説パネルスタイル
-   ===================================================== */
-
-/* 検索ボックス */
-.term-search-box {
-  margin-bottom: 2rem;
-}
-
-/* カテゴリセクション */
-.term-category-section {
-  margin-bottom: 2.5rem;
-}
-
-.term-category-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-/* 用語カードグリッド */
-.term-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.8rem;
-}
-
-/* 用語カード（一覧用） */
-.term-card {
-  display: block;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-  transition: border-color 0.12s, background 0.12s;
-  background: var(--paper);
-}
-
-.term-card:hover {
-  border-left-color: var(--accent);
-  border-color: var(--accent);
-  background: var(--accent-pale, #f0f4fa);
-}
-
-.term-card-name {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.92rem;
-  font-weight: 700;
-  margin-bottom: 0.2rem;
-  color: var(--ink);
-}
-
-.term-card-reading {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  color: var(--ink-light);
-  margin-bottom: 0.5rem;
-}
-
-.term-card-short {
-  font-size: 0.75rem;
-  line-height: 1.65;
-  color: var(--ink-mid);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 用語詳細ページ */
-.term-detail-body {
-  padding: 1.5rem 0;
-}
-
-/* 展示キャプション（短い説明） */
-.term-short-panel {
-  font-size: 1rem;
-  line-height: 1.85;
-  color: var(--ink);
-  padding: 1.2rem 1.5rem;
-  border-left: 4px solid var(--accent);
-  background: var(--accent-pale, #f0f4fa);
-  margin-bottom: 1.5rem;
-}
-
-/* よみがな */
-.term-reading {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
-  color: var(--ink-light);
-  letter-spacing: 0.06em;
-  margin-top: 0.3rem;
-  margin-bottom: 0.5rem;
-}
-
-/* カテゴリバッジ */
-.term-category-badge {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  border: 1px solid var(--rule);
-  padding: 0.15rem 0.5rem;
-  margin-bottom: 0.6rem;
-}
-
-/* 関連カルテへの導線 */
-.term-karte-link {
-  display: block;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--accent);
-  text-decoration: none;
-  color: var(--ink-mid);
-  font-size: 0.8rem;
-  margin-bottom: 0.4rem;
-  transition: border-color 0.12s, color 0.12s;
-}
-
-.term-karte-link:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-/* 公式情報リンク */
-.term-source-link {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--ink-mid);
-  text-decoration: none;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.1rem;
-  transition: color 0.12s, border-color 0.12s;
-}
-
-.term-source-link:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .term-card-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .term-short-panel {
-    font-size: 0.9rem;
-    padding: 1rem 1.1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .term-card {
-    padding: 0.8rem 0.9rem;
-  }
-
-  .term-card-name {
-    font-size: 0.85rem;
-  }
-
-  .term-short-panel {
-    font-size: 0.85rem;
-    line-height: 1.75;
-  }
-}
-
-/* ===== 用語本文内インラインリンク ===== */
-.term-inline-link {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-underline-offset: 2px;
-  cursor: pointer;
-  transition: color 0.12s;
-}
-
-.term-inline-link:hover {
-  color: var(--accent);
-}
-
-/* ===== 法律辞典 ===== */
-
-/* 法律カード（一覧）— term-cardを継承しつつ左線色を変える */
-.law-card {
-  border-left-color: #5a7fa8;
-}
-
-.law-card:hover {
-  border-left-color: var(--accent);
-}
-
-/* 正式名称（short_nameがある場合に正式名称を小さく表示） */
-.law-full-name {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  color: var(--ink-light);
-  margin-top: 0.3rem;
-  line-height: 1.5;
-}
-
-/* 制定年 */
-.law-enacted {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  margin-top: 0.2rem;
-}
-
-/* ポイントリスト */
-.law-key-points {
-  margin: 0;
-  padding-left: 1.2rem;
-  list-style: none;
-}
-
-.law-key-points li {
-  font-size: 0.83rem;
-  line-height: 1.8;
-  color: var(--ink-mid);
-  padding: 0.25rem 0;
-  border-bottom: 1px solid var(--rule);
-  position: relative;
-}
-
-.law-key-points li::before {
-  content: '▸';
-  color: var(--accent);
-  position: absolute;
-  left: -1.1rem;
-  font-size: 0.7rem;
-}
-
-.law-key-points li:last-child {
-  border-bottom: none;
-}
-
-/* e-Govリンクボタン */
-.law-egov-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.65rem 1.1rem;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 500;
-  transition: background 0.12s, color 0.12s;
-}
-
-.law-egov-btn:hover {
-  background: var(--accent);
-  color: var(--paper);
-}
-
-@media (max-width: 768px) {
-  .law-egov-btn {
-    font-size: 0.78rem;
-    padding: 0.6rem 0.9rem;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .law-key-points li {
-    font-size: 0.8rem;
-  }
-}
-
-/* =====================================================
-   トップページ 3ブロック構成
-   ===================================================== */
-
-.home-blocks {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-bottom: 3rem;
-  border: 1px solid var(--rule);
-}
-
-.home-block {
-  padding: 1.6rem 2rem;
-  border-bottom: 1px solid var(--rule);
+// ===== CONFIG =====
+const SHEET_ID = '1xVWTPun5X0sW7qlx-XolbX1-mdZjdtVNJ7CTqWJhc3A';
+const DB_SHEET_NAME = 'kansokuDB';
+const SURVEY_SHEET_NAME = '市民の声';
+const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbxiZEEce69vsneiNs064iQ5MAJtmB4Jjgm9EoxZj29LZ-kJ18EICndUuZ_poU47gmwJsA/exec';
+const SHEET_BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=`;
+
+// ===== STATE =====
+let dbData = [];
+let surveyData = [];
+let termsData = []; // 用語辞典
+let lawsData  = []; // 法律辞典
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('hdate').textContent = new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'.');
+  loadKartes();
+  loadDB();
+  loadSurveyVoices();
+  window.addEventListener('hashchange', handleHashRoute);
+  handleHashRoute();
+});
+
+// ===== PAGE NAVIGATION =====
+function showPage(name, navEl) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  window.scrollTo(0, 0);
+  if (name === 'essays') loadEssays();
+  if (name === 'karte') loadKartes();
+  if (!['kartedetail','tags','tagdetail','map','terms','laws'].includes(name) && /^#\//.test(location.hash)) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+}
+
+// ===== ハッシュルーティング =====
+// /#/tags       → タグ一覧
+// /#/tag/タグ名 → タグ別カルテ一覧
+// /#/karte/ID   → 独立カルテページ
+function handleHashRoute() {
+  const hash = location.hash;
+
+  if (hash === '#/tags') {
+    _activatePage('page-tags', 'タグから探す');
+    renderTagIndex();
+    return;
+  }
+
+  if (hash === '#/laws') {
+    _activatePage('page-laws', '法律を調べる');
+    renderLawIndex();
+    return;
+  }
+
+  if (hash === '#/terms') {
+    _activatePage('page-terms', '用語辞典');
+    renderTermIndex();
+    return;
+  }
+
+  const mapMatch = hash.match(/^#\/map(\?pref=(.+))?$/);
+  if (mapMatch) {
+    const highlightPref = mapMatch[2] ? decodeURIComponent(mapMatch[2]) : null;
+    _activatePage('page-map', '地図で見る');
+    renderMapPage(highlightPref);
+    return;
+  }
+
+  const tagMatch = hash.match(/^#\/tag\/(.+)$/);
+  if (tagMatch) {
+    const tagName = decodeURIComponent(tagMatch[1]);
+    _activatePage('page-tagdetail', 'タグから探す');
+    renderTagPage(tagName);
+    return;
+  }
+
+  const lawMatch = hash.match(/^#\/law\/(.+)$/);
+  if (lawMatch) {
+    const lawId = decodeURIComponent(lawMatch[1]);
+    _activatePage('page-laws', '法律を調べる');
+    renderLawPage(lawId);
+    return;
+  }
+
+  const termMatch = hash.match(/^#\/term\/(.+)$/);
+  if (termMatch) {
+    const termId = decodeURIComponent(termMatch[1]);
+    _activatePage('page-terms', '用語辞典');
+    renderTermPage(termId);
+    return;
+  }
+
+  const karteMatch = hash.match(/^#\/karte\/(.+)$/);
+  if (karteMatch) {
+    const karteId = decodeURIComponent(karteMatch[1]);
+    _activatePage('page-kartedetail', '事案カルテ');
+    renderKarteDetailPage(karteId);
+    return;
+  }
 }
-
-.home-block:last-child {
-  border-bottom: none;
-}
-
-.home-block-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 1rem;
-}
-
-.home-block-grid {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.home-block-grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.home-block-grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.home-block-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-  background: var(--paper);
-  transition: border-color 0.12s, background 0.12s;
-  cursor: pointer;
-  gap: 0.25rem;
-}
-
-.home-block-btn:hover {
-  border-color: var(--accent);
-  background: var(--accent-pale, #f0f4fa);
-}
-
-.home-block-icon {
-  font-size: 1.3rem;
-  line-height: 1;
-  margin-bottom: 0.3rem;
-}
-
-.home-block-name {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.35;
-}
-
-.home-block-sub {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--ink-light);
-  line-height: 1.5;
-}
-
-/* =====================================================
-   静的ページ（MANAについて・利用と引用）
-   ===================================================== */
-
-.static-page-body {
-  max-width: 680px;
-  padding: 1.5rem 0 3rem;
-}
-
-.static-section {
-  padding: 1.8rem 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.static-section:last-child {
-  border-bottom: none;
-}
-
-.static-section-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 0.9rem;
-}
-
-.static-section p {
-  font-size: 0.85rem;
-  line-height: 1.9;
-  color: var(--ink-mid);
-  margin-bottom: 0.8rem;
-}
-
-.static-section p:last-child {
-  margin-bottom: 0;
-}
-
-.static-list {
-  padding-left: 1.2rem;
-  margin: 0.5rem 0 0.8rem;
-  list-style: none;
-}
-
-.static-list li {
-  font-size: 0.83rem;
-  line-height: 1.8;
-  color: var(--ink-mid);
-  padding: 0.2rem 0;
-  position: relative;
-}
-
-.static-list li::before {
-  content: '—';
-  position: absolute;
-  left: -1.1rem;
-  color: var(--ink-light);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.7rem;
-}
-
-.static-cite-example {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.78rem;
-  color: var(--ink);
-  background: var(--paper-warm, #f7f5f0);
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--accent);
-  padding: 0.7rem 1rem;
-  margin: 0.8rem 0;
-}
-
-.static-external-link {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--accent);
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 0.1rem;
-  margin-top: 0.5rem;
-  transition: opacity 0.12s;
-}
-
-.static-external-link:hover {
-  opacity: 0.7;
-}
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .home-block {
-    padding: 1.2rem 1rem;
-  }
-
-  .home-block-grid-3 {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.4rem;
-  }
-
-  .home-block-grid-2 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.4rem;
-  }
-
-  .home-block-btn {
-    padding: 0.8rem 0.7rem;
-  }
-
-  .home-block-name {
-    font-size: 0.78rem;
-  }
-
-  .static-page-body {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .home-block-grid-3 {
-    grid-template-columns: repeat(1, 1fr);
-  }
-
-  .home-block-grid-2 {
-    grid-template-columns: repeat(1, 1fr);
-  }
-
-  .home-block-sub {
-    display: none;
-  }
-}
-
-/* ===== サイトロゴSVG ===== */
-.site-logo {
-  height: 52px;
-  width: auto;
-  color: var(--ink);
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .site-logo {
-    height: 36px;
-  }
-}
-
-@media (max-width: 480px) {
-  .site-logo {
-    height: 30px;
-  }
-}
-
-/* =====================================================
-   カルテ詳細 — 観測記録ノートスタイル（kn-*）
-   他ページには影響しない独立クラス体系
-   ===================================================== */
-
-.kn-wrap {
-  max-width: 720px;
-  padding: 0.5rem 0 3rem;
-}
-
-/* ラベル行 */
-.kn-label-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
-  flex-wrap: wrap;
-}
-
-/* スタンプ風ラベル */
-.kn-stamp {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--paper);
-  background: var(--ink);
-  padding: 0.3rem 0.7rem;
-  display: inline-block;
-  line-height: 1.4;
-}
-
-/* メタバッジ群 */
-.kn-meta-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-}
-
-.kn-badge {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.06em;
-  padding: 0.2rem 0.55rem;
-  border: 1px solid var(--rule);
-  color: var(--ink-mid);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.kn-badge-region {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.kn-badge-field {
-  background: var(--paper-warm, #f7f5f0);
-}
-
-.kn-badge-date {
-  color: var(--ink-light);
-}
-
-/* 事案タイトル */
-.kn-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: clamp(1.1rem, 3vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.45;
-  color: var(--ink);
-  margin: 0 0 1.2rem;
-  letter-spacing: -0.01em;
-}
-
-/* 罫線 */
-.kn-rule {
-  border: none;
-  border-top: 2px solid var(--ink);
-  margin-bottom: 2rem;
-  position: relative;
-}
-
-.kn-rule::after {
-  content: '';
-  display: block;
-  border-top: 1px solid var(--rule);
-  margin-top: 4px;
-}
-
-/* セクション共通 */
-.kn-section {
-  margin-bottom: 2rem;
-  padding-bottom: 1.8rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.kn-section:last-of-type {
-  border-bottom: none;
-}
-
-.kn-section-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 0.75rem;
-}
-
-.kn-section-body {
-  font-size: 0.92rem;
-  line-height: 1.95;
-  color: var(--ink-mid);
-}
-
-/* 観測メモ：左罫線付き */
-.kn-memo {
-  padding-left: 1rem;
-  border-left: 3px solid var(--rule);
-}
-
-/* MANAコメント：付箋風 */
-.kn-comment {
-  background: #fdfbf5;
-  border: 1px solid #ddd8c4;
-  border-left: 4px solid #b8a97a;
-  padding: 0.9rem 1rem;
-  font-size: 0.88rem;
-  line-height: 1.9;
-}
-
-/* タグ軸グループ */
-.kn-tag-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.kn-tag-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.kn-tag-axis {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  color: var(--ink-light);
-  letter-spacing: 0.06em;
-  padding-top: 0.18rem;
-  white-space: nowrap;
-  min-width: 2.8rem;
-}
-
-.kn-tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-/* 地域リンク */
-.kn-region-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--accent);
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 0.1rem;
-  transition: opacity 0.12s;
-}
-
-.kn-region-link:hover {
-  opacity: 0.7;
-}
-
-/* 観測ソース */
-.kn-source-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.kn-source-link {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--rule);
-  text-decoration: none;
-  transition: border-color 0.12s;
-}
-
-.kn-source-link:hover {
-  border-left-color: var(--accent);
-}
-
-.kn-source-title {
-  font-size: 0.84rem;
-  color: var(--ink);
-  line-height: 1.5;
-}
-
-.kn-source-meta {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-}
-
-/* フッターメタ */
-.kn-footer-meta {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  color: var(--ink-light);
-  letter-spacing: 0.06em;
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--rule);
-}
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .kn-label-row {
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-
-  .kn-title {
-    font-size: 1.05rem;
-  }
-
-  .kn-section {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-  }
-
-  .kn-comment {
-    padding: 0.7rem 0.8rem;
-  }
-}
-
-/* カルテ詳細ページだけ全幅化（他ページのpadding: 0 2remは維持）*/
-#page-kartedetail {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (max-width: 768px) {
-  #page-kartedetail {
-    padding-left: 0.4rem;
-    padding-right: 0.4rem;
-  }
-}
-
-/* =====================================================
-   カルテ詳細 — プロフィール型レイアウト（kp-*）
-   kn-* クラスと共存。他ページには影響しない。
-   ===================================================== */
-
-.kp-wrap {
-  background: #f9f6ef;
-  border: 0.5px solid #c4bead;
-  max-width: 1280px;
-  width: 100%;
-}
-
-/* ヘッダー帯 */
-.kp-head {
-  padding: 1.1rem 1.4rem 1rem;
-  border-bottom: 1px solid #c4bead;
-  background: #f0ead8;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.kp-head-left { flex: 1; }
-
-.kp-no-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #6a6252;
-  margin-bottom: 5px;
-  font-weight: 600;
-}
-
-.kp-no {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #1e1c16;
-  letter-spacing: 0.06em;
-  border-bottom: 1.5px solid #1e1c16;
-  display: inline-block;
-  padding-bottom: 2px;
-  margin-bottom: 0.6rem;
-}
-
-.kp-title {
-  font-size: clamp(0.98rem, 2.5vw, 1.15rem);
-  font-weight: 700;
-  line-height: 1.55;
-  color: #1a1816;
-}
-
-.kp-head-right {
-  flex-shrink: 0;
-  padding-top: 0.15rem;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.kp-status-pill {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
-  padding: 2px 8px;
-  border: 0.5px solid #c4bead;
-  color: #4a4438;
-  background: #f9f6ef;
-  white-space: nowrap;
-  text-decoration: none;
-  display: inline-block;
-}
-
-/* プロフィールグリッド */
-.kp-profile {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-bottom: 1px solid #c4bead;
-}
-
-.kp-pitem {
-  padding: 0.75rem 1rem;
-  border-right: 0.5px solid #d4cebe;
-  border-bottom: 0.5px solid #d4cebe;
-}
-
-.kp-pitem:nth-child(3n) {
-  border-right: none;
-}
-
-.kp-pitem-full {
-  grid-column: 1 / -1;
-  border-right: none;
-}
-
-.kp-pitem-last {
-  border-bottom: none;
-}
-
-.kp-pl {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #5a5248;
-  margin-bottom: 0.45rem;
-  font-weight: 600;
-}
-
-.kp-pv {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-}
-
-.kp-pv-text {
-  font-size: 0.9rem;
-  color: #1e1c16;
-  line-height: 1.5;
-}
-
-.kp-pv-s {
-  display: block;
-  font-size: 0.8rem;
-  color: #4a4438;
-  margin-top: 2px;
-}
-
-.kp-link-val {
-  font-size: 0.84rem;
-  color: #1e1c16;
-  text-decoration: none;
-  border-bottom: 1px solid #c4bead;
-}
-
-.kp-link-val:hover { color: #5a6a8a; border-color: #5a6a8a; }
-
-.kp-empty {
-  font-size: 0.78rem;
-  color: #bbb4a4;
-}
-
-/* タグチップ */
-.kp-chip {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.75rem;
-  padding: 3px 8px;
-  text-decoration: none;
-  display: inline-block;
-  line-height: 1.4;
-  transition: opacity 0.12s;
-}
-
-.kp-chip:hover { opacity: 0.75; }
-
-.kp-chip-e       { background: #fdf6e3; color: #7a6020; border: 0.5px solid #d4b87a; }
-.kp-chip-s       { background: #ecf2fa; color: #1a4878; border: 0.5px solid #8ab4e0; }
-.kp-chip-v       { background: #eef6e8; color: #2a6018; border: 0.5px solid #88c070; }
-.kp-chip-neutral { background: #f9f6ef; color: #4a4438; border: 0.5px solid #c4bead; }
-
-/* 観測メモ・経過・ソース */
-.kp-body {
-  padding: 0.95rem 1.4rem;
-  border-bottom: 0.5px solid #d4cebe;
-}
-
-.kp-body-last {
-  border-bottom: none;
-}
-
-.kp-bl {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #5a5248;
-  margin-bottom: 0.6rem;
-  font-weight: 600;
-}
-
-.kp-bb {
-  font-size: 0.9rem;
-  line-height: 1.95;
-  color: #2e2c26;
-  padding-left: 0.8rem;
-  border-left: 2px solid #c4bead;
-}
-
-.kp-bb-comment {
-  background: #fdfaf2;
-  border-left-color: #b8a880;
-  padding: 0.75rem 1rem;
-}
-
-/* 観測ソース */
-.kp-src-list { display: flex; flex-direction: column; gap: 6px; }
-
-.kp-src-item {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 0.5rem 0.75rem;
-  border-left: 2px solid #c4bead;
-  text-decoration: none;
-  transition: border-color 0.12s;
-}
-
-.kp-src-item:hover { border-left-color: #5a6a8a; }
-
-.kp-src-title {
-  font-size: 0.86rem;
-  color: #2e2c26;
-  line-height: 1.5;
-}
-
-.kp-src-meta {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  color: #9a9080;
-}
-
-/* フッター */
-.kp-foot {
-  padding: 0.6rem 1.4rem;
-  background: #ede8d8;
-  border-top: 0.5px solid #c4bead;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.2rem;
-}
-
-.kp-fi {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
-  color: #6a6252;
-  letter-spacing: 0.06em;
-}
-
-/* ===== スマホ対応 ===== */
-@media (max-width: 768px) {
-  .kp-head {
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-
-  .kp-head-right {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  /* プロフィールを2列 */
-  .kp-profile {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .kp-pitem:nth-child(3n) {
-    border-right: 0.5px solid #d4cebe;
-  }
-
-  .kp-pitem:nth-child(2n) {
-    border-right: none;
-  }
-
-  .kp-chip {
-    font-size: 0.82rem;
-    padding: 5px 10px;
-  }
-
-  .kp-bb {
-    font-size: 0.88rem;
-  }
-
-  .kp-src-title {
-    font-size: 0.88rem;
-  }
-}
-
-@media (max-width: 480px) {
-  /* 1列に折りたたみ */
-  .kp-profile {
-    grid-template-columns: 1fr;
-  }
-
-  .kp-pitem {
-    border-right: none !important;
-  }
-
-  .kp-pitem-full {
-    border-right: none;
-  }
-
-  /* タグチップをさらに押しやすく */
-  .kp-chip {
-    font-size: 0.88rem;
-    padding: 6px 12px;
-    min-height: 36px;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  .kp-head {
-    padding: 0.9rem 1rem;
-  }
-
-  .kp-pitem {
-    padding: 0.65rem 1rem;
-  }
-
-  .kp-body {
-    padding: 0.85rem 1rem;
-  }
-
-  .kp-bb {
-    font-size: 0.9rem;
-    line-height: 1.9;
-  }
-
-  .kp-src-title {
-    font-size: 0.9rem;
-  }
+function _activatePage(pageId, navLabel) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  document.querySelectorAll('nav a').forEach(a => {
+    if (a.textContent.trim() === navLabel) a.classList.add('active');
+  });
+  window.scrollTo(0, 0);
+}
+
+function goToKartePage(karteId) {
+  location.hash = '#/karte/' + encodeURIComponent(karteId);
+}
+
+// ===== 法律辞典 =====
+
+function loadLaws() {
+  if (lawsData.length) return Promise.resolve(lawsData);
+  return fetch('/laws.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      lawsData = data;
+      return lawsData;
+    })
+    .catch(function(err) {
+      console.error('laws.json読み込みエラー:', err.message);
+      return [];
+    });
+}
+
+// ===== 法律一覧ページ /#/laws =====
+function renderLawIndex(query) {
+  const container = document.getElementById('page-laws');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadLaws().then(function(laws) {
+    if (!laws.length) {
+      container.innerHTML = '<div class="karte-detail-loading">法律データを読み込めませんでした</div>';
+      return;
+    }
+
+    const q       = (query || '').trim();
+    const results = q
+      ? laws.filter(function(l) {
+          return (l.name || '').includes(q) ||
+                 (l.short_name || '').includes(q) ||
+                 (l.reading || '').includes(q) ||
+                 (l.short || '').includes(q) ||
+                 (l.category || '').includes(q);
+        })
+      : laws;
+
+    // カテゴリ別に整理
+    const byCategory = {};
+    results.forEach(function(l) {
+      const cat = l.category || 'その他';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(l);
+    });
+
+    const searchBox =
+      '<div class="term-search-box">'
+      + '<input type="text" id="law-search-input" placeholder="法律名・分野を検索…" value="' + escapeAttr(q) + '"'
+      + ' oninput="renderLawIndex(this.value)"'
+      + ' style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--rule);'
+      + 'font-family:\'Noto Sans JP\',sans-serif;font-size:0.83rem;background:var(--paper);color:var(--ink)">'
+      + '</div>';
+
+    const catHtml = Object.keys(byCategory).map(function(cat) {
+      const items = byCategory[cat].map(function(l) {
+        const dispName = l.short_name || l.name;
+        return '<a href="#/law/' + encodeURIComponent(l.id) + '" class="term-card law-card">'
+          + '<div class="term-card-name">' + dispName + '</div>'
+          + (l.enacted ? '<div class="term-card-reading">' + l.enacted + '</div>' : '')
+          + '<div class="term-card-short">' + (l.short || '') + '</div>'
+          + '</a>';
+      }).join('');
+      return '<div class="term-category-section">'
+        + '<div class="term-category-label">' + cat + '</div>'
+        + '<div class="term-card-grid">' + items + '</div>'
+        + '</div>';
+    }).join('');
+
+    const emptyMsg = results.length === 0
+      ? '<div style="color:var(--ink-light);font-size:0.83rem;padding:2rem 0">「' + escapeAttr(q) + '」に一致する法律が見つかりません</div>'
+      : '';
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<div class="page-title">法律を調べる</div>'
+      + '<div class="page-subtitle">e-Gov法令検索へのリンク集。条文の原文は各法律ページからアクセスできます。</div>'
+      + '</div>'
+      + searchBox
+      + emptyMsg
+      + catHtml;
+
+    const input = document.getElementById('law-search-input');
+    if (input && q) {
+      input.focus();
+      input.setSelectionRange(q.length, q.length);
+    }
+  });
+}
+
+// ===== 法律詳細ページ /#/law/id =====
+function renderLawPage(lawId) {
+  const container = document.getElementById('page-laws');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadLaws().then(function(laws) {
+    const l = laws.find(function(x) { return x.id === lawId; });
+    if (!l) {
+      container.innerHTML =
+        '<div class="karte-detail-header">'
+        + '<a href="#/laws" class="karte-detail-back">← 法律一覧へ</a>'
+        + '</div>'
+        + '<div class="karte-detail-loading">法律が見つかりません</div>';
+      return;
+    }
+
+    const dispName = l.short_name || l.name;
+
+    // ポイントリスト
+    const pointsHtml = (l.key_points || []).length
+      ? '<ul class="law-key-points">'
+        + l.key_points.map(function(p) { return '<li>' + p + '</li>'; }).join('')
+        + '</ul>'
+      : '';
+
+    // 関連用語リンク（terms.jsonへ）
+    const termLinks = (l.related_terms || []).map(function(term) {
+      const matched = termsData.find(function(t) { return t.term === term; });
+      if (matched) {
+        return '<a href="#/term/' + encodeURIComponent(matched.id) + '" class="tag-museum-btn">📖 ' + term + '</a>';
+      }
+      return '<span class="tag-museum-btn tag-museum-btn-sub">' + term + '</span>';
+    }).join('');
+
+    // 関連タグリンク（タグページへ）
+    const tagLinks = (l.related_tags || []).map(function(tag) {
+      return '<a href="#/tag/' + encodeURIComponent(tag) + '" class="tag-museum-btn">' + tag + '</a>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<a href="#/laws" class="karte-detail-back">← 法律一覧へ</a>'
+      + '<div class="term-category-badge">' + (l.category || '') + '</div>'
+      + '<div class="page-title">' + dispName + '</div>'
+      + (l.short_name ? '<div class="law-full-name">' + l.name + '</div>' : '')
+      + (l.reading ? '<div class="term-reading">' + l.reading + '</div>' : '')
+      + (l.enacted ? '<div class="law-enacted">制定：' + l.enacted + '</div>' : '')
+      + '</div>'
+
+      + '<div class="term-detail-body">'
+
+      // 概要（展示キャプション）
+      + '<div class="term-short-panel">' + (l.short || '') + '</div>'
+
+      // 押さえておくべきポイント
+      + (pointsHtml
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">押さえておくべきポイント</div>'
+            + pointsHtml
+            + '</div>'
+          : '')
+
+      // 関連用語（用語辞典へ）
+      + (termLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連用語（用語辞典）</div>'
+            + '<div class="tag-btn-group">' + termLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // 関連タグ（タグページへ）
+      + (tagLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連タグから事案を探す</div>'
+            + '<div class="tag-btn-group">' + tagLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // e-Gov リンク
+      + (l.egov_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">条文を読む</div>'
+            + '<a href="' + l.egov_url + '" target="_blank" rel="noopener" class="law-egov-btn">'
+            + '⚖️ e-Gov法令検索で条文を読む（外部サイト）'
+            + '</a>'
+            + '</div>'
+          : '')
+
+      // 厚労省等リンク
+      + (l.mhlw_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">制度の詳細</div>'
+            + '<a href="' + l.mhlw_url + '" target="_blank" rel="noopener" class="term-source-link">'
+            + '🔗 ' + (l.category || '関連省庁') + 'の解説ページ'
+            + '</a>'
+            + '</div>'
+          : '')
+
+      + '</div>';
+  });
+}
+
+// ===== 用語辞典 =====
+
+// テキスト内の登録済み用語を /#/term/xxx へのリンクに置き換える
+// 対象：用語辞典の detail フィールドのみ（プレーンテキスト前提）
+// - 長い用語から先に処理（「生活保護受給者」を「生活保護」より先に）
+// - 現在表示中の用語（currentTermId）はスキップ
+function autoLinkTerms(text, currentTermId) {
+  if (!text || !termsData.length) return text;
+
+  // 文字数の長い順にソート
+  const sorted = termsData
+    .filter(function(t) { return t.id !== currentTermId; })
+    .sort(function(a, b) { return b.term.length - a.term.length; });
+
+  // プレーンテキストを部分ごとに分割して処理
+  // 置換済みの <a> タグ部分は再処理しないよう、文字列を分割しながら進む
+  sorted.forEach(function(t) {
+    var parts = [];
+    var remaining = text;
+    var idx;
+    while ((idx = remaining.indexOf(t.term)) !== -1) {
+      // 用語の前の部分はそのまま保持
+      parts.push(remaining.slice(0, idx));
+      // 用語をリンクに置き換え
+      parts.push('<a href="#/term/' + encodeURIComponent(t.id) + '" class="term-inline-link">' + t.term + '</a>');
+      remaining = remaining.slice(idx + t.term.length);
+    }
+    parts.push(remaining);
+    text = parts.join('');
+  });
+
+  return text;
+}
+
+// terms.jsonを読み込む（初回のみ。以降はメモリから返す）
+function loadTerms() {
+  if (termsData.length) return Promise.resolve(termsData);
+  return fetch('/terms.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      termsData = data;
+      return termsData;
+    })
+    .catch(function(err) {
+      console.error('terms.json読み込みエラー:', err.message);
+      return [];
+    });
+}
+
+// 部分一致検索（term・reading・short・category を対象）
+function searchTerms(query) {
+  if (!query || !termsData.length) return [];
+  const q = query.trim().toLowerCase();
+  return termsData.filter(function(t) {
+    return (
+      t.term.toLowerCase().includes(q) ||
+      (t.reading || '').includes(q) ||
+      (t.short || '').toLowerCase().includes(q) ||
+      (t.category || '').toLowerCase().includes(q)
+    );
+  });
+}
+
+// ===== 用語一覧ページ /#/terms =====
+function renderTermIndex(query) {
+  const container = document.getElementById('page-terms');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadTerms().then(function(terms) {
+    if (!terms.length) {
+      container.innerHTML = '<div class="karte-detail-loading">用語辞典を読み込めませんでした</div>';
+      return;
+    }
+
+    const q       = (query || '').trim();
+    const results = q ? searchTerms(q) : terms;
+
+    // カテゴリ別に整理
+    const byCategory = {};
+    results.forEach(function(t) {
+      const cat = t.category || 'その他';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(t);
+    });
+
+    const searchBox =
+      '<div class="term-search-box">'
+      + '<input type="text" id="term-search-input" placeholder="用語を検索…" value="' + escapeAttr(q) + '"'
+      + ' oninput="renderTermIndex(this.value)"'
+      + ' style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--rule);'
+      + 'font-family:\'Noto Sans JP\',sans-serif;font-size:0.83rem;background:var(--paper);color:var(--ink)">'
+      + '</div>';
+
+    const catHtml = Object.keys(byCategory).map(function(cat) {
+      const items = byCategory[cat].map(function(t) {
+        return '<a href="#/term/' + encodeURIComponent(t.id) + '" class="term-card">'
+          + '<div class="term-card-name">' + t.term + '</div>'
+          + '<div class="term-card-reading">' + (t.reading || '') + '</div>'
+          + '<div class="term-card-short">' + (t.short || '') + '</div>'
+          + '</a>';
+      }).join('');
+      return '<div class="term-category-section">'
+        + '<div class="term-category-label">' + cat + '</div>'
+        + '<div class="term-card-grid">' + items + '</div>'
+        + '</div>';
+    }).join('');
+
+    const emptyMsg = results.length === 0
+      ? '<div style="color:var(--ink-light);font-size:0.83rem;padding:2rem 0">「' + escapeAttr(q) + '」に一致する用語が見つかりません</div>'
+      : '';
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<div class="page-title">用語辞典</div>'
+      + '<div class="page-subtitle">制度・行政用語の展示解説パネル</div>'
+      + '</div>'
+      + searchBox
+      + emptyMsg
+      + catHtml;
+
+    // 検索ボックスにフォーカスを戻す
+    const input = document.getElementById('term-search-input');
+    if (input && q) {
+      input.focus();
+      input.setSelectionRange(q.length, q.length);
+    }
+  });
+}
+
+// ===== 用語詳細ページ /#/term/id =====
+function renderTermPage(termId) {
+  const container = document.getElementById('page-terms');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadTerms().then(function(terms) {
+    const t = terms.find(function(x) { return x.id === termId; });
+    if (!t) {
+      container.innerHTML =
+        '<div class="karte-detail-header">'
+        + '<a href="#/terms" class="karte-detail-back">← 用語一覧へ</a>'
+        + '</div>'
+        + '<div class="karte-detail-loading">用語が見つかりません</div>';
+      return;
+    }
+
+    // 関連タグリンク
+    const tagLinks = (t.related_tags || []).map(function(tag) {
+      return '<a href="#/tag/' + encodeURIComponent(tag) + '" class="tag-museum-btn">' + tag + '</a>';
+    }).join('');
+
+    // 関連カルテへの導線（filterKarteByTagを使用）
+    const karteLinks = (t.related_karte_tags || []).map(function(tag) {
+      return '<a href="#/tag/' + encodeURIComponent(tag) + '" class="term-karte-link">'
+        + '📋 「' + tag + '」の事案カルテを見る'
+        + '</a>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<a href="#/terms" class="karte-detail-back">← 用語一覧へ</a>'
+      + '<div class="term-category-badge">' + (t.category || '') + '</div>'
+      + '<div class="page-title">' + t.term + '</div>'
+      + '<div class="term-reading">' + (t.reading || '') + '</div>'
+      + '</div>'
+
+      + '<div class="term-detail-body">'
+
+      // 短い説明（展示キャプション）
+      + '<div class="term-short-panel">' + (t.short || '') + '</div>'
+
+      // 詳しい説明（登録済み用語を自動リンク化）
+      + (t.detail
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">詳しい説明</div>'
+            + '<div class="karte-modal-text">' + autoLinkTerms(t.detail, t.id) + '</div>'
+            + '</div>'
+          : '')
+
+      // 関連タグ
+      + (tagLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連タグから事案を探す</div>'
+            + '<div class="tag-btn-group">' + tagLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // 関連カルテ
+      + (karteLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連カルテ</div>'
+            + karteLinks
+            + '</div>'
+          : '')
+
+      // 公式情報リンク
+      + (t.source_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">公式情報</div>'
+            + '<a href="' + t.source_url + '" target="_blank" rel="noopener" class="term-source-link">'
+            + '🔗 ' + (t.source || t.source_url)
+            + '</a>'
+            + '</div>'
+          : '')
+
+      + '</div>';
+  });
+}
+
+
+
+// ===== 法律辞典 =====
+
+function loadLaws() {
+  if (lawsData.length) return Promise.resolve(lawsData);
+  return fetch('/laws.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      lawsData = data;
+      return lawsData;
+    })
+    .catch(function(err) {
+      console.error('laws.json読み込みエラー:', err.message);
+      return [];
+    });
+}
+
+// ===== 法律一覧ページ /#/laws =====
+function renderLawIndex(query) {
+  const container = document.getElementById('page-laws');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadLaws().then(function(laws) {
+    if (!laws.length) {
+      container.innerHTML = '<div class="karte-detail-loading">法律データを読み込めませんでした</div>';
+      return;
+    }
+
+    const q = (query || '').trim();
+    const results = q
+      ? laws.filter(function(l) {
+          return (l.name || '').includes(q) ||
+                 (l.short_name || '').includes(q) ||
+                 (l.reading || '').includes(q) ||
+                 (l.short || '').includes(q) ||
+                 (l.category || '').includes(q);
+        })
+      : laws;
+
+    // カテゴリ別に整理
+    const byCategory = {};
+    results.forEach(function(l) {
+      const cat = l.category || 'その他';
+      if (!byCategory[cat]) byCategory[cat] = [];
+      byCategory[cat].push(l);
+    });
+
+    const searchBox =
+      '<div class="term-search-box">'
+      + '<input type="text" id="law-search-input" placeholder="法律名を検索…" value="' + escapeAttr(q) + '"'
+      + ' oninput="renderLawIndex(this.value)"'
+      + ' style="width:100%;padding:0.6rem 0.8rem;border:1px solid var(--rule);'
+      + 'font-family:Noto Sans JP,sans-serif;font-size:0.83rem;background:var(--paper);color:var(--ink)">'
+      + '</div>';
+
+    const catHtml = Object.keys(byCategory).map(function(cat) {
+      const items = byCategory[cat].map(function(l) {
+        const displayName = l.short_name || l.name;
+        return '<a href="#/law/' + encodeURIComponent(l.id) + '" class="term-card law-card">'
+          + '<div class="term-card-name">' + displayName + '</div>'
+          + (l.short_name ? '<div class="term-card-reading">' + l.name + '</div>' : '<div class="term-card-reading">' + (l.reading || '') + '</div>')
+          + '<div class="term-card-short">' + (l.short || '') + '</div>'
+          + '</a>';
+      }).join('');
+      return '<div class="term-category-section">'
+        + '<div class="term-category-label">' + cat + '</div>'
+        + '<div class="term-card-grid">' + items + '</div>'
+        + '</div>';
+    }).join('');
+
+    const emptyMsg = results.length === 0
+      ? '<div style="color:var(--ink-light);font-size:0.83rem;padding:2rem 0">「' + escapeAttr(q) + '」に一致する法律が見つかりません</div>'
+      : '';
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<div class="page-title">法律を調べる</div>'
+      + '<div class="page-subtitle">制度の根拠となる法律へのガイド</div>'
+      + '</div>'
+      + searchBox
+      + emptyMsg
+      + catHtml;
+
+    const input = document.getElementById('law-search-input');
+    if (input && q) {
+      input.focus();
+      input.setSelectionRange(q.length, q.length);
+    }
+  });
+}
+
+// ===== 法律詳細ページ /#/law/xxx =====
+function renderLawPage(lawId) {
+  const container = document.getElementById('page-laws');
+  if (!container) return;
+  container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+
+  loadLaws().then(function(laws) {
+    const l = laws.find(function(x) { return x.id === lawId; });
+    if (!l) {
+      container.innerHTML =
+        '<div class="karte-detail-header">'
+        + '<a href="#/laws" class="karte-detail-back">← 法律一覧へ</a>'
+        + '</div>'
+        + '<div class="karte-detail-loading">該当する法律が見つかりません</div>';
+      return;
+    }
+
+    const displayName = l.short_name || l.name;
+
+    // ポイントリスト
+    const pointsHtml = (l.key_points || []).length
+      ? '<ul class="law-key-points">'
+        + l.key_points.map(function(p) { return '<li>' + p + '</li>'; }).join('')
+        + '</ul>'
+      : '';
+
+    // 関連用語リンク（terms.jsonへ）
+    const termLinks = (l.related_terms || []).map(function(term) {
+      const t = termsData.find(function(x) { return x.term === term; });
+      if (t) {
+        return '<a href="#/term/' + encodeURIComponent(t.id) + '" class="tag-museum-btn">' + term + '</a>';
+      }
+      return '<span class="tag-museum-btn" style="opacity:0.5">' + term + '</span>';
+    }).join('');
+
+    // 関連タグリンク
+    const tagLinks = (l.related_tags || []).map(function(tag) {
+      return '<a href="#/tag/' + encodeURIComponent(tag) + '" class="tag-museum-btn">' + tag + '</a>';
+    }).join('');
+
+    container.innerHTML =
+      '<div class="karte-detail-header">'
+      + '<a href="#/laws" class="karte-detail-back">← 法律一覧へ</a>'
+      + '<div class="term-category-badge">' + (l.category || '') + '</div>'
+      + '<div class="page-title">' + displayName + '</div>'
+      + (l.short_name
+          ? '<div class="law-fullname">' + l.name + '</div>'
+          : '<div class="term-reading">' + (l.reading || '') + '</div>')
+      + (l.enacted ? '<div class="law-enacted">制定：' + l.enacted + '</div>' : '')
+      + '</div>'
+
+      + '<div class="term-detail-body">'
+
+      // 概要（展示キャプション）
+      + '<div class="term-short-panel">' + (l.short || '') + '</div>'
+
+      // 知っておくべきポイント
+      + (pointsHtml
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">知っておくべきポイント</div>'
+            + pointsHtml
+            + '</div>'
+          : '')
+
+      // 関連用語（用語辞典へ）
+      + (termLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連用語</div>'
+            + '<div class="tag-btn-group">' + termLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // 関連タグ（タグページへ）
+      + (tagLinks
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">関連タグから事案を探す</div>'
+            + '<div class="tag-btn-group">' + tagLinks + '</div>'
+            + '</div>'
+          : '')
+
+      // e-Govリンク
+      + (l.egov_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">条文を読む</div>'
+            + '<a href="' + l.egov_url + '" target="_blank" rel="noopener" class="law-egov-link">'
+            + '📄 e-Gov 法令検索で全文を見る →</a>'
+            + '</div>'
+          : '')
+
+      // 所管省庁リンク
+      + (l.mhlw_url
+          ? '<div class="karte-modal-section">'
+            + '<div class="karte-modal-section-label">所管省庁の説明</div>'
+            + '<a href="' + l.mhlw_url + '" target="_blank" rel="noopener" class="term-source-link">'
+            + '🔗 厚生労働省のページを見る</a>'
+            + '</div>'
+          : '')
+
+      + '</div>';
+  });
+}
+
+// ===== 地図ページ /#/map =====
+let _mapInstance = null;
+
+function renderMapPage(highlightPref) {
+  const container = document.getElementById('page-map');
+  if (!container) return;
+
+  if (!dbData.length) {
+    container.innerHTML = '<div class="karte-detail-loading">観測DBを読み込み中……</div>';
+    setTimeout(function(){ renderMapPage(highlightPref); }, 400);
+    return;
+  }
+
+  // 都道府県ごとの件数集計
+  const counts = {};
+  dbData.forEach(r => {
+    const pref = r.region_pref || r.region || '';
+    if (!pref || pref === '厚労省' || pref === '総務省' || pref === '内閣府') return;
+    counts[pref] = (counts[pref] || 0) + 1;
+  });
+
+  const total    = dbData.length;
+  const maxCount = Math.max(...Object.values(counts), 1);
+  const sorted   = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+  // 件数一覧HTMLをあらかじめ組み立てる
+  const tableRows = sorted.map(([pref, count]) =>
+    `<div onclick="filterByRegion('${pref}')"
+          style="display:flex;justify-content:space-between;align-items:center;
+                 padding:0.35rem 0.6rem;border:1px solid var(--rule);cursor:pointer;
+                 font-size:0.78rem;transition:all 0.12s"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--rule)';this.style.color='var(--ink)'">
+       <span>${pref}</span>
+       <span style="font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light)">${count}件</span>
+     </div>`
+  ).join('');
+
+  container.innerHTML =
+    '<div class="karte-detail-header">' +
+      '<div class="page-title">地域別 観測記録マップ</div>' +
+      '<div class="page-subtitle">観測DB ' + total + '件の地域分布（クリックで絞り込み）</div>' +
+    '</div>' +
+    '<div id="map-container" style="height:500px;width:100%;margin:1rem 0;border:1px solid var(--rule)"></div>' +
+    '<div style="display:flex;align-items:center;gap:1rem;font-family:DM Mono,monospace;font-size:0.65rem;color:var(--ink-light);margin-bottom:1.5rem">' +
+      '<span>件数：</span>' +
+      '<span style="display:flex;align-items:center;gap:0.3rem"><span style="display:inline-block;width:16px;height:16px;background:#eef3fa;border:1px solid #85b7eb"></span> 少</span>' +
+      '<span style="display:flex;align-items:center;gap:0.3rem"><span style="display:inline-block;width:16px;height:16px;background:#123a6f"></span> 多</span>' +
+      '<span style="margin-left:auto">地域が取得できていない記事は集計対象外</span>' +
+    '</div>' +
+    '<div class="section-label" style="margin-bottom:0.8rem">都道府県別 件数一覧</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:0.3rem;margin-bottom:2rem">' +
+      tableRows +
+    '</div>';
+
+  if (_mapInstance) { _mapInstance.remove(); _mapInstance = null; }
+
+  const map = L.map('map-container', { zoomControl: true }).setView([36.5, 136], 5);
+  _mapInstance = map;
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    opacity: 0.15
+  }).addTo(map);
+
+  // 将来はリポジトリ内の /japan.geojson に変更予定
+  fetch('https://raw.githubusercontent.com/dataofjapan/land/master/japan.geojson')
+    .then(r => r.json())
+    .then(geojson => {
+      L.geoJSON(geojson, {
+        style: function(feature) {
+          const pref  = feature.properties.nam_ja || feature.properties.name || '';
+          const count = counts[pref] || 0;
+          const opacity = count === 0 ? 0.08 : 0.2 + (count / maxCount) * 0.7;
+          return { fillColor: count === 0 ? '#9a9690' : '#123a6f', fillOpacity: opacity, color: '#ffffff', weight: 1 };
+        },
+        onEachFeature: function(feature, layer) {
+          const pref  = feature.properties.nam_ja || feature.properties.name || '';
+          const count = counts[pref] || 0;
+          layer.bindTooltip('<strong>' + pref + '</strong><br>' + count + '件', { sticky: true, className: 'map-tooltip' });
+          layer.on('click', function() { if (count > 0) filterByRegion(pref); });
+          layer.on('mouseover', function() {
+            if (pref !== highlightPref) this.setStyle({ weight: 2, color: '#123a6f' });
+          });
+          layer.on('mouseout', function() {
+            if (pref !== highlightPref) this.setStyle({ weight: 1, color: '#ffffff' });
+          });
+          // カルテ詳細から遷移した場合に該当都道府県を強調表示
+          if (highlightPref && pref === highlightPref) {
+            layer.setStyle({ weight: 3, color: '#e05a00', fillColor: '#e05a00', fillOpacity: 0.6 });
+            layer.bringToFront();
+          }
+        }
+      }).addTo(map);
+    })
+    .catch(function() {
+      var el = document.getElementById('map-container');
+      if (el) el.innerHTML = '<div class="karte-detail-loading">地図データの読み込みに失敗しました</div>';
+    });
+}
+
+// 地図・件数一覧から観測DBをregionフィールドで直接絞り込む
+function filterByRegion(pref) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-db').classList.add('active');
+  const dbNav = document.querySelector('nav a:nth-child(2)');
+  if (dbNav) dbNav.classList.add('active');
+  window.scrollTo(0, 0);
+  if (/^#\//.test(location.hash)) {
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+  // region_pref または region フィールドを直接比較（キーワード検索ではない）
+  const filtered = dbData.filter(r => (r.region_pref || r.region || '') === pref);
+  _currentFilteredData = filtered;
+  document.getElementById('db-search').value = '';
+  document.getElementById('db-count-label').textContent = '「' + pref + '」の記事： ' + filtered.length + ' 件';
+  renderDB(filtered);
+}
+
+// ===== タグ一覧ページ /#/tags =====
+function renderTagIndex() {
+  const container = document.getElementById('page-tags');
+  if (!container) return;
+  if (!karteData.length) {
+    container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+    setTimeout(renderTagIndex, 300);
+    return;
+  }
+
+  // 主探索軸（5軸）: 分野・対象者・行為者・出来事・地域
+  const mainAxes = [
+    { key: 'tags_field',        icon: '📋', label: '分野から探す',      desc: '関係する制度・行政分野' },
+    { key: 'tags_target',       icon: '👤', label: '対象者から探す',    desc: 'あなた自身や家族の状況' },
+    { key: 'tags_actor',        icon: '🏛', label: '行為者から探す',    desc: '関わった機関や担当者' },
+    { key: 'tags_event_search', icon: '⚡', label: '出来事から探す',    desc: '何をされたか・何が起きたか' },
+    { key: 'region_pref',       icon: '🗾', label: '地域から探す',      desc: '都道府県・地方自治体' },
+  ];
+
+  // 補助探索軸: 状態タグのみ（前面に出しすぎず補助として）
+  const subAxes = [
+    { key: 'tags_status', icon: '🔖', label: '現在の状況から探す', desc: '疑惑段階・係争中・是正済みなど' },
+  ];
+
+  // 既存観測タグ（最下部に折りたたみ表示）
+  const observeAxes = [
+    { key: 'tags_event',     label: '出来事タグ（観測軸）' },
+    { key: 'tags_structure', label: '構造タグ（観測軸）' },
+    { key: 'tags_evidence',  label: '根拠タグ（観測軸）' },
+  ];
+
+  // タグ集計
+  function countTags(key) {
+    const counts = {};
+    karteData.forEach(k => {
+      splitKarteTags(k[key] || '').forEach(tag => {
+        if (tag) counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+    return Object.entries(counts).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  }
+
+  // 主軸HTML（博物館的・セクション区切り）
+  function buildMainAxisHtml(axis) {
+    const tags = countTags(axis.key);
+    if (!tags.length) return '';
+    return '<div class="tag-axis-section">'
+      + '<div class="tag-axis-header">'
+      +   '<span class="tag-axis-icon">' + axis.icon + '</span>'
+      +   '<div>'
+      +     '<div class="tag-axis-label">' + axis.label + '</div>'
+      +     '<div class="tag-axis-desc">' + axis.desc + '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="tag-btn-group">'
+      + tags.map(function(t) {
+          return '<a href="#/tag/' + encodeURIComponent(t[0]) + '" class="tag-museum-btn">'
+            + t[0]
+            + '<span class="tag-museum-count">' + t[1] + '</span>'
+            + '</a>';
+        }).join('')
+      + '</div>'
+      + '</div>';
+  }
+
+  // 補助軸HTML（コンパクト）
+  function buildSubAxisHtml(axis) {
+    const tags = countTags(axis.key);
+    if (!tags.length) return '';
+    return '<div class="tag-axis-section tag-axis-sub">'
+      + '<div class="tag-axis-header">'
+      +   '<span class="tag-axis-icon">' + axis.icon + '</span>'
+      +   '<div>'
+      +     '<div class="tag-axis-label">' + axis.label + '</div>'
+      +     '<div class="tag-axis-desc">' + axis.desc + '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div class="tag-btn-group">'
+      + tags.map(function(t) {
+          return '<a href="#/tag/' + encodeURIComponent(t[0]) + '" class="tag-museum-btn tag-museum-btn-sub">'
+            + t[0]
+            + '<span class="tag-museum-count">' + t[1] + '</span>'
+            + '</a>';
+        }).join('')
+      + '</div>'
+      + '</div>';
+  }
+
+  // 観測タグHTML（カード型・常時展開）
+  function buildObserveAxisHtml(axis) {
+    const tags = countTags(axis.key);
+    if (!tags.length) return '';
+    return '<div class="tag-observe-axis">'
+      + '<div class="tag-observe-axis-label">' + axis.label + '</div>'
+      + '<div class="tag-btn-group">'
+      + tags.map(function(t) {
+          return '<a href="#/tag/' + encodeURIComponent(t[0]) + '" class="tag-museum-btn tag-museum-btn-sub">'
+            + t[0]
+            + '<span class="tag-museum-count">' + t[1] + '</span>'
+            + '</a>';
+        }).join('')
+      + '</div>'
+      + '</div>';
+  }
+
+  const hasExplore = karteData.some(k =>
+    k.tags_field || k.tags_target || k.tags_actor || k.tags_event_search
+  );
+
+  const mainHtml   = mainAxes.map(buildMainAxisHtml).join('');
+  const subHtml    = subAxes.map(buildSubAxisHtml).join('');
+  const observeHtml = observeAxes.map(buildObserveAxisHtml).join('');
+
+  const fallbackNote = !hasExplore
+    ? '<div style="font-family:DM Mono,monospace;font-size:0.65rem;color:var(--ink-light);margin-bottom:1.5rem;padding:0.5rem 0.8rem;border-left:2px solid var(--rule)">探索タグは順次付与中です。現在は観測タグから探せます。</div>'
+    : '';
+
+  container.innerHTML =
+    '<div class="karte-detail-header">'
+    + '<div class="page-title">アーカイブを探索する</div>'
+    + '<div class="page-subtitle">分野・対象者・地域など様々な入口から記録を探せます</div>'
+    + '</div>'
+    + '<div class="tag-explore-page">'
+    + fallbackNote
+    + (mainHtml || '<div style="color:var(--ink-light);font-size:0.83rem;margin-bottom:2rem">探索タグを付与中です。下の観測タグから探せます。</div>')
+    + (subHtml ? '<div class="tag-sub-divider">補助的な絞り込み</div>' + subHtml : '')
+    + (observeHtml
+        ? '<div class="tag-observe-section">'
+          + '<div class="tag-observe-header">'
+          +   '<div class="tag-observe-title">観測タグから探す</div>'
+          +   '<div class="tag-observe-desc">出来事・構造・状態・根拠の4軸で記録を分類しています。MANAの分析視点から探索できます。</div>'
+          + '</div>'
+          + '<div class="tag-observe-axes">' + observeHtml + '</div>'
+          + '</div>'
+        : '')
+    + '</div>';
+}
+
+function toggleObserveTags(el) {
+  el.nextElementSibling.classList.toggle('open');
+  el.classList.toggle('open');
+}
+
+// ===== タグ別カルテ一覧 /#/tag/タグ名 =====
+function renderTagPage(tagName) {
+  const container = document.getElementById('page-tagdetail');
+  if (!container) return;
+  if (!karteData.length) {
+    container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+    setTimeout(() => renderTagPage(tagName), 300);
+    return;
+  }
+
+  const allTagFields = [
+    'tags_field', 'tags_target', 'tags_actor', 'tags_event_search',
+    'tags_event', 'tags_structure', 'tags_status', 'tags_evidence',
+    'region_pref'
+  ];
+  const matched = karteData.filter(k =>
+    allTagFields.some(f => splitKarteTags(k[f] || '').includes(tagName))
+  );
+
+  const backLink = `<a href="#/tags" class="karte-detail-back">← タグ一覧へ</a>`;
+
+  const cards = matched.map(k => {
+    const urls       = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
+    const structTags = splitKarteTags(k.tags_structure);
+    const eventTags  = splitKarteTags(k.tags_event);
+    return `<div class="karte-card" onclick="location.hash='#/karte/${encodeURIComponent(k.id)}'">
+      <div class="karte-card-top">
+        <span class="karte-card-id">${k.id}</span>
+        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
+        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
+      </div>
+      <div class="karte-card-title">${k.title}</div>
+      ${k.summary ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
+      <div class="karte-card-tags">
+        ${structTags.map(t=>`<span class="db-tag-s">${t}</span>`).join('')}
+        ${eventTags.map(t =>`<span class="db-tag-e">${t}</span>`).join('')}
+      </div>
+      <div class="karte-card-footer"><span>記事 ${urls.length} 件</span></div>
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="karte-detail-header">
+      ${backLink}
+      <div class="page-title">「${tagName}」のカルテ</div>
+      <div class="page-subtitle">${matched.length} 件</div>
+    </div>
+    <div style="padding:1.5rem 0">
+      ${matched.length ? cards : '<div class="karte-detail-loading">該当するカルテがありません</div>'}
+    </div>`;
+}
+
+// ===== 独立カルテページ /#/karte/ID =====
+function renderKarteDetailPage(karteId) {
+  const container = document.getElementById('kartedetail-content');
+  if (!container) return;
+
+  if (!karteData || !karteData.length) {
+    container.innerHTML = '<div class="karte-detail-loading">読み込み中……</div>';
+    setTimeout(() => renderKarteDetailPage(karteId), 300);
+    return;
+  }
+
+  const k = karteData.find(k => k.id === karteId);
+  if (!k) {
+    container.innerHTML = `<div class="karte-detail-loading">指定されたカルテ（${escapeAttr(karteId)}）が見つかりません</div>`;
+    return;
+  }
+
+  const urls = k.related_urls ? k.related_urls.split('\n').map(u => u.trim()).filter(Boolean) : [];
+
+  const sourcesHtml = urls.map(u => {
+    const article = dbData.find(r => normalizeUrl(r.url) === normalizeUrl(u));
+    const title  = article ? article.title : null;
+    const date   = article ? article.date  : null;
+    const region = article ? (article.region || '') : null;
+    return `<a class="kp-src-item" href="${u}" target="_blank" rel="noopener">
+      <span class="kp-src-t">${title || u}</span>
+      ${date || region ? `<span class="kp-src-m">${[date, region].filter(Boolean).join(' — ')}</span>` : ''}
+    </a>`;
+  }).join('');
+
+  const regionPref = k.region_pref || k.region || '';
+  const karteNum   = k.id ? k.id.replace(/^KARTE-/, '') : k.id;
+
+  const tagsEvent     = splitKarteTags(k.tags_event);
+  const tagsStructure = splitKarteTags(k.tags_structure);
+  const tagsStatus    = splitKarteTags(k.tags_status);
+  const tagsEvidence  = splitKarteTags(k.tags_evidence);
+  const tagsTarget    = splitKarteTags(k.tags_target || '');
+  const tagsActor     = splitKarteTags(k.tags_actor  || '');
+
+  function chips(tags, cls) {
+    return tags.map(t =>
+      `<a href="#/tag/${encodeURIComponent(t)}" class="${cls}">${t}</a>`
+    ).join('');
+  }
+
+  container.innerHTML = `<div class="kp">
+
+    <!-- 左：プロフィール -->
+    <div class="kp-left">
+      <div class="kp-head">
+        <div class="kp-no-label">観測記録</div>
+        <div class="kp-no">No.${karteNum}</div>
+        <div class="kp-id">${k.id}</div>
+      </div>
+
+      <div class="kp-meta">
+        <div class="kp-ml">地域</div>
+        ${regionPref
+          ? `<div class="kp-mv"><a href="#/map?pref=${encodeURIComponent(regionPref)}" style="color:#1a1816;text-decoration:none;border-bottom:1px solid #c8c0b0">${regionPref}</a></div>
+             ${k.region_city ? `<div class="kp-mv-s">${k.region_city}</div>` : ''}`
+          : '<div class="kp-mv-s" style="color:#b8b0a0">—</div>'}
+      </div>
+
+      <div class="kp-meta">
+        <div class="kp-ml">分野</div>
+        <div class="kp-mv">${k.field || '<span style="color:#b8b0a0">—</span>'}</div>
+      </div>
+
+      ${tagsTarget.length ? `
+      <div class="kp-meta">
+        <div class="kp-ml">対象者</div>
+        <div class="kp-chips">${chips(tagsTarget, 'kp-chip-n')}</div>
+      </div>` : ''}
+
+      ${tagsActor.length ? `
+      <div class="kp-meta">
+        <div class="kp-ml">行為者</div>
+        <div class="kp-chips">${chips(tagsActor, 'kp-chip-n')}</div>
+      </div>` : ''}
+
+      ${k.start_date ? `
+      <div class="kp-meta">
+        <div class="kp-ml">事案開始</div>
+        <div class="kp-mv-s">${k.start_date}</div>
+      </div>` : ''}
+
+      ${tagsStatus.length ? `
+      <div class="kp-meta">
+        <div class="kp-ml">状態</div>
+        <div class="kp-chips">
+          ${tagsStatus.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="kp-pill" style="text-decoration:none">${t}</a>`).join('')}
+        </div>
+      </div>` : ''}
+
+      ${tagsEvidence.length ? `
+      <div class="kp-meta">
+        <div class="kp-ml">根拠</div>
+        <div class="kp-chips">${chips(tagsEvidence, 'kp-chip-v')}</div>
+      </div>` : ''}
+
+    </div>
+
+    <!-- 右：観測内容 -->
+    <div class="kp-right">
+
+      <!-- 事案名帯 -->
+      <div class="kp-title-band">
+        <h1>${k.title}</h1>
+        ${tagsStatus.length ? `<span class="kp-status">${tagsStatus[0]}</span>` : ''}
+      </div>
+
+      <!-- 出来事タグ（主役） -->
+      ${tagsEvent.length ? `
+      <div class="kp-event-block">
+        <div class="kp-event-label">観測された出来事</div>
+        <div class="kp-chips-lg">${chips(tagsEvent, 'kp-chip-e')}</div>
+      </div>` : ''}
+
+      <!-- 観測メモ・観測所見 -->
+      ${k.summary ? `
+      <div class="kp-cell">
+        <div class="kp-cl">観測メモ</div>
+        <div class="kp-cb">${k.summary}</div>
+      </div>` : ''}
+
+      ${k.mana_comment ? `
+      <div class="kp-cell">
+        <div class="kp-cl">観測所見</div>
+        <div class="kp-cb-sub">${k.mana_comment}</div>
+      </div>` : ''}
+
+      ${k.progress ? `
+      <div class="kp-cell-full">
+        <div class="kp-cl">経過</div>
+        <div class="kp-cb">${k.progress}</div>
+      </div>` : ''}
+
+      <!-- 構造パターン（控えめ） -->
+      ${tagsStructure.length ? `
+      <div class="kp-struct-block">
+        <div class="kp-struct-label">構造パターン（分析補助）</div>
+        <div class="kp-chips">${chips(tagsStructure, 'kp-chip-s')}</div>
+      </div>` : ''}
+
+      <!-- 観測ソース -->
+      ${urls.length ? `
+      <div class="kp-cell-full">
+        <div class="kp-cl">観測ソース（${urls.length}件）</div>
+        ${sourcesHtml}
+      </div>` : ''}
+
+      <!-- フッター -->
+      <div class="kp-foot">
+        <span class="kp-fi">${k.id}</span>
+        <span class="kp-fi">PROJECT MANA</span>
+        ${k.updated_at ? `<span class="kp-fi">${k.updated_at.slice(0,10)}更新</span>` : ''}
+        ${k.created_at ? `<span class="kp-fi">作成 ${k.created_at.slice(0,10)}</span>` : ''}
+        <span class="kp-fi">CC BY 4.0</span>
+      </div>
+
+    </div>
+  </div>`;
+}
+function checkKarteLinkage() {
+  if (!dbData.length || !karteData.length) return;
+  const dbUrls = dbData.map(r => r.url).filter(Boolean);
+  const karteUrls = karteData.flatMap(k =>
+    k.related_urls ? k.related_urls.split('\n').map(u => u.trim()).filter(Boolean) : []
+  );
+  const matched = [];
+  const unmatched = [];
+  dbData.forEach(r => {
+    if (!r.url) { unmatched.push(r); return; }
+    findKarteByUrl(r.url) ? matched.push(r) : unmatched.push(r);
+  });
+  const emptyRelatedKartes = karteData.filter(k => !k.related_urls || !k.related_urls.trim());
+  console.log('===== カルテ紐付け状況（事実集計） =====');
+  console.log('1. 観測DBの記事URL数:', dbUrls.length);
+  console.log('2. カルテ related_urls 内URL数（延べ）:', karteUrls.length);
+  console.log('3. URL一致している記事数:', matched.length);
+  console.log('4. URL一致していない記事一覧（' + unmatched.length + '件）:');
+  unmatched.forEach(r => console.log('   -', r.date, r.title, '|', r.url || '(URLなし)'));
+  console.log('5. related_urlsが空のカルテ一覧（' + emptyRelatedKartes.length + '件）:');
+  emptyRelatedKartes.forEach(k => console.log('   -', k.id, k.title));
+  console.log('=========================================');
+}
+
+// ===== LOAD DB =====
+function loadDB() {
+  console.log('DB読み込み開始（GAS API）:', GAS_API_URL);
+  fetch(GAS_API_URL)
+    .then(r => {
+      console.log('HTTPステータス:', r.status);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      if (!Array.isArray(data)) throw new Error('データ形式が不正です: ' + JSON.stringify(data).slice(0, 100));
+      dbData = data.map(row => ({
+        date:           row['日付'] || '',
+        region:         row['地域'] || '',
+        region_pref:    row['地域']    || row['都道府県'] || '',
+        region_city:    row['市区町村'] || '',
+        region_ward:    row['区']       || '',
+        municipality:   row['市区町村'] || '',
+        field:          row['分野'] || '',
+        source:         row['出典'] || '',
+        url:            row['URL'] || '',
+        title:          row['タイトル'] || '',
+        summary:        row['要約'] || '',
+        tags_event:     row['出来事タグ'] || '',
+        tags_structure: row['構造タグ'] || '',
+        tags_evidence:  row['根拠タグ'] || '',
+        tags_status:    row['状態タグ'] || '',
+        severity:       row['重要度'] || '中',
+        structure_note: row['構造メモ'] || '',
+        collected_at:   row['収録日時'] || '',
+      })).filter(r => r.title);
+      dbData.sort((a, b) => {
+        const dateA = new Date(a.date || 0);
+        const dateB = new Date(b.date || 0);
+        if (dateB - dateA !== 0) return dateB - dateA;
+        return new Date(b.collected_at || 0) - new Date(a.collected_at || 0);
+      });
+      console.log('DB読み込み成功:', dbData.length + '件');
+      renderDB(dbData);
+      updateStats();
+      renderHomeNews(dbData.slice(0, 5));
+      buildFilters(dbData);
+      updateTicker(dbData);
+      renderHomeTagCloud(dbData);
+      checkKarteLinkage();
+    })
+    .catch(err => {
+      console.error('DB読み込みエラー:', err.message);
+    });
+}
+
+function loadSurveyVoices() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') {
+    renderHomeVoices(demoVoices());
+    return;
+  }
+  fetch(SHEET_BASE + encodeURIComponent(SURVEY_SHEET_NAME))
+    .then(r => r.text())
+    .then(text => {
+      const json = JSON.parse(text.replace('/*O_o*/\ngoogle.visualization.Query.setResponse(', '').replace(');', ''));
+      const rows = json.table.rows;
+      surveyData = rows.slice(1).map(row => ({
+        pref: row.c[0]?.v || '',
+        window: row.c[1]?.v || '',
+        detail: row.c[3]?.v || '',
+        date: row.c[6]?.v || ''
+      })).filter(r => r.detail);
+      renderHomeVoices(surveyData.slice(-3).reverse());
+      document.getElementById('survey-count-stat').innerHTML = surveyData.length + '<sup>件</sup>';
+      document.getElementById('survey-count-sub').textContent = '▲ 随時更新';
+    })
+    .catch(() => renderHomeVoices(demoVoices()));
+}
+
+// ===== DEMO DATA =====
+function useDemoData() {
+  dbData = [
+    {
+      date:'2026-06-05', region:'京都府', municipality:'京都市', field:'生活保護', url:'',
+      title:'【デモ】福祉窓口で申請者に不適切発言、録音が証拠として提出',
+      summary:'生活保護申請窓口で担当職員が申請者に不適切な発言。録音データが提出され問題化。',
+      tags_event:'申請妨害 / 誤情報提供', tags_structure:'説明責任 / 組織防衛',
+      tags_evidence:'当事者証言 / 録音・録画', tags_status:'疑惑段階', severity:'高'
+    },
+    {
+      date:'2026-06-04', region:'大阪府', municipality:'大阪市', field:'障害福祉', url:'',
+      title:'【デモ】福祉事務所の訪問記録に虚偽記載、監査で発覚',
+      summary:'福祉事務所の職員が未実施の訪問を実施済みとして記録。内部監査で発覚し担当者を処分。',
+      tags_event:'記録改ざん', tags_structure:'内部統制 / 説明責任 / 自己修正不能',
+      tags_status:'行政が認めた / 謝罪あり', tags_evidence:'監査報告', severity:'高'
+    },
+    {
+      date:'2026-06-03', region:'神奈川県', municipality:'', field:'障害福祉', url:'',
+      title:'【デモ】障害福祉サービスの支給量を独断で削減、行政不服申立て',
+      summary:'担当ケースワーカーが利用者の同意なくサービス支給量を削減。不服申立てが認められる。',
+      tags_event:'支給停止 / 本人意思の無視', tags_structure:'当事者主体の不実装 / 権限濫用',
+      tags_status:'係争中 / 是正あり', tags_evidence:'裁判例 / 当事者証言', severity:'高'
+    },
+    {
+      date:'2026-06-02', region:'東京都', municipality:'', field:'情報公開', url:'',
+      title:'【デモ】区役所窓口で申請書類を紛失、再提出強要し4ヶ月放置',
+      summary:'提出済みの申請書類が区役所内で紛失。担当部署は再提出を求め、その後も4ヶ月間対応せず。',
+      tags_event:'長期放置 / 書類紛失', tags_structure:'判断プロセス不備 / 説明責任',
+      tags_status:'是正なし', tags_evidence:'当事者証言', severity:'中'
+    },
+    {
+      date:'2026-05-30', region:'愛知県', municipality:'', field:'生活保護', url:'',
+      title:'【デモ】生活保護申請に「まず親族に相談を」と繰り返し申請阻止',
+      summary:'窓口職員が法的根拠なく親族扶養を条件として提示し続け、申請を事実上阻止していた事例。',
+      tags_event:'申請妨害 / 扶養照会濫用', tags_structure:'制度実装の失敗 / 前例主義 / 反復構造',
+      tags_status:'疑惑段階', tags_evidence:'当事者証言', severity:'高'
+    },
+    {
+      date:'2026-05-15', region:'京都府', municipality:'京都市', field:'財政', url:'',
+      title:'【デモ】京都市財政推計ミスが発覚、値上げ方針は継続',
+      summary:'財政危機の根拠となった推計に誤りが発覚したにもかかわらず、当局は値上げ方針を撤回せず。',
+      tags_event:'財政推計ミス / 政策撤回なし', tags_structure:'説明責任 / 自己修正不能 / 財政危機言説',
+      tags_status:'誤り認定 / 謝罪あり / 撤回なし', tags_evidence:'議会議事録 / 行政資料', severity:'高'
+    },
+  ];
+  renderDB(dbData);
+  updateStats();
+  renderHomeNews(dbData.slice(0, 5));
+  buildFilters(dbData);
+  updateTicker(dbData);
+  renderHomeTagCloud(dbData);
+  renderHomeVoices(demoVoices());
+}
+
+function demoVoices() {
+  return [
+    {pref:'京都市 / 福祉窓口', detail:'申請したいと言ったら、まず家族に相談してきてと言われた。家族と連絡が取れないから来ているのに。'},
+    {pref:'大阪市 / 障害福祉課', detail:'必要な書類を聞いたら毎回違うことを言われる。わざと諦めさせようとしているとしか思えない。'},
+    {pref:'名古屋市 / 生活支援課', detail:'担当者が変わったら前の記録が全部消えていた。また一から説明させられた。'},
+  ];
+}
+
+// ===== RENDER DB =====
+const TAG_COLORS = {
+  event:     {bg:'#fdf0f0',border:'#e8a0a0',text:'#8b2020'},
+  structure: {bg:'#e6f1fb',border:'#85b7eb',text:'#0c447c'},
+  evidence:  {bg:'#eaf3de',border:'#97c459',text:'#27500a'},
+  status:    {bg:'#faeeda',border:'#ef9f27',text:'#633806'},
+};
+
+let activeTagFilters = {event:[], structure:[], evidence:[], status:[]};
+
+function renderDB(data) {
+  _currentFilteredData = data;
+  const container = document.getElementById('db-cards');
+  if (!container) return;
+
+  console.log('renderDB - dbData件数:', data.length);
+  console.log('renderDB - karteData件数:', (karteData && karteData.length) ? karteData.length : '未読み込み');
+  const totalMatch = data.filter(r => findKarteByUrl(r.url)).length;
+  console.log('renderDB - URL照合成功件数:', totalMatch + '/' + data.length);
+  data.slice(0, 3).forEach((r, i) => {
+    const k = findKarteByUrl(r.url);
+    console.log(`記事[${i}] URL:「${r.url}」→ カルテ:`, k ? k.id + ' ' + k.title : 'なし');
+    if (!k && karteData && karteData.length) {
+      console.log(`  related_urls例:`, karteData[0]?.related_urls?.slice(0, 100));
+    }
+  });
+
+  if (!data.length) {
+    container.innerHTML = '<div class="db-empty">該当するデータがありません</div>';
+    document.getElementById('db-count-label').textContent = '';
+    return;
+  }
+
+  document.getElementById('db-count-label').textContent = data.length + ' 件表示中';
+
+  container.innerHTML = data.map((r, idx) => {
+    const eventTags  = splitTags(r.tags_event);
+    const structTags = splitTags(r.tags_structure);
+    const evidTags   = splitTags(r.tags_evidence);
+    const statusTags = splitTags(r.tags_status);
+    const sev = r.severity === '高' ? `<span class="db-card-sev-high">高</span>` :
+                r.severity === '中' ? `<span class="db-card-sev-mid">中</span>` : '';
+    const hasAnyTag = eventTags.length || structTags.length || evidTags.length || statusTags.length;
+    const relatedKarte = findKarteByUrl(r.url);
+    // idxではなくURLのハッシュ値でカードIDを生成（フィルタ後のズレを防止）
+    const cardId = 'card-' + idx + '-' + (r.url || r.title || '').replace(/[^a-zA-Z0-9]/g, '').slice(-8);
+
+    return `<div class="db-card" id="${cardId}">
+      <div class="db-card-top">
+        <span class="db-card-date">${r.date}</span>
+        ${r.region ? `<span class="db-card-region">${r.region}${r.municipality ? ' / ' + r.municipality : ''}</span>` : ''}
+        ${r.field ? `<span class="db-card-field">${r.field}</span>` : ''}
+        ${sev}
+        ${relatedKarte ? `<span class="db-card-karte-badge">カルテあり</span>` : ''}
+      </div>
+      <div class="db-card-title">
+        ${r.url ? `<a href="${r.url}" target="_blank">${r.title}</a>` : r.title}
+      </div>
+      ${relatedKarte ? `<button class="db-card-karte-btn" onclick="event.stopPropagation();goToKartePage('${relatedKarte.id}')">📋 事案カルテを見る：${relatedKarte.title}</button>` : ''}
+      ${r.summary ? `<div class="db-card-summary">${r.summary}</div>` : ''}
+      <div class="db-card-tags">
+        ${eventTags.map(t=>`<span class="db-tag-e" onclick="event.stopPropagation();addTagFilter('event','${t}')">${t}</span>`).join('')}
+        ${structTags.map(t=>`<span class="db-tag-s" onclick="event.stopPropagation();addTagFilter('structure','${t}')">${t}</span>`).join('')}
+        ${evidTags.map(t=>`<span class="db-tag-v" onclick="event.stopPropagation();addTagFilter('evidence','${t}')">${t}</span>`).join('')}
+        ${statusTags.map(t=>`<span class="db-tag-t" onclick="event.stopPropagation();addTagFilter('status','${t}')">${t}</span>`).join('')}
+      </div>
+      ${hasAnyTag ? `<button class="db-similar-btn" id="similar-btn-${cardId}" onclick="event.stopPropagation();toggleSimilar('${cardId}')">共通する構造を探す</button>` : ''}
+      <div class="db-card-similar" id="similar-${cardId}"></div>
+    </div>`;
+  }).join('');
+}
+
+function openKarteFromDB(karteId) {
+  goToKartePage(karteId);
+}
+
+function normalizeUrl(url) {
+  if (!url) return '';
+  return url.trim().replace(/\/$/, '');
+}
+
+function findKarteByUrl(articleUrl) {
+  if (!articleUrl) return null;
+  if (!karteData || !karteData.length) return null;
+  const normalized = normalizeUrl(articleUrl);
+  return karteData.find(k => {
+    const urls = k.related_urls;
+    if (!urls) return false;
+    const urlList = Array.isArray(urls) ? urls : String(urls).split('\n');
+    return urlList.map(u => normalizeUrl(u)).includes(normalized);
+  }) || null;
+}
+
+function splitTags(str) {
+  if (!str) return [];
+  return str.split('/').map(t => t.trim()).filter(Boolean);
+}
+
+function buildSidebarTagFilters(data) {
+  const collect = (key) => {
+    const counts = {};
+    data.forEach(r => {
+      splitTags(r[key]).forEach(t => { counts[t] = (counts[t]||0)+1; });
+    });
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  };
+  const render = (id, key, entries) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = entries.map(([tag, count]) =>
+      `<button class="db-tag-btn" onclick="toggleTagFilter('${key}','${tag}',this)">${tag}<span style="opacity:0.5;margin-left:0.2rem">${count}</span></button>`
+    ).join('');
+  };
+  render('filter-event',    'tags_event',     collect('tags_event'));
+  render('filter-structure','tags_structure',  collect('tags_structure'));
+  render('filter-status',   'tags_status',     collect('tags_status'));
+  render('filter-evidence', 'tags_evidence',   collect('tags_evidence'));
+}
+
+function toggleTagFilter(type, tag, btn) {
+  const idx = activeTagFilters[type].indexOf(tag);
+  if (idx === -1) {
+    activeTagFilters[type].push(tag);
+    btn.classList.add('active');
+  } else {
+    activeTagFilters[type].splice(idx, 1);
+    btn.classList.remove('active');
+  }
+  filterDB();
+}
+
+function addTagFilter(type, tag) {
+  if (!activeTagFilters[type].includes(tag)) {
+    activeTagFilters[type].push(tag);
+    const btns = document.querySelectorAll(`#filter-${type} .db-tag-btn`);
+    btns.forEach(btn => { if (btn.textContent.trim().startsWith(tag)) btn.classList.add('active'); });
+  }
+  showPage('db', document.querySelector('nav a:nth-child(2)'));
+  filterDB();
+}
+
+function resetFilters() {
+  document.getElementById('db-search').value = '';
+  document.getElementById('db-pref').value = '';
+  document.getElementById('db-category').value = '';
+  document.getElementById('db-severity').value = '';
+  activeTagFilters = {event:[], structure:[], evidence:[], status:[]};
+  document.querySelectorAll('.db-tag-btn').forEach(b => b.classList.remove('active'));
+  filterDB();
+}
+
+function toggleDbFilter(btn) {
+  const sidebar = document.getElementById('db-sidebar');
+  const icon    = document.getElementById('db-filter-toggle-icon');
+  const label   = document.getElementById('db-filter-toggle-label');
+  sidebar.classList.toggle('open');
+  const isOpen = sidebar.classList.contains('open');
+  icon.textContent  = isOpen ? '▲' : '▼';
+  label.textContent = isOpen ? '絞り込み条件を閉じる' : '絞り込み条件を表示';
+}
+
+function filterDB() {
+  const kw   = (document.getElementById('db-search')?.value || '').toLowerCase();
+  const pref = document.getElementById('db-pref')?.value || '';
+  const cat  = document.getElementById('db-category')?.value || '';
+  const sev  = document.getElementById('db-severity')?.value || '';
+  const filtered = dbData.filter(r => {
+    const allText = [r.title, r.summary, r.tags_event, r.tags_structure, r.tags_evidence, r.tags_status].filter(Boolean).join(' ').toLowerCase();
+    if (kw && !allText.includes(kw)) return false;
+    if (pref && (r.region||r.prefecture||'') !== pref) return false;
+    if (cat  && (r.field||r.category||'') !== cat) return false;
+    if (sev  && r.severity !== sev) return false;
+    if (activeTagFilters.event.length     && !activeTagFilters.event.every(t     => (r.tags_event||'').includes(t)))     return false;
+    if (activeTagFilters.structure.length && !activeTagFilters.structure.every(t  => (r.tags_structure||'').includes(t))) return false;
+    if (activeTagFilters.evidence.length  && !activeTagFilters.evidence.every(t   => (r.tags_evidence||'').includes(t)))  return false;
+    if (activeTagFilters.status.length    && !activeTagFilters.status.every(t     => (r.tags_status||'').includes(t)))    return false;
+    return true;
+  });
+  renderDB(filtered);
+}
+
+function buildFilters(data) {
+  const prefs = [...new Set(data.map(r => r.region||r.prefecture||'').filter(Boolean))].sort();
+  const cats  = [...new Set(data.map(r => r.field||r.category||'').filter(Boolean))].sort();
+  const prefSel = document.getElementById('db-pref');
+  const catSel  = document.getElementById('db-category');
+  prefSel.innerHTML = '<option value="">全地域</option>';
+  catSel.innerHTML  = '<option value="">全分野</option>';
+  prefs.forEach(p => { const o = document.createElement('option'); o.value = o.textContent = p; prefSel.appendChild(o); });
+  cats.forEach(c  => { const o = document.createElement('option'); o.value = o.textContent = c; catSel.appendChild(o); });
+  buildSidebarTagFilters(data);
+}
+
+function updateStats() {
+  const dbCount = dbData.length;
+  document.getElementById('db-count-stat').innerHTML = dbCount + '<sup>件</sup>';
+  document.getElementById('db-count-sub').textContent = '▲ AI自動収集・毎日更新';
+  // ホームの統計行
+  const homeDb = document.getElementById('home-db-count');
+  if (homeDb) homeDb.textContent = dbCount + '件';
+}
+
+function renderHomeNews(data) {
+  document.getElementById('home-news-list').innerHTML = data.map((r, i) => `
+    <div class="news-item">
+      <div class="news-num">0${i+1}</div>
+      <div>
+        <div class="news-pref">${r.prefecture}</div>
+        <div class="news-title">${r.title}</div>
+        <div class="news-meta">${r.date} — ${r.source}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderHomeVoices(data) {
+  document.getElementById('home-voices').innerHTML = data.map(v => `
+    <div class="voice-item">
+      <span class="voice-pref">${v.pref}</span>
+      「${v.detail.slice(0, 60)}${v.detail.length > 60 ? '……' : ''}」
+    </div>
+  `).join('');
+}
+
+function updateTicker(data) {
+  const items = data.slice(0, 6).map(r => `${r.region||r.prefecture||''}・${r.title}`).join('　　');
+  const doubled = items + '　　　　' + items;
+  document.getElementById('ticker-text').textContent = doubled;
+}
+
+// ===== SURVEY =====
+const GAS_SURVEY_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
+
+function submitSurvey() {
+  const pref   = document.getElementById('s-pref').value;
+  const win    = document.getElementById('s-window').value;
+  const detail = document.getElementById('s-detail').value;
+  const result = document.querySelector('input[name="result"]:checked')?.value || '';
+  const when   = document.getElementById('s-when').value;
+  const types  = [...document.querySelectorAll('input[type="checkbox"]:checked')].map(c => c.value).join('、');
+  if (!pref || !detail) { alert('都道府県と体験の詳細は必須です'); return; }
+  const data = { pref, window: win, types, detail, result, when, timestamp: new Date().toISOString() };
+  if (GAS_SURVEY_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    document.getElementById('survey-form-container').style.display = 'none';
+    document.getElementById('survey-thanks').style.display = 'block';
+    return;
+  }
+  fetch(GAS_SURVEY_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(() => {
+    document.getElementById('survey-form-container').style.display = 'none';
+    document.getElementById('survey-thanks').style.display = 'block';
+  }).catch(() => {
+    document.getElementById('survey-form-container').style.display = 'none';
+    document.getElementById('survey-thanks').style.display = 'block';
+  });
+}
+
+// ===== 構造類似表示 =====
+function getComparableTags(r) {
+  return [
+    ...splitTags(r.tags_structure),
+    ...splitTags(r.tags_event),
+    ...splitTags(r.tags_status),
+    ...splitTags(r.tags_evidence),
+  ];
+}
+
+function calcSimilarity(a, b) {
+  const tagsA = new Set(getComparableTags(a));
+  const tagsB = new Set(getComparableTags(b));
+  return [...tagsA].filter(t => tagsB.has(t));
+}
+
+function scoreLabel(count) {
+  if (count >= 5) return { label: '要観測', cls: 'score-3' };
+  if (count >= 3) return { label: '構造的類似あり', cls: 'score-2' };
+  if (count >= 1) return { label: '関連あり', cls: 'score-1' };
+  return null;
+}
+
+function toggleSimilar(cardId) {
+  const panel = document.getElementById('similar-' + cardId);
+  const btn   = document.getElementById('similar-btn-' + cardId);
+  if (!panel || !btn) return;
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+    btn.textContent = '共通する構造を探す';
+    return;
+  }
+  // data-url属性からURLを取得してdbDataを逆引き
+  const cardEl = panel.closest('.db-card');
+  const articleUrl = cardEl ? cardEl.querySelector('.db-card-title a')?.href : null;
+  const normalizedTarget = articleUrl ? normalizeUrl(articleUrl) : null;
+  const target = normalizedTarget
+    ? dbData.find(r => normalizeUrl(r.url) === normalizedTarget)
+    : null;
+  if (!target) return;
+  const targetTags = new Set(getComparableTags(target));
+  if (targetTags.size === 0) {
+    panel.innerHTML = '<div style="font-size:0.78rem;color:var(--ink-light)">タグが未付与のため比較できません</div>';
+    panel.classList.add('open');
+    return;
+  }
+  const results = dbData
+    .filter(r => r !== target && r.title !== target.title)
+    .map(r => ({ r, common: calcSimilarity(target, r) }))
+    .filter(x => x.common.length >= 1)
+    .sort((a, b) => b.common.length - a.common.length)
+    .slice(0, 5);
+  if (!results.length) {
+    panel.innerHTML = '<div class="db-similar-label">共通する構造を持つ事例</div><div style="font-size:0.78rem;color:var(--ink-light)">現在のDBに一致する事例はありません</div>';
+    panel.classList.add('open');
+    btn.classList.add('active');
+    btn.textContent = '▲ 閉じる';
+    return;
+  }
+  const topCommon = results[0].common;
+  const score = scoreLabel(topCommon.length);
+  panel.innerHTML = `
+    <div class="db-similar-label">この記事と共通する構造</div>
+    ${score ? `<div class="db-similar-score ${score.cls}">共通タグ数：${topCommon.length}　${score.label}</div>` : ''}
+    <div class="db-similar-tags">
+      ${topCommon.map(t => `<span class="db-similar-tag">${t}</span>`).join('')}
+    </div>
+    <div class="db-similar-label" style="margin-top:0.5rem">同じ構造が観測された事例</div>
+    <div class="db-similar-cases">
+      ${results.map(x => `
+        <div class="db-similar-case">
+          <span class="db-similar-case-region">${x.r.region || ''}</span>
+          ${x.r.url ? `<a href="${x.r.url}" target="_blank" style="color:var(--ink-mid);border-bottom:1px solid var(--rule)">${x.r.title}</a>` : x.r.title}
+          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-left:0.4rem">（一致${x.common.length}）</span>
+        </div>
+      `).join('')}
+    </div>`;
+  panel.classList.add('open');
+  btn.classList.add('active');
+  btn.textContent = '▲ 閉じる';
+}
+
+let _currentFilteredData = [];
+function getCurrentFilteredData() { return _currentFilteredData; }
+
+function renderHomeTagCloud(data) {
+  const tagCount = {};
+  data.forEach(r => {
+    ['tags_event','tags_structure','tags_evidence','tags_status'].forEach(key => {
+      if (!r[key]) return;
+      r[key].split(' / ').forEach(t => {
+        t = t.trim();
+        if (t) tagCount[t] = (tagCount[t] || 0) + 1;
+      });
+    });
+  });
+  const sorted = Object.entries(tagCount).sort((a,b) => b[1]-a[1]).slice(0, 24);
+  const max = sorted[0]?.[1] || 1;
+  document.getElementById('home-tag-cloud').innerHTML = sorted.map(([tag, count]) => {
+    const size    = 0.62 + (count / max) * 0.22;
+    const opacity = 0.5  + (count / max) * 0.5;
+    return `<span onclick="filterByTag('${tag}')" style="font-family:'DM Mono',monospace;font-size:${size}rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;opacity:${opacity};transition:all 0.15s;display:inline-block;margin:0.15rem" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--rule)';this.style.color='var(--ink-mid)'">${tag}<span style="font-size:0.52rem;opacity:0.5;margin-left:0.2rem">${count}</span></span>`;
+  }).join('');
+}
+
+function filterByTag(tag) {
+  showPage('db', document.querySelector('nav a:nth-child(2)'));
+  setTimeout(() => {
+    document.getElementById('db-search').value = tag;
+    filterDB();
+  }, 50);
+}
+
+// ===== KARTE =====
+const QA_SHEET_NAME    = 'Q&A';
+const GAS_QA_URL       = 'YOUR_GAS_WEB_APP_URL_HERE';
+const KARTE_SHEET_NAME = 'カルテ';
+let qaData    = [];
+let karteData = [];
+
+const demoKartes = [
+  {
+    id:'KARTE-0001', title:'京都市生活保護窓口での申請妨害', region:'京都府', field:'生活保護',
+    summary:'京都市の福祉窓口において、生活保護申請者が「まず家族に相談を」「書類が揃ってから来て」などの言葉で申請を阻まれる事案が複数件確認されている。担当者が異なるにもかかわらず言葉が酷似しており、組織的な対応指針の存在が疑われる。',
+    progress:'市民団体が事例を収集中。行政は「個別対応」として組織的関与を否定。',
+    tags_event:'申請妨害 / 扶養照会濫用', tags_structure:'組織的不作為 / 説明責任 / 前例主義',
+    tags_status:'疑惑段階', tags_evidence:'当事者証言',
+    tags_field:'生活保護', tags_target:'生活保護申請者', tags_actor:'福祉事務所 / ケースワーカー',
+    tags_event_search:'申請を断られた / 扶養照会を強いられた',
+    related_urls:'https://example.com/article1\nhttps://example.com/article2',
+    mana_comment:'', created_at:'2026-06-08', updated_at:'2026-06-09', start_date:'2026-06-01',
+  },
+  {
+    id:'KARTE-0002', title:'燕市生活保護費の過大支給と回収問題', region:'新潟県', field:'生活保護',
+    summary:'新潟県燕市において、生活保護受給者9人への総額約855万円の誤支給が判明。行政ミスによる過払いにもかかわらず、受給者への返還請求が行われた。',
+    progress:'行政が誤りを認め謝罪。返還交渉中。',
+    tags_event:'誤情報提供 / 財政推計ミス', tags_structure:'内部統制 / 説明責任 / 自己修正不能',
+    tags_status:'行政が認めた / 謝罪あり', tags_evidence:'報道',
+    tags_field:'生活保護', tags_target:'生活保護受給者', tags_actor:'市区町村窓口',
+    tags_event_search:'支給を止められた',
+    related_urls:'https://example.com/article3',
+    mana_comment:'', created_at:'2026-06-08', updated_at:'2026-06-08', start_date:'2026-06-08',
+  },
+];
+
+function loadKartes() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') {
+    karteData = demoKartes;
+    renderKartes(karteData);
+    buildKarteFilters(karteData);
+    handleHashRoute();
+    return;
+  }
+  const url = GAS_API_URL + '?sheet=' + encodeURIComponent(KARTE_SHEET_NAME);
+  console.log('カルテ読み込み開始:', url);
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      console.log('カルテAPIレスポンス件数:', Array.isArray(data) ? data.length : 'エラー');
+      if (!Array.isArray(data)) throw new Error('配列ではありません: ' + JSON.stringify(data).slice(0, 100));
+      karteData = data.map(row => ({
+        id:             row['カルテID'] || row['id'] || '',
+        title:          row['事案名']   || row['title'] || '',
+        region:         row['地域']     || '',
+        region_pref:    row['地域']    || row['都道府県'] || '',
+        region_city:    row['市区町村'] || '',
+        region_ward:    row['区']       || '',
+        field:          row['分野']     || '',
+        summary:        row['概要']     || '',
+        progress:       row['経過']     || '',
+        tags_event:     row['出来事タグ'] || '',
+        tags_structure: row['構造タグ']   || '',
+        tags_status:    row['状態タグ']   || '',
+        tags_evidence:  row['根拠タグ']   || '',
+        related_urls:   row['関連記事URL'] || '',
+        mana_comment:   row['MANAコメント'] || '',
+        created_at:     row['作成日']     || '',
+        updated_at:     row['最終更新日'] || '',
+        start_date:     row['事案開始日'] || '',
+        tags_field:        row['分野タグ']         || '',
+        tags_target:       row['対象者タグ']        || '',
+        tags_actor:        row['行為者タグ']        || '',
+        tags_event_search: row['出来事タグ（探索）'] || '',
+      })).filter(r => r.id || r.title);
+      console.log('カルテ読み込み成功:', karteData.length + '件');
+      // ホームのカルテ件数・タグ件数を更新
+      const homeKarte = document.getElementById('home-karte-count');
+      if (homeKarte) homeKarte.textContent = karteData.length + '件';
+      const allTags = new Set();
+      karteData.forEach(k => {
+        ['tags_field','tags_target','tags_actor','tags_event_search',
+         'tags_event','tags_structure','tags_status','tags_evidence'].forEach(f => {
+          splitKarteTags(k[f] || '').forEach(t => allTags.add(t));
+        });
+      });
+      const homeTag = document.getElementById('home-tag-count');
+      if (homeTag) homeTag.textContent = allTags.size + '種';
+      renderKartes(karteData);
+      buildKarteFilters(karteData);
+      if (dbData.length) renderDB(dbData);
+      handleHashRoute();
+      checkKarteLinkage();
+    })
+    .catch(err => {
+      console.error('カルテ読み込みエラー:', err.message);
+      const list = document.getElementById('karte-list');
+      if (list) list.innerHTML = `<div class="db-empty">カルテの読み込みに失敗しました<br><span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ink-light)">${err.message}</span></div>`;
+    });
+}
+
+function renderKartes(data) {
+  const list = document.getElementById('karte-list');
+  document.getElementById('karte-count-label').textContent = data.length + ' 件';
+  if (!data.length) {
+    list.innerHTML = '<div class="db-empty">該当する事案カルテがありません</div>';
+    return;
+  }
+  list.innerHTML = data.map(k => {
+    const urls       = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
+    const structTags = splitKarteTags(k.tags_structure);
+    const eventTags  = splitKarteTags(k.tags_event);
+    const statusTags = splitKarteTags(k.tags_status);
+    return `<div class="karte-card" onclick="openKarteModal('${k.id}')">
+      <div class="karte-card-top">
+        <span class="karte-card-id">${k.id}</span>
+        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
+        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
+        ${statusTags[0] ? `<span class="db-tag-t">${statusTags[0]}</span>` : ''}
+      </div>
+      <div class="karte-card-title">${k.title}</div>
+      ${k.summary  ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
+      ${k.progress ? `<div class="karte-card-progress">${k.progress}</div>` : ''}
+      <div class="karte-card-tags">
+        ${structTags.map(t => `<span class="db-tag-s">${t}</span>`).join('')}
+        ${eventTags.map(t  => `<span class="db-tag-e">${t}</span>`).join('')}
+      </div>
+      <div class="karte-card-footer">
+        <span>記事 ${urls.length} 件</span>
+        <span>更新: ${k.updated_at ? k.updated_at.slice(0,10) : ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildKarteFilters(data) {
+  const prefs    = [...new Set(data.map(k => k.region).filter(Boolean))].sort();
+  const fields   = [...new Set(data.map(k => k.field).filter(Boolean))].sort();
+  const structs  = [...new Set(data.flatMap(k => splitKarteTags(k.tags_structure)))].sort();
+  const statuses = [...new Set(data.flatMap(k => splitKarteTags(k.tags_status)))].sort();
+  const fill = (id, items) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const first = sel.options[0].outerHTML;
+    sel.innerHTML = first + items.map(v => `<option value="${v}">${v}</option>`).join('');
+  };
+  fill('karte-pref',      prefs);
+  fill('karte-field',     fields);
+  fill('karte-structure', structs);
+  fill('karte-status',    statuses);
+}
+
+function filterKartes() {
+  const pref   = document.getElementById('karte-pref')?.value || '';
+  const field  = document.getElementById('karte-field')?.value || '';
+  const struct = document.getElementById('karte-structure')?.value || '';
+  const status = document.getElementById('karte-status')?.value || '';
+  const filtered = karteData.filter(k =>
+    (!pref   || k.region === pref) &&
+    (!field  || k.field === field) &&
+    (!struct || (k.tags_structure || '').includes(struct)) &&
+    (!status || (k.tags_status    || '').includes(status))
+  );
+  renderKartes(filtered);
+}
+
+function openKarteModal(id) {
+  const k = karteData.find(k => k.id === id);
+  if (!k) return;
+  const myStructTags = splitKarteTags(k.tags_structure);
+  const related = karteData.filter(other =>
+    other.id !== k.id &&
+    splitKarteTags(other.tags_structure).some(t => myStructTags.includes(t))
+  ).slice(0, 5);
+  const urls = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
+
+  document.getElementById('karte-modal-content').innerHTML = `
+    <div class="karte-modal-id">${k.id}</div>
+    <div class="karte-modal-title">${k.title}</div>
+    <div class="karte-card-top" style="margin-bottom:1rem">
+      ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
+      ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
+    </div>
+    <div class="karte-modal-section">
+      <div class="karte-modal-section-label">概要</div>
+      <div class="karte-modal-text">${k.summary}</div>
+    </div>
+    ${k.progress ? `<div class="karte-modal-section">
+      <div class="karte-modal-section-label">現在の経過</div>
+      <div class="karte-modal-progress">${k.progress}</div>
+    </div>` : ''}
+    <div class="karte-modal-section">
+      <div class="karte-modal-section-label">このカルテのタグ</div>
+      ${[
+        {label:'出来事', tags: splitKarteTags(k.tags_event),     cls:'db-tag-e'},
+        {label:'状態',   tags: splitKarteTags(k.tags_status),    cls:'db-tag-t'},
+        {label:'根拠',   tags: splitKarteTags(k.tags_evidence),  cls:'db-tag-v'},
+        {label:'構造',   tags: splitKarteTags(k.tags_structure), cls:'db-tag-s'},
+      ].filter(g => g.tags.length).map(g => `
+        <div style="margin-bottom:0.5rem">
+          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-right:0.4rem">${g.label}</span>
+          ${g.tags.map(t => `<span class="${g.cls}" style="cursor:pointer" onclick="filterKarteByTag('${escapeAttr(t)}')" title="「${escapeAttr(t)}」の事案を探す">${t}</span>`).join('')}
+        </div>
+      `).join('')}
+    </div>
+    ${k.mana_comment ? `<div class="karte-modal-section">
+      <div class="karte-modal-section-label">MANAコメント</div>
+      <div class="karte-modal-text">${k.mana_comment}</div>
+    </div>` : ''}
+    ${urls.length ? `<div class="karte-modal-section">
+      <div class="karte-modal-section-label">関連記事 (${urls.length}件)</div>
+      ${urls.map(u => `<a class="karte-related-link" href="${u}" target="_blank">${u}</a>`).join('')}
+    </div>` : ''}
+    ${related.length ? `<div class="karte-modal-section">
+      <div class="karte-modal-section-label">共通構造タグを持つ関連事案</div>
+      <div class="karte-related-cards">
+        ${related.map(r => `<div class="karte-related-card" onclick="openKarteModal('${r.id}')">
+          <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent)">${r.region} / ${r.field}</span>
+          <div style="font-weight:500;margin-top:0.2rem">${r.title}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+  document.getElementById('karte-modal').classList.add('show');
+}
+
+function closeKarteModal(e) {
+  if (e.target.id === 'karte-modal') {
+    document.getElementById('karte-modal').classList.remove('show');
+  }
+}
+
+function filterKarteByTag(tag) {
+  document.getElementById('karte-modal').classList.remove('show');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-karte').classList.add('active');
+  const karteNav = document.querySelector('nav a:nth-child(5)');
+  if (karteNav) karteNav.classList.add('active');
+  window.scrollTo(0, 0);
+  const filtered = karteData.filter(k =>
+    [k.tags_event, k.tags_structure, k.tags_status, k.tags_evidence]
+      .some(t => (t || '').includes(tag))
+  );
+  renderKartes(filtered);
+  document.getElementById('karte-count-label').textContent = `「${tag}」の事案： ${filtered.length} 件`;
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function splitKarteTags(str) {
+  if (!str) return [];
+  return str.split(/[\/・,、]/).map(t => t.trim()).filter(Boolean);
+}
+
+// ===== ESSAYS =====
+const ESSAY_SHEET_NAME = '論考';
+let essayData = [];
+
+const demoEssays = [
+  {date:'2025-11-01',type:'調査報告書',title:'尊厳の倫理学——行政的暴力と当事者の声',summary:'行政による不作為は単なる怠慢ではない。それは権力関係の構造的な産物であり、当事者の尊厳を組織的に剥奪するプロセスである。収集された証言と記録から、その論理と倫理的含意を検討する。',tags:'尊厳 / 当事者主体 / 組織的不作為 / 行政暴力',url:'',status:'公開',featured:'1'},
+  {date:'2025-08-01',type:'調査報告書',title:'行政の組織的不作為——京都市の事例から',summary:'京都市の福祉行政における申請妨害・虚偽記録・権限濫用の事例を収集・分析。個別の逸脱ではなく、組織文化として定着した構造的不作為を記述する。',tags:'水際作戦 / 生活保護 / 組織的不作為 / 京都市',url:'',status:'公開',featured:''},
+  {date:'2025-06-15',type:'論考',title:'水際作戦の構造——なぜ申請は阻まれるのか',summary:'生活保護申請の妨害は偶発的な窓口対応の問題ではない。制度を実装させないための組織的な選択として機能している。その構造を解析する。',tags:'水際作戦 / 生活保護 / 制度実装 / 申請妨害',url:'',status:'公開',featured:''},
+  {date:'2026-06-01',type:'論考',title:'ポテトは混ざる——多文化的出会いと人間の多様性の基底',summary:'ラトビア人のツアーガイドとの会話から生まれた問い。異なる文化・背景を持つ人間が出会うとき、そこに生まれるものは何か。多様性の根拠を「混ざること」に見出す試み。',tags:'多文化 / 多様性 / 当事者研究 / エッセイ',url:'',status:'執筆中',featured:''},
+];
+
+function loadEssays() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') {
+    essayData = demoEssays; renderEssays(essayData); buildEssayFilters(essayData); return;
+  }
+  fetch(SHEET_BASE + encodeURIComponent(ESSAY_SHEET_NAME))
+    .then(r => r.text())
+    .then(text => {
+      const json = JSON.parse(text.replace('/*O_o*/\ngoogle.visualization.Query.setResponse(', '').replace(');', ''));
+      const rows = json.table.rows;
+      essayData = rows.slice(1).map(row => ({
+        date:row.c[0]?.v||'', type:row.c[1]?.v||'', title:row.c[2]?.v||'',
+        summary:row.c[3]?.v||'', tags:row.c[4]?.v||'', url:row.c[5]?.v||'',
+        status:row.c[6]?.v||'', featured:row.c[7]?.v||''
+      })).filter(r => r.title && r.status !== '非公開');
+      renderEssays(essayData);
+      buildEssayFilters(essayData);
+    })
+    .catch(() => { essayData = demoEssays; renderEssays(essayData); buildEssayFilters(essayData); });
+}
+
+function renderEssays(data) {
+  const list = document.getElementById('essay-list');
+  document.getElementById('essay-count').textContent = data.length + ' 件';
+  if (!data.length) { list.innerHTML = '<div style="padding:2rem 0;color:var(--ink-light);font-size:0.83rem">該当する論考がありません</div>'; return; }
+  const featured = data.find(e => e.featured === '1');
+  const rest = data.filter(e => e !== featured);
+  let html = '';
+  if (featured) {
+    html += `<div style="border-bottom:1px solid var(--rule);padding-bottom:2rem;margin-bottom:2rem">
+      <div style="display:flex;gap:0.8rem;align-items:center;margin-bottom:0.6rem">
+        <span style="font-family:'DM Mono',monospace;font-size:0.6rem;background:var(--ink);color:var(--paper);padding:0.15rem 0.5rem">最新</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent)">${featured.type}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light)">${featured.date}</span>
+      </div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;line-height:1.2;margin-bottom:0.8rem">${featured.title}</h2>
+      <p style="font-size:0.85rem;line-height:1.9;color:var(--ink-mid);margin-bottom:1rem">${featured.summary}</p>
+      <div style="margin-bottom:1rem">${renderEssayTags(featured.tags)}</div>
+      ${featured.url?`<a href="${featured.url}" target="_blank" class="btn-primary" style="display:inline-flex">報告書を読む（PDF）→</a>`:featured.status==='執筆中'?`<span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--ink-light)">執筆中</span>`:`<span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--ink-light)">PDF準備中</span>`}
+    </div>`;
+  }
+  html += rest.map(e => `
+    <div style="padding:1rem 0;border-bottom:1px solid var(--rule)">
+      <div style="display:flex;gap:0.8rem;align-items:center;margin-bottom:0.4rem">
+        <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent)">${e.type}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)">${e.date}</span>
+        ${e.status==='執筆中'?`<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);border:1px solid var(--rule);padding:0.1rem 0.35rem">執筆中</span>`:''}
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;line-height:1.3;margin-bottom:0.4rem">
+        ${e.url?`<a href="${e.url}" target="_blank" style="border-bottom:1px solid var(--rule)">${e.title}</a>`:e.title}
+      </div>
+      <p style="font-size:0.8rem;line-height:1.75;color:var(--ink-mid);margin-bottom:0.5rem">${e.summary}</p>
+      <div>${renderEssayTags(e.tags)}</div>
+    </div>`).join('');
+  list.innerHTML = html;
+}
+
+function renderEssayTags(tagStr) {
+  if (!tagStr) return '';
+  return tagStr.split(' / ').map(t=>t.trim()).filter(Boolean).map(t=>
+    `<span onclick="filterEssayByTag('${t}')" style="display:inline-block;margin:0.1rem;padding:0.15rem 0.5rem;border:1px solid var(--rule);font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-mid);cursor:pointer" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--ink-mid)';this.style.borderColor='var(--rule)'">${t}</span>`
+  ).join('');
+}
+
+function buildEssayFilters(data) {
+  const tags = [...new Set(data.flatMap(e=>(e.tags||'').split(' / ').map(t=>t.trim()).filter(Boolean)))].sort();
+  const sel = document.getElementById('essay-tag-filter');
+  tags.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sel.appendChild(o);});
+  document.getElementById('essay-tag-cloud').innerHTML = tags.map(t=>
+    `<span class="tag" onclick="filterEssayByTag('${t}')" style="cursor:pointer">${t}</span>`
+  ).join('');
+}
+
+function filterEssays() {
+  const tag  = document.getElementById('essay-tag-filter').value;
+  const type = document.getElementById('essay-type-filter').value;
+  renderEssays(essayData.filter(e=>(!tag||(e.tags||'').includes(tag))&&(!type||e.type===type)));
+}
+
+function filterEssayByTag(tag) {
+  document.getElementById('essay-tag-filter').value = tag;
+  filterEssays();
+}
+
+// ===== Q&A =====
+const demoQA = [
+  {id:1, type:'質問', content:'扶養照会を断ることはできますか？DVがあって家族に知られたくないです。', answer:'はい、断れます。DV・虐待・家族関係が壊れているなどの理由がある場合、扶養照会を省略できます。申請時に「家族への照会は希望しません。理由は○○です」と伝え、書面で申し出ると効果的です。', date:'2026-05-10', status:'公開'},
+  {id:2, type:'体験', content:'「書類が揃ってから来てください」と言われて追い返されそうになりましたが、「申請書だけください」と言ったら受け取れました。', answer:'', date:'2026-05-18', status:'公開'},
+  {id:3, type:'アドバイス', content:'窓口に行くとき、録音していることを最初に伝えたら対応がすごく丁寧になりました。最初から言うのがおすすめです。', answer:'', date:'2026-05-22', status:'公開'},
+  {id:4, type:'質問', content:'申請したのに2週間以上連絡がありません。どうすればいいですか？', answer:'法律では14日以内に決定することが原則です（最長30日）。担当ケースワーカーに進捗を確認してください。「いつ決定が出ますか」と電話で聞くのが一番早いです。それでも動かない場合は支援団体に相談することをおすすめします。', date:'2026-05-28', status:'公開'},
+];
+
+function initQA() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') { qaData = demoQA; renderQA(qaData); return; }
+  fetch(SHEET_BASE + encodeURIComponent(QA_SHEET_NAME))
+    .then(r => r.text())
+    .then(text => {
+      const json = JSON.parse(text.replace('/*O_o*/\ngoogle.visualization.Query.setResponse(', '').replace(');', ''));
+      const rows = json.table.rows;
+      qaData = rows.slice(1).map((row, i) => ({
+        id: i+1, type: row.c[0]?.v || '', content: row.c[1]?.v || '',
+        answer: row.c[2]?.v || '', date: row.c[3]?.v || '', status: row.c[4]?.v || ''
+      })).filter(r => r.content && r.status === '公開');
+      renderQA(qaData);
+    })
+    .catch(() => { qaData = demoQA; renderQA(qaData); });
+}
+
+function renderQA(data) {
+  const list = document.getElementById('qa-list');
+  if (!data.length) {
+    list.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--ink-light);font-size:0.83rem">まだ投稿がありません</div>';
+    return;
+  }
+  list.innerHTML = data.map(q => `
+    <div class="qa-item">
+      <div class="qa-question" onclick="toggleQA(${q.id})">
+        <span class="qa-q-label">${q.type}</span>
+        <span class="qa-q-text">${q.content}</span>
+        <span class="qa-arrow" id="qa-arrow-${q.id}">▼</span>
+      </div>
+      <div class="qa-answer ${q.answer ? '' : 'no-answer'}" id="qa-ans-${q.id}">
+        ${q.answer ? q.answer : '<span style="color:var(--ink-light)">まだ回答がありません。知っている方は投稿してください。</span>'}
+        <div class="qa-meta">${q.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleQA(id) {
+  document.getElementById('qa-ans-'   + id).classList.toggle('show');
+  document.getElementById('qa-arrow-' + id).classList.toggle('open');
+}
+
+function filterQA(kw) {
+  renderQA(qaData.filter(q => q.content.includes(kw) || (q.answer && q.answer.includes(kw))));
+}
+
+function switchQaTab(tab, el) {
+  document.querySelectorAll('.qa-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('qa-tab-list').style.display = tab === 'list' ? 'block' : 'none';
+  document.getElementById('qa-tab-post').style.display = tab === 'post' ? 'block' : 'none';
+}
+
+function showGuideSection(sec, el) {
+  document.querySelectorAll('.guide-section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.guide-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('gsec-' + sec).style.display = 'block';
+  el.classList.add('active');
+  if (sec === 'qa') initQA();
+}
+
+// ===== QA SUBMIT =====
+const GEMINI_API_KEY_CLIENT = '';
+
+async function submitQA() {
+  const type    = document.getElementById('qa-type').value;
+  const content = document.getElementById('qa-content').value.trim();
+  const status  = document.getElementById('qa-status');
+  if (!content) { alert('内容を入力してください'); return; }
+  status.className = 'qa-status checking';
+  status.style.display = 'block';
+  status.textContent = 'AIが内容を確認しています……';
+  let approved = false;
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY_CLIENT}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text:`以下の投稿内容を審査してください。生活保護申請Q&Aサイトへの投稿です。\n\n【投稿内容】\n${content}\n\n【審査基準】\n- OK: 生活保護・行政窓口に関する質問、体験談、アドバイス、困りごと\n- NG: 広告・宣伝、特定個人への攻撃・誹謗中傷、全く無関係な内容、個人情報（氏名・住所等）を含む投稿\n\n【出力形式】以下のJSONのみを出力すること:\n{"result":"ok","reason":"理由"} または {"result":"ng","reason":"理由"}`}]}],
+        generationConfig:{temperature:0,maxOutputTokens:200}
+      })
+    });
+    const data   = await res.json();
+    const text   = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    approved = parsed.result === 'ok';
+    if (!approved) {
+      status.className = 'qa-status ng';
+      status.textContent = '投稿できませんでした：' + (parsed.reason || 'ガイドラインに沿っていない内容です');
+      return;
+    }
+  } catch(e) {
+    approved = true;
+  }
+  if (GAS_QA_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    status.className = 'qa-status ok';
+    status.textContent = '✓ 投稿を受け付けました。審査後に公開されます。';
+    document.getElementById('qa-content').value = '';
+    return;
+  }
+  fetch(GAS_QA_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({type, content, answer:'', date: new Date().toISOString().slice(0,10), status:'審査済み・公開待ち'})
+  }).then(() => {
+    status.className = 'qa-status ok';
+    status.textContent = '✓ 投稿を受け付けました。審査後に公開されます。';
+    document.getElementById('qa-content').value = '';
+  }).catch(() => {
+    status.className = 'qa-status ok';
+    status.textContent = '✓ 投稿を受け付けました。';
+    document.getElementById('qa-content').value = '';
+  });
 }
