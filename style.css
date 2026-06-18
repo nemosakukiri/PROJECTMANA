@@ -2191,3 +2191,140 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   font-size: 0.83rem;
   color: var(--ink);
 }
+
+/* =====================================================
+   カルテ詳細 左カラム チップ型探索導線（kp2-prow・kp2-chip）
+   ===================================================== */
+
+.kp2-prow {
+  margin-bottom: .55rem;
+  padding-bottom: .55rem;
+  border-bottom: 0.5px solid #c8c0b0;
+}
+
+.kp2-prow:last-child { border-bottom: none; margin-bottom: 0; }
+
+.kp2-prow-label {
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #7a7060;
+  margin-bottom: .3rem;
+  font-weight: 700;
+}
+
+.kp2-chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+/* チップ共通 */
+.kp2-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  padding: 3px 7px;
+  border: 1px solid;
+  text-decoration: none;
+  cursor: default;
+  margin: 2px 2px 0 0;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+  font-style: normal;
+  line-height: 1.4;
+}
+
+.kp2-chip-arrow {
+  font-size: 9px;
+  opacity: .5;
+}
+
+/* クリック可能なチップ */
+a.kp2-chip { cursor: pointer; }
+
+/* 地域（青） */
+.kp2-chip-region {
+  background: #eef3fa;
+  color: #123a6f;
+  border-color: #8ab4e0;
+}
+a.kp2-chip-region:hover {
+  background: #123a6f;
+  color: #fff;
+}
+
+/* 分野（琥珀） */
+.kp2-chip-field {
+  background: #fdf6e3;
+  color: #6a5018;
+  border-color: #d4b87a;
+}
+a.kp2-chip-field:hover {
+  background: #6a5018;
+  color: #fff;
+}
+
+/* 状態（紺・太字） */
+.kp2-chip-status {
+  background: #eef3fa;
+  color: #123a6f;
+  border-color: #8ab4e0;
+  font-weight: 700;
+}
+a.kp2-chip-status:hover {
+  background: #123a6f;
+  color: #fff;
+}
+
+/* 対象者（緑） */
+.kp2-chip-target {
+  background: #eef6e8;
+  color: #1e5012;
+  border-color: #78b860;
+}
+a.kp2-chip-target:hover {
+  background: #1e5012;
+  color: #fff;
+}
+
+/* 行為者（生成り） */
+.kp2-chip-actor {
+  background: #f4f0e8;
+  color: #4a3828;
+  border-color: #b8a880;
+}
+a.kp2-chip-actor:hover {
+  background: #4a3828;
+  color: #fff;
+}
+
+/* 根拠種別（グレーグリーン） */
+.kp2-chip-evidence {
+  background: #eef6e8;
+  color: #1e5012;
+  border-color: #78b860;
+}
+a.kp2-chip-evidence:hover {
+  background: #1e5012;
+  color: #fff;
+}
+
+/* クリック不可（純粋な情報） */
+.kp2-chip-text {
+  background: transparent;
+  color: #5a5248;
+  border-color: transparent;
+  padding-left: 0;
+  font-size: 11px;
+  cursor: default;
+}
+
+@media (max-width: 480px) {
+  .kp2-chip {
+    font-size: 13px;
+    padding: 5px 10px;
+    min-height: 36px;
+  }
+}
