@@ -2151,3 +2151,43 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* ===== 奥付 ===== */
+.static-colophon {
+  background: var(--paper-warm, #f7f5f0);
+  border: 1px solid var(--rule);
+  padding: 1.2rem 1.4rem;
+  border-bottom: none;
+}
+
+.colophon-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.colophon-row {
+  display: flex;
+  gap: 1.5rem;
+  padding: .45rem 0;
+  border-bottom: 1px solid var(--rule);
+  align-items: baseline;
+}
+
+.colophon-row:last-child {
+  border-bottom: none;
+}
+
+.colophon-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--ink-light);
+  letter-spacing: .06em;
+  min-width: 7rem;
+  flex-shrink: 0;
+}
+
+.colophon-val {
+  font-size: 0.83rem;
+  color: var(--ink);
+}
