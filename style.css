@@ -2328,3 +2328,117 @@ a.kp2-chip-evidence:hover {
     min-height: 36px;
   }
 }
+
+/* ===== トップ全文検索 ===== */
+.home-search-wrap {
+  position: relative;
+  margin: 1.4rem 0 1.2rem;
+  max-width: 600px;
+}
+
+.home-search-inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.home-search-input {
+  width: 100%;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 0.9rem;
+  padding: .75rem 2.5rem .75rem 1rem;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s;
+}
+
+.home-search-input:focus {
+  border-color: var(--accent);
+}
+
+.home-search-icon {
+  position: absolute;
+  right: .8rem;
+  font-size: 1rem;
+  pointer-events: none;
+  opacity: .5;
+}
+
+.home-search-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  z-index: 200;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.hsr-item {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  padding: .65rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  transition: background .1s;
+}
+
+.hsr-item:last-child { border-bottom: none; }
+.hsr-item:hover { background: var(--paper-warm); }
+
+.hsr-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  padding: 1px 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.hsr-badge-karte {
+  background: var(--accent);
+  color: #fff;
+}
+
+.hsr-badge-db {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.hsr-title {
+  font-size: 0.82rem;
+  color: var(--ink);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.hsr-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-light);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.hsr-empty {
+  padding: 1rem;
+  font-size: 0.8rem;
+  color: var(--ink-light);
+  text-align: center;
+}
+
+.hsr-more {
+  padding: .6rem 1rem;
+  font-size: 0.75rem;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: center;
+  border-top: 1px solid var(--rule);
+  font-weight: 500;
+}
+
+.hsr-more:hover { background: var(--accent-pale); }
