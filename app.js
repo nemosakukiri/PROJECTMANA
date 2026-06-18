@@ -1237,6 +1237,100 @@ function renderKarteDetailPage(karteId) {
     </div>
   </div>`;
 }
+// ===== トップ全文検索 =====
+let _homeSearchTimer = null;
+
+function homeSearch(kw) {
+  const resultsEl = document.getElementById('home-search-results');
+  if (!resultsEl) return;
+
+  kw = kw.trim();
+  if (!kw) { resultsEl.style.display = 'none'; return; }
+
+  // デバウンス：200ms待って実行
+  clearTimeout(_homeSearchTimer);
+  _homeSearchTimer = setTimeout(() => _runHomeSearch(kw), 200);
+}
+
+function _runHomeSearch(kw) {
+  const resultsEl = document.getElementById('home-search-results');
+  if (!resultsEl) return;
+
+  const q = kw.toLowerCase();
+  const MAX = 8;
+  const hits = [];
+
+  // カルテを検索（タイトル・概要）
+  if (karteData && karteData.length) {
+    karteData.forEach(k => {
+      const haystack = ((k.title || '') + ' ' + (k.summary || '')).toLowerCase();
+      if (haystack.includes(q)) {
+        hits.push({
+          type: 'karte',
+          id:   k.id,
+          title: k.title || '',
+          sub:   (k.region || '') + (k.field ? '　' + k.field : ''),
+        });
+      }
+    });
+  }
+
+  // 観測DBを検索（タイトル・要約）
+  if (dbData && dbData.length) {
+    dbData.forEach(r => {
+      const haystack = ((r.title || '') + ' ' + (r.summary || '')).toLowerCase();
+      if (haystack.includes(q)) {
+        hits.push({
+          type:  'db',
+          url:   r.url || '',
+          title: r.title || '',
+          sub:   (r.date ? r.date.slice(0, 10) : '') + (r.region ? '　' + r.region : ''),
+        });
+      }
+    });
+  }
+
+  if (!hits.length) {
+    resultsEl.innerHTML = '<div class="hsr-empty">「' + kw + '」に一致する記録が見つかりませんでした</div>';
+    resultsEl.style.display = 'block';
+    return;
+  }
+
+  const shown = hits.slice(0, MAX);
+  const more  = hits.length - shown.length;
+
+  resultsEl.innerHTML = shown.map(h => {
+    if (h.type === 'karte') {
+      return `<div class="hsr-item hsr-karte" onclick="goToKartePage('${h.id}')">
+        <span class="hsr-badge hsr-badge-karte">カルテ</span>
+        <span class="hsr-title">${h.title}</span>
+        <span class="hsr-sub">${h.sub}</span>
+      </div>`;
+    } else {
+      const onclick = h.url
+        ? `window.open('${h.url}','_blank')`
+        : `showPage('db',document.querySelector('nav a:nth-child(2)'))`;
+      return `<div class="hsr-item hsr-db" onclick="${onclick}">
+        <span class="hsr-badge hsr-badge-db">観測DB</span>
+        <span class="hsr-title">${h.title}</span>
+        <span class="hsr-sub">${h.sub}</span>
+      </div>`;
+    }
+  }).join('') + (more > 0
+    ? `<div class="hsr-more" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))">他 ${more} 件 → 観測DBで検索する</div>`
+    : '');
+
+  resultsEl.style.display = 'block';
+}
+
+// 検索窓の外クリックで結果を閉じる
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('home-search-results');
+  if (wrap && !wrap.contains(e.target) && e.target.id !== 'home-search-input') {
+    wrap.style.display = 'none';
+  }
+});
+
 function checkKarteLinkage() {
   if (!dbData.length || !karteData.length) return;
   const dbUrls = dbData.map(r => r.url).filter(Boolean);
