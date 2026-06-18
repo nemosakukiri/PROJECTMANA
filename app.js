@@ -24,15 +24,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ===== PAGE NAVIGATION =====
 function showPage(name, navEl) {
+  console.log('[showPage]', name, '| hash:', location.hash, '| history.length:', history.length);
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
+  const pageEl = document.getElementById('page-' + name);
+  if (!pageEl) return;
+  pageEl.classList.add('active');
   if (navEl) navEl.classList.add('active');
   window.scrollTo(0, 0);
   if (name === 'essays') loadEssays();
   if (name === 'karte') loadKartes();
-  if (!['kartedetail','tags','tagdetail','map','terms','laws'].includes(name) && /^#\//.test(location.hash)) {
-    history.replaceState(null, '', location.pathname + location.search);
+  // hashルート以外のページへ遷移する場合のみhashをクリア
+  // ただし現在 #/karte/xxx など hashルート表示中の場合は
+  // pushState で空hashを履歴に積む（ブラウザバックで戻れるように）
+  const hashRoutePages = ['kartedetail','tags','tagdetail','map','terms','laws'];
+  if (!hashRoutePages.includes(name) && /^#\//.test(location.hash)) {
+    history.pushState(null, '', location.pathname + location.search);
   }
 }
 
@@ -43,6 +50,7 @@ function showPage(name, navEl) {
 function handleHashRoute() {
   _routeHandled = true;
   const hash = location.hash;
+  console.log('[handleHashRoute] hash:', hash, '| state:', JSON.stringify(history.state), '| stack-length:', history.length);
 
   if (hash === '#/tags') {
     _activatePage('page-tags', 'タグから探す');
@@ -113,6 +121,7 @@ function _activatePage(pageId, navLabel) {
 }
 
 function goToKartePage(karteId) {
+  console.log('[goToKartePage]', karteId, '| before hash:', location.hash, '| history.length:', history.length);
   location.hash = '#/karte/' + encodeURIComponent(karteId);
 }
 
@@ -1249,6 +1258,35 @@ function checkKarteLinkage() {
   unmatched.forEach(r => console.log('   -', r.date, r.title, '|', r.url || '(URLなし)'));
   console.log('5. related_urlsが空のカルテ一覧（' + emptyRelatedKartes.length + '件）:');
   emptyRelatedKartes.forEach(k => console.log('   -', k.id, k.title));
+
+  // ===== 代表記事ズレ検出 =====
+  console.log('===== 代表記事ズレ検出 =====');
+  let mismatchCount = 0;
+  dbData.forEach(r => {
+    if (!r.url) return;
+    const karte = findKarteByUrl(r.url);
+    if (!karte) return;
+
+    // カルテのrelated_urlsの先頭URLを「代表記事」とみなす
+    const firstUrl = karte.related_urls
+      ? karte.related_urls.split('\n').map(u => u.trim()).filter(Boolean)[0]
+      : null;
+
+    // DB記事タイトルとカルテタイトルの比較
+    const dbTitle    = (r.title || '').slice(0, 30);
+    const karteTitle = (karte.title || '').slice(0, 30);
+
+    // 先頭URL（代表記事）とDB記事URLが一致しない場合 → ズレの可能性
+    if (firstUrl && normalizeUrl(firstUrl) !== normalizeUrl(r.url)) {
+      mismatchCount++;
+      console.warn('[ズレ候補] DB記事:「' + dbTitle + '」→ ' + karte.id + '「' + karteTitle + '」/ 代表URL:' + (firstUrl || '').slice(0, 60));
+    }
+  });
+  if (mismatchCount === 0) {
+    console.log('代表記事ズレ: 検出なし');
+  } else {
+    console.warn('代表記事ズレ候補: ' + mismatchCount + '件 → ブラウザのConsoleで[ズレ候補]を確認してください');
+  }
   console.log('=========================================');
 }
 
@@ -1282,6 +1320,7 @@ function loadDB() {
         severity:       row['重要度'] || '中',
         structure_note: row['構造メモ'] || '',
         collected_at:   row['収録日時'] || '',
+        karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
       })).filter(r => r.title);
       dbData.sort((a, b) => {
         const dateA = new Date(a.date || 0);
@@ -1434,7 +1473,11 @@ function renderDB(data) {
     const sev = r.severity === '高' ? `<span class="db-card-sev-high">高</span>` :
                 r.severity === '中' ? `<span class="db-card-sev-mid">中</span>` : '';
     const hasAnyTag = eventTags.length || structTags.length || evidTags.length || statusTags.length;
-    const relatedKarte = findKarteByUrl(r.url);
+    // カルテ紐付け：karte_id列を正式キーとして使用
+    // findKarteByUrl()はURL逆引きのため代表記事ズレを起こす→表示制御には使わない
+    const relatedKarte = r.karte_id
+      ? karteData.find(k => k.id === r.karte_id) || null
+      : null;
     // idxではなくURLのハッシュ値でカードIDを生成（フィルタ後のズレを防止）
     const cardId = 'card-' + idx + '-' + (r.url || r.title || '').replace(/[^a-zA-Z0-9]/g, '').slice(-8);
 
