@@ -122,8 +122,7 @@ function _activatePage(pageId, navLabel) {
 }
 
 function goToKartePage(karteId) {
-  console.log('[goToKartePage]', karteId, '| before hash:', location.hash, '| history.length:', history.length);
-  location.hash = '#/karte/' + encodeURIComponent(karteId);
+  window.open('#/karte/' + encodeURIComponent(karteId), '_blank');
 }
 
 // ===== 法律辞典 =====
