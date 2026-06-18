@@ -111,6 +111,7 @@ function handleHashRoute() {
   }
 }
 function _activatePage(pageId, navLabel) {
+  console.log('[_activatePage]', pageId, '| hash:', location.hash, '| history.length:', history.length);
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
   document.getElementById(pageId).classList.add('active');
@@ -1322,6 +1323,16 @@ function loadDB() {
         collected_at:   row['収録日時'] || '',
         karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
       })).filter(r => r.title);
+      // [診断] カルテID列がAPIから来ているか確認
+      const sampleRow = dbData.slice(0, 3);
+      sampleRow.forEach((r, i) => {
+        console.log('[loadDB診断] 記事' + i + ':', r.title ? r.title.slice(0, 30) : '(無題)',
+          '| karte_id:', r.karte_id || '(空)',
+          '| url末尾:', (r.url || '').slice(-30));
+      });
+      const hasKarteId = dbData.some(r => r.karte_id);
+      console.log('[loadDB診断] カルテID列が存在するか:', hasKarteId ? 'YES ✅' : 'NO ❌（GAS APIが列を返していない可能性）');
+
       dbData.sort((a, b) => {
         const dateA = new Date(a.date || 0);
         const dateB = new Date(b.date || 0);
@@ -1474,10 +1485,16 @@ function renderDB(data) {
                 r.severity === '中' ? `<span class="db-card-sev-mid">中</span>` : '';
     const hasAnyTag = eventTags.length || structTags.length || evidTags.length || statusTags.length;
     // カルテ紐付け：karte_id列を正式キーとして使用
-    // findKarteByUrl()はURL逆引きのため代表記事ズレを起こす→表示制御には使わない
     const relatedKarte = r.karte_id
       ? karteData.find(k => k.id === r.karte_id) || null
       : null;
+    // [診断] 最初の5件のみログ
+    if (idx < 5) {
+      console.log('[renderDB診断] idx:' + idx,
+        '| 記事:', (r.title || '').slice(0, 25),
+        '| karte_id:', r.karte_id || '(空)',
+        '| relatedKarte:', relatedKarte ? relatedKarte.id + ' ' + (relatedKarte.title || '').slice(0, 20) : 'null');
+    }
     // idxではなくURLのハッシュ値でカードIDを生成（フィルタ後のズレを防止）
     const cardId = 'card-' + idx + '-' + (r.url || r.title || '').replace(/[^a-zA-Z0-9]/g, '').slice(-8);
 
