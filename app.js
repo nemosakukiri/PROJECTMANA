@@ -10,6 +10,7 @@ let dbData = [];
 let surveyData = [];
 let termsData = []; // 用語辞典
 let lawsData  = []; // 法律辞典
+let _routeHandled = false; // 初回ルーティング済みフラグ
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,6 +41,7 @@ function showPage(name, navEl) {
 // /#/tag/タグ名 → タグ別カルテ一覧
 // /#/karte/ID   → 独立カルテページ
 function handleHashRoute() {
+  _routeHandled = true;
   const hash = location.hash;
 
   if (hash === '#/tags') {
@@ -1096,25 +1098,73 @@ function renderKarteDetailPage(karteId) {
 
       <div class="kp2-demo-title">事案プロフィール：</div>
 
-      <div class="kp2-demo-row">
-        <span class="kp2-dl">地域</span>
-        <span class="kp2-dv">${regionPref
-          ? `<a href="#/map?pref=${encodeURIComponent(regionPref)}" style="color:#123a6f;text-decoration:none">${regionPref}</a>`
-          : '—'}</span>
-        ${k.region_city ? `<span class="kp2-dl">市区町村</span><span class="kp2-dv">${k.region_city}</span>` : ''}
-        <span class="kp2-dl">分野</span>
-        <span class="kp2-dv">${k.field || '—'}</span>
-        ${tagsStatus.length ? `<span class="kp2-dl">状態</span><span class="kp2-dv">${tagsStatus[0]}</span>` : ''}
-        ${k.start_date ? `<span class="kp2-dl">事案開始</span><span class="kp2-dv">${k.start_date}</span>` : ''}
-        <span class="kp2-dl">根拠記事</span>
-        <span class="kp2-dv">${urls.length}件</span>
+      <!-- 地域：地図ページへ（クリック可） -->
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">地域</div>
+        ${regionPref
+          ? `<a href="#/map?pref=${encodeURIComponent(regionPref)}" class="kp2-chip kp2-chip-region" title="${regionPref}の事案を地図で見る">${regionPref} <span class="kp2-chip-arrow">→</span></a>`
+            + (k.region_city ? `<span class="kp2-chip kp2-chip-text">${k.region_city}</span>` : '')
+          : '<span class="kp2-chip kp2-chip-text">—</span>'}
       </div>
 
-      ${tagsTarget.length ? `<div class="kp2-demo-sec"><div class="kp2-dsl">対象者：</div><div class="kp2-dsv">${tagsTarget.join('、')}</div></div>` : ''}
-      ${tagsActor.length  ? `<div class="kp2-demo-sec"><div class="kp2-dsl">行為者：</div><div class="kp2-dsv">${tagsActor.join('<br>')}</div></div>` : ''}
-      ${tagsEvidence.length ? `<div class="kp2-demo-sec"><div class="kp2-dsl">根拠種別：</div><div class="kp2-dsv">${tagsEvidence.join(' / ')}</div></div>` : ''}
-      <div class="kp2-demo-sec"><div class="kp2-dsl">カルテID：</div><div class="kp2-dsv">${k.id}</div></div>
-      ${k.updated_at ? `<div class="kp2-demo-sec"><div class="kp2-dsl">最終更新：</div><div class="kp2-dsv">${k.updated_at.slice(0,10)}</div></div>` : ''}
+      <!-- 分野：タグページへ（クリック可） -->
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">分野</div>
+        ${k.field
+          ? `<a href="#/tag/${encodeURIComponent(k.field)}" class="kp2-chip kp2-chip-field" title="${k.field}の事案一覧">${k.field} <span class="kp2-chip-arrow">→</span></a>`
+          : '<span class="kp2-chip kp2-chip-text">—</span>'}
+      </div>
+
+      <!-- 状態：タグページへ（クリック可） -->
+      ${tagsStatus.length ? `
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">状態</div>
+        ${tagsStatus.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="kp2-chip kp2-chip-status" title="${t}の事案一覧">${t} <span class="kp2-chip-arrow">→</span></a>`).join('')}
+      </div>` : ''}
+
+      <!-- 対象者：タグページへ（クリック可） -->
+      ${tagsTarget.length ? `
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">対象者</div>
+        <div class="kp2-chip-wrap">${tagsTarget.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="kp2-chip kp2-chip-target" title="${t}の事案一覧">${t} <span class="kp2-chip-arrow">→</span></a>`).join('')}</div>
+      </div>` : ''}
+
+      <!-- 行為者：タグページへ（クリック可） -->
+      ${tagsActor.length ? `
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">行為者</div>
+        <div class="kp2-chip-wrap">${tagsActor.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="kp2-chip kp2-chip-actor" title="${t}の事案一覧">${t} <span class="kp2-chip-arrow">→</span></a>`).join('')}</div>
+      </div>` : ''}
+
+      <!-- 根拠種別：タグページへ（クリック可） -->
+      ${tagsEvidence.length ? `
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">根拠種別</div>
+        <div class="kp2-chip-wrap">${tagsEvidence.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="kp2-chip kp2-chip-evidence" title="${t}の事案一覧">${t} <span class="kp2-chip-arrow">→</span></a>`).join('')}</div>
+      </div>` : ''}
+
+      <!-- 事案開始・根拠記事・カルテID：クリック不可（純粋な情報） -->
+      ${k.start_date ? `
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">事案開始</div>
+        <span class="kp2-chip kp2-chip-text">${k.start_date}</span>
+      </div>` : ''}
+
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">根拠記事</div>
+        <span class="kp2-chip kp2-chip-text">${urls.length}件</span>
+      </div>
+
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">カルテID</div>
+        <span class="kp2-chip kp2-chip-text" style="font-family:'DM Mono',monospace;font-size:10px">${k.id}</span>
+      </div>
+
+      ${k.updated_at ? `
+      <div class="kp2-prow">
+        <div class="kp2-prow-label">最終更新</div>
+        <span class="kp2-chip kp2-chip-text">${k.updated_at.slice(0,10)}</span>
+      </div>` : ''}
 
     </div>
 
@@ -1127,7 +1177,7 @@ function renderKarteDetailPage(karteId) {
 
       <div class="kp2-panels">
 
-        <!-- 出来事：全幅・強調 -->
+        <!-- 出来事：全幅・強調・クリック可能 -->
         ${tagsEvent.length ? `
         <div class="kp2-panel-event">
           <div class="kp2-panel-head-event"><div class="kp2-panel-label-event">観測された出来事：</div></div>
@@ -1758,7 +1808,7 @@ function loadKartes() {
     karteData = demoKartes;
     renderKartes(karteData);
     buildKarteFilters(karteData);
-    handleHashRoute();
+    if (!_routeHandled) handleHashRoute();
     return;
   }
   const url = GAS_API_URL + '?sheet=' + encodeURIComponent(KARTE_SHEET_NAME);
@@ -1808,7 +1858,7 @@ function loadKartes() {
       renderKartes(karteData);
       buildKarteFilters(karteData);
       if (dbData.length) renderDB(dbData);
-      handleHashRoute();
+      if (!_routeHandled) handleHashRoute();
       checkKarteLinkage();
     })
     .catch(err => {
