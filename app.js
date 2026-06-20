@@ -1024,8 +1024,8 @@ function renderTagPage(tagName) {
       <div class="karte-card-title">${k.title}</div>
       ${k.summary ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
       <div class="karte-card-tags">
-        ${structTags.map(t=>`<span class="db-tag-s">${t}</span>`).join('')}
-        ${eventTags.map(t =>`<span class="db-tag-e">${t}</span>`).join('')}
+        ${structTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-s" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${eventTags.map(t =>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-e" onclick="event.stopPropagation()">${t}</a>`).join('')}
       </div>
       <div class="karte-card-footer"><span>記事 ${urls.length} 件</span></div>
     </div>`;
@@ -1605,10 +1605,10 @@ function renderDB(data) {
       ${relatedKarte ? `<button class="db-card-karte-btn" onclick="event.stopPropagation();goToKartePage('${relatedKarte.id}')">📋 事案カルテを見る：${relatedKarte.title}</button>` : ''}
       ${r.summary ? `<div class="db-card-summary">${r.summary}</div>` : ''}
       <div class="db-card-tags">
-        ${eventTags.map(t=>`<span class="db-tag-e" onclick="event.stopPropagation();addTagFilter('event','${t}')">${t}</span>`).join('')}
-        ${structTags.map(t=>`<span class="db-tag-s" onclick="event.stopPropagation();addTagFilter('structure','${t}')">${t}</span>`).join('')}
-        ${evidTags.map(t=>`<span class="db-tag-v" onclick="event.stopPropagation();addTagFilter('evidence','${t}')">${t}</span>`).join('')}
-        ${statusTags.map(t=>`<span class="db-tag-t" onclick="event.stopPropagation();addTagFilter('status','${t}')">${t}</span>`).join('')}
+        ${eventTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-e" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${structTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-s" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${evidTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-v" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${statusTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-t" onclick="event.stopPropagation()">${t}</a>`).join('')}
       </div>
       ${hasAnyTag ? `<button class="db-similar-btn" id="similar-btn-${cardId}" onclick="event.stopPropagation();toggleSimilar('${cardId}')">共通する構造を探す</button>` : ''}
       <div class="db-card-similar" id="similar-${cardId}"></div>
@@ -1677,16 +1677,6 @@ function toggleTagFilter(type, tag, btn) {
     activeTagFilters[type].splice(idx, 1);
     btn.classList.remove('active');
   }
-  filterDB();
-}
-
-function addTagFilter(type, tag) {
-  if (!activeTagFilters[type].includes(tag)) {
-    activeTagFilters[type].push(tag);
-    const btns = document.querySelectorAll(`#filter-${type} .db-tag-btn`);
-    btns.forEach(btn => { if (btn.textContent.trim().startsWith(tag)) btn.classList.add('active'); });
-  }
-  showPage('db', document.querySelector('nav a:nth-child(2)'));
   filterDB();
 }
 
@@ -2033,11 +2023,11 @@ function renderKartes(data) {
     const structTags = splitKarteTags(k.tags_structure);
     const eventTags  = splitKarteTags(k.tags_event);
     const statusTags = splitKarteTags(k.tags_status);
-    return `<div class="karte-card" onclick="goToKartePage('${k.id}')">\n      <div class="karte-card-top">\n        <span class="karte-card-id">${k.id}</span>\n        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}\n        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}\n        ${statusTags[0] ? `<span class="db-tag-t">${statusTags[0]}</span>` : ''}\n      </div>\n      <div class="karte-card-title">${k.title}</div>\n      ${k.summary  ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
+    return `<div class="karte-card" onclick="goToKartePage('${k.id}')">\n      <div class="karte-card-top">\n        <span class="karte-card-id">${k.id}</span>\n        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}\n        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}\n        ${statusTags[0] ? `<a href="#/tag/${encodeURIComponent(statusTags[0])}" class="db-tag-t" onclick="event.stopPropagation()">${statusTags[0]}</a>` : ''}\n      </div>\n      <div class="karte-card-title">${k.title}</div>\n      ${k.summary  ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
       ${k.progress ? `<div class="karte-card-progress">${k.progress}</div>` : ''}
       <div class="karte-card-tags">
-        ${structTags.map(t => `<span class="db-tag-s">${t}</span>`).join('')}
-        ${eventTags.map(t  => `<span class="db-tag-e">${t}</span>`).join('')}
+        ${structTags.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-s" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${eventTags.map(t  => `<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-e" onclick="event.stopPropagation()">${t}</a>`).join('')}
       </div>
       <div class="karte-card-footer">
         <span>記事 ${urls.length} 件</span>
@@ -2076,88 +2066,6 @@ function filterKartes() {
     (!status || (k.tags_status    || '').includes(status))
   );
   renderKartes(filtered);
-}
-
-function openKarteModal(id) {
-  const k = karteData.find(k => k.id === id);
-  if (!k) return;
-  const myStructTags = splitKarteTags(k.tags_structure);
-  const related = karteData.filter(other =>
-    other.id !== k.id &&
-    splitKarteTags(other.tags_structure).some(t => myStructTags.includes(t))
-  ).slice(0, 5);
-  const urls = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
-
-  const kmc = document.getElementById('karte-modal-content'); if(kmc) kmc.innerHTML = `
-    <div class="karte-modal-id">${k.id}</div>
-    <div class="karte-modal-title">${k.title}</div>
-    <div class="karte-card-top" style="margin-bottom:1rem">
-      ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}
-      ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}
-    </div>
-    <div class="karte-modal-section">
-      <div class="karte-modal-section-label">概要</div>
-      <div class="karte-modal-text">${k.summary}</div>
-    </div>
-    ${k.progress ? `<div class="karte-modal-section">
-      <div class="karte-modal-section-label">現在の経過</div>
-      <div class="karte-modal-progress">${k.progress}</div>
-    </div>` : ''}
-    <div class="karte-modal-section">
-      <div class="karte-modal-section-label">このカルテのタグ</div>
-      ${[
-        {label:'出来事', tags: splitKarteTags(k.tags_event),     cls:'db-tag-e'},
-        {label:'状態',   tags: splitKarteTags(k.tags_status),    cls:'db-tag-t'},
-        {label:'根拠',   tags: splitKarteTags(k.tags_evidence),  cls:'db-tag-v'},
-        {label:'構造',   tags: splitKarteTags(k.tags_structure), cls:'db-tag-s'},
-      ].filter(g => g.tags.length).map(g => `
-        <div style="margin-bottom:0.5rem">
-          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-right:0.4rem">${g.label}</span>
-          ${g.tags.map(t => `<span class="${g.cls}" style="cursor:pointer" onclick="filterKarteByTag('${escapeAttr(t)}')" title="「${escapeAttr(t)}」の事案を探す">${t}</span>`).join('')}
-        </div>
-      `).join('')}
-    </div>
-    ${k.mana_comment ? `<div class="karte-modal-section">
-      <div class="karte-modal-section-label">MANAコメント</div>
-      <div class="karte-modal-text">${k.mana_comment}</div>
-    </div>` : ''}
-    ${urls.length ? `<div class="karte-modal-section">
-      <div class="karte-modal-section-label">関連記事 (${urls.length}件)</div>
-      ${urls.map(u => `<a class="karte-related-link" href="${u}" target="_blank">${u}</a>`).join('')}
-    </div>` : ''}
-    ${related.length ? `<div class="karte-modal-section">
-      <div class="karte-modal-section-label">共通構造タグを持つ関連事案</div>
-      <div class="karte-related-cards">
-        ${related.map(r => `<div class="karte-related-card" onclick="goToKartePage('${r.id}')">
-          <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent)">${r.region} / ${r.field}</span>
-          <div style="font-weight:500;margin-top:0.2rem">${r.title}</div>
-        </div>`).join('')}
-      </div>
-    </div>` : ''}
-  `;
-  document.getElementById('karte-modal').classList.add('show');
-}
-
-function closeKarteModal(e) {
-  if (e.target.id === 'karte-modal') {
-    document.getElementById('karte-modal').classList.remove('show');
-  }
-}
-
-function filterKarteByTag(tag) {
-  document.getElementById('karte-modal').classList.remove('show');
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-  document.getElementById('page-karte').classList.add('active');
-  const karteNav = document.querySelector('nav a:nth-child(5)');
-  if (karteNav) karteNav.classList.add('active');
-  window.scrollTo(0, 0);
-  const filtered = karteData.filter(k =>
-    [k.tags_event, k.tags_structure, k.tags_status, k.tags_evidence]
-      .some(t => (t || '').includes(tag))
-  );
-  renderKartes(filtered);
-  document.getElementById('karte-count-label').textContent = `「${tag}」の事案： ${filtered.length} 件`;
 }
 
 function escapeAttr(str) {
