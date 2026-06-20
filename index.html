@@ -345,6 +345,7 @@
       <label>時期（おおよそで構いません）</label>
       <input type="text" id="s-when" placeholder="例：2024年ごろ、昨年など">
     </div>
+    <div id="survey-error" style="display:none;background:#fdf0f0;border:1px solid #e8b0b0;color:#8b2020;padding:0.8rem 1rem;font-size:0.82rem;line-height:1.6;margin-bottom:1rem"></div>
     <button class="btn-primary" onclick="submitSurvey()">記録を送信する →</button>
   </div>
   <div class="survey-thanks" id="survey-thanks">
@@ -352,6 +353,54 @@
     <p>あなたの記録を受け取りました。<br>集まった声はデータとして分析され、このサイトで公開されます。<br><br>あなたの体験は、同じ困難に直面している人たちへの<br>重要な記録になります。</p>
     <br>
     <button class="btn-outline" onclick="document.getElementById('survey-thanks').style.display='none';document.getElementById('survey-form-container').style.display='block'">別の体験を記録する</button>
+  </div>
+</div>
+
+<!-- 観測フィードバックページ -->
+<div class="page" id="page-feedback">
+  <div class="survey-header">
+    <div class="page-title">観測フィードバック</div>
+    <p class="survey-intro">PROJECT MANAの観測精度を高めるためのご連絡です。カルテの誤り、タグの修正提案、地域情報の補完、関連記事・資料の情報提供、サイトの改善提案などをお寄せください。これは社会観測データ（市民の声）とは別に、運営が確認・反映に使う情報として扱います。</p>
+  </div>
+  <div class="survey-form" id="feedback-form-container">
+    <div class="field">
+      <label>種別</label>
+      <select id="f-type">
+        <option value="">選択してください</option>
+        <option>カルテの誤り</option>
+        <option>タグ修正提案</option>
+        <option>地域情報の補完</option>
+        <option>関連記事・資料の情報提供</option>
+        <option>サイト改善提案</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>対象カルテID（わかる場合のみ）</label>
+      <input type="text" id="f-karte-id" placeholder="例：KARTE-0402">
+      <div class="field-note">カルテ詳細ページのURL末尾、または左カラムの「カルテID」欄に記載されています</div>
+    </div>
+    <div class="field">
+      <label>対象URL（関連記事・資料がある場合）</label>
+      <input type="text" id="f-url" placeholder="例：https://example.com/news/...">
+    </div>
+    <div class="field">
+      <label>内容</label>
+      <textarea id="f-content" rows="6" placeholder="できるだけ具体的に記述してください。どのカルテ・どのタグについてか、何が誤っているか、何を補完してほしいかなど。"></textarea>
+    </div>
+    <div class="field">
+      <label>連絡先（任意）</label>
+      <input type="text" id="f-contact" placeholder="返信を希望する場合のみメールアドレス等をご記入ください">
+      <div class="field-note">原則として個別返信はできませんが、重要な修正の際にご連絡することがあります</div>
+    </div>
+    <div id="feedback-error" style="display:none;background:#fdf0f0;border:1px solid #e8b0b0;color:#8b2020;padding:0.8rem 1rem;font-size:0.82rem;line-height:1.6;margin-bottom:1rem"></div>
+    <button class="btn-primary" onclick="submitFeedback()">フィードバックを送る →</button>
+  </div>
+  <div class="survey-thanks" id="feedback-thanks">
+    <h3>ありがとうございます</h3>
+    <p>フィードバックを受け取りました。<br>カルテ・タグ・地域情報など、観測精度の改善に活用させていただきます。<br><br>百葉箱は、設置した者だけが観測するものではありません。<br>あなたの気づきが、観測を少しずつ正確にしていきます。</p>
+    <br>
+    <button class="btn-outline" onclick="document.getElementById('feedback-thanks').style.display='none';document.getElementById('feedback-form-container').style.display='block'">別のフィードバックを送る</button>
   </div>
 </div>
 
@@ -726,7 +775,7 @@
         <li>サイトの構造や設計への意見</li>
       </ul>
       <p>どんな小さな気づきでも、PROJECT MANAの観測精度を高めます。</p>
-      <a id="feedback-link" href="#" target="_blank" rel="noopener" class="static-external-link" style="margin-top:.5rem">→ 観測フィードバックを送る</a>
+      <a id="feedback-link" href="#" onclick="showPage('feedback', null); return false;" class="static-external-link" style="margin-top:.5rem">→ 観測フィードバックを送る</a>
     </div>
 
   </div>
