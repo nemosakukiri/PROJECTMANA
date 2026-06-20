@@ -1859,6 +1859,60 @@ function submitSurvey() {
   });
 }
 
+// ===== 観測フィードバック送信 =====
+const GAS_FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbw0MWRwN9ZgoXxtAsAQus3wDhsnZc1nESxp_imFe90-b9dAw4jbnBLpMQ4zJUm1Z2VsFQ/exec';
+
+function submitFeedback() {
+  const type    = document.getElementById('f-type').value;
+  const karteId = document.getElementById('f-karte-id').value.trim();
+  const url     = document.getElementById('f-url').value.trim();
+  const content = document.getElementById('f-content').value.trim();
+  const contact = document.getElementById('f-contact').value.trim();
+
+  if (!type || !content) { alert('種別と内容は必須です'); return; }
+
+  const errEl = document.getElementById('feedback-error');
+
+  // 送信先が未設定の場合は「送信完了」を絶対に表示しない（未送信データの隠蔽防止）
+  if (GAS_FEEDBACK_URL === 'YOUR_GAS_FEEDBACK_URL_HERE') {
+    if (errEl) {
+      errEl.textContent = '現在、送信先が未設定のため送信できません。しばらくしてから再度お試しください。';
+      errEl.style.display = 'block';
+    } else {
+      alert('現在、送信先が未設定のため送信できません。しばらくしてから再度お試しください。');
+    }
+    return;
+  }
+
+  const data = {
+    type,
+    targetKarteId: karteId,
+    targetUrl: url,
+    content,
+    contact,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (errEl) errEl.style.display = 'none';
+
+  fetch(GAS_FEEDBACK_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(() => {
+    document.getElementById('feedback-form-container').style.display = 'none';
+    document.getElementById('feedback-thanks').style.display = 'block';
+  }).catch(() => {
+    // 送信失敗時も「成功」を装わない
+    if (errEl) {
+      errEl.textContent = '送信に失敗しました。通信状況をご確認のうえ、もう一度お試しください。';
+      errEl.style.display = 'block';
+    } else {
+      alert('送信に失敗しました。通信状況をご確認のうえ、もう一度お試しください。');
+    }
+  });
+}
+
 // ===== 構造類似表示 =====
 function getComparableTags(r) {
   return [
