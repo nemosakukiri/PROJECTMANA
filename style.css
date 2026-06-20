@@ -2443,3 +2443,81 @@ a.kp2-chip-evidence:hover {
 }
 
 .hsr-more:hover { background: var(--accent-pale); }
+
+/* ===== 構造が近い事案（タグ重なり比較導線） ===== */
+.kp2-panel-structural {
+  background: #f4f8fd;
+  border: 1.5px solid #8ab4e0;
+}
+
+.kp2-panel-structural .kp2-panel-head {
+  background: #123a6f;
+}
+
+.kp2-structural-body {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+
+.kp2-related-item {
+  padding: .65rem .8rem;
+  background: #fff;
+  border: 1px solid #d4dce8;
+  border-left: 3px solid #123a6f;
+}
+
+.kp2-related-top {
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  margin-bottom: .25rem;
+}
+
+.kp2-related-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #123a6f;
+  text-decoration: none;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.kp2-related-title:hover {
+  text-decoration: underline;
+}
+
+.kp2-related-newtab {
+  font-size: 12px;
+  color: #6a8ab8;
+  text-decoration: none;
+  flex-shrink: 0;
+  padding: 0 .2rem;
+}
+
+.kp2-related-newtab:hover {
+  color: #123a6f;
+}
+
+.kp2-related-match {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #d4a84a;
+  background: #fff8e6;
+  border: 1px solid #d4a84a;
+  display: inline-block;
+  padding: 1px 7px;
+  margin-bottom: .35rem;
+}
+
+.kp2-related-tags {
+  font-size: 11px;
+  color: #4a4438;
+  line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+  .kp2-related-title { font-size: 13.5px; }
+  .kp2-related-tags  { font-size: 12px; }
+}
