@@ -1003,7 +1003,7 @@ function renderTagPage(tagName) {
   const allTagFields = [
     'tags_field', 'tags_target', 'tags_actor', 'tags_event_search',
     'tags_event', 'tags_structure', 'tags_status', 'tags_evidence',
-    'region_pref'
+    'region_pref', 'region_city'
   ];
   const matched = karteData.filter(k =>
     allTagFields.some(f => splitKarteTags(k[f] || '').includes(tagName))
@@ -1100,7 +1100,7 @@ function renderKarteDetailPage(karteId) {
   const STRUCTURAL_TAG_FIELDS = [
     'tags_field', 'tags_target', 'tags_actor', 'tags_event_search',
     'tags_event', 'tags_structure', 'tags_status', 'tags_evidence',
-    'region_pref'
+    'region_pref', 'region_city'
   ];
 
   function collectTagSet(karte) {
