@@ -1095,6 +1095,48 @@ function renderKarteDetailPage(karteId) {
     </div>`;
   }
 
+  // ===== 構造が近い事案：タグの重なりで比較導線を作る =====
+  // renderTagPage()の横断検索対象フィールドと揃える
+  const STRUCTURAL_TAG_FIELDS = [
+    'tags_field', 'tags_target', 'tags_actor', 'tags_event_search',
+    'tags_event', 'tags_structure', 'tags_status', 'tags_evidence',
+    'region_pref'
+  ];
+
+  function collectTagSet(karte) {
+    const set = new Set();
+    STRUCTURAL_TAG_FIELDS.forEach(f => {
+      splitKarteTags(karte[f] || '').forEach(t => set.add(t));
+    });
+    return set;
+  }
+
+  const myTagSet = collectTagSet(k);
+
+  const structurallyRelated = karteData
+    .filter(other => other.id !== k.id)
+    .map(other => {
+      const otherTagSet = collectTagSet(other);
+      const common = [...myTagSet].filter(t => otherTagSet.has(t));
+      return { karte: other, commonTags: common, commonCount: common.length };
+    })
+    .filter(r => r.commonCount >= 3)
+    .sort((a, b) => b.commonCount - a.commonCount)
+    .slice(0, 5);
+
+  const structurallyRelatedHtml = structurallyRelated.length
+    ? structurallyRelated.map(r => `
+      <div class="kp2-related-item">
+        <div class="kp2-related-top">
+          <a href="#/karte/${encodeURIComponent(r.karte.id)}" class="kp2-related-title">${r.karte.title}</a>
+          <a href="#/karte/${encodeURIComponent(r.karte.id)}" target="_blank" rel="noopener" class="kp2-related-newtab" title="新しいタブで開く">↗</a>
+        </div>
+        <div class="kp2-related-match">${r.commonCount}タグ一致</div>
+        <div class="kp2-related-tags">一致タグ：${r.commonTags.join('、')}</div>
+      </div>
+    `).join('')
+    : '<span class="kp2-empty">構造が近い事案は見つかりませんでした</span>';
+
   container.innerHTML = `<div class="kp2-wrap">
     <div class="kp2-left">
 
@@ -1193,15 +1235,16 @@ function renderKarteDetailPage(karteId) {
           <div class="kp2-panel-body">${chipsHtml(tagsEvent, 'kp2-chip-e')}</div>
         </div>` : ''}
 
-        <!-- 観測メモ（全文・切れない）/ 関連カルテ -->
-        <div class="kp2-panel kp2-panel-memo">
+        <!-- 観測メモ（全文・切れない）-->
+        <div class="kp2-panel kp2-panel-memo" style="grid-column:1/-1">
           <div class="kp2-panel-head"><div class="kp2-panel-label">観測メモ：</div></div>
           <div class="kp2-panel-body kp2-memo-body">${k.summary || '<span class="kp2-empty">未記録</span>'}</div>
         </div>
 
-        <div class="kp2-panel kp2-panel-karte">
-          <div class="kp2-panel-head"><div class="kp2-panel-label">関連カルテ：</div></div>
-          <div class="kp2-panel-body kp2-empty">未登録（今後拡充予定）</div>
+        <!-- 構造が近い事案：タグの重なりによる比較導線（ニュースの関連記事ではない） -->
+        <div class="kp2-panel kp2-panel-structural" style="grid-column:1/-1">
+          <div class="kp2-panel-head"><div class="kp2-panel-label">構造が近い事案：</div></div>
+          <div class="kp2-panel-body kp2-structural-body">${structurallyRelatedHtml}</div>
         </div>
 
         <!-- メモ / 経過 -->
