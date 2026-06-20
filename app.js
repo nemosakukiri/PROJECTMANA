@@ -1813,7 +1813,7 @@ function updateTicker(data) {
 }
 
 // ===== SURVEY =====
-const GAS_SURVEY_URL = 'YOUR_GAS_WEB_APP_URL_HERE';
+const GAS_SURVEY_URL = 'https://script.google.com/macros/s/AKfycbwXWIwaQWYnE-LX6sPXNdqCL_--CT-CidBsYnntp88wFYJ0MMyHjhFBI0mZyO9ZlYdymg/exec';
 
 function submitSurvey() {
   const pref   = document.getElementById('s-pref').value;
@@ -1823,12 +1823,24 @@ function submitSurvey() {
   const when   = document.getElementById('s-when').value;
   const types  = [...document.querySelectorAll('input[type="checkbox"]:checked')].map(c => c.value).join('、');
   if (!pref || !detail) { alert('都道府県と体験の詳細は必須です'); return; }
-  const data = { pref, window: win, types, detail, result, when, timestamp: new Date().toISOString() };
+
+  // 送信先が未設定の場合は「送信完了」を絶対に表示しない（未送信データの隠蔽防止）
   if (GAS_SURVEY_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
-    document.getElementById('survey-form-container').style.display = 'none';
-    document.getElementById('survey-thanks').style.display = 'block';
+    const errEl = document.getElementById('survey-error');
+    if (errEl) {
+      errEl.textContent = '現在、送信先が未設定のため送信できません。しばらくしてから再度お試しください。';
+      errEl.style.display = 'block';
+    } else {
+      alert('現在、送信先が未設定のため送信できません。しばらくしてから再度お試しください。');
+    }
     return;
   }
+
+  const data = { pref, window: win, types, detail, result, when, timestamp: new Date().toISOString() };
+
+  const errEl = document.getElementById('survey-error');
+  if (errEl) errEl.style.display = 'none';
+
   fetch(GAS_SURVEY_URL, {
     method: 'POST', mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
@@ -1837,8 +1849,13 @@ function submitSurvey() {
     document.getElementById('survey-form-container').style.display = 'none';
     document.getElementById('survey-thanks').style.display = 'block';
   }).catch(() => {
-    document.getElementById('survey-form-container').style.display = 'none';
-    document.getElementById('survey-thanks').style.display = 'block';
+    // 送信失敗時も「成功」を装わない
+    if (errEl) {
+      errEl.textContent = '送信に失敗しました。通信状況をご確認のうえ、もう一度お試しください。';
+      errEl.style.display = 'block';
+    } else {
+      alert('送信に失敗しました。通信状況をご確認のうえ、もう一度お試しください。');
+    }
   });
 }
 
