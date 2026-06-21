@@ -1457,6 +1457,7 @@ function loadDB() {
         severity:       row['重要度'] || '中',
         structure_note: row['構造メモ'] || '',
         collected_at:   row['収録日時'] || '',
+        old_flag:       row['古い記事'] || '', // 「古い記事候補」が入っていればアーカイブ扱い
         karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
       })).filter(r => r.title);
       // [診断] カルテID列がAPIから来ているか確認
@@ -1469,16 +1470,22 @@ function loadDB() {
       const hasKarteId = dbData.some(r => r.karte_id);
       console.log('[loadDB診断] カルテID列が存在するか:', hasKarteId ? 'YES ✅' : 'NO ❌（GAS APIが列を返していない可能性）');
 
+      // ===== 表示順は必ず「収集日ベースの新着順」に統一する =====
+      // 公開日(date)や文字列順ではなく、collected_at（収録日時）をDateとして比較する。
+      // collected_atが取れない異常データのみ date にフォールバックする。
       dbData.sort((a, b) => {
-        const dateA = new Date(a.date || 0);
-        const dateB = new Date(b.date || 0);
-        if (dateB - dateA !== 0) return dateB - dateA;
-        return new Date(b.collected_at || 0) - new Date(a.collected_at || 0);
+        const collectedA = new Date(a.collected_at || 0);
+        const collectedB = new Date(b.collected_at || 0);
+        if (!isNaN(collectedA) && !isNaN(collectedB) && (collectedB - collectedA !== 0)) {
+          return collectedB - collectedA;
+        }
+        // collected_atが同値・不正な場合のみdateにフォールバック
+        return new Date(b.date || 0) - new Date(a.date || 0);
       });
       console.log('DB読み込み成功:', dbData.length + '件');
       renderDB(dbData);
       updateStats();
-      renderHomeNews(dbData.slice(0, 5));
+      renderHomeNews(dbData.filter(r => !r.old_flag).slice(0, 5));
       buildFilters(dbData);
       updateTicker(dbData);
       renderHomeTagCloud(dbData);
@@ -1560,7 +1567,7 @@ function useDemoData() {
   ];
   renderDB(dbData);
   updateStats();
-  renderHomeNews(dbData.slice(0, 5));
+  renderHomeNews(dbData.filter(r => !r.old_flag).slice(0, 5));
   buildFilters(dbData);
   updateTicker(dbData);
   renderHomeTagCloud(dbData);
@@ -1602,7 +1609,21 @@ function renderDB(data) {
     }
   });
 
-  if (!data.length) {
+  // ===== 古い記事候補は通常の新着一覧からは分離する（削除はしない） =====
+  // 「古い記事」列に値（例：「古い記事候補」）が入っている行はアーカイブ扱い。
+  // チェックボックス #db-show-old がオンの場合のみ表示に含める。
+  const showOld = document.getElementById('db-show-old')?.checked || false;
+  const oldCount = data.filter(r => r.old_flag).length;
+  const visibleData = showOld ? data : data.filter(r => !r.old_flag);
+
+  const oldCountLabel = document.getElementById('db-old-count-label');
+  if (oldCountLabel) {
+    oldCountLabel.textContent = oldCount > 0
+      ? `（過去記事 ${oldCount}件を${showOld ? '表示中' : '非表示中'}）`
+      : '';
+  }
+
+  if (!visibleData.length) {
     container.innerHTML = '<div class="db-empty">該当するデータがありません</div>';
     const cl0 = document.getElementById('db-count-label');
     if (cl0) cl0.textContent = '';
@@ -1610,9 +1631,9 @@ function renderDB(data) {
   }
 
   const cl = document.getElementById('db-count-label');
-  if (cl) cl.textContent = data.length + ' 件表示中';
+  if (cl) cl.textContent = visibleData.length + ' 件表示中' + (!showOld && oldCount > 0 ? `（過去記事${oldCount}件は除く）` : '');
 
-  container.innerHTML = data.map((r, idx) => {
+  container.innerHTML = visibleData.map((r, idx) => {
     const eventTags  = splitTags(r.tags_event);
     const structTags = splitTags(r.tags_structure);
     const evidTags   = splitTags(r.tags_evidence);
@@ -1634,9 +1655,10 @@ function renderDB(data) {
     // idxではなくURLのハッシュ値でカードIDを生成（フィルタ後のズレを防止）
     const cardId = 'card-' + idx + '-' + (r.url || r.title || '').replace(/[^a-zA-Z0-9]/g, '').slice(-8);
 
-    return `<div class="db-card" id="${cardId}">
+    return `<div class="db-card${r.old_flag ? ' db-card-old' : ''}" id="${cardId}">
       <div class="db-card-top">
         <span class="db-card-date">${r.date}</span>
+        ${r.old_flag ? `<span class="db-card-old-badge" title="収集はされましたが、公開日が古い記事です">過去記事</span>` : ''}
         ${r.region ? `<span class="db-card-region">${r.region}${r.municipality ? ' / ' + r.municipality : ''}</span>` : ''}
         ${r.field ? `<span class="db-card-field">${r.field}</span>` : ''}
         ${sev}
@@ -1807,7 +1829,9 @@ function renderHomeVoices(data) {
 }
 
 function updateTicker(data) {
-  const items = data.slice(0, 6).map(r => `${r.region||r.prefecture||''}・${r.title}`).join('　　');
+  // ティッカーは「現在進行中の新着」を見せる場所のため、過去記事（old_flag）は除外する
+  const liveData = data.filter(r => !r.old_flag);
+  const items = liveData.slice(0, 6).map(r => `${r.region||r.prefecture||''}・${r.title}`).join('　　');
   const doubled = items + '　　　　' + items;
   const tt = document.getElementById('ticker-text'); if(tt) tt.textContent = doubled;
 }
