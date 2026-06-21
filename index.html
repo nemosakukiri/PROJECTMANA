@@ -278,7 +278,14 @@
 
     <!-- 右：記事カード -->
     <div class="db-main">
-      <div class="db-count" id="db-count-label"></div>
+      <div class="db-toolbar">
+        <div class="db-count" id="db-count-label"></div>
+        <label class="db-show-old-toggle">
+          <input type="checkbox" id="db-show-old" onchange="filterDB()">
+          過去記事も表示する
+          <span id="db-old-count-label" class="db-old-count-label"></span>
+        </label>
+      </div>
       <div id="db-cards"></div>
     </div>
   </div>
