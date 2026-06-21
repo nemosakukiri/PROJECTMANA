@@ -1,2566 +1,865 @@
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --ink:#0f0e0d;
-  --ink-mid:#2e2d2b;
-  --ink-light:#6b6764;
-  --paper:#faf9f6;
-  --paper-warm:#f3f1ec;
-  --rule:#e0ddd6;
-  --accent:#123a6f;
-  --accent-pale:#eef3fa;
-}
-body{font-family:'Noto Sans JP',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh}
-a{color:inherit;text-decoration:none}
-
-/* HEADER */
-header{border-bottom:3px solid var(--ink);padding:0 2rem;position:sticky;top:0;background:var(--paper);z-index:100}
-.header-top{display:flex;align-items:baseline;justify-content:space-between;padding:1rem 0 0.5rem}
-.site-name{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;letter-spacing:-0.02em}
-.site-name span{color:var(--accent)}
-.tagline{font-size:0.88rem;font-weight:400;color:var(--ink-mid);letter-spacing:0.06em}
-.header-meta{display:flex;gap:2rem;align-items:center}
-.header-date{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--ink-mid)}
-nav a{font-size:0.7rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1.5px solid transparent;padding-bottom:1px;transition:all 0.15s;margin-left:1.5rem}
-nav a:hover,nav a.active{border-color:var(--accent);color:var(--accent)}
-.ticker{background:var(--ink);color:var(--paper);padding:0.3rem 2rem;font-family:'DM Mono',monospace;font-size:0.65rem;display:flex;gap:1rem;overflow:hidden}
-.ticker-label{color:var(--accent);font-weight:500;flex-shrink:0}
-@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.ticker-inner{display:inline-flex;gap:3rem;animation:scroll 25s linear infinite;white-space:nowrap}
-
-/* PAGES */
-.page{display:none;padding:0 2rem 3rem}
-.page.active{display:block}
-
-/* HOME */
-.hero{border-bottom:1px solid var(--rule);padding:2rem 0}
-.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem}
-.hero-kicker{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.6rem}
-.hero-headline{font-family:'Playfair Display',serif;font-size:2.3rem;font-weight:700;line-height:1.15;letter-spacing:-0.02em;margin-bottom:1rem}
-.hero-body{font-size:0.92rem;line-height:1.95;color:var(--ink-mid);margin-bottom:1.4rem}
-.btn-primary{display:inline-flex;align-items:center;gap:0.4rem;background:var(--ink);color:var(--paper);font-size:0.72rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.65rem 1.4rem;cursor:pointer;border:none;transition:background 0.15s;font-family:'Noto Sans JP',sans-serif}
-.btn-primary:hover{background:var(--accent)}
-.btn-outline{display:inline-flex;align-items:center;gap:0.4rem;background:transparent;color:var(--ink);font-size:0.72rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.6rem 1.2rem;cursor:pointer;border:1.5px solid var(--ink);transition:all 0.15s;font-family:'Noto Sans JP',sans-serif}
-.btn-outline:hover{background:var(--ink);color:var(--paper)}
-
-.stats-col{border-left:1px solid var(--rule);padding-left:3rem;display:flex;flex-direction:column;gap:0}
-.stat-card{padding:1.1rem 0;border-bottom:1px solid var(--rule)}
-.stat-card:last-child{border-bottom:none}
-.stat-num{font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:900;line-height:1}
-.stat-num sup{font-size:0.9rem;color:var(--accent)}
-.stat-label{font-size:0.7rem;color:var(--ink-mid);font-weight:300;margin-top:0.2rem}
-.stat-change{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-top:0.25rem}
-
-.pillars{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--rule)}
-.pillar{padding:1.8rem 0;cursor:pointer}
-.pillar:not(:last-child){border-right:1px solid var(--rule);padding-right:2rem}
-.pillar:not(:first-child){padding-left:2rem}
-.pillar:hover .pillar-title{color:var(--accent)}
-.pillar-num{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light);margin-bottom:0.6rem}
-.pillar-badge{display:inline-block;background:var(--accent);color:white;font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;padding:0.12rem 0.4rem;margin-bottom:0.5rem}
-.pillar-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;line-height:1.2;transition:color 0.15s}
-.pillar-desc{font-size:0.92rem;line-height:1.85;color:var(--ink-mid)}
-.pillar-link{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.7rem;font-weight:500;color:var(--accent);margin-top:0.8rem;border-bottom:1px solid var(--accent);padding-bottom:1px}
-
-.home-bottom{display:grid;grid-template-columns:2fr 1fr;gap:3rem;padding:2rem 0}
-.section-label{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;border-top:3px solid var(--ink);padding-top:0.5rem;margin-bottom:1rem}
-.section-label.red{border-top-color:var(--accent)}
-.section-label.navy{border-top-color:var(--accent)}
-.news-item{display:grid;grid-template-columns:1.5rem 1fr;gap:0.8rem;padding:0.85rem 0;border-bottom:1px solid var(--rule)}
-.news-item:last-child{border-bottom:none}
-.news-num{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);padding-top:0.1rem}
-.news-pref{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);margin-bottom:0.15rem}
-.news-title{font-size:0.83rem;font-weight:500;line-height:1.4;margin-bottom:0.25rem}
-.news-meta{font-size:0.72rem;color:var(--ink-light)}
-
-.voice-panel{background:var(--paper-warm);border:1px solid var(--rule);padding:1.2rem}
-.voice-item{padding:0.65rem 0;border-bottom:1px solid var(--rule);font-size:0.84rem;line-height:1.7;color:var(--ink-mid)}
-.voice-item:last-child{border-bottom:none}
-.voice-pref{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--accent);display:block;margin-bottom:0.15rem}
-
-.db-card-similar{display:none;margin-top:0.8rem;padding:0.8rem;background:var(--paper-warm);border-left:3px solid var(--accent)}
-.db-card-similar.open{display:block}
-.db-similar-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem}
-.db-similar-tags{display:flex;flex-wrap:wrap;gap:0.25rem;margin-bottom:0.6rem}
-.db-similar-tag{font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.1rem 0.4rem;background:#e6f1fb;border:1px solid #85b7eb;color:#0c447c}
-.db-similar-score{font-family:'DM Mono',monospace;font-size:0.65rem;margin-bottom:0.6rem}
-.db-similar-score.score-1{color:var(--ink-mid)}
-.db-similar-score.score-2{color:#7a4a10}
-.db-similar-score.score-3{color:var(--accent);font-weight:500}
-.db-similar-cases{display:flex;flex-direction:column;gap:0.3rem}
-.db-similar-case{font-size:0.75rem;color:var(--ink-mid);padding:0.3rem 0;border-bottom:1px solid var(--rule);line-height:1.4}
-.db-similar-case:last-child{border-bottom:none}
-.db-similar-case-region{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);margin-right:0.4rem}
-.db-similar-btn{font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.15rem 0.5rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;margin-top:0.4rem;transition:all 0.12s}
-.db-similar-btn:hover{border-color:var(--accent);color:var(--accent)}
-.db-similar-btn.active{border-color:var(--accent);color:var(--accent);background:#eef3fa}
-
-/* DB PAGE */
-.db-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
-.page-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;margin-bottom:0.4rem}
-.page-subtitle{font-size:0.95rem;color:var(--ink-mid);line-height:1.75}
-.db-filter-toggle{display:none;width:100%;margin:1rem 0 0;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;font-weight:500;padding:0.65rem 1rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer;text-align:left}
-.db-layout{display:grid;grid-template-columns:210px 1fr;gap:2.5rem;padding:1.5rem 0;align-items:start}
-.db-sidebar{position:sticky;top:90px}
-.db-filter-block{margin-bottom:1.2rem}
-.db-filter-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;border-top:1px solid var(--rule);padding-top:0.5rem}
-.db-sidebar input,.db-sidebar select{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.6rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none}
-.db-sidebar input:focus,.db-sidebar select:focus{border-color:var(--accent)}
-.db-tag-filter{display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.3rem}
-.db-tag-btn{font-family:'DM Mono',monospace;font-size:0.58rem;padding:0.15rem 0.4rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;transition:all 0.12s}
-.db-tag-btn:hover{border-color:var(--accent);color:var(--accent)}
-.db-tag-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.db-filter-reset{width:100%;margin-top:1rem;font-family:'Noto Sans JP',sans-serif;font-size:0.7rem;padding:0.5rem;border:1px solid var(--rule);background:transparent;color:var(--ink-mid);cursor:pointer;transition:all 0.12s}
-.db-filter-reset:hover{border-color:var(--ink);color:var(--ink)}
-.db-count{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--ink-light);padding:0 0 0.8rem;border-bottom:2px solid var(--ink);margin-bottom:1rem}
-.db-card{padding:1rem 0;border-bottom:1px solid var(--rule)}
-.db-card:hover{background:var(--paper-warm);margin:0 -0.5rem;padding:1rem 0.5rem}
-.db-card-top{display:flex;gap:0.6rem;align-items:center;margin-bottom:0.35rem;flex-wrap:wrap}
-.db-card-date{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
-.db-card-region{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);font-weight:500}
-.db-card-field{font-size:0.62rem;padding:0.08rem 0.35rem;background:var(--paper-warm);border:1px solid var(--rule);color:var(--ink-mid)}
-.db-card-sev-high{font-family:'DM Mono',monospace;font-size:0.58rem;color:#8b2020;background:#fdf0f0;border:1px solid #e8a0a0;padding:0.08rem 0.3rem}
-.db-card-sev-mid{font-family:'DM Mono',monospace;font-size:0.58rem;color:#633806;background:#faeeda;border:1px solid #ef9f27;padding:0.08rem 0.3rem}
-.db-card-title{font-size:0.88rem;font-weight:500;line-height:1.4;margin-bottom:0.35rem}
-.db-card-title a{color:var(--ink);border-bottom:1px solid var(--rule)}
-.db-card-title a:hover{color:var(--accent);border-color:var(--accent)}
-.db-card-summary{font-size:0.92rem;color:var(--ink-mid);line-height:1.8;margin-bottom:0.45rem}
-.db-card-tags{display:flex;flex-wrap:wrap;gap:0.22rem}
-.db-tag-e{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#fdf0f0;border:1px solid #e8a0a0;color:#8b2020;cursor:pointer}
-.db-tag-s{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#e6f1fb;border:1px solid #85b7eb;color:#0c447c;cursor:pointer}
-.db-tag-v{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#eaf3de;border:1px solid #97c459;color:#27500a;cursor:pointer}
-.db-tag-t{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#faeeda;border:1px solid #ef9f27;color:#633806;cursor:pointer}
-.db-card-karte-btn{display:inline-flex;align-items:center;gap:0.3rem;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.18rem 0.5rem;border:1px solid var(--accent);color:var(--accent);background:transparent;cursor:pointer;transition:all 0.12s;margin-top:0.4rem}
-.db-card-karte-btn:hover{background:var(--accent);color:#fff}
-.db-card-karte-badge{font-family:'DM Mono',monospace;font-size:0.55rem;padding:0.1rem 0.35rem;background:var(--accent);color:#fff;letter-spacing:0.04em}
-.pref-tag{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent)}
-
-/* SURVEY PAGE */
-.survey-header{padding:2rem 0 1.5rem;border-bottom:1px solid var(--rule)}
-.survey-intro{font-size:0.85rem;line-height:1.9;color:var(--ink-mid);max-width:600px;margin-top:0.8rem}
-.survey-form{max-width:640px;padding:2rem 0}
-.field{margin-bottom:1.8rem}
-.field label{display:block;font-size:0.78rem;font-weight:500;margin-bottom:0.5rem;letter-spacing:0.03em}
-.field-note{font-size:0.68rem;color:var(--ink-light);margin-top:0.25rem}
-.field input,.field select,.field textarea{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;padding:0.7rem 0.9rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none;transition:border-color 0.15s}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
-.field textarea{resize:vertical;line-height:1.7}
-.radio-group{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.3rem}
-.radio-item{display:flex;align-items:center;gap:0.6rem;font-size:0.82rem;cursor:pointer}
-.radio-item input{width:auto;margin:0}
-.survey-thanks{display:none;text-align:center;padding:3rem 0}
-.survey-thanks h3{font-family:'Playfair Display',serif;font-size:1.6rem;margin-bottom:0.8rem}
-.survey-thanks p{font-size:0.85rem;color:var(--ink-mid);line-height:1.8}
-
-/* ESSAYS PAGE */
-.essays-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
-.essays-grid{display:grid;grid-template-columns:2fr 1fr;gap:3rem;padding:2rem 0}
-.essay-featured{border-bottom:1px solid var(--rule);padding-bottom:2rem;margin-bottom:2rem}
-.essay-kicker{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem}
-.essay-title{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;line-height:1.2;margin-bottom:0.8rem}
-.essay-excerpt{font-size:0.88rem;line-height:1.9;color:var(--ink-mid);margin-bottom:1rem}
-.essay-byline{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light)}
-.essay-list-item{padding:1rem 0;border-bottom:1px solid var(--rule);cursor:pointer}
-.essay-list-item:hover .essay-list-title{color:var(--accent)}
-.essay-list-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:0.3rem;transition:color 0.15s}
-.essay-list-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
-.essay-sidebar{}
-.sidebar-section{margin-bottom:2rem}
-.sidebar-title{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;border-top:2px solid var(--ink);padding-top:0.5rem;margin-bottom:0.8rem}
-.tag-cloud{display:flex;flex-wrap:wrap;gap:0.4rem}
-.tag{font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;transition:all 0.15s}
-.tag:hover{border-color:var(--accent);color:var(--accent)}
-
-footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-content:space-between;align-items:center;margin-top:2rem}
-.footer-name{font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700}
-.footer-copy{font-size:0.62rem;color:var(--ink-light);font-family:'DM Mono',monospace}
-
-/* GUIDE PAGE */
-.guide-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
-.guide-layout{display:grid;grid-template-columns:220px 1fr;gap:3rem;padding:2rem 0;align-items:start}
-.guide-nav{position:sticky;top:100px}
-.guide-nav-item{display:block;font-size:0.78rem;padding:0.55rem 0;border-bottom:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;transition:color 0.15s}
-.guide-nav-item:hover,.guide-nav-item.active{color:var(--accent);font-weight:500}
-.guide-nav-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.1em;text-transform:uppercase;padding:0.8rem 0 0.4rem;margin-top:0.5rem}
-.guide-content{}
-.guide-section{margin-bottom:3rem;padding-bottom:3rem;border-bottom:1px solid var(--rule)}
-.guide-section:last-child{border-bottom:none}
-.guide-section-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;margin-bottom:1.2rem}
-.guide-section-intro{font-size:0.9rem;line-height:1.95;color:var(--ink-mid);margin-bottom:1.5rem}
-.step-list{display:flex;flex-direction:column;gap:1rem}
-.step-item{display:grid;grid-template-columns:2.5rem 1fr;gap:1rem;background:var(--paper-warm);padding:1.2rem;border-left:3px solid var(--ink)}
-.step-item.warning{border-left-color:var(--accent);background:var(--accent-pale,#fdf5f5)}
-.step-num{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--ink-light);line-height:1}
-.step-body{}
-.step-title{font-size:0.85rem;font-weight:700;margin-bottom:0.3rem}
-.step-desc{font-size:0.86rem;line-height:1.8;color:var(--ink-mid)}
-.tip-box{background:var(--paper-warm);border:1px solid var(--rule);border-left:3px solid var(--accent);padding:1rem 1.2rem;margin:1rem 0}
-.tip-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem}
-.tip-text{font-size:0.82rem;line-height:1.75;color:var(--ink-mid)}
-.phrase-list{display:flex;flex-direction:column;gap:0.6rem}
-.phrase-item{background:var(--paper-warm);padding:0.8rem 1rem;border-left:2px solid var(--ink);font-size:0.83rem;line-height:1.6}
-.phrase-bad{border-left-color:var(--ink-light);color:var(--ink-light);text-decoration:line-through}
-.phrase-good{border-left-color:var(--accent);font-weight:500}
-.contact-list{display:flex;flex-direction:column;gap:0.8rem}
-.contact-item{padding:1rem;background:var(--paper-warm);border:1px solid var(--rule)}
-.contact-name{font-weight:700;font-size:0.85rem;margin-bottom:0.2rem}
-.contact-detail{font-size:0.78rem;color:var(--ink-mid);line-height:1.6}
-.contact-tel{font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--accent)}
-
-/* QA */
-.qa-tabs{display:flex;gap:0;border-bottom:2px solid var(--ink);margin-bottom:1.5rem}
-.qa-tab{font-size:0.78rem;font-weight:500;padding:0.6rem 1.2rem;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;letter-spacing:0.03em}
-.qa-tab.active{border-bottom-color:var(--accent);color:var(--accent)}
-.qa-search{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.85rem;padding:0.65rem 0.9rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none;margin-bottom:1rem}
-.qa-search:focus{border-color:var(--ink)}
-.qa-list{display:flex;flex-direction:column;gap:0}
-.qa-item{border-bottom:1px solid var(--rule);overflow:hidden}
-.qa-question{padding:1rem 0;cursor:pointer;display:flex;justify-content:space-between;align-items:start;gap:1rem}
-.qa-question:hover .qa-q-text{color:var(--accent)}
-.qa-q-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent);flex-shrink:0;padding-top:0.15rem}
-.qa-q-text{font-size:0.85rem;font-weight:500;line-height:1.4;flex:1}
-.qa-arrow{font-size:0.7rem;color:var(--ink-light);flex-shrink:0;transition:transform 0.2s}
-.qa-arrow.open{transform:rotate(180deg)}
-.qa-answer{display:none;padding:0 0 1.2rem 2rem;font-size:0.88rem;line-height:1.9;color:var(--ink-mid)}
-.qa-answer.show{display:block}
-.qa-meta{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);margin-top:0.5rem}
-.qa-post-btn{margin-top:1.5rem}
-.qa-form{background:var(--paper-warm);border:1px solid var(--rule);padding:1.5rem;margin-top:1rem;display:none}
-.qa-form.show{display:block}
-.qa-form .field{margin-bottom:1.2rem}
-.qa-form .field:last-child{margin-bottom:0}
-.qa-status{font-size:0.78rem;padding:0.6rem;text-align:center;display:none}
-.qa-status.checking{color:var(--ink-mid);background:var(--paper-warm);border:1px solid var(--rule)}
-.qa-status.ok{color:#2d6a2d;background:#f0f7f0;border:1px solid #b8d8b8}
-.qa-status.ng{color:var(--accent);background:#fdf0f0;border:1px solid #f0b8b8}
-/* KARTE PAGE */
-.karte-header{padding:2rem 0 1rem;border-bottom:1px solid var(--rule)}
-.karte-layout{display:grid;grid-template-columns:200px 1fr;gap:2.5rem;padding:1.5rem 0;align-items:start}
-.karte-sidebar{position:sticky;top:90px}
-.karte-filter-block{margin-bottom:1.2rem}
-.karte-filter-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem;border-top:1px solid var(--rule);padding-top:0.5rem}
-.karte-sidebar select{width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.6rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none}
-.karte-card{border:1px solid var(--rule);padding:1.4rem;margin-bottom:1rem;cursor:pointer;transition:border-color 0.15s}
-.karte-card:hover{border-color:var(--accent)}
-.karte-card-top{display:flex;gap:0.6rem;align-items:center;margin-bottom:0.6rem;flex-wrap:wrap}
-.karte-card-id{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light)}
-.karte-card-region{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);font-weight:500}
-.karte-card-field{font-size:0.62rem;padding:0.08rem 0.35rem;background:var(--paper-warm);border:1px solid var(--rule);color:var(--ink-mid)}
-.karte-card-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;line-height:1.3;margin-bottom:0.5rem}
-.karte-card-summary{font-size:0.8rem;color:var(--ink-mid);line-height:1.75;margin-bottom:0.6rem}
-.karte-card-progress{font-size:0.75rem;color:var(--ink-mid);border-left:2px solid var(--accent);padding-left:0.6rem;margin-bottom:0.6rem;font-style:italic}
-.karte-card-tags{display:flex;flex-wrap:wrap;gap:0.22rem;margin-bottom:0.6rem}
-.karte-card-footer{display:flex;justify-content:space-between;align-items:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)}
-.karte-related{margin-top:0.5rem}
-.karte-related-label{font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-bottom:0.3rem}
-.karte-related-link{display:block;font-size:0.72rem;color:var(--accent);border-bottom:1px solid var(--rule);padding:0.2rem 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
-/* DETAIL MODAL */
-.karte-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto}
-.karte-modal-overlay.show{display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
-.karte-modal{background:var(--paper);max-width:720px;width:100%;padding:2rem;position:relative}
-.karte-modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--ink-mid)}
-.karte-modal-id{font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-bottom:0.5rem}
-.karte-modal-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;line-height:1.2;margin-bottom:1rem}
-.karte-modal-section{margin-bottom:1.2rem;border-top:1px solid var(--rule);padding-top:0.8rem}
-.karte-modal-section-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.4rem}
-.karte-modal-text{font-size:0.85rem;line-height:1.85;color:var(--ink-mid)}
-.karte-modal-progress{font-size:0.82rem;border-left:2px solid var(--accent);padding-left:0.8rem;color:var(--ink-mid);font-style:italic}
-.karte-related-cards{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem}
-.karte-related-card{padding:0.6rem 0.8rem;border:1px solid var(--rule);font-size:0.78rem;cursor:pointer}
-.karte-related-card:hover{border-color:var(--accent);color:var(--accent)}
-
-/* 独立カルテページ */
-.karte-detail-header{padding:1.5rem 0 1rem;border-bottom:1px solid var(--rule)}
-.karte-detail-back{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;color:var(--ink-mid);cursor:pointer;margin-bottom:0.8rem}
-.karte-detail-back:hover{color:var(--accent)}
-.karte-detail-body{padding:1.5rem 0;max-width:720px}
-#page-kartedetail .karte-detail-body{max-width:100%;padding:1.5rem 0}
-.karte-detail-loading{padding:3rem 0;text-align:center;color:var(--ink-light);font-size:0.85rem}
-
-@media (max-width: 768px) {
-
-  /* 全体の横幅制限 */
-  *{box-sizing:border-box}
-  body{overflow-x:hidden}
-
-  /* ヘッダー */
-  header{padding:0 0.8rem}
-  .header-top{flex-direction:column;gap:0.4rem;padding:0.7rem 0 0.4rem}
-  .header-meta{flex-direction:column;gap:0.4rem;align-items:flex-start;width:100%}
-  nav{display:flex;flex-wrap:wrap;gap:0.25rem;width:100%}
-  nav a{margin-left:0;font-size:0.62rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);border-radius:2px}
-  .site-name{font-size:1.4rem}
-  .tagline{font-size:0.78rem}
-  .ticker{padding:0.28rem 0.8rem;font-size:0.58rem}
-
-  /* ページ余白 */
-  .page{padding:0 0.8rem 2rem}
-  main{padding:0 0.8rem}
-
-  /* ヒーロー */
-  .hero-grid{grid-template-columns:1fr;gap:1.2rem}
-  .stats-col{border-left:none;padding-left:0;border-top:1px solid var(--rule);padding-top:0.8rem;display:grid;grid-template-columns:repeat(3,1fr);gap:0}
-  .stat-card{padding:0.6rem 0.4rem;border-bottom:none;border-right:1px solid var(--rule)}
-  .stat-card:last-child{border-right:none}
-  .stat-num{font-size:1.5rem}
-  .hero-headline{font-size:1.45rem;line-height:1.2}
-  .hero-body{font-size:0.82rem}
-
-  /* 4本柱 */
-  .pillars{grid-template-columns:1fr 1fr}
-  .pillar{padding:1rem 0.7rem !important;border-right:none !important;border-bottom:1px solid var(--rule)}
-  .pillar-title{font-size:0.95rem}
-  .pillar-desc{font-size:0.84rem}
-
-  /* ホーム下部 */
-  .home-bottom{grid-template-columns:1fr;gap:1.2rem}
-
-  /* 注目パターン・タグクラウド */
-  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
-  div[style*="border-left:1px solid var(--rule);"]{border-left:none !important;padding-left:0 !important;border-top:1px solid var(--rule);padding-top:1rem !important}
-
-  /* ===== DBページ ===== */
-  .db-filter-toggle{display:block}
-  .db-layout{grid-template-columns:1fr !important;gap:0.8rem}
-  .db-sidebar{
-    position:static !important;
-    display:none;
-    width:100%;
-    background:var(--paper-warm);
-    border:1px solid var(--rule);
-    padding:1rem;
-    margin-bottom:0.5rem;
-  }
-  .db-sidebar.open{display:block}
-  .db-sidebar input,
-  .db-sidebar select{width:100% !important;font-size:0.88rem;padding:0.55rem 0.7rem}
-  .db-tag-filter{gap:0.3rem}
-  .db-tag-btn{font-size:0.65rem;padding:0.3rem 0.55rem;min-height:32px}
-  .db-filter-toggle{
-    display:block;
-    width:100%;
-    margin:0.8rem 0 0;
-    font-family:'Noto Sans JP',sans-serif;
-    font-size:0.85rem;
-    font-weight:500;
-    padding:0.75rem 1rem;
-    border:1.5px solid var(--ink);
-    background:var(--paper);
-    color:var(--ink);
-    cursor:pointer;
-    text-align:left;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-  }
-  .db-card{padding:1rem 0}
-  .db-card:hover{margin:0;padding:1rem 0;background:none}
-  .db-card-title{font-size:0.88rem;line-height:1.45}
-  .db-card-summary{font-size:0.86rem}
-  .db-card-top{gap:0.35rem;flex-wrap:wrap}
-  .db-card-karte-btn{
-    width:100%;
-    justify-content:center;
-    font-size:0.7rem;
-    padding:0.5rem 0.8rem;
-    min-height:36px;
-    margin-top:0.5rem;
-  }
-  .db-main{min-width:0;width:100%;overflow-x:hidden}
-
-  /* カルテモーダル スマホ最適化 */
-  .karte-modal-overlay{padding:0.5rem}
-  .karte-modal{padding:1.2rem;width:100%;max-width:100%}
-  .karte-modal-title{font-size:1.2rem}
-  .karte-modal-close{top:0.8rem;right:0.8rem;font-size:1rem;min-height:36px;min-width:36px}
-  .karte-related-card{padding:0.7rem;min-height:44px}
-
-  /* カルテページ */
-  .karte-layout{grid-template-columns:1fr;gap:0.8rem}
-  .karte-sidebar{position:static}
-  .karte-card{padding:1rem}
-  .karte-card-title{font-size:1rem}
-
-  /* アンケート */
-  .survey-form{padding:1rem 0}
-  .field input,.field select,.field textarea{font-size:0.9rem;padding:0.65rem 0.8rem}
-  .radio-item{font-size:0.85rem;padding:0.2rem 0}
-
-  /* 論考 */
-  .essays-grid{grid-template-columns:1fr}
-  .essay-sidebar{display:none}
-
-  /* 生活保護ガイド */
-  .guide-layout{grid-template-columns:1fr;gap:0.8rem}
-  .guide-nav{position:static;display:flex;flex-wrap:wrap;gap:0.25rem;border-bottom:1px solid var(--rule);padding-bottom:0.8rem;margin-bottom:0.8rem}
-  .guide-nav-item{font-size:0.7rem;padding:0.3rem 0.6rem;border:1px solid var(--rule);display:inline-block;min-height:32px}
-  .guide-nav-label{display:none}
-  .step-item{grid-template-columns:2rem 1fr;gap:0.6rem;padding:0.8rem}
-  .btn-primary,.btn-outline{min-height:44px;font-size:0.82rem}
-
-  /* フッター */
-  footer{flex-direction:column;gap:0.3rem;padding:1rem 0.8rem;text-align:center}
-}
-
-/* ===== スマホ対応 (480px以下) ===== */
-@media (max-width: 480px) {
-  .site-name{font-size:1.2rem}
-  .hero-headline{font-size:1.25rem}
-  .pillars{grid-template-columns:1fr}
-  .stats-col{grid-template-columns:1fr}
-  .stat-card{border-right:none;border-bottom:1px solid var(--rule)}
-  .stat-card:last-child{border-bottom:none}
-  .stat-num{font-size:1.4rem}
-  .page-title{font-size:1.3rem}
-  .btn-primary,.btn-outline{width:100%;justify-content:center;text-align:center;font-size:0.7rem}
-  .guide-section-title{font-size:1.1rem}
-  .db-card-tags{gap:0.18rem}
-  .db-tag-e,.db-tag-s,.db-tag-v,.db-tag-t{font-size:0.55rem;padding:0.06rem 0.28rem}
-}
-/* =====================================================
-   PROJECT MANA — Phase 1 スマホ対応追記
-   既存style.cssの末尾に追記する上書き用スタイル
-   JS・HTML構造には触れない
-   ===================================================== */
-
-/* ----- 独立カルテページ 基本 ----- */
-.karte-detail-body {
-  padding: 1.5rem 0;
-  width: 100%;
-}
-
-/* ----- 関連記事リンク：長いURLの折り返し ----- */
-.karte-related-link {
-  white-space: normal;
-  word-break: break-all;
-  overflow: hidden;
-  text-overflow: clip;
-}
-
-/* =====================================================
-   768px以下
-   ===================================================== */
-@media (max-width: 768px) {
-
-  /* 独立カルテページ */
-  .karte-detail-body {
-    max-width: 100%;
-    padding: 1rem 0;
-  }
-
-  .karte-detail-back {
-    font-size: 0.8rem;
-    padding: 0.3rem 0;
-    min-height: 36px;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* カルテ詳細：セクション余白を詰める */
-  .karte-modal-section {
-    margin-bottom: 1rem;
-    padding-top: 0.7rem;
-  }
-
-  .karte-modal-title {
-    font-size: 1.3rem;
-    line-height: 1.3;
-  }
-
-  .karte-modal-text {
-    font-size: 0.83rem;
-    line-height: 1.8;
-  }
-
-  /* タグサイズ統一（読みやすさ優先） */
-  .db-tag-e,
-  .db-tag-s,
-  .db-tag-v,
-  .db-tag-t {
-    font-size: 0.68rem;
-    padding: 0.18rem 0.4rem;
-    min-height: 28px;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* 観測DBカード：hover時の負マージンによる横スクロール防止 */
-  .db-card:hover {
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  /* 観測DBカード：タグ行の折り返し改善 */
-  .db-card-tags {
-    gap: 0.28rem;
-    row-gap: 0.28rem;
-  }
-
-  /* 観測DB：カード上部の情報行が詰みすぎないよう調整 */
-  .db-card-top {
-    row-gap: 0.3rem;
-  }
-
-  /* カルテ一覧カード */
-  .karte-card-title {
-    font-size: 1rem;
-    line-height: 1.35;
-  }
-
-  .karte-card-summary {
-    font-size: 0.78rem;
-    line-height: 1.7;
-  }
-
-  /* 独立カルテページ内のタグ */
-  .karte-modal-section .db-tag-e,
-  .karte-modal-section .db-tag-s,
-  .karte-modal-section .db-tag-v,
-  .karte-modal-section .db-tag-t {
-    font-size: 0.68rem;
-    padding: 0.18rem 0.4rem;
-  }
-}
-
-/* =====================================================
-   480px以下
-   ===================================================== */
-@media (max-width: 480px) {
-
-  /* 独立カルテページ */
-  .karte-detail-header {
-    padding: 1rem 0 0.8rem;
-  }
-
-  .karte-detail-body {
-    padding: 0.8rem 0;
-  }
-
-  .karte-modal-id {
-    font-size: 0.6rem;
-  }
-
-  .karte-modal-title {
-    font-size: 1.15rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .karte-modal-section-label {
-    font-size: 0.58rem;
-  }
-
-  .karte-modal-text {
-    font-size: 0.82rem;
-  }
-
-  /* タグをさらに少し大きく（極小画面での誤タップ防止） */
-  .db-tag-e,
-  .db-tag-s,
-  .db-tag-v,
-  .db-tag-t {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.45rem;
-    min-height: 30px;
-  }
-
-  /* 関連記事リンク：極小画面での行高調整 */
-  .karte-related-link {
-    font-size: 0.7rem;
-    line-height: 1.5;
-    padding: 0.3rem 0;
-  }
-
-  /* DBカードタイトル */
-  .db-card-title {
-    font-size: 0.85rem;
-    line-height: 1.45;
-  }
-
-  /* DBカード要約 */
-  .db-card-summary {
-    font-size: 0.76rem;
-  }
-}
-
-/* ===== 独立カルテページ：元記事リスト ===== */
-.karte-source-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.3rem;
-}
-
-.karte-source-link {
-  display: block;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--accent);
-  text-decoration: none;
-  color: var(--ink);
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.karte-source-link:hover {
-  border-color: var(--accent);
-  background: var(--accent-pale);
-}
-
-.karte-source-title {
-  display: block;
-  font-size: 0.83rem;
-  font-weight: 500;
-  line-height: 1.4;
-  color: var(--ink);
-  word-break: break-all;
-}
-
-.karte-source-meta {
-  display: block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  margin-top: 0.25rem;
-}
-
-@media (max-width: 768px) {
-  .karte-source-link {
-    padding: 0.7rem 0.8rem;
-  }
-  .karte-source-title {
-    font-size: 0.82rem;
-  }
-}
-
-/* ===== 地図ページ ===== */
-.map-tooltip {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  border: 1px solid var(--rule);
-  box-shadow: none;
-}
-
-@media (max-width: 768px) {
-  #map-container {
-    height: 320px !important;
-  }
-}
-
-/* =====================================================
-   ホームページ リデザイン — 博物館スタイル
-   ===================================================== */
-
-/* hero全体 */
-.hero-museum {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 5rem 0 3rem;   /* 上下余白を拡大 */
-  text-align: center;
-}
-
-/* kicker：上部の小さいラベル */
-.hero-museum-kicker {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;   /* スペーシングを広げて上品に */
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 1.6rem;    /* タイトルとの余白を拡大 */
-}
-
-/* メインタイトル */
-.hero-museum-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(2.2rem, 6vw, 4.2rem);  /* 最小2.2rem・最大4.2remに拡大 */
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  margin-bottom: 1.6rem;    /* 余白を拡大 */
-}
-
-/* 説明文 */
-.hero-museum-desc {
-  font-size: 1.0rem;
-  line-height: 2.1;
-  color: var(--ink-mid);
-  max-width: 580px;
-  width: 100%;               /* スマホで横はみ出し防止 */
-  margin: 0 auto 3.2rem;    /* 下余白を拡大 */
-}
-
-/* 探索ボタン4つ */
-.hero-explore-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.8rem;
-  margin-bottom: 3rem;      /* 統計行との余白を拡大 */
-}
-
-.hero-explore-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem 1rem;       /* 1.4rem → 2rem に拡大 */
-  border: 1px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-  transition: border-color 0.15s, background 0.15s;
-  cursor: pointer;
-  background: transparent;
-}
-
-.hero-explore-btn:hover {
-  border-color: var(--accent);
-  background: var(--accent-pale, #f0f4fa);
-}
-
-.hero-explore-icon {
-  font-size: 1.8rem;        /* 1.6rem → 1.8rem */
-  margin-bottom: 0.6rem;
-  line-height: 1;
-}
-
-.hero-explore-label {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.88rem;       /* 0.82rem → 0.88rem */
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-}
-
-.hero-explore-sub {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.72rem;
-  color: var(--ink-light);
-}
-
-/* 統計行 */
-.hero-stats-row {
-  display: flex;
-  justify-content: center;
-  gap: 0;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-  padding: 1.6rem 0;        /* 1.2rem → 1.6rem */
-  margin-bottom: 0;
-}
-
-.hero-stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0 2.5rem;        /* 2rem → 2.5rem */
-  border-right: 1px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-  transition: color 0.15s;
-  cursor: pointer;
-}
-
-.hero-stat-item:last-child {
-  border-right: none;
-}
-
-.hero-stat-item:hover {
-  color: var(--accent);
-}
-
-.hero-stat-num {
-  font-family: 'DM Mono', monospace;
-  font-size: 1.8rem;        /* 1.4rem → 1.8rem */
-  font-weight: 700;
-  line-height: 1.1;
-  margin-bottom: 0.35rem;
-  color: var(--ink);
-}
-
-.hero-stat-num small {
-  font-size: 0.6rem;
-  font-weight: 400;
-  color: var(--ink-light);
-  margin-left: 0.2rem;
-}
-
-.hero-stat-item:hover .hero-stat-num {
-  color: var(--accent);
-}
-
-.hero-stat-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  letter-spacing: 0.08em;
-}
-
-/* ===== スマホ対応 ===== */
-@media (max-width: 768px) {
-  .hero-museum {
-    padding: 2.5rem 0 1.8rem;   /* スマホでは余白を抑制 */
-  }
-
-  .hero-museum-title {
-    font-size: clamp(1.8rem, 8vw, 2.6rem);  /* スマホ最小1.8rem */
-  }
-
-  .hero-explore-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .hero-explore-btn {
-    padding: 1.5rem 0.8rem;     /* スマホでは少し詰める */
-  }
-
-  .hero-stats-row {
-    flex-wrap: wrap;
-    gap: 0;
-    padding: 0;
-  }
-
-  .hero-stat-item {
-    width: 50%;
-    padding: 1rem 0;
-    border-right: none;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .hero-stat-item:nth-child(1),
-  .hero-stat-item:nth-child(2) {
-    border-right: 1px solid var(--rule);
-  }
-
-  .hero-stat-item:nth-last-child(-n+2) {
-    border-bottom: none;
-  }
-
-  .hero-stat-num {
-    font-size: 1.4rem;          /* スマホでは数字を抑制 */
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-museum {
-    padding: 2rem 0 1.5rem;
-  }
-
-  .hero-museum-title {
-    font-size: clamp(1.6rem, 9vw, 2.2rem);  /* 極小画面でも折り返し安全 */
-  }
-
-  .hero-museum-desc {
-    font-size: 0.84rem;
-    line-height: 1.85;
-  }
-
-  .hero-explore-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
-  }
-
-  .hero-explore-btn {
-    padding: 1.2rem 0.5rem;
-  }
-
-  .hero-explore-icon {
-    font-size: 1.4rem;
-  }
-
-  .hero-explore-label {
-    font-size: 0.8rem;
-  }
-
-  /* 極小画面ではサブテキストを非表示（ボタンが詰まらないよう） */
-  .hero-explore-sub {
-    display: none;
-  }
-
-  .hero-stat-num {
-    font-size: 1.2rem;
-  }
-}
-
-/* =====================================================
-   タグページ — 博物館スタイル
-   ===================================================== */
-
-.tag-explore-page {
-  padding: 1.5rem 0;
-}
-
-/* 各軸のセクション */
-.tag-axis-section {
-  padding: 2rem 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.tag-axis-section:last-of-type {
-  border-bottom: none;
-}
-
-.tag-axis-sub {
-  background: var(--paper-warm);
-  padding: 1.5rem 1.2rem;
-  margin: 0 -1.2rem;
-}
-
-/* セクションヘッダー（アイコン + ラベル + 説明） */
-.tag-axis-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
-}
-
-.tag-axis-icon {
-  font-size: 1.4rem;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-top: 0.1rem;
-}
-
-.tag-axis-label {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 0.2rem;
-}
-
-.tag-axis-desc {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  letter-spacing: 0.04em;
-}
-
-/* タグボタングループ */
-.tag-btn-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-/* 主軸タグボタン */
-.tag-museum-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.8rem;
-  border: 1px solid var(--rule);
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.78rem;
-  color: var(--ink);
-  text-decoration: none;
-  transition: border-color 0.12s, color 0.12s, background 0.12s;
-  background: var(--paper);
-}
-
-.tag-museum-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-pale);
-}
-
-/* 補助軸タグボタン（少し小さめ） */
-.tag-museum-btn-sub {
-  font-size: 0.72rem;
-  padding: 0.3rem 0.65rem;
-  background: transparent;
-}
-
-/* 件数バッジ */
-.tag-museum-count {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--ink-mid);
-}
-
-/* 補助軸の区切りラベル */
-.tag-sub-divider {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 1.5rem 0 0;
-  border-top: 1px solid var(--rule);
-  margin-top: 0.5rem;
-}
-
-/* 観測タグセクション — カード型・常時展開 */
-.tag-observe-section {
-  margin-top: 2.5rem;
-  padding: 1.8rem 1.6rem;
-  border: 1px solid var(--rule);
-  border-left: 4px solid var(--ink);
-  background: var(--paper-warm, #f7f5f0);
-}
-
-.tag-observe-header {
-  margin-bottom: 1.6rem;
-}
-
-.tag-observe-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 0.5rem;
-}
-
-.tag-observe-desc {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  color: var(--ink-mid);
-  line-height: 1.7;
-  letter-spacing: 0.02em;
-}
-
-.tag-observe-axes {
-  display: flex;
-  flex-direction: column;
-  gap: 1.4rem;
-}
-
-.tag-observe-axis {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.tag-observe-axis-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  color: var(--ink-light);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-@media (max-width: 768px) {
-  .tag-observe-section {
-    padding: 1.2rem 1rem;
-  }
-}
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .tag-axis-section {
-    padding: 1.5rem 0;
-  }
-
-  .tag-axis-icon {
-    font-size: 1.2rem;
-  }
-
-  .tag-axis-label {
-    font-size: 0.84rem;
-  }
-
-  .tag-museum-btn {
-    font-size: 0.72rem;
-    padding: 0.35rem 0.65rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .tag-axis-header {
-    gap: 0.7rem;
-  }
-
-  .tag-museum-btn {
-    font-size: 0.68rem;
-    padding: 0.3rem 0.55rem;
-  }
-}
-
-/* =====================================================
-   用語辞典 — 展示解説パネルスタイル
-   ===================================================== */
-
-/* 検索ボックス */
-.term-search-box {
-  margin-bottom: 2rem;
-}
-
-/* カテゴリセクション */
-.term-category-section {
-  margin-bottom: 2.5rem;
-}
-
-.term-category-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-/* 用語カードグリッド */
-.term-card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 0.8rem;
-}
-
-/* 用語カード（一覧用） */
-.term-card {
-  display: block;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-  transition: border-color 0.12s, background 0.12s;
-  background: var(--paper);
-}
-
-.term-card:hover {
-  border-left-color: var(--accent);
-  border-color: var(--accent);
-  background: var(--accent-pale, #f0f4fa);
-}
-
-.term-card-name {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.92rem;
-  font-weight: 700;
-  margin-bottom: 0.2rem;
-  color: var(--ink);
-}
-
-.term-card-reading {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  color: var(--ink-light);
-  margin-bottom: 0.5rem;
-}
-
-.term-card-short {
-  font-size: 0.75rem;
-  line-height: 1.65;
-  color: var(--ink-mid);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* 用語詳細ページ */
-.term-detail-body {
-  padding: 1.5rem 0;
-}
-
-/* 展示キャプション（短い説明） */
-.term-short-panel {
-  font-size: 1rem;
-  line-height: 1.85;
-  color: var(--ink);
-  padding: 1.2rem 1.5rem;
-  border-left: 4px solid var(--accent);
-  background: var(--accent-pale, #f0f4fa);
-  margin-bottom: 1.5rem;
-}
-
-/* よみがな */
-.term-reading {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
-  color: var(--ink-light);
-  letter-spacing: 0.06em;
-  margin-top: 0.3rem;
-  margin-bottom: 0.5rem;
-}
-
-/* カテゴリバッジ */
-.term-category-badge {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  border: 1px solid var(--rule);
-  padding: 0.15rem 0.5rem;
-  margin-bottom: 0.6rem;
-}
-
-/* 関連カルテへの導線 */
-.term-karte-link {
-  display: block;
-  padding: 0.6rem 0.8rem;
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--accent);
-  text-decoration: none;
-  color: var(--ink-mid);
-  font-size: 0.8rem;
-  margin-bottom: 0.4rem;
-  transition: border-color 0.12s, color 0.12s;
-}
-
-.term-karte-link:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-/* 公式情報リンク */
-.term-source-link {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--ink-mid);
-  text-decoration: none;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.1rem;
-  transition: color 0.12s, border-color 0.12s;
-}
-
-.term-source-link:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .term-card-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .term-short-panel {
-    font-size: 0.9rem;
-    padding: 1rem 1.1rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .term-card {
-    padding: 0.8rem 0.9rem;
-  }
-
-  .term-card-name {
-    font-size: 0.85rem;
-  }
-
-  .term-short-panel {
-    font-size: 0.85rem;
-    line-height: 1.75;
-  }
-}
-
-/* ===== 用語本文内インラインリンク ===== */
-.term-inline-link {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-underline-offset: 2px;
-  cursor: pointer;
-  transition: color 0.12s;
-}
-
-.term-inline-link:hover {
-  color: var(--accent);
-}
-
-/* ===== 法律辞典 ===== */
-
-/* 法律カード（一覧）— term-cardを継承しつつ左線色を変える */
-.law-card {
-  border-left-color: #5a7fa8;
-}
-
-.law-card:hover {
-  border-left-color: var(--accent);
-}
-
-/* 正式名称（short_nameがある場合に正式名称を小さく表示） */
-.law-full-name {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  color: var(--ink-light);
-  margin-top: 0.3rem;
-  line-height: 1.5;
-}
-
-/* 制定年 */
-.law-enacted {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  margin-top: 0.2rem;
-}
-
-/* ポイントリスト */
-.law-key-points {
-  margin: 0;
-  padding-left: 1.2rem;
-  list-style: none;
-}
-
-.law-key-points li {
-  font-size: 0.83rem;
-  line-height: 1.8;
-  color: var(--ink-mid);
-  padding: 0.25rem 0;
-  border-bottom: 1px solid var(--rule);
-  position: relative;
-}
-
-.law-key-points li::before {
-  content: '▸';
-  color: var(--accent);
-  position: absolute;
-  left: -1.1rem;
-  font-size: 0.7rem;
-}
-
-.law-key-points li:last-child {
-  border-bottom: none;
-}
-
-/* e-Govリンクボタン */
-.law-egov-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.65rem 1.1rem;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 500;
-  transition: background 0.12s, color 0.12s;
-}
-
-.law-egov-btn:hover {
-  background: var(--accent);
-  color: var(--paper);
-}
-
-@media (max-width: 768px) {
-  .law-egov-btn {
-    font-size: 0.78rem;
-    padding: 0.6rem 0.9rem;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .law-key-points li {
-    font-size: 0.8rem;
-  }
-}
-
-/* =====================================================
-   トップページ 3ブロック構成
-   ===================================================== */
-
-.home-blocks {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin-bottom: 3rem;
-  border: 1px solid var(--rule);
-}
-
-.home-block {
-  padding: 1.6rem 2rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.home-block:last-child {
-  border-bottom: none;
-}
-
-.home-block-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 1rem;
-}
-
-.home-block-grid {
-  display: grid;
-  gap: 0.7rem;
-}
-
-.home-block-grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.home-block-grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.home-block-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--rule);
-  text-decoration: none;
-  color: var(--ink);
-  background: var(--paper);
-  transition: border-color 0.12s, background 0.12s;
-  cursor: pointer;
-  gap: 0.25rem;
-}
-
-.home-block-btn:hover {
-  border-color: var(--accent);
-  background: var(--accent-pale, #f0f4fa);
-}
-
-.home-block-icon {
-  font-size: 1.3rem;
-  line-height: 1;
-  margin-bottom: 0.3rem;
-}
-
-.home-block-name {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.35;
-}
-
-.home-block-sub {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--ink-light);
-  line-height: 1.5;
-}
-
-/* =====================================================
-   静的ページ（MANAについて・利用と引用）
-   ===================================================== */
-
-.static-page-body {
-  max-width: 680px;
-  padding: 1.5rem 0 3rem;
-}
-
-.static-section {
-  padding: 1.8rem 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.static-section:last-child {
-  border-bottom: none;
-}
-
-.static-section-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 0.9rem;
-}
-
-.static-section p {
-  font-size: 0.85rem;
-  line-height: 1.9;
-  color: var(--ink-mid);
-  margin-bottom: 0.8rem;
-}
-
-.static-section p:last-child {
-  margin-bottom: 0;
-}
-
-.static-list {
-  padding-left: 1.2rem;
-  margin: 0.5rem 0 0.8rem;
-  list-style: none;
-}
-
-.static-list li {
-  font-size: 0.83rem;
-  line-height: 1.8;
-  color: var(--ink-mid);
-  padding: 0.2rem 0;
-  position: relative;
-}
-
-.static-list li::before {
-  content: '—';
-  position: absolute;
-  left: -1.1rem;
-  color: var(--ink-light);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.7rem;
-}
-
-.static-cite-example {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.78rem;
-  color: var(--ink);
-  background: var(--paper-warm, #f7f5f0);
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--accent);
-  padding: 0.7rem 1rem;
-  margin: 0.8rem 0;
-}
-
-.static-external-link {
-  display: inline-block;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--accent);
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 0.1rem;
-  margin-top: 0.5rem;
-  transition: opacity 0.12s;
-}
-
-.static-external-link:hover {
-  opacity: 0.7;
-}
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .home-block {
-    padding: 1.2rem 1rem;
-  }
-
-  .home-block-grid-3 {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.4rem;
-  }
-
-  .home-block-grid-2 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.4rem;
-  }
-
-  .home-block-btn {
-    padding: 0.8rem 0.7rem;
-  }
-
-  .home-block-name {
-    font-size: 0.78rem;
-  }
-
-  .static-page-body {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .home-block-grid-3 {
-    grid-template-columns: repeat(1, 1fr);
-  }
-
-  .home-block-grid-2 {
-    grid-template-columns: repeat(1, 1fr);
-  }
-
-  .home-block-sub {
-    display: none;
-  }
-}
-
-/* ===== サイトロゴSVG ===== */
-.site-logo {
-  height: 52px;
-  width: auto;
-  color: var(--ink);
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .site-logo {
-    height: 36px;
-  }
-}
-
-@media (max-width: 480px) {
-  .site-logo {
-    height: 30px;
-  }
-}
-
-/* =====================================================
-   カルテ詳細 — 観測記録ノートスタイル（kn-*）
-   他ページには影響しない独立クラス体系
-   ===================================================== */
-
-.kn-wrap {
-  max-width: 720px;
-  padding: 0.5rem 0 3rem;
-}
-
-/* ラベル行 */
-.kn-label-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.2rem;
-  flex-wrap: wrap;
-}
-
-/* スタンプ風ラベル */
-.kn-stamp {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--paper);
-  background: var(--ink);
-  padding: 0.3rem 0.7rem;
-  display: inline-block;
-  line-height: 1.4;
-}
-
-/* メタバッジ群 */
-.kn-meta-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  align-items: center;
-}
-
-.kn-badge {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.62rem;
-  letter-spacing: 0.06em;
-  padding: 0.2rem 0.55rem;
-  border: 1px solid var(--rule);
-  color: var(--ink-mid);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.kn-badge-region {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.kn-badge-field {
-  background: var(--paper-warm, #f7f5f0);
-}
-
-.kn-badge-date {
-  color: var(--ink-light);
-}
-
-/* 事案タイトル */
-.kn-title {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: clamp(1.1rem, 3vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.45;
-  color: var(--ink);
-  margin: 0 0 1.2rem;
-  letter-spacing: -0.01em;
-}
-
-/* 罫線 */
-.kn-rule {
-  border: none;
-  border-top: 2px solid var(--ink);
-  margin-bottom: 2rem;
-  position: relative;
-}
-
-.kn-rule::after {
-  content: '';
-  display: block;
-  border-top: 1px solid var(--rule);
-  margin-top: 4px;
-}
-
-/* セクション共通 */
-.kn-section {
-  margin-bottom: 2rem;
-  padding-bottom: 1.8rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-.kn-section:last-of-type {
-  border-bottom: none;
-}
-
-.kn-section-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-light);
-  margin-bottom: 0.75rem;
-}
-
-.kn-section-body {
-  font-size: 0.92rem;
-  line-height: 1.95;
-  color: var(--ink-mid);
-}
-
-/* 観測メモ：左罫線付き */
-.kn-memo {
-  padding-left: 1rem;
-  border-left: 3px solid var(--rule);
-}
-
-/* MANAコメント：付箋風 */
-.kn-comment {
-  background: #fdfbf5;
-  border: 1px solid #ddd8c4;
-  border-left: 4px solid #b8a97a;
-  padding: 0.9rem 1rem;
-  font-size: 0.88rem;
-  line-height: 1.9;
-}
-
-/* タグ軸グループ */
-.kn-tag-groups {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.kn-tag-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.kn-tag-axis {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  color: var(--ink-light);
-  letter-spacing: 0.06em;
-  padding-top: 0.18rem;
-  white-space: nowrap;
-  min-width: 2.8rem;
-}
-
-.kn-tag-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-/* 地域リンク */
-.kn-region-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--accent);
-  text-decoration: none;
-  border-bottom: 1px solid var(--accent);
-  padding-bottom: 0.1rem;
-  transition: opacity 0.12s;
-}
-
-.kn-region-link:hover {
-  opacity: 0.7;
-}
-
-/* 観測ソース */
-.kn-source-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.kn-source-link {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.65rem 0.8rem;
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--rule);
-  text-decoration: none;
-  transition: border-color 0.12s;
-}
-
-.kn-source-link:hover {
-  border-left-color: var(--accent);
-}
-
-.kn-source-title {
-  font-size: 0.84rem;
-  color: var(--ink);
-  line-height: 1.5;
-}
-
-.kn-source-meta {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-}
-
-/* フッターメタ */
-.kn-footer-meta {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  color: var(--ink-light);
-  letter-spacing: 0.06em;
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--rule);
-}
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .kn-label-row {
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-
-  .kn-title {
-    font-size: 1.05rem;
-  }
-
-  .kn-section {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-  }
-
-  .kn-comment {
-    padding: 0.7rem 0.8rem;
-  }
-}
-
-/* カルテ詳細ページだけ全幅化（他ページのpadding: 0 2remは維持）*/
-#page-kartedetail {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-}
-
-@media (max-width: 768px) {
-  #page-kartedetail {
-    padding-left: 0.4rem;
-    padding-right: 0.4rem;
-  }
-}
-
-/* =====================================================
-   カルテ詳細 — ペルソナカード型レイアウト（kp2-*）
-   ===================================================== */
-
-.kp2-wrap {
-  display: grid;
-  grid-template-columns: 230px 1fr;
-  background: #fff;
-  max-width: 100%;
-  outline: 2px solid #123a6f;
-}
-
-/* 左カラム */
-.kp2-left {
-  padding: 1rem 1.2rem;
-  border-right: 1px solid #ddd;
-}
-
-.kp2-no-block {
-  text-align: center;
-  border: 2px solid #123a6f;
-  padding: 1.1rem .8rem 1.2rem;
-  margin-bottom: 1rem;
-  background: #f4f8fd;
-}
-
-.kp2-no-label {
-  font-size: 10px;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: #123a6f;
-  margin-bottom: 7px;
-  font-weight: 700;
-}
-
-.kp2-no-num {
-  font-size: 32px;
-  font-weight: 500;
-  color: #123a6f;
-  font-family: 'DM Mono', monospace;
-  letter-spacing: .04em;
-  line-height: 1.1;
-}
-
-.kp2-no-id {
-  font-size: 10px;
-  color: #5a8ab8;
-  margin-top: 6px;
-  font-family: 'DM Mono', monospace;
-}
-
-.kp2-demo-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #123a6f;
-  font-style: italic;
-  border-bottom: 2px solid #123a6f;
-  padding-bottom: .3rem;
-  margin-bottom: .8rem;
-}
-
-.kp2-demo-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px;
-  margin-bottom: .7rem;
-}
-
-.kp2-dl {
-  font-size: 11px;
-  font-weight: 700;
-  color: #333;
-  font-style: italic;
-}
-
-.kp2-dv {
-  font-size: 11px;
-  color: #123a6f;
-  font-weight: 700;
-}
-
-.kp2-demo-sec {
-  margin-bottom: .7rem;
-  border-bottom: 1px solid #bbb;
-  padding-bottom: .5rem;
-}
-
-.kp2-demo-sec:last-child { border-bottom: none; }
-
-.kp2-dsl {
-  font-size: 11px;
-  font-weight: 700;
-  color: #333;
-  font-style: italic;
-  margin-bottom: .2rem;
-}
-
-.kp2-dsv {
-  font-size: 11px;
-  color: #555;
-  font-style: italic;
-  line-height: 1.6;
-}
-
-/* 右カラム */
-.kp2-right { display: flex; flex-direction: column; }
-
-.kp2-name-band {
-  background: #f4f8fd;
-  border-top: 4px solid #123a6f;
-  border-bottom: 1px solid #b8d0f0;
-  padding: .9rem 1rem;
-  margin-bottom: .6rem;
-}
-
-.kp2-name-band h1 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #123a6f;
-  text-align: center;
-  line-height: 1.55;
-  letter-spacing: .02em;
-}
-
-/* パネルグリッド */
-.kp2-panels {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: .6rem;
-  padding: 0 .6rem .6rem;
-}
-
-/* 出来事パネル（強調・全幅） */
-.kp2-panel-event {
-  grid-column: 1 / -1;
-  background: #fffbf0;
-  border: 2px solid #d4a84a;
-}
-
-.kp2-panel-head-event {
-  background: #d4a84a;
-  padding: .5rem .8rem;
-}
-
-.kp2-panel-label-event {
-  font-size: 13px;
-  font-weight: 700;
-  color: #fff;
-  font-style: italic;
-}
-
-/* 通常パネル */
-.kp2-panel {
-  background: #fff;
-  border: 1px solid #ccc;
-}
-
-.kp2-panel-head {
-  background: #123a6f;
-  padding: .4rem .8rem;
-}
-
-.kp2-panel-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  font-style: italic;
-}
-
-.kp2-panel-body {
-  padding: .65rem .8rem;
-  font-size: 11.5px;
-  color: #444;
-  line-height: 1.75;
-  font-style: italic;
-  min-height: 52px;
-}
-
-.kp2-empty { color: #bbb; }
-
-/* タグチップ */
-.kp2-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-
-.kp2-chip-e {
-  font-size: 11.5px;
-  padding: 4px 10px;
-  background: #fff8e6;
-  color: #5a3c0a;
-  border: 1.5px solid #d4a84a;
-  font-weight: 700;
-  font-style: normal;
-  text-decoration: none;
-  display: inline-block;
-  transition: opacity .12s;
-}
-
-.kp2-chip-e:hover { opacity: .75; }
-
-.kp2-chip-s {
-  font-size: 10px;
-  padding: 2px 6px;
-  background: #edf2f8;
-  color: #2a4a6a;
-  border: 1px solid #a8bcd0;
-  font-style: normal;
-  text-decoration: none;
-  display: inline-block;
-  transition: opacity .12s;
-}
-
-.kp2-chip-s:hover { opacity: .75; }
-
-.kp2-chip-v {
-  font-size: 10px;
-  padding: 2px 6px;
-  background: #eef6e8;
-  color: #1e5012;
-  border: 1px solid #78b860;
-  font-style: normal;
-  text-decoration: none;
-  display: inline-block;
-  transition: opacity .12s;
-}
-
-.kp2-chip-v:hover { opacity: .75; }
-
-/* スマホ対応 */
-@media (max-width: 768px) {
-  .kp2-wrap { grid-template-columns: 1fr; }
-  .kp2-left { border-right: none; border-bottom: 2px solid #123a6f; }
-  .kp2-panels { grid-template-columns: 1fr; }
-  .kp2-panel-event { grid-column: 1; }
-  .kp2-name-band h1 { font-size: 14px; }
-}
-
-@media (max-width: 480px) {
-  .kp2-chip-e { font-size: 13px; padding: 5px 11px; min-height: 36px; display: inline-flex; align-items: center; }
-  .kp2-panel-body { font-size: 13px; }
-}
-
-/* 関連カルテパネル（将来の主役として枠を確保） */
-.kp2-panel-karte .kp2-panel-head {
-  background: #1a5298;
-}
-
-/* 構造パターン折りたたみ */
-.kp2-panel-struct {
-  border: 1px solid #d0d8e4;
-  background: #f8f9fb;
-}
-
-.kp2-struct-toggle {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #6a7e98;
-  padding: .5rem .8rem;
-  cursor: pointer;
-  user-select: none;
-  letter-spacing: .04em;
-  transition: color .12s;
-}
-
-.kp2-struct-toggle:hover { color: #2a4a6a; }
-
-.kp2-struct-toggle.kp2-open {
-  color: #2a4a6a;
-}
-
-.kp2-struct-toggle.kp2-open::before {
-  content: '▼ ';
-}
-
-.kp2-struct-toggle:not(.kp2-open)::before {
-  content: '▶ ';
-}
-
-.kp2-struct-toggle {
-  list-style: none;
-}
-
-.kp2-struct-body {
-  display: none;
-  padding: .5rem .8rem .7rem;
-  border-top: 1px solid #d0d8e4;
-}
-
-.kp2-struct-body.kp2-open {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-/* 観測メモ：全文表示（min-height解除・切れない） */
-.kp2-memo-body {
-  min-height: unset !important;
-  font-style: normal !important;
-  font-size: 12.5px;
-  line-height: 1.85;
-  color: #2e2c26;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* ===== 奥付 ===== */
-.static-colophon {
-  background: var(--paper-warm, #f7f5f0);
-  border: 1px solid var(--rule);
-  padding: 1.2rem 1.4rem;
-  border-bottom: none;
-}
-
-.colophon-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.colophon-row {
-  display: flex;
-  gap: 1.5rem;
-  padding: .45rem 0;
-  border-bottom: 1px solid var(--rule);
-  align-items: baseline;
-}
-
-.colophon-row:last-child {
-  border-bottom: none;
-}
-
-.colophon-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.65rem;
-  color: var(--ink-light);
-  letter-spacing: .06em;
-  min-width: 7rem;
-  flex-shrink: 0;
-}
-
-.colophon-val {
-  font-size: 0.83rem;
-  color: var(--ink);
-}
-
-/* =====================================================
-   カルテ詳細 左カラム チップ型探索導線（kp2-prow・kp2-chip）
-   ===================================================== */
-
-.kp2-prow {
-  margin-bottom: .55rem;
-  padding-bottom: .55rem;
-  border-bottom: 0.5px solid #c8c0b0;
-}
-
-.kp2-prow:last-child { border-bottom: none; margin-bottom: 0; }
-
-.kp2-prow-label {
-  font-size: 9px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: #7a7060;
-  margin-bottom: .3rem;
-  font-weight: 700;
-}
-
-.kp2-chip-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-}
-
-/* チップ共通 */
-.kp2-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 11px;
-  padding: 3px 7px;
-  border: 1px solid;
-  text-decoration: none;
-  cursor: default;
-  margin: 2px 2px 0 0;
-  transition: background .12s, color .12s;
-  white-space: nowrap;
-  font-style: normal;
-  line-height: 1.4;
-}
-
-.kp2-chip-arrow {
-  font-size: 9px;
-  opacity: .5;
-}
-
-/* クリック可能なチップ */
-a.kp2-chip { cursor: pointer; }
-
-/* 地域（青） */
-.kp2-chip-region {
-  background: #eef3fa;
-  color: #123a6f;
-  border-color: #8ab4e0;
-}
-a.kp2-chip-region:hover {
-  background: #123a6f;
-  color: #fff;
-}
-
-/* 分野（琥珀） */
-.kp2-chip-field {
-  background: #fdf6e3;
-  color: #6a5018;
-  border-color: #d4b87a;
-}
-a.kp2-chip-field:hover {
-  background: #6a5018;
-  color: #fff;
-}
-
-/* 状態（紺・太字） */
-.kp2-chip-status {
-  background: #eef3fa;
-  color: #123a6f;
-  border-color: #8ab4e0;
-  font-weight: 700;
-}
-a.kp2-chip-status:hover {
-  background: #123a6f;
-  color: #fff;
-}
-
-/* 対象者（緑） */
-.kp2-chip-target {
-  background: #eef6e8;
-  color: #1e5012;
-  border-color: #78b860;
-}
-a.kp2-chip-target:hover {
-  background: #1e5012;
-  color: #fff;
-}
-
-/* 行為者（生成り） */
-.kp2-chip-actor {
-  background: #f4f0e8;
-  color: #4a3828;
-  border-color: #b8a880;
-}
-a.kp2-chip-actor:hover {
-  background: #4a3828;
-  color: #fff;
-}
-
-/* 根拠種別（グレーグリーン） */
-.kp2-chip-evidence {
-  background: #eef6e8;
-  color: #1e5012;
-  border-color: #78b860;
-}
-a.kp2-chip-evidence:hover {
-  background: #1e5012;
-  color: #fff;
-}
-
-/* クリック不可（純粋な情報） */
-.kp2-chip-text {
-  background: transparent;
-  color: #5a5248;
-  border-color: transparent;
-  padding-left: 0;
-  font-size: 11px;
-  cursor: default;
-}
-
-@media (max-width: 480px) {
-  .kp2-chip {
-    font-size: 13px;
-    padding: 5px 10px;
-    min-height: 36px;
-  }
-}
-
-/* ===== トップ全文検索 ===== */
-.home-search-wrap {
-  position: relative;
-  margin: 1.4rem auto 1.2rem;
-  max-width: 600px;
-  width: 100%;
-}
-
-.home-search-inner {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.home-search-input {
-  width: 100%;
-  font-family: 'Noto Sans JP', sans-serif;
-  font-size: 0.9rem;
-  padding: .75rem 2.5rem .75rem 1rem;
-  border: 2px solid var(--ink);
-  background: var(--paper);
-  color: var(--ink);
-  outline: none;
-  transition: border-color .15s;
-}
-
-.home-search-input:focus {
-  border-color: var(--accent);
-}
-
-.home-search-icon {
-  position: absolute;
-  right: .8rem;
-  font-size: 1rem;
-  pointer-events: none;
-  opacity: .5;
-}
-
-.home-search-results {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: var(--paper);
-  border: 1.5px solid var(--ink);
-  z-index: 200;
-  max-height: 420px;
-  overflow-y: auto;
-}
-
-.hsr-item {
-  display: flex;
-  align-items: baseline;
-  gap: .6rem;
-  padding: .65rem 1rem;
-  border-bottom: 1px solid var(--rule);
-  cursor: pointer;
-  transition: background .1s;
-}
-
-.hsr-item:last-child { border-bottom: none; }
-.hsr-item:hover { background: var(--paper-warm); }
-
-.hsr-badge {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.58rem;
-  padding: 1px 5px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.hsr-badge-karte {
-  background: var(--accent);
-  color: #fff;
-}
-
-.hsr-badge-db {
-  background: var(--ink);
-  color: var(--paper);
-}
-
-.hsr-title {
-  font-size: 0.82rem;
-  color: var(--ink);
-  line-height: 1.4;
-  flex: 1;
-}
-
-.hsr-sub {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  color: var(--ink-light);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.hsr-empty {
-  padding: 1rem;
-  font-size: 0.8rem;
-  color: var(--ink-light);
-  text-align: center;
-}
-
-.hsr-more {
-  padding: .6rem 1rem;
-  font-size: 0.75rem;
-  color: var(--accent);
-  cursor: pointer;
-  text-align: center;
-  border-top: 1px solid var(--rule);
-  font-weight: 500;
-}
-
-.hsr-more:hover { background: var(--accent-pale); }
-
-/* ===== 構造が近い事案（タグ重なり比較導線） ===== */
-.kp2-panel-structural {
-  background: #f4f8fd;
-  border: 1.5px solid #8ab4e0;
-}
-
-.kp2-panel-structural .kp2-panel-head {
-  background: #123a6f;
-}
-
-.kp2-structural-body {
-  display: flex;
-  flex-direction: column;
-  gap: .7rem;
-}
-
-.kp2-related-item {
-  padding: .65rem .8rem;
-  background: #fff;
-  border: 1px solid #d4dce8;
-  border-left: 3px solid #123a6f;
-}
-
-.kp2-related-top {
-  display: flex;
-  align-items: baseline;
-  gap: .5rem;
-  margin-bottom: .25rem;
-}
-
-.kp2-related-title {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #123a6f;
-  text-decoration: none;
-  line-height: 1.5;
-  flex: 1;
-}
-
-.kp2-related-title:hover {
-  text-decoration: underline;
-}
-
-.kp2-related-newtab {
-  font-size: 12px;
-  color: #6a8ab8;
-  text-decoration: none;
-  flex-shrink: 0;
-  padding: 0 .2rem;
-}
-
-.kp2-related-newtab:hover {
-  color: #123a6f;
-}
-
-.kp2-related-match {
-  font-family: 'DM Mono', monospace;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #d4a84a;
-  background: #fff8e6;
-  border: 1px solid #d4a84a;
-  display: inline-block;
-  padding: 1px 7px;
-  margin-bottom: .35rem;
-}
-
-.kp2-related-tags {
-  font-size: 11px;
-  color: #4a4438;
-  line-height: 1.6;
-}
-
-@media (max-width: 480px) {
-  .kp2-related-title { font-size: 13.5px; }
-  .kp2-related-tags  { font-size: 12px; }
-}
-
-/* ===== 観測DB：過去記事の表示分離 ===== */
-.db-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: .6rem;
-  margin-bottom: .5rem;
-}
-
-.db-show-old-toggle {
-  display: flex;
-  align-items: center;
-  gap: .35rem;
-  font-size: 0.78rem;
-  color: var(--ink-mid);
-  cursor: pointer;
-  user-select: none;
-}
-
-.db-show-old-toggle input[type="checkbox"] {
-  cursor: pointer;
-}
-
-.db-old-count-label {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.68rem;
-  color: var(--ink-light);
-}
-
-.db-card-old {
-  opacity: 0.7;
-}
-
-.db-card-old-badge {
-  font-family: 'DM Mono', monospace;
-  font-size: 0.6rem;
-  padding: 1px 6px;
-  background: #f0ead8;
-  color: #8a8070;
-  border: 1px solid #c8c0b0;
-}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROJECT MANA — 市民のための行政監視プラットフォーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/logo-favicon.svg">
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div onclick="showPage('home',document.querySelector('nav a:nth-child(1)'))" style="cursor:pointer;display:flex;align-items:center;gap:1.2rem">
+      <img src="/logo.svg" alt="PROJECT MANA" class="site-logo">
+      <div>
+        <div class="site-name">PROJECT <span>MANA</span></div>
+        <div class="tagline">社会の構造を観測する百葉箱</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="header-date" id="hdate"></div>
+      <nav>
+        <a href="#" class="active" onclick="showPage('home',this)">ホーム</a>
+        <a href="#" onclick="showPage('db',this)">観測DB</a>
+        <a href="#" onclick="showPage('survey',this)">市民の声</a>
+        <a href="#" onclick="showPage('essays',this)">論考</a>
+        <a href="#" onclick="showPage('karte',this)">事案カルテ</a>
+        <a href="#/tags">タグから探す</a>
+        <a href="#/map">地図で見る</a>
+        <a href="#/terms">用語辞典</a>
+        <a href="#/laws">法律を調べる</a>
+        <a href="#" onclick="showPage('guide',this)">生活保護の手引き</a>
+      </nav>
+    </div>
+  </div>
+  <div class="ticker">
+    <span class="ticker-label">LIVE</span>
+    <div class="ticker-inner" id="ticker-text"></div>
+  </div>
+</header>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <section class="hero">
+    <div class="hero-museum">
+      <div class="hero-museum-kicker">PROJECT MANA — 市民の観測アーカイブ</div>
+      <h1 class="hero-museum-title">制度はある。<br>実装されていないだけだ。</h1>
+      <p class="hero-museum-desc">行政・福祉・制度運用の現場で繰り返し現れる出来事を記録し、その背後にある構造的パターンを観測する市民アーカイブです。</p>
+
+      <!-- 全文検索 -->
+      <div class="home-search-wrap">
+        <div class="home-search-inner">
+          <input type="text" id="home-search-input"
+            class="home-search-input"
+            placeholder="キーワードで探す　例：申請妨害、京都市、生活保護"
+            oninput="homeSearch(this.value)"
+            autocomplete="off">
+          <span class="home-search-icon">🔍</span>
+        </div>
+        <div id="home-search-results" class="home-search-results" style="display:none"></div>
+      </div>
+
+      <!-- 探索ボタン4つ -->
+      <!-- 3ブロック構成の探索入口 -->
+      <div class="home-blocks">
+
+        <div class="home-block">
+          <div class="home-block-label">観測する</div>
+          <div class="home-block-grid home-block-grid-3">
+            <a href="#" onclick="showPage('karte',document.querySelector('nav a:nth-child(5)'))" class="home-block-btn">
+              <span class="home-block-icon">📋</span>
+              <span class="home-block-name">事案カルテ</span>
+              <span class="home-block-sub">記録された事案</span>
+            </a>
+            <a href="#" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))" class="home-block-btn">
+              <span class="home-block-icon">📰</span>
+              <span class="home-block-name">観測DB</span>
+              <span class="home-block-sub">全収録記事</span>
+            </a>
+            <a href="#/tags" class="home-block-btn">
+              <span class="home-block-icon">🏷</span>
+              <span class="home-block-name">タグから探す</span>
+              <span class="home-block-sub">分野・対象・行為者</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="home-block">
+          <div class="home-block-label">調べる</div>
+          <div class="home-block-grid home-block-grid-2">
+            <a href="#/terms" class="home-block-btn">
+              <span class="home-block-icon">📚</span>
+              <span class="home-block-name">用語辞典</span>
+              <span class="home-block-sub">制度用語を調べる</span>
+            </a>
+            <a href="#/laws" class="home-block-btn">
+              <span class="home-block-icon">⚖️</span>
+              <span class="home-block-name">法律辞典</span>
+              <span class="home-block-sub">根拠法を調べる</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="home-block">
+          <div class="home-block-label">知る</div>
+          <div class="home-block-grid home-block-grid-2">
+            <a href="#" onclick="showPage('about',null)" class="home-block-btn">
+              <span class="home-block-icon">ℹ️</span>
+              <span class="home-block-name">PROJECT MANAについて</span>
+              <span class="home-block-sub">このサイトとは</span>
+            </a>
+            <a href="#" onclick="showPage('citation',null)" class="home-block-btn">
+              <span class="home-block-icon">📜</span>
+              <span class="home-block-name">利用と引用について</span>
+              <span class="home-block-sub">著作権・CC BY 4.0</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 観測状況（クリックで各ページへ） -->
+      <div class="hero-stats-row">
+        <a href="#" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))" class="hero-stat-item">
+          <span class="hero-stat-num" id="home-db-count">—</span>
+          <span class="hero-stat-label">観測記録</span>
+        </a>
+        <a href="#" onclick="showPage('karte',document.querySelector('nav a:nth-child(5)'))" class="hero-stat-item">
+          <span class="hero-stat-num" id="home-karte-count">—</span>
+          <span class="hero-stat-label">事案カルテ</span>
+        </a>
+        <a href="#/map" class="hero-stat-item">
+          <span class="hero-stat-num">47<small>都道府県</small></span>
+          <span class="hero-stat-label">対象地域</span>
+        </a>
+        <a href="#/tags" class="hero-stat-item">
+          <span class="hero-stat-num" id="home-tag-count">—</span>
+          <span class="hero-stat-label">探索タグ</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="pillars">
+    <div class="pillar" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))">
+      <div class="pillar-num">01 —</div>
+      <div class="pillar-badge">AI自動収集</div>
+      <h2 class="pillar-title">全国観測<br>データベース</h2>
+      <p class="pillar-desc">全国の行政・福祉・制度に関する記録をAIが毎日自動収集・分類。地域・タグ・時系列で検索可能。</p>
+      <div class="pillar-link">観測DBを開く →</div>
+    </div>
+    <div class="pillar" onclick="showPage('survey',document.querySelector('nav a:nth-child(3)'))">
+      <div class="pillar-num">02 —</div>
+      <div class="pillar-badge">匿名OK</div>
+      <h2 class="pillar-title">市民の声<br>アンケート</h2>
+      <p class="pillar-desc">行政窓口での体験を記録してください。匿名で投稿でき、集まった声はデータとして公開されます。</p>
+      <div class="pillar-link">声を届ける →</div>
+    </div>
+    <div class="pillar" onclick="showPage('essays',document.querySelector('nav a:nth-child(4)'))">
+      <div class="pillar-num">03 —</div>
+      <div class="pillar-badge">随時更新</div>
+      <h2 class="pillar-title">調査報告と<br>論考</h2>
+      <p class="pillar-desc">収集データと証言をもとに行政の構造的問題を分析・記述する独立市民調査報告。</p>
+      <div class="pillar-link">論考を読む →</div>
+    </div>
+    <div class="pillar" onclick="showPage('guide',document.querySelector('nav a:nth-child(5)'))">
+      <div class="pillar-num">04 —</div>
+      <div class="pillar-badge">京都市対応</div>
+      <h2 class="pillar-title">生活保護<br>申請の手引き</h2>
+      <p class="pillar-desc">申請の流れ・窓口対策・使える言葉。当事者の声から生まれたノウハウ集。Q&amp;Aに投稿もできます。</p>
+      <div class="pillar-link">手引きを見る →</div>
+    </div>
+  </div>
+
+  <!-- 今週の注目パターン -->
+  <div style="border-bottom:1px solid var(--rule);padding:1.8rem 0">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem">
+      <div>
+        <div class="section-label navy" style="margin-bottom:1rem">今週の注目パターン — MANA編集</div>
+        <div id="pattern-spotlight">
+          <div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-bottom:0.5rem">2026.06.05 — 京都市 × 生活保護 × 水際</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;line-height:1.3;margin-bottom:0.8rem">京都市で今月3件目の申請妨害——偶然か、構造か</div>
+          <div style="font-size:0.82rem;line-height:1.85;color:var(--ink-mid);margin-bottom:1rem">今月だけで京都市の生活福祉課において「書類が揃ってから来て」「家族に相談してから」という申請妨害の証言が3件集まった。担当者が異なるにもかかわらず言葉が酷似している。これは個人の問題ではなく、窓口文化として定着している可能性がある。</div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <span style="font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer" onclick="filterByTag('京都市')">京都市</span>
+            <span style="font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer" onclick="filterByTag('生活保護')">生活保護</span>
+            <span style="font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer" onclick="filterByTag('水際')">水際</span>
+            <span style="font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer" onclick="filterByTag('組織的')">組織的</span>
+          </div>
+        </div>
+      </div>
+      <div style="border-left:1px solid var(--rule);padding-left:3rem">
+        <div class="section-label" style="margin-bottom:1rem">タグから掘る</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.2rem" id="home-tag-cloud"></div>
+        <div style="font-size:0.72rem;color:var(--ink-light);line-height:1.7">タグをクリックするとDBで絞り込めます。複数のタグを組み合わせることで、構造的なパターンが見えてきます。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-bottom">
+    <div>
+      <div class="section-label navy">最新 観測記録 — AI自動収集</div>
+      <div id="home-news-list"></div>
+    </div>
+    <div>
+      <div class="section-label">市民の声 — 最新投稿</div>
+      <div class="voice-panel">
+        <div id="home-voices"></div>
+        <br>
+        <button class="btn-outline" style="width:100%;justify-content:center" onclick="showPage('survey',document.querySelector('nav a:nth-child(3)'))">あなたの体験を記録する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DB PAGE -->
+<div class="page" id="page-db">
+  <div class="db-header">
+    <div class="page-title">全国 行政・福祉・制度 観測データベース</div>
+    <div class="page-subtitle">AIが毎日自動収集・更新。左のフィルターで絞り込んで、構造的パターンを探してください。</div>
+  </div>
+
+  <!-- スマホ用フィルタートグル -->
+  <button class="db-filter-toggle" onclick="toggleDbFilter(this)">
+    <span id="db-filter-toggle-label">絞り込み条件を表示</span> <span id="db-filter-toggle-icon">▼</span>
+  </button>
+
+  <div class="db-layout">
+    <!-- 左：フィルター -->
+    <div class="db-sidebar" id="db-sidebar">
+      <div class="db-filter-block">
+        <div class="db-filter-label">キーワード</div>
+        <input type="text" id="db-search" placeholder="例：申請妨害、京都市" oninput="filterDB()">
+      </div>
+      <div class="db-filter-block">
+        <div class="db-filter-label">地域</div>
+        <select id="db-pref" onchange="filterDB()">
+          <option value="">全て</option>
+        </select>
+      </div>
+      <div class="db-filter-block">
+        <div class="db-filter-label">分野</div>
+        <select id="db-category" onchange="filterDB()">
+          <option value="">全て</option>
+        </select>
+      </div>
+      <div class="db-filter-block">
+        <div class="db-filter-label">出来事タグ</div>
+        <div class="db-tag-filter" id="filter-event"></div>
+      </div>
+      <div class="db-filter-block">
+        <div class="db-filter-label">構造タグ</div>
+        <div class="db-tag-filter" id="filter-structure"></div>
+      </div>
+      <div class="db-filter-block">
+        <div class="db-filter-label">状態タグ</div>
+        <div class="db-tag-filter" id="filter-status"></div>
+      </div>
+      <div class="db-filter-block">
+        <div class="db-filter-label">根拠タグ</div>
+        <div class="db-tag-filter" id="filter-evidence"></div>
+      </div>
+      <div class="db-filter-block">
+        <div class="db-filter-label">重要度</div>
+        <select id="db-severity" onchange="filterDB()">
+          <option value="">全て</option>
+          <option value="高">高</option>
+          <option value="中">中</option>
+          <option value="低">低</option>
+        </select>
+      </div>
+      <button class="db-filter-reset" onclick="resetFilters()">フィルターをリセット</button>
+    </div>
+
+    <!-- 右：記事カード -->
+    <div class="db-main">
+      <div class="db-toolbar">
+        <div class="db-count" id="db-count-label"></div>
+        <label class="db-show-old-toggle">
+          <input type="checkbox" id="db-show-old" onchange="filterDB()">
+          過去記事も表示する
+          <span id="db-old-count-label" class="db-old-count-label"></span>
+        </label>
+      </div>
+      <div id="db-cards"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SURVEY PAGE -->
+<div class="page" id="page-survey">
+  <div class="survey-header">
+    <div class="page-title">市民の声 — アンケート</div>
+    <p class="survey-intro">行政窓口での体験を記録してください。あなたの声がデータになり、政策提言の根拠になります。匿名での投稿が可能です。個人を特定できる情報は入力しないでください。</p>
+  </div>
+  <div class="survey-form" id="survey-form-container">
+    <div class="field">
+      <label>都道府県</label>
+      <select id="s-pref">
+        <option value="">選択してください</option>
+        <option>北海道</option><option>青森県</option><option>岩手県</option><option>宮城県</option><option>秋田県</option><option>山形県</option><option>福島県</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>新潟県</option><option>富山県</option><option>石川県</option><option>福井県</option><option>山梨県</option><option>長野県</option><option>岐阜県</option><option>静岡県</option><option>愛知県</option><option>三重県</option><option>滋賀県</option><option>京都府</option><option>大阪府</option><option>兵庫県</option><option>奈良県</option><option>和歌山県</option><option>鳥取県</option><option>島根県</option><option>岡山県</option><option>広島県</option><option>山口県</option><option>徳島県</option><option>香川県</option><option>愛媛県</option><option>高知県</option><option>福岡県</option><option>佐賀県</option><option>長崎県</option><option>熊本県</option><option>大分県</option><option>宮崎県</option><option>鹿児島県</option><option>沖縄県</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>窓口の種類</label>
+      <select id="s-window">
+        <option value="">選択してください</option>
+        <option>生活保護・生活支援</option>
+        <option>障害福祉</option>
+        <option>介護・高齢者福祉</option>
+        <option>児童・子育て支援</option>
+        <option>住民票・戸籍</option>
+        <option>国民健康保険</option>
+        <option>年金</option>
+        <option>ハローワーク・雇用</option>
+        <option>税務</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>体験の種類（複数選択可）</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="checkbox" value="申請拒否・妨害"> 申請を拒否・妨害された</label>
+        <label class="radio-item"><input type="checkbox" value="不適切な言動"> 窓口職員の不適切な言動</label>
+        <label class="radio-item"><input type="checkbox" value="情報提供の拒否"> 情報や書類の提供を拒否された</label>
+        <label class="radio-item"><input type="checkbox" value="長期放置"> 手続きが長期間放置された</label>
+        <label class="radio-item"><input type="checkbox" value="虚偽説明"> 虚偽の説明をされた</label>
+        <label class="radio-item"><input type="checkbox" value="記録の改ざん"> 記録の改ざんや紛失</label>
+        <label class="radio-item"><input type="checkbox" value="その他"> その他</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>体験の詳細</label>
+      <textarea id="s-detail" rows="6" placeholder="できるだけ具体的に記述してください。いつ、どこで、誰が（役職・部署）、何をされたか。個人名は不要です。"></textarea>
+      <div class="field-note">個人を特定できる情報（氏名・住所等）は入力しないでください</div>
+    </div>
+    <div class="field">
+      <label>その後どうなりましたか</label>
+      <div class="radio-group">
+        <label class="radio-item"><input type="radio" name="result" value="解決"> 解決した</label>
+        <label class="radio-item"><input type="radio" name="result" value="一部解決"> 一部解決した</label>
+        <label class="radio-item"><input type="radio" name="result" value="未解決"> まだ解決していない</label>
+        <label class="radio-item"><input type="radio" name="result" value="諦めた"> 諦めた</label>
+        <label class="radio-item"><input type="radio" name="result" value="不明"> わからない</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>時期（おおよそで構いません）</label>
+      <input type="text" id="s-when" placeholder="例：2024年ごろ、昨年など">
+    </div>
+    <div id="survey-error" style="display:none;background:#fdf0f0;border:1px solid #e8b0b0;color:#8b2020;padding:0.8rem 1rem;font-size:0.82rem;line-height:1.6;margin-bottom:1rem"></div>
+    <button class="btn-primary" onclick="submitSurvey()">記録を送信する →</button>
+  </div>
+  <div class="survey-thanks" id="survey-thanks">
+    <h3>ありがとうございます</h3>
+    <p>あなたの記録を受け取りました。<br>集まった声はデータとして分析され、このサイトで公開されます。<br><br>あなたの体験は、同じ困難に直面している人たちへの<br>重要な記録になります。</p>
+    <br>
+    <button class="btn-outline" onclick="document.getElementById('survey-thanks').style.display='none';document.getElementById('survey-form-container').style.display='block'">別の体験を記録する</button>
+  </div>
+</div>
+
+<!-- 観測フィードバックページ -->
+<div class="page" id="page-feedback">
+  <div class="survey-header">
+    <div class="page-title">観測フィードバック</div>
+    <p class="survey-intro">PROJECT MANAの観測精度を高めるためのご連絡です。カルテの誤り、タグの修正提案、地域情報の補完、関連記事・資料の情報提供、サイトの改善提案などをお寄せください。これは社会観測データ（市民の声）とは別に、運営が確認・反映に使う情報として扱います。</p>
+  </div>
+  <div class="survey-form" id="feedback-form-container">
+    <div class="field">
+      <label>種別</label>
+      <select id="f-type">
+        <option value="">選択してください</option>
+        <option>カルテの誤り</option>
+        <option>タグ修正提案</option>
+        <option>地域情報の補完</option>
+        <option>関連記事・資料の情報提供</option>
+        <option>サイト改善提案</option>
+        <option>その他</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>対象カルテID（わかる場合のみ）</label>
+      <input type="text" id="f-karte-id" placeholder="例：KARTE-0402">
+      <div class="field-note">カルテ詳細ページのURL末尾、または左カラムの「カルテID」欄に記載されています</div>
+    </div>
+    <div class="field">
+      <label>対象URL（関連記事・資料がある場合）</label>
+      <input type="text" id="f-url" placeholder="例：https://example.com/news/...">
+    </div>
+    <div class="field">
+      <label>内容</label>
+      <textarea id="f-content" rows="6" placeholder="できるだけ具体的に記述してください。どのカルテ・どのタグについてか、何が誤っているか、何を補完してほしいかなど。"></textarea>
+    </div>
+    <div class="field">
+      <label>連絡先（任意）</label>
+      <input type="text" id="f-contact" placeholder="返信を希望する場合のみメールアドレス等をご記入ください">
+      <div class="field-note">原則として個別返信はできませんが、重要な修正の際にご連絡することがあります</div>
+    </div>
+    <div id="feedback-error" style="display:none;background:#fdf0f0;border:1px solid #e8b0b0;color:#8b2020;padding:0.8rem 1rem;font-size:0.82rem;line-height:1.6;margin-bottom:1rem"></div>
+    <button class="btn-primary" onclick="submitFeedback()">フィードバックを送る →</button>
+  </div>
+  <div class="survey-thanks" id="feedback-thanks">
+    <h3>ありがとうございます</h3>
+    <p>フィードバックを受け取りました。<br>カルテ・タグ・地域情報など、観測精度の改善に活用させていただきます。<br><br>百葉箱は、設置した者だけが観測するものではありません。<br>あなたの気づきが、観測を少しずつ正確にしていきます。</p>
+    <br>
+    <button class="btn-outline" onclick="document.getElementById('feedback-thanks').style.display='none';document.getElementById('feedback-form-container').style.display='block'">別のフィードバックを送る</button>
+  </div>
+</div>
+
+<!-- ESSAYS PAGE -->
+<div class="page" id="page-essays">
+  <div class="essays-header">
+    <div class="page-title">論考アーカイブ</div>
+    <div class="page-subtitle">調査報告・論考・エッセイ — MANA著</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 220px;gap:3rem;padding:2rem 0;align-items:start">
+    <div>
+      <!-- フィルター -->
+      <div style="display:flex;gap:0.8rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center">
+        <select id="essay-tag-filter" onchange="filterEssays()" style="font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.7rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none">
+          <option value="">全タグ</option>
+        </select>
+        <select id="essay-type-filter" onchange="filterEssays()" style="font-family:'Noto Sans JP',sans-serif;font-size:0.78rem;padding:0.45rem 0.7rem;border:1px solid var(--rule);background:var(--paper);color:var(--ink);outline:none">
+          <option value="">全種別</option>
+          <option>調査報告書</option>
+          <option>論考</option>
+          <option>エッセイ</option>
+          <option>声明</option>
+        </select>
+        <span id="essay-count" style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--ink-light);margin-left:auto"></span>
+      </div>
+
+      <!-- 一覧 -->
+      <div id="essay-list"></div>
+    </div>
+
+    <!-- サイドバー -->
+    <div style="position:sticky;top:100px">
+      <div class="sidebar-section">
+        <div class="sidebar-title">タグ一覧</div>
+        <div id="essay-tag-cloud" class="tag-cloud"></div>
+      </div>
+      <div class="sidebar-section" style="margin-top:1.5rem">
+        <div class="sidebar-title">このアーカイブについて</div>
+        <p style="font-size:0.77rem;line-height:1.8;color:var(--ink-mid)">PROJECT MANAによる独立調査報告・論考・エッセイのアーカイブです。データと証言をもとに、行政の構造的問題を記述します。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GUIDE PAGE -->
+<div class="page" id="page-guide">
+  <div class="guide-header">
+    <div class="page-title">生活保護 申請の手引き</div>
+    <div class="page-subtitle">京都市版 — 当事者の声とノウハウをもとに作成。知ることが力になります。</div>
+  </div>
+  <div class="guide-layout">
+    <nav class="guide-nav">
+      <div class="guide-nav-label">手引き</div>
+      <span class="guide-nav-item active" onclick="showGuideSection('flow',this)">申請の流れ</span>
+      <span class="guide-nav-item" onclick="showGuideSection('docs',this)">必要な書類</span>
+      <span class="guide-nav-item" onclick="showGuideSection('phrases',this)">使える言葉</span>
+      <span class="guide-nav-item" onclick="showGuideSection('tactics',this)">窓口の対処法</span>
+      <span class="guide-nav-item" onclick="showGuideSection('contacts',this)">相談先</span>
+      <div class="guide-nav-label">みんなの声</div>
+      <span class="guide-nav-item" onclick="showGuideSection('qa',this)">Q&amp;A</span>
+    </nav>
+
+    <div class="guide-content">
+
+      <!-- 申請の流れ -->
+      <div class="guide-section" id="gsec-flow">
+        <div class="guide-section-title">申請の流れ</div>
+        <p class="guide-section-intro">生活保護は、申請すれば受けられる権利です。窓口に行くだけで申請できます。「相談」と「申請」は別物——「相談に来た」ではなく「申請に来た」と伝えることが大事です。</p>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <div class="step-title">福祉事務所の窓口に行く</div>
+              <div class="step-desc">京都市の場合、各区の区役所内にある「生活福祉課」が窓口です。予約不要で行けます。一人で行くのが不安な場合は支援者や同行者と一緒に行っても構いません。</div>
+            </div>
+          </div>
+          <div class="step-item warning">
+            <div class="step-num">!</div>
+            <div class="step-body">
+              <div class="step-title">「申請したい」と最初に伝える</div>
+              <div class="step-desc">「相談したい」と言うと、申請させずに帰らせようとする場合があります。最初から「生活保護を申請したいです」と明確に伝えましょう。</div>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <div class="step-title">申請書を受け取り、記入して提出</div>
+              <div class="step-desc">申請書は窓口でもらえます。その場で書いて提出できます。書けない部分は空欄でも受け付けてもらえます。「書類が揃わないと申請できない」は誤りです。</div>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <div class="step-title">調査・訪問（申請から14日以内）</div>
+              <div class="step-desc">担当ケースワーカーが自宅訪問や資産調査を行います。調査には協力しますが、プライバシーに関わる不当な質問には答える義務はありません。</div>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-body">
+              <div class="step-title">決定通知（申請から14日以内、最長30日）</div>
+              <div class="step-desc">開始または却下の通知が届きます。却下された場合は理由の説明を求め、不服があれば審査請求ができます。</div>
+            </div>
+          </div>
+        </div>
+        <div class="tip-box">
+          <div class="tip-label">覚えておいてほしいこと</div>
+          <div class="tip-text">申請日が保護開始日の基準になります。迷っている間も、申請は早いほど良いです。「申請書を渡さない」「書類が揃ってから来て」は違法な水際作戦です。</div>
+        </div>
+      </div>
+
+      <!-- 必要な書類 -->
+      <div class="guide-section" id="gsec-docs" style="display:none">
+        <div class="guide-section-title">必要な書類</div>
+        <p class="guide-section-intro">書類が揃っていなくても申請はできます。ただし、後から提出を求められる書類を事前に知っておくとスムーズです。</p>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">◎</div>
+            <div class="step-body">
+              <div class="step-title">申請時に持って行くと良いもの</div>
+              <div class="step-desc">身分証明書（健康保険証・マイナンバーカード等） / 印鑑 / 通帳（残高がわかるもの） / 家賃の分かる賃貸契約書 / 医療を受けている場合は診察券</div>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">△</div>
+            <div class="step-body">
+              <div class="step-title">後から提出を求められることがある書類</div>
+              <div class="step-desc">収入・資産がわかる書類 / 家族の状況に関する書類 / 医師の診断書（障害や疾病がある場合）</div>
+            </div>
+          </div>
+          <div class="step-item warning">
+            <div class="step-num">!</div>
+            <div class="step-body">
+              <div class="step-title">なくても申請できます</div>
+              <div class="step-desc">住所不定の方、書類を揃えられない方も申請できます。「書類が揃ってから来てください」と言われたら、その場で「申請書だけ受け取らせてください」と伝えましょう。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 使える言葉 -->
+      <div class="guide-section" id="gsec-phrases" style="display:none">
+        <div class="guide-section-title">使える言葉</div>
+        <p class="guide-section-intro">窓口では言い方ひとつで対応が変わることがあります。実際に効果があった言葉を集めました。</p>
+        <div class="phrase-list">
+          <div class="phrase-item phrase-bad">「相談があって来ました」</div>
+          <div class="phrase-item phrase-good">「生活保護を申請したいです。申請書をください。」</div>
+          <div class="phrase-item phrase-bad">「働けないんですけど……」</div>
+          <div class="phrase-item phrase-good">「現在、生活に困窮しており、今日から申請したいと思っています。」</div>
+          <div class="phrase-item phrase-bad">「どうすればいいですか」</div>
+          <div class="phrase-item phrase-good">「申請書を受け取る権利があると理解しています。書類が揃っていなくても申請はできるはずです。」</div>
+        </div>
+        <div class="tip-box">
+          <div class="tip-label">録音について</div>
+          <div class="tip-text">窓口での会話は録音できます。「記録のために録音させてください」と一言伝えて録音することで、後のトラブルに備えられます。相手の反応が変わることもあります。</div>
+        </div>
+      </div>
+
+      <!-- 窓口の対処法 -->
+      <div class="guide-section" id="gsec-tactics" style="display:none">
+        <div class="guide-section-title">窓口でよく言われること・その対処法</div>
+        <p class="guide-section-intro">「水際作戦」と呼ばれる申請妨害のパターンと、その対処法です。</p>
+        <div class="step-list">
+          <div class="step-item warning">
+            <div class="step-num">!</div>
+            <div class="step-body">
+              <div class="step-title">「まず家族に相談してから来てください」</div>
+              <div class="step-desc">家族への扶養照会は申請の条件ではありません。「家族への連絡は希望しません。申請は本人の権利として行いたいです」と伝えられます。DVや家族関係のトラブルがある場合は明示しましょう。</div>
+            </div>
+          </div>
+          <div class="step-item warning">
+            <div class="step-num">!</div>
+            <div class="step-body">
+              <div class="step-title">「まだ働けるでしょ」「若いから大丈夫」</div>
+              <div class="step-desc">職員が就労可能かどうかを窓口で判断する権限はありません。「申請書を受け取り、審査の中で判断していただきたいです」と伝えましょう。</div>
+            </div>
+          </div>
+          <div class="step-item warning">
+            <div class="step-num">!</div>
+            <div class="step-body">
+              <div class="step-title">「車を売ってから来てください」「保険を解約してから」</div>
+              <div class="step-desc">資産処分は申請後の審査の中で判断されるものです。窓口で条件を付けて申請を断ることは違法です。「申請を受け付けてください。資産については審査の中で説明します」と伝えましょう。</div>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">→</div>
+            <div class="step-body">
+              <div class="step-title">それでも申請書を渡さない場合</div>
+              <div class="step-desc">その日の日時・対応した職員の名前・言われた内容をメモする。支援団体や弁護士に相談する。後日、支援者と一緒に再訪する。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 相談先 -->
+      <div class="guide-section" id="gsec-contacts" style="display:none">
+        <div class="guide-section-title">相談先（京都市）</div>
+        <p class="guide-section-intro">一人で抱え込まないでください。無料で相談できる窓口があります。</p>
+        <div class="contact-list">
+          <div class="contact-item">
+            <div class="contact-name">京都市生活困窮者自立支援相談窓口</div>
+            <div class="contact-detail">各区役所・支所の生活福祉課。生活保護の申請窓口でもあります。</div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-name">京都府生活と健康を守る会（京都生健会）</div>
+            <div class="contact-detail">生活保護の申請同行支援を行っています。一緒に窓口に行ってもらえます。</div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-name">法テラス京都</div>
+            <div class="contact-detail">収入の少ない方向けの無料法律相談。弁護士への相談費用の立替制度もあります。</div>
+            <div class="contact-tel">0570-078374</div>
+          </div>
+          <div class="contact-item">
+            <div class="contact-name">京都弁護士会 法律相談センター</div>
+            <div class="contact-detail">有料ですが、行政の不当対応については法的アドバイスが得られます。</div>
+            <div class="contact-tel">075-231-2378</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q&A -->
+      <div class="guide-section" id="gsec-qa" style="display:none">
+        <div class="guide-section-title">Q&amp;A — みんなの声</div>
+        <p class="guide-section-intro">実際に経験した人の声と知恵を集めています。質問・回答の投稿はAIが自動審査します。</p>
+
+        <div class="qa-tabs">
+          <div class="qa-tab active" onclick="switchQaTab('list',this)">Q&amp;Aを読む</div>
+          <div class="qa-tab" onclick="switchQaTab('post',this)">投稿する</div>
+        </div>
+
+        <div id="qa-tab-list">
+          <input class="qa-search" type="text" placeholder="キーワードで検索（例：扶養照会、書類、断られた）" oninput="filterQA(this.value)">
+          <div class="qa-list" id="qa-list"></div>
+        </div>
+
+        <div id="qa-tab-post" style="display:none">
+          <p style="font-size:0.82rem;line-height:1.8;color:var(--ink-mid);margin-bottom:1.2rem">質問・体験・アドバイスを投稿できます。投稿内容はAIが自動審査し、問題がないものは公開されます。個人を特定できる情報は入れないでください。</p>
+          <div class="qa-form show">
+            <div class="field">
+              <label style="font-size:0.78rem;font-weight:500;display:block;margin-bottom:0.4rem">種類</label>
+              <select id="qa-type" style="width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.82rem;padding:0.6rem 0.8rem;border:1px solid var(--rule);background:var(--paper);outline:none">
+                <option value="質問">質問（こういう時どうすればいい？）</option>
+                <option value="体験">体験（こんなことがあった）</option>
+                <option value="アドバイス">アドバイス（これが役に立った）</option>
+              </select>
+            </div>
+            <div class="field">
+              <label style="font-size:0.78rem;font-weight:500;display:block;margin-bottom:0.4rem">内容</label>
+              <textarea id="qa-content" rows="5" style="width:100%;font-family:'Noto Sans JP',sans-serif;font-size:0.83rem;padding:0.7rem 0.9rem;border:1px solid var(--rule);background:var(--paper);outline:none;resize:vertical;line-height:1.7" placeholder="できるだけ具体的に書いてください。個人名・住所などは不要です。"></textarea>
+            </div>
+            <div id="qa-status" class="qa-status"></div>
+            <button class="btn-primary" onclick="submitQA()">AIに審査してもらって投稿する →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- KARTE PAGE -->
+<div class="page" id="page-karte">
+  <div class="karte-header">
+    <div class="page-title">事案カルテ</div>
+    <div class="page-subtitle">同じ地域・分野・時期の記事を束ねた事案単位のカルテ。構造タグで関連事案を探せます。</div>
+  </div>
+
+  <div class="karte-layout">
+    <div class="karte-sidebar">
+      <div class="karte-filter-block">
+        <div class="karte-filter-label">地域</div>
+        <select id="karte-pref" onchange="filterKartes()">
+          <option value="">全て</option>
+        </select>
+      </div>
+      <div class="karte-filter-block">
+        <div class="karte-filter-label">分野</div>
+        <select id="karte-field" onchange="filterKartes()">
+          <option value="">全て</option>
+        </select>
+      </div>
+      <div class="karte-filter-block">
+        <div class="karte-filter-label">構造タグ</div>
+        <select id="karte-structure" onchange="filterKartes()">
+          <option value="">全て</option>
+        </select>
+      </div>
+      <div class="karte-filter-block">
+        <div class="karte-filter-label">状態</div>
+        <select id="karte-status" onchange="filterKartes()">
+          <option value="">全て</option>
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <div class="db-count" id="karte-count-label"></div>
+      <div id="karte-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- タグ一覧ページ -->
+<div class="page" id="page-tags"></div>
+
+<!-- タグ別カルテ一覧ページ -->
+<div class="page" id="page-tagdetail"></div>
+
+<!-- 地図ページ -->
+<div class="page" id="page-map"></div>
+
+<!-- 用語辞典ページ -->
+<div class="page" id="page-terms"></div>
+
+<!-- 法律辞典ページ -->
+<div class="page" id="page-laws"></div>
+
+<!-- PROJECT MANAについてページ -->
+<div class="page" id="page-about">
+  <div class="karte-detail-header">
+    <div class="page-title">PROJECT MANAについて</div>
+  </div>
+  <div class="static-page-body">
+
+    <div class="static-section">
+      <div class="static-section-label">このサイトは何か</div>
+      <p style="font-size:1.05rem;line-height:1.9;color:var(--ink);margin-bottom:1.2rem">PROJECT MANAは、山の麓にある百葉箱です。</p>
+      <p>山の頂上から全体を見渡すのでもなく、街の中心で出来事を消費するのでもなく、山の麓から日々の変化を静かに記録する場所です。</p>
+      <p>行政・福祉・制度運用の現場で起きている出来事を記録し、その背景を観測するための市民アーカイブです。「制度はある。実装されていないだけだ。」という観点から、申請妨害・長期放置・記録改ざん・情報非公開など、制度が機能しない現場の事実を収集・分類・公開しています。</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">百葉箱と博物館</div>
+      <p>MANAは「百葉箱」と「博物館」の両方の性格を持っています。百葉箱が気象を観測するように、MANAは社会の構造を観測します。そして博物館が標本を分類・展示するように、MANAは収集した事案を整理・探索できる形で公開します。</p>
+      <p>記録することが目的であり、告発や運動の場ではありません。利用者が自分で調べ、自分で判断するための情報基盤を目指しています。</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">何を収録しているか</div>
+      <p>報道記事・行政資料・議会議事録・裁判例・当事者証言などをもとに、以下を収録しています。</p>
+      <ul class="static-list">
+        <li><strong>観測DB</strong>：全国の行政・福祉・制度に関する記事をAIが毎日自動収集・分類したデータベース</li>
+        <li><strong>事案カルテ</strong>：個々の事案を地域・分野・タグで整理した記録票</li>
+        <li><strong>用語辞典</strong>：制度用語の解説パネル（カルテやDBを読む際の参照用）</li>
+        <li><strong>法律辞典</strong>：関連法律のe-Govリンク集</li>
+      </ul>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">運営について</div>
+      <p>PROJECT MANAは個人運営の市民アーカイブです。行政、福祉、権利擁護、地域社会などに関する公開情報を収集し、事案として整理・観測しています。特定の政党・団体・企業とは関係がありません。</p>
+      <p>MANAは中立を標榜するサイトではありません。「記録する」という行為そのものに立場があります。ただし、特定の結論を誘導することは目的としておらず、利用者がそれぞれ自分の問いを持てるような記録を目指しています。</p>
+      <p>私たちは答えを決めるためではなく、何が起きているのかを見失わないために観測を続けています。</p>
+      <p style="margin-top:.8rem;font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--ink-mid)">運営者　多藝　麻奈</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">このサイトの限界について</div>
+      <p>PROJECT MANAは、答えを提示するためのサイトではありません。出来事を記録し、事案として整理し、社会構造を観測するための百葉箱です。</p>
+      <p>カルテやタグにはAIによる整理を含みます。誤りや不完全さが含まれる可能性があります。記録は完成品ではなく、観測の途中経過です。</p>
+    </div>
+
+    <div class="static-section" style="border-bottom:none">
+      <div class="static-section-label">観測に参加する</div>
+      <p>百葉箱は、設置した者だけが観測するものではありません。そこを通りかかった人が「今日は違う」と気づくことも、観測のひとつです。</p>
+      <p>以下のようなご連絡をお待ちしています。</p>
+      <ul class="static-list">
+        <li>カルテや記事内容の誤り報告</li>
+        <li>関連する記事・資料・事実の情報提供</li>
+        <li>タグの追加・修正の提案</li>
+        <li>地域情報の補足・修正</li>
+        <li>サイトの構造や設計への意見</li>
+      </ul>
+      <p>どんな小さな気づきでも、PROJECT MANAの観測精度を高めます。</p>
+      <a id="feedback-link" href="#" onclick="showPage('feedback', null); return false;" class="static-external-link" style="margin-top:.5rem">→ 観測フィードバックを送る</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- 利用と引用についてページ -->
+<div class="page" id="page-citation">
+  <div class="karte-detail-header">
+    <div class="page-title">利用と引用について</div>
+  </div>
+  <div class="static-page-body">
+
+    <div class="static-section">
+      <div class="static-section-label">PROJECT MANAは記事転載サイトではありません</div>
+      <p>PROJECT MANAは、報道記事・行政資料・公的情報をもとに事案を整理・分類・構造化したアーカイブです。記事の全文転載は行っておらず、原典を尊重し、可能な限り元記事・元資料へのリンクを掲載しています。</p>
+      <p>報道記事・行政資料等の著作権は、それぞれの権利者（報道機関・行政機関等）に帰属します。</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">PROJECT MANA独自コンテンツのライセンス</div>
+      <p>以下のコンテンツはPROJECT MANAが独自に作成したものであり、<strong>CC BY 4.0（クリエイティブ・コモンズ 表示 4.0 国際）</strong>のもとで公開します。</p>
+      <ul class="static-list">
+        <li>事案カルテ（タイトル・概要・経過・タグ等）</li>
+        <li>タグ体系（出来事タグ・構造タグ・探索タグ等）</li>
+        <li>用語辞典の解説文</li>
+        <li>法律辞典のポイント解説文</li>
+        <li>MANAコメント・構造メモ</li>
+      </ul>
+      <p>CC BY 4.0では、出典を明記すれば営利・非営利を問わず自由に複製・改変・再配布できます。</p>
+      <a href="https://creativecommons.org/licenses/by/4.0/deed.ja" target="_blank" rel="noopener" class="static-external-link">CC BY 4.0 ライセンス全文（Creative Commons）→</a>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">引用・転載時のお願い</div>
+      <p>PROJECT MANA独自コンテンツを引用・転載する場合は、出典として以下の形式で明記してください。</p>
+      <div class="static-cite-example">出典：PROJECT MANA（projectmana-lime.vercel.app）</div>
+      <p>学術論文・報告書・記事等での引用も歓迎します。引用箇所・用途をお知らせいただけると参考になります（任意）。</p>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">免責事項</div>
+      <p>PROJECT MANAは情報の正確性に努めていますが、収録内容の完全性・最新性を保証するものではありません。カルテやタグにはAIによる整理を含み、誤りや不完全さが含まれる可能性があります。</p>
+      <p>制度・法律に関する情報は、必ず公式情報・専門家にご確認ください。用語辞典・法律辞典の解説は参照用であり、法的アドバイスではありません。</p>
+    </div>
+
+    <div class="static-section static-colophon">
+      <div class="static-section-label">奥付</div>
+      <div class="colophon-body">
+        <div class="colophon-row"><span class="colophon-label">サイト名</span><span class="colophon-val">PROJECT MANA</span></div>
+        <div class="colophon-row"><span class="colophon-label">運営者</span><span class="colophon-val">多藝　麻奈</span></div>
+        <div class="colophon-row"><span class="colophon-label">種別</span><span class="colophon-val">個人運営・市民アーカイブ</span></div>
+        <div class="colophon-row"><span class="colophon-label">所在</span><span class="colophon-val">京都</span></div>
+        <div class="colophon-row"><span class="colophon-label">独自コンテンツ</span><span class="colophon-val">CC BY 4.0</span></div>
+        <div class="colophon-row"><span class="colophon-label">URL</span><span class="colophon-val">projectmana-lime.vercel.app</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 独立カルテページ -->
+<div class="page" id="page-kartedetail">
+  <div class="karte-detail-header">
+    <span class="karte-detail-back" onclick="history.back()">← 戻る</span>
+  </div>
+  <div class="karte-detail-body" id="kartedetail-content">
+    <div class="karte-detail-loading">読み込み中……</div>
+  </div>
+</div>
+
+
+<footer>
+  <div class="footer-name">PROJECT MANA</div>
+  <div class="footer-copy">独立市民調査プラットフォーム — 京都 — © 2026</div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
