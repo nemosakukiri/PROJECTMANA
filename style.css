@@ -2521,3 +2521,46 @@ a.kp2-chip-evidence:hover {
   .kp2-related-title { font-size: 13.5px; }
   .kp2-related-tags  { font-size: 12px; }
 }
+
+/* ===== 観測DB：過去記事の表示分離 ===== */
+.db-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin-bottom: .5rem;
+}
+
+.db-show-old-toggle {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: 0.78rem;
+  color: var(--ink-mid);
+  cursor: pointer;
+  user-select: none;
+}
+
+.db-show-old-toggle input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.db-old-count-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--ink-light);
+}
+
+.db-card-old {
+  opacity: 0.7;
+}
+
+.db-card-old-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  padding: 1px 6px;
+  background: #f0ead8;
+  color: #8a8070;
+  border: 1px solid #c8c0b0;
+}
