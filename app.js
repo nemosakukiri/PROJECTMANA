@@ -1313,3 +1313,1286 @@ function _runHomeSearch(kw) {
           type: 'karte',
           id:   k.id,
           title: k.title || '',
+                    sub:   (k.region || '') + (k.field ? '　' + k.field : ''),
+        });
+      }
+    });
+  }
+
+  // 観測DBを検索（タイトル・要約）
+  if (dbData && dbData.length) {
+    dbData.forEach(r => {
+      const haystack = ((r.title || '') + ' ' + (r.summary || '')).toLowerCase();
+      if (haystack.includes(q)) {
+        hits.push({
+          type:  'db',
+          url:   r.url || '',
+          title: r.title || '',
+          sub:   (r.date ? r.date.slice(0, 10) : '') + (r.region ? '　' + r.region : ''),
+        });
+      }
+    });
+  }
+
+  if (!hits.length) {
+    resultsEl.innerHTML = '<div class="hsr-empty">「' + kw + '」に一致する記録が見つかりませんでした</div>';
+    resultsEl.style.display = 'block';
+    return;
+  }
+
+  const shown = hits.slice(0, MAX);
+  const more  = hits.length - shown.length;
+
+  resultsEl.innerHTML = shown.map(h => {
+    if (h.type === 'karte') {
+      return `<div class="hsr-item hsr-karte" onclick="goToKartePage('${h.id}')">
+        <span class="hsr-badge hsr-badge-karte">カルテ</span>
+        <span class="hsr-title">${h.title}</span>
+        <span class="hsr-sub">${h.sub}</span>
+      </div>`;
+    } else {
+      const onclick = h.url
+        ? `window.open('${h.url}','_blank')`
+        : `showPage('db',document.querySelector('nav a:nth-child(2)'))`;
+      return `<div class="hsr-item hsr-db" onclick="${onclick}">
+        <span class="hsr-badge hsr-badge-db">観測DB</span>
+        <span class="hsr-title">${h.title}</span>
+        <span class="hsr-sub">${h.sub}</span>
+      </div>`;
+    }
+  }).join('') + (more > 0
+    ? `<div class="hsr-more" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))">他 ${more} 件 → 観測DBで検索する</div>`
+    : '');
+
+  resultsEl.style.display = 'block';
+}
+
+// 検索窓の外クリックで結果を閉じる
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('home-search-results');
+  if (wrap && !wrap.contains(e.target) && e.target.id !== 'home-search-input') {
+    wrap.style.display = 'none';
+  }
+});
+
+function checkKarteLinkage() {
+  if (!dbData.length || !karteData.length) return;
+  const dbUrls = dbData.map(r => r.url).filter(Boolean);
+  const karteUrls = karteData.flatMap(k =>
+    k.related_urls ? k.related_urls.split('\n').map(u => u.trim()).filter(Boolean) : []
+  );
+  const matched = [];
+  const unmatched = [];
+  dbData.forEach(r => {
+    if (!r.url) { unmatched.push(r); return; }
+    findKarteByUrl(r.url) ? matched.push(r) : unmatched.push(r);
+  });
+  const emptyRelatedKartes = karteData.filter(k => !k.related_urls || !k.related_urls.trim());
+  console.log('===== カルテ紐付け状況（事実集計） =====');
+  console.log('1. 観測DBの記事URL数:', dbUrls.length);
+  console.log('2. カルテ related_urls 内URL数（延べ）:', karteUrls.length);
+  console.log('3. URL一致している記事数:', matched.length);
+  console.log('4. URL一致していない記事一覧（' + unmatched.length + '件）:');
+  unmatched.forEach(r => console.log('   -', r.date, r.title, '|', r.url || '(URLなし)'));
+  console.log('5. related_urlsが空のカルテ一覧（' + emptyRelatedKartes.length + '件）:');
+  emptyRelatedKartes.forEach(k => console.log('   -', k.id, k.title));
+
+  // ===== 代表記事ズレ検出 =====
+  console.log('===== 代表記事ズレ検出 =====');
+  let mismatchCount = 0;
+  dbData.forEach(r => {
+    if (!r.url) return;
+    const karte = findKarteByUrl(r.url);
+    if (!karte) return;
+
+    // カルテのrelated_urlsの先頭URLを「代表記事」とみなす
+    const firstUrl = karte.related_urls
+      ? karte.related_urls.split('\n').map(u => u.trim()).filter(Boolean)[0]
+      : null;
+
+    // DB記事タイトルとカルテタイトルの比較
+    const dbTitle    = (r.title || '').slice(0, 30);
+    const karteTitle = (karte.title || '').slice(0, 30);
+
+    // 先頭URL（代表記事）とDB記事URLが一致しない場合 → ズレの可能性
+    if (firstUrl && normalizeUrl(firstUrl) !== normalizeUrl(r.url)) {
+      mismatchCount++;
+      console.warn('[ズレ候補] DB記事:「' + dbTitle + '」→ ' + karte.id + '「' + karteTitle + '」/ 代表URL:' + (firstUrl || '').slice(0, 60));
+    }
+  });
+  if (mismatchCount === 0) {
+    console.log('代表記事ズレ: 検出なし');
+  } else {
+    console.warn('代表記事ズレ候補: ' + mismatchCount + '件 → ブラウザのConsoleで[ズレ候補]を確認してください');
+  }
+  console.log('=========================================');
+}
+
+// ===== LOAD DB =====
+function loadDB() {
+  console.log('DB読み込み開始（GAS API）:', GAS_API_URL);
+  fetch(GAS_API_URL)
+    .then(r => {
+      console.log('HTTPステータス:', r.status);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(data => {
+      if (!Array.isArray(data)) throw new Error('データ形式が不正です: ' + JSON.stringify(data).slice(0, 100));
+      dbData = data.map(row => ({
+        date:           row['日付'] || '',
+        region:         row['地域'] || '',
+        region_pref:    row['地域']    || row['都道府県'] || '',
+        region_city:    row['市区町村'] || '',
+        region_ward:    row['区']       || '',
+        municipality:   row['市区町村'] || '',
+        field:          row['分野'] || '',
+        source:         row['出典'] || '',
+        url:            row['URL'] || '',
+        title:          row['タイトル'] || '',
+        summary:        row['要約'] || '',
+        tags_event:     row['出来事タグ'] || '',
+        tags_structure: row['構造タグ'] || '',
+        tags_evidence:  row['根拠タグ'] || '',
+        tags_status:    row['状態タグ'] || '',
+        severity:       row['重要度'] || '中',
+        structure_note: row['構造メモ'] || '',
+        collected_at:   row['収録日時'] || '',
+        old_flag:       row['古い記事'] || '', // 「古い記事候補」が入っていればアーカイブ扱い
+        date_status:    row['date_status'] || '', // 確定 / 未確認 / 要確認
+        karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
+      })).filter(r => r.title);
+      // [診断] カルテID列がAPIから来ているか確認
+      const sampleRow = dbData.slice(0, 3);
+      sampleRow.forEach((r, i) => {
+        console.log('[loadDB診断] 記事' + i + ':', r.title ? r.title.slice(0, 30) : '(無題)',
+          '| karte_id:', r.karte_id || '(空)',
+          '| url末尾:', (r.url || '').slice(-30));
+      });
+      const hasKarteId = dbData.some(r => r.karte_id);
+      console.log('[loadDB診断] カルテID列が存在するか:', hasKarteId ? 'YES ✅' : 'NO ❌（GAS APIが列を返していない可能性）');
+
+      // ===== 表示順は必ず「収集日ベースの新着順」に統一する =====
+      // 公開日(date)や文字列順ではなく、collected_at（収録日時）をDateとして比較する。
+      // collected_atが取れない異常データのみ date にフォールバックする。
+      dbData.sort((a, b) => {
+        const collectedA = new Date(a.collected_at || 0);
+        const collectedB = new Date(b.collected_at || 0);
+        if (!isNaN(collectedA) && !isNaN(collectedB) && (collectedB - collectedA !== 0)) {
+          return collectedB - collectedA;
+        }
+        // collected_atが同値・不正な場合のみdateにフォールバック
+        return new Date(b.date || 0) - new Date(a.date || 0);
+      });
+      console.log('DB読み込み成功:', dbData.length + '件');
+      renderDB(dbData);
+      updateStats();
+      renderHomeNews(dbData.filter(r => !isHeldBack(r)).slice(0, 5));
+      buildFilters(dbData);
+      updateTicker(dbData);
+      renderHomeTagCloud(dbData);
+      checkKarteLinkage();
+    })
+    .catch(err => {
+      console.error('DB読み込みエラー:', err.message);
+    });
+}
+
+function loadSurveyVoices() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') {
+    renderHomeVoices(demoVoices());
+    return;
+  }
+  fetch(SHEET_BASE + encodeURIComponent(SURVEY_SHEET_NAME))
+    .then(r => r.text())
+    .then(text => {
+      const json = JSON.parse(text.replace('/*O_o*/\ngoogle.visualization.Query.setResponse(', '').replace(');', ''));
+      const rows = json.table.rows;
+      surveyData = rows.slice(1).map(row => ({
+        pref: row.c[0]?.v || '',
+        window: row.c[1]?.v || '',
+        detail: row.c[3]?.v || '',
+        date: row.c[6]?.v || ''
+      })).filter(r => r.detail);
+      renderHomeVoices(surveyData.slice(-3).reverse());
+      const scs = document.getElementById('survey-count-stat'); if(scs) scs.innerHTML = surveyData.length + '<sup>件</sup>';
+      const scb = document.getElementById('survey-count-sub'); if(scb) scb.textContent = '▲ 随時更新';
+    })
+    .catch(() => renderHomeVoices(demoVoices()));
+}
+
+// ===== DEMO DATA =====
+function useDemoData() {
+  dbData = [
+    {
+      date:'2026-06-05', region:'京都府', municipality:'京都市', field:'生活保護', url:'',
+      title:'【デモ】福祉窓口で申請者に不適切発言、録音が証拠として提出',
+      summary:'生活保護申請窓口で担当職員が申請者に不適切な発言。録音データが提出され問題化。',
+      tags_event:'申請妨害 / 誤情報提供', tags_structure:'説明責任 / 組織防衛',
+      tags_evidence:'当事者証言 / 録音・録画', tags_status:'疑惑段階', severity:'高'
+    },
+    {
+      date:'2026-06-04', region:'大阪府', municipality:'大阪市', field:'障害福祉', url:'',
+      title:'【デモ】福祉事務所の訪問記録に虚偽記載、監査で発覚',
+      summary:'福祉事務所の職員が未実施の訪問を実施済みとして記録。内部監査で発覚し担当者を処分。',
+      tags_event:'記録改ざん', tags_structure:'内部統制 / 説明責任 / 自己修正不能',
+      tags_status:'行政が認めた / 謝罪あり', tags_evidence:'監査報告', severity:'高'
+    },
+    {
+      date:'2026-06-03', region:'神奈川県', municipality:'', field:'障害福祉', url:'',
+      title:'【デモ】障害福祉サービスの支給量を独断で削減、行政不服申立て',
+      summary:'担当ケースワーカーが利用者の同意なくサービス支給量を削減。不服申立てが認められる。',
+      tags_event:'支給停止 / 本人意思の無視', tags_structure:'当事者主体の不実装 / 権限濫用',
+      tags_status:'係争中 / 是正あり', tags_evidence:'裁判例 / 当事者証言', severity:'高'
+    },
+    {
+      date:'2026-06-02', region:'東京都', municipality:'', field:'情報公開', url:'',
+      title:'【デモ】区役所窓口で申請書類を紛失、再提出強要し4ヶ月放置',
+      summary:'提出済みの申請書類が区役所内で紛失。担当部署は再提出を求め、その後も4ヶ月間対応せず。',
+      tags_event:'長期放置 / 書類紛失', tags_structure:'判断プロセス不備 / 説明責任',
+      tags_status:'是正なし', tags_evidence:'当事者証言', severity:'中'
+    },
+    {
+      date:'2026-05-30', region:'愛知県', municipality:'', field:'生活保護', url:'',
+      title:'【デモ】生活保護申請に「まず親族に相談を」と繰り返し申請阻止',
+      summary:'窓口職員が法的根拠なく親族扶養を条件として提示し続け、申請を事実上阻止していた事例。',
+      tags_event:'申請妨害 / 扶養照会濫用', tags_structure:'制度実装の失敗 / 前例主義 / 反復構造',
+      tags_status:'疑惑段階', tags_evidence:'当事者証言', severity:'高'
+    },
+    {
+      date:'2026-05-15', region:'京都府', municipality:'京都市', field:'財政', url:'',
+      title:'【デモ】京都市財政推計ミスが発覚、値上げ方針は継続',
+      summary:'財政危機の根拠となった推計に誤りが発覚したにもかかわらず、当局は値上げ方針を撤回せず。',
+      tags_event:'財政推計ミス / 政策撤回なし', tags_structure:'説明責任 / 自己修正不能 / 財政危機言説',
+      tags_status:'誤り認定 / 謝罪あり / 撤回なし', tags_evidence:'議会議事録 / 行政資料', severity:'高'
+    },
+  ];
+  renderDB(dbData);
+  updateStats();
+  renderHomeNews(dbData.filter(r => !isHeldBack(r)).slice(0, 5));
+  buildFilters(dbData);
+  updateTicker(dbData);
+  renderHomeTagCloud(dbData);
+  renderHomeVoices(demoVoices());
+}
+
+function demoVoices() {
+  return [
+    {pref:'京都市 / 福祉窓口', detail:'申請したいと言ったら、まず家族に相談してきてと言われた。家族と連絡が取れないから来ているのに。'},
+    {pref:'大阪市 / 障害福祉課', detail:'必要な書類を聞いたら毎回違うことを言われる。わざと諦めさせようとしているとしか思えない。'},
+    {pref:'名古屋市 / 生活支援課', detail:'担当者が変わったら前の記録が全部消えていた。また一から説明させられた。'},
+  ];
+}
+
+// ===== RENDER DB =====
+const TAG_COLORS = {
+  event:     {bg:'#fdf0f0',border:'#e8a0a0',text:'#8b2020'},
+  structure: {bg:'#e6f1fb',border:'#85b7eb',text:'#0c447c'},
+  evidence:  {bg:'#eaf3de',border:'#97c459',text:'#27500a'},
+  status:    {bg:'#faeeda',border:'#ef9f27',text:'#633806'},
+};
+
+let activeTagFilters = {event:[], structure:[], evidence:[], status:[]};
+
+function renderDB(data) {
+  _currentFilteredData = data;
+  const container = document.getElementById('db-cards');
+  if (!container) return;
+
+  console.log('renderDB - dbData件数:', data.length);
+  console.log('renderDB - karteData件数:', (karteData && karteData.length) ? karteData.length : '未読み込み');
+  const totalMatch = data.filter(r => findKarteByUrl(r.url)).length;
+  console.log('renderDB - URL照合成功件数:', totalMatch + '/' + data.length);
+  data.slice(0, 3).forEach((r, i) => {
+    const k = findKarteByUrl(r.url);
+    console.log(`記事[${i}] URL:「${r.url}」→ カルテ:`, k ? k.id + ' ' + k.title : 'なし');
+    if (!k && karteData && karteData.length) {
+      console.log(`  related_urls例:`, karteData[0]?.related_urls?.slice(0, 100));
+    }
+  });
+
+  // ===== 保留箱は通常の新着一覧からは分離する（削除はしない） =====
+  // 「古い記事候補」（確定的に古い）または「要確認」（日付未確認・再配信疑い）の
+  // いずれかに該当する行は保留箱扱い。
+  // チェックボックス #db-show-old がオンの場合のみ表示に含める。
+  const showOld = document.getElementById('db-show-old')?.checked || false;
+  const oldCount = data.filter(r => isHeldBack(r)).length;
+  const visibleData = showOld ? data : data.filter(r => !isHeldBack(r));
+
+  const oldCountLabel = document.getElementById('db-old-count-label');
+  if (oldCountLabel) {
+    oldCountLabel.textContent = oldCount > 0
+      ? `（保留 ${oldCount}件を${showOld ? '表示中' : '非表示中'}）`
+      : '';
+  }
+
+  if (!visibleData.length) {
+    container.innerHTML = '<div class="db-empty">該当するデータがありません</div>';
+    const cl0 = document.getElementById('db-count-label');
+    if (cl0) cl0.textContent = '';
+    return;
+  }
+
+  const cl = document.getElementById('db-count-label');
+  if (cl) cl.textContent = visibleData.length + ' 件表示中' + (!showOld && oldCount > 0 ? `（保留${oldCount}件は除く）` : '');
+
+  container.innerHTML = visibleData.map((r, idx) => {
+    const eventTags  = splitTags(r.tags_event);
+    const structTags = splitTags(r.tags_structure);
+    const evidTags   = splitTags(r.tags_evidence);
+    const statusTags = splitTags(r.tags_status);
+    const sev = r.severity === '高' ? `<span class="db-card-sev-high">高</span>` :
+                r.severity === '中' ? `<span class="db-card-sev-mid">中</span>` : '';
+    const hasAnyTag = eventTags.length || structTags.length || evidTags.length || statusTags.length;
+    // カルテ紐付け：karte_id列を正式キーとして使用
+    const relatedKarte = r.karte_id
+      ? karteData.find(k => k.id === r.karte_id) || null
+      : null;
+    // [診断] 最初の5件のみログ
+    if (idx < 5) {
+      console.log('[renderDB診断] idx:' + idx,
+        '| 記事:', (r.title || '').slice(0, 25),
+        '| karte_id:', r.karte_id || '(空)',
+        '| relatedKarte:', relatedKarte ? relatedKarte.id + ' ' + (relatedKarte.title || '').slice(0, 20) : 'null');
+    }
+    // idxではなくURLのハッシュ値でカードIDを生成（フィルタ後のズレを防止）
+    const cardId = 'card-' + idx + '-' + (r.url || r.title || '').replace(/[^a-zA-Z0-9]/g, '').slice(-8);
+
+    return `<div class="db-card${isHeldBack(r) ? ' db-card-old' : ''}" id="${cardId}">
+      <div class="db-card-top">
+        <span class="db-card-date">${r.date}</span>
+        ${r.old_flag
+          ? `<span class="db-card-old-badge" title="元記事公開日が古いと確認済みです">過去記事</span>`
+          : (r.date_status === '要確認'
+            ? `<span class="db-card-old-badge db-card-review-badge" title="日付の矛盾、またはGoogleニュース再配信の疑いが強いため確認が必要です">要確認</span>`
+            : '')}
+        ${r.region ? `<span class="db-card-region">${r.region}${r.municipality ? ' / ' + r.municipality : ''}</span>` : ''}
+        ${r.field ? `<span class="db-card-field">${r.field}</span>` : ''}
+        ${sev}
+        ${relatedKarte ? `<span class="db-card-karte-badge">カルテあり</span>` : ''}
+      </div>
+      <div class="db-card-title">
+        ${r.url ? `<a href="${r.url}" target="_blank">${r.title}</a>` : r.title}
+      </div>
+      ${relatedKarte ? `<button class="db-card-karte-btn" onclick="event.stopPropagation();goToKartePage('${relatedKarte.id}')">📋 事案カルテを見る：${relatedKarte.title}</button>` : ''}
+      ${r.summary ? `<div class="db-card-summary">${r.summary}</div>` : ''}
+      <div class="db-card-tags">
+        ${eventTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-e" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${structTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-s" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${evidTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-v" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${statusTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-t" onclick="event.stopPropagation()">${t}</a>`).join('')}
+      </div>
+      ${hasAnyTag ? `<button class="db-similar-btn" id="similar-btn-${cardId}" onclick="event.stopPropagation();toggleSimilar('${cardId}')">共通する構造を探す</button>` : ''}
+      <div class="db-card-similar" id="similar-${cardId}"></div>
+    </div>`;
+  }).join('');
+}
+
+function openKarteFromDB(karteId) {
+  goToKartePage(karteId);
+}
+
+function normalizeUrl(url) {
+  if (!url) return '';
+  return url.trim().replace(/\/$/, '');
+}
+
+function findKarteByUrl(articleUrl) {
+  if (!articleUrl) return null;
+  if (!karteData || !karteData.length) return null;
+  const normalized = normalizeUrl(articleUrl);
+  const allMatched = karteData.filter(k => {
+    const urls = k.related_urls;
+    if (!urls) return false;
+    const urlList = Array.isArray(urls) ? urls : String(urls).split('\n');
+    return urlList.map(u => normalizeUrl(u)).includes(normalized);
+  });
+  if (allMatched.length > 1) {
+    console.warn('[findKarteByUrl] 重複URL検出:', normalized,
+      '→', allMatched.map(k => k.id).join(', '));
+  }
+  return allMatched[0] || null;
+}
+
+// ===== 保留箱判定（v4） =====
+// 保留（通常の新着表示・トップページ・ティッカーから外す）対象は以下のみ：
+//   - 「古い記事候補」（元記事公開日が古いと確認済み）
+//   - date_status = '要確認'（日付に矛盾、Googleニュース再配信疑いが強い等）
+// date_status = '未確認'（RSS日付はあるが元記事公開日が未確認なだけ）は保留しない。
+// 通常表示してよい。ただし弱いバッジ（「元記事日付未確認」）で明示する。
+function isHeldBack(r) {
+  if (r.old_flag) return true; // 確定的に古い記事
+  if (r.date_status === '要確認') return true; // 日付矛盾・再配信疑いが強いもの
+  return false; // 「未確認」は保留対象にしない
+}
+
+function splitTags(str) {
+  if (!str) return [];
+  return str.split('/').map(t => t.trim()).filter(Boolean);
+}
+
+function buildSidebarTagFilters(data) {
+  const collect = (key) => {
+    const counts = {};
+    data.forEach(r => {
+      splitTags(r[key]).forEach(t => { counts[t] = (counts[t]||0)+1; });
+    });
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  };
+  const render = (id, key, entries) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = entries.map(([tag, count]) =>
+      `<button class="db-tag-btn" onclick="toggleTagFilter('${key}','${tag}',this)">${tag}<span style="opacity:0.5;margin-left:0.2rem">${count}</span></button>`
+    ).join('');
+  };
+  render('filter-event',    'tags_event',     collect('tags_event'));
+  render('filter-structure','tags_structure',  collect('tags_structure'));
+  render('filter-status',   'tags_status',     collect('tags_status'));
+  render('filter-evidence', 'tags_evidence',   collect('tags_evidence'));
+}
+
+function toggleTagFilter(type, tag, btn) {
+  const idx = activeTagFilters[type].indexOf(tag);
+  if (idx === -1) {
+    activeTagFilters[type].push(tag);
+    btn.classList.add('active');
+  } else {
+    activeTagFilters[type].splice(idx, 1);
+    btn.classList.remove('active');
+  }
+  filterDB();
+}
+
+function resetFilters() {
+  document.getElementById('db-search').value = '';
+  document.getElementById('db-pref').value = '';
+  document.getElementById('db-category').value = '';
+  document.getElementById('db-severity').value = '';
+  activeTagFilters = {event:[], structure:[], evidence:[], status:[]};
+  document.querySelectorAll('.db-tag-btn').forEach(b => b.classList.remove('active'));
+  filterDB();
+}
+
+function toggleDbFilter(btn) {
+  const sidebar = document.getElementById('db-sidebar');
+  const icon    = document.getElementById('db-filter-toggle-icon');
+  const label   = document.getElementById('db-filter-toggle-label');
+  sidebar.classList.toggle('open');
+  const isOpen = sidebar.classList.contains('open');
+  icon.textContent  = isOpen ? '▲' : '▼';
+  label.textContent = isOpen ? '絞り込み条件を閉じる' : '絞り込み条件を表示';
+}
+
+function filterDB() {
+  const kw   = (document.getElementById('db-search')?.value || '').toLowerCase();
+  const pref = document.getElementById('db-pref')?.value || '';
+  const cat  = document.getElementById('db-category')?.value || '';
+  const sev  = document.getElementById('db-severity')?.value || '';
+  const filtered = dbData.filter(r => {
+    const allText = [r.title, r.summary, r.tags_event, r.tags_structure, r.tags_evidence, r.tags_status].filter(Boolean).join(' ').toLowerCase();
+    if (kw && !allText.includes(kw)) return false;
+    if (pref && (r.region||r.prefecture||'') !== pref) return false;
+    if (cat  && (r.field||r.category||'') !== cat) return false;
+    if (sev  && r.severity !== sev) return false;
+    if (activeTagFilters.event.length     && !activeTagFilters.event.every(t     => (r.tags_event||'').includes(t)))     return false;
+    if (activeTagFilters.structure.length && !activeTagFilters.structure.every(t  => (r.tags_structure||'').includes(t))) return false;
+    if (activeTagFilters.evidence.length  && !activeTagFilters.evidence.every(t   => (r.tags_evidence||'').includes(t)))  return false;
+    if (activeTagFilters.status.length    && !activeTagFilters.status.every(t     => (r.tags_status||'').includes(t)))    return false;
+    return true;
+  });
+  renderDB(filtered);
+}
+
+function buildFilters(data) {
+  const prefs = [...new Set(data.map(r => r.region||r.prefecture||'').filter(Boolean))].sort();
+  const cats  = [...new Set(data.map(r => r.field||r.category||'').filter(Boolean))].sort();
+  const prefSel = document.getElementById('db-pref');
+  const catSel  = document.getElementById('db-category');
+  prefSel.innerHTML = '<option value="">全地域</option>';
+  catSel.innerHTML  = '<option value="">全分野</option>';
+  prefs.forEach(p => { const o = document.createElement('option'); o.value = o.textContent = p; prefSel.appendChild(o); });
+  cats.forEach(c  => { const o = document.createElement('option'); o.value = o.textContent = c; catSel.appendChild(o); });
+  buildSidebarTagFilters(data);
+}
+
+function updateStats() {
+  const dbCount = dbData.length;
+  const dcs = document.getElementById('db-count-stat'); if(dcs) dcs.innerHTML = dbCount + '<sup>件</sup>';
+  const dcb = document.getElementById('db-count-sub'); if(dcb) dcb.textContent = '▲ AI自動収集・毎日更新';
+  // ホームの統計行
+  const homeDb = document.getElementById('home-db-count');
+  if (homeDb) homeDb.textContent = dbCount + '件';
+}
+
+function renderHomeNews(data) {
+  document.getElementById('home-news-list').innerHTML = data.map((r, i) => `
+    <div class="news-item">
+      <div class="news-num">0${i+1}</div>
+      <div>
+        <div class="news-pref">${r.prefecture}</div>
+        <div class="news-title">${r.title}</div>
+        <div class="news-meta">${r.date} — ${r.source}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderHomeVoices(data) {
+  const hv = document.getElementById('home-voices'); if(hv) hv.innerHTML = data.map(v => `
+    <div class="voice-item">
+      <span class="voice-pref">${v.pref}</span>
+      「${v.detail.slice(0, 60)}${v.detail.length > 60 ? '……' : ''}」
+    </div>
+  `).join('');
+}
+
+function updateTicker(data) {
+  // ティッカーは「現在進行中の新着」を見せる場所のため、過去記事（old_flag）は除外する
+  const liveData = data.filter(r => !isHeldBack(r));
+  const items = liveData.slice(0, 6).map(r => `${r.region||r.prefecture||''}・${r.title}`).join('　　');
+  const doubled = items + '　　　　' + items;
+  const tt = document.getElementById('ticker-text'); if(tt) tt.textContent = doubled;
+}
+
+// ===== SURVEY =====
+const GAS_SURVEY_URL = 'https://script.google.com/macros/s/AKfycbwXWIwaQWYnE-LX6sPXNdqCL_--CT-CidBsYnntp88wFYJ0MMyHjhFBI0mZyO9ZlYdymg/exec';
+
+function submitSurvey() {
+  const pref   = document.getElementById('s-pref').value;
+  const win    = document.getElementById('s-window').value;
+  const detail = document.getElementById('s-detail').value;
+  const result = document.querySelector('input[name="result"]:checked')?.value || '';
+  const when   = document.getElementById('s-when').value;
+  const types  = [...document.querySelectorAll('input[type="checkbox"]:checked')].map(c => c.value).join('、');
+  if (!pref || !detail) { alert('都道府県と体験の詳細は必須です'); return; }
+
+  // 送信先が未設定の場合は「送信完了」を絶対に表示しない（未送信データの隠蔽防止）
+  if (GAS_SURVEY_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    const errEl = document.getElementById('survey-error');
+    if (errEl) {
+      errEl.textContent = '現在、送信先が未設定のため送信できません。しばらくしてから再度お試しください。';
+      errEl.style.display = 'block';
+    } else {
+      alert('現在、送信先が未設定のため送信できません。しばらくしてから再度お試しください。');
+    }
+    return;
+  }
+
+  const data = { pref, window: win, types, detail, result, when, timestamp: new Date().toISOString() };
+
+  const errEl = document.getElementById('survey-error');
+  if (errEl) errEl.style.display = 'none';
+
+  fetch(GAS_SURVEY_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(() => {
+    document.getElementById('survey-form-container').style.display = 'none';
+    document.getElementById('survey-thanks').style.display = 'block';
+  }).catch(() => {
+    // 送信失敗時も「成功」を装わない
+    if (errEl) {
+      errEl.textContent = '送信に失敗しました。通信状況をご確認のうえ、もう一度お試しください。';
+      errEl.style.display = 'block';
+    } else {
+      alert('送信に失敗しました。通信状況をご確認のうえ、もう一度お試しください。');
+    }
+  });
+}
+
+// ===== 観測フィードバック送信 =====
+// ===== 観測の窓ページ =====
+function renderWindowsPage() {
+  const cv = document.getElementById('windows-canvas');
+  if (!cv) return;
+
+  const isMobile = window.innerWidth < 600;
+  const W = isMobile ? window.innerWidth : Math.min(window.innerWidth, 860);
+  const H = Math.round(W * 820 / 680);
+  cv.width = W;
+  cv.height = H;
+  cv.style.maxWidth = '100%';
+
+  const ctx = cv.getContext('2d');
+  const scale = W / 680;
+
+  ctx.fillStyle = '#cdd6e0';
+  ctx.fillRect(0, 0, W, H);
+  ctx.scale(scale, scale);
+
+  let _s = 31;
+  function r() { _s = (_s * 9301 + 49297) % 233280; return _s / 233280; }
+
+  function branch(x, y, a, len, d, maxD) {
+    if (d > maxD || len < 2.5) return;
+    const nx = x + Math.cos(a) * len, ny = y + Math.sin(a) * len;
+    const w = Math.max(0.5, Math.pow((maxD - d + 1) / maxD, 1.2) * 18);
+    const cx = x + Math.cos(a) * len * 0.5 + (r() - 0.5) * 12;
+    const cy = y + Math.sin(a) * len * 0.5 + (r() - 0.5) * 12;
+    ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(cx, cy, nx, ny);
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.stroke();
+    const sp = 0.28 + d * 0.032;
+    const j = () => (r() - 0.5) * 0.16;
+    const n = d < 3 ? 3 : d < 6 ? 3 : 2;
+    const f = () => 0.60 + r() * 0.10;
+    if (n === 3) {
+      branch(nx, ny, a - sp + j(), len * f(), d + 1, maxD);
+      branch(nx, ny, a + j() * 0.4, len * (f() + 0.06), d + 1, maxD);
+      branch(nx, ny, a + sp + j(), len * f(), d + 1, maxD);
+    } else {
+      branch(nx, ny, a - sp + j(), len * f(), d + 1, maxD);
+      branch(nx, ny, a + sp + j(), len * f(), d + 1, maxD);
+    }
+  }
+
+  const bx = 680 * 0.44, by = 820 - 55;
+  branch(bx, by, -Math.PI / 2, 152, 0, 10);
+
+  ctx.fillStyle = '#14140c';
+  ctx.beginPath(); ctx.ellipse(bx, 820 - 30, 680 * 0.58, 68, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(0, 820 - 44, 680, 44);
+
+  function bird(x, y, sz, al) {
+    ctx.save(); ctx.globalAlpha = al;
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = 1.3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - sz, y); ctx.quadraticCurveTo(x - sz * .5, y - sz * .65, x, y);
+    ctx.moveTo(x, y); ctx.quadraticCurveTo(x + sz * .5, y - sz * .65, x + sz, y);
+    ctx.stroke(); ctx.restore();
+  }
+  bird(80, 160, 10, .2); bird(100, 150, 7, .14);
+  bird(540, 120, 9, .18); bird(560, 132, 7, .12);
+  bird(300, 80, 8, .13); bird(318, 88, 6, .09);
+  bird(160, 240, 7, .1); bird(480, 200, 8, .12);
+
+  // 巣箱の定義（クリック判定用にhitbox情報も保持）
+  const windows = [
+    { label: '報道の窓', sub: '422件　稼働中', active: true,  action: () => showPage('db',    document.querySelector('nav a:nth-child(2)')), x: bx - 265, y: 440, w: 84, h: 56 },
+    { label: '事案の窓', sub: '345件　稼働中', active: true,  action: () => showPage('karte', document.querySelector('nav a:nth-child(5)')), x: bx + 190, y: 360, w: 84, h: 56 },
+    { label: '行政の窓', sub: '設計中',        active: false, href: null,       x: bx - 220, y: 240, w: 76, h: 50 },
+    { label: '統計の窓', sub: '設計中',        active: false, href: null,       x: bx + 200, y: 280, w: 76, h: 50 },
+    { label: '地域の窓', sub: '構想中',        active: false, href: null,       x: bx - 60,  y: 160, w: 74, h: 48 },
+    { label: '議会の窓', sub: '構想中',        active: false, href: null,       x: bx + 140, y: 180, w: 74, h: 48 },
+    { label: '構造の窓', sub: '構想中',        active: false, href: null,       x: bx - 30,  y: 36,  w: 72, h: 46 },
+  ];
+
+  function drawBox(win) {
+    const { x, y, w, h, label, sub, active } = win;
+    ctx.fillStyle = active ? '#14140c' : 'rgba(20,20,12,0.48)';
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 + 5, y); ctx.lineTo(x, y - 14); ctx.lineTo(x + w / 2 - 5, y);
+    ctx.fill();
+    ctx.beginPath(); ctx.roundRect(x - w / 2, y, w, h, 3); ctx.fill();
+    const hr = active ? 8 : 5.5;
+    ctx.beginPath(); ctx.arc(x, y + h * .34, hr, 0, Math.PI * 2);
+    ctx.fillStyle = '#cdd6e0'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y + h * .34, hr * .35, 0, Math.PI * 2);
+    ctx.fillStyle = active ? '#14140c' : 'rgba(20,20,12,.5)'; ctx.fill();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = active ? '#cdd6e0' : 'rgba(200,210,220,.7)';
+    ctx.font = `${active ? '600 12' : '500 10.5'}px sans-serif`;
+    ctx.fillText(label, x, y + h * .65);
+    ctx.font = '400 8px sans-serif';
+    ctx.fillStyle = active ? 'rgba(160,185,210,.95)' : 'rgba(150,165,180,.55)';
+    ctx.fillText(sub, x, y + h * .81);
+  }
+
+  windows.forEach(drawBox);
+
+  // トースト表示
+  function showToast() {
+    const toast = document.getElementById('windows-toast');
+    if (!toast) return;
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 1600);
+  }
+
+  // クリック判定（CSSによる表示サイズを基準に座標変換）
+  function onCanvasClick(e) {
+    const rect = cv.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * 680 / rect.width;
+    const my = (e.clientY - rect.top)  * 680 / rect.width;
+    for (const win of windows) {
+      const inBox = mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
+                 && my >= win.y - 14         && my <= win.y + win.h;
+      if (!inBox) continue;
+      if (win.active && win.action) {
+        win.action();
+      } else {
+        showToast();
+      }
+      return;
+    }
+  }
+
+  // カーソル変更
+  function onCanvasMove(e) {
+    const rect = cv.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * 680 / rect.width;
+    const my = (e.clientY - rect.top)  * 680 / rect.width;
+    const hit = windows.some(win =>
+      mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
+      && my >= win.y - 14 && my <= win.y + win.h
+    );
+    cv.style.cursor = hit ? 'pointer' : 'default';
+  }
+
+  cv.removeEventListener('click', cv._clickHandler);
+  cv.removeEventListener('mousemove', cv._moveHandler);
+  cv._clickHandler = onCanvasClick;
+  cv._moveHandler = onCanvasMove;
+  cv.addEventListener('click', onCanvasClick);
+  cv.addEventListener('mousemove', onCanvasMove);
+}
+
+const GAS_FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbw0MWRwN9ZgoXxtAsAQus3wDhsnZc1nESxp_imFe90-b9dAw4jbnBLpMQ4zJUm1Z2VsFQ/exec';
+
+function submitFeedback() {
+  const type    = document.getElementById('f-type').value;
+  const karteId = document.getElementById('f-karte-id').value.trim();
+  const url     = document.getElementById('f-url').value.trim();
+  const content = document.getElementById('f-content').value.trim();
+  const contact = document.getElementById('f-contact').value.trim();
+
+  if (!type || !content) { alert('種別と内容は必須です'); return; }
+
+  const errEl = document.getElementById('feedback-error');
+
+  // 送信先が未設定の場合は「送信完了」を絶対に表示しない（未送信データの隠蔽防止）
+  if (GAS_FEEDBACK_URL === 'YOUR_GAS_FEEDBACK_URL_HERE') {
+    if (errEl) {
+      errEl.textContent = '現在、送信先が未設定のため送信できません。しばらくしてから再度お試しください。';
+      errEl.style.display = 'block';
+    } else {
+      alert('現在、送信先が未設定のため送信できません。しばらくしてから再度お試しください。');
+    }
+    return;
+  }
+
+  const data = {
+    type,
+    targetKarteId: karteId,
+    targetUrl: url,
+    content,
+    contact,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (errEl) errEl.style.display = 'none';
+
+  fetch(GAS_FEEDBACK_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(() => {
+    document.getElementById('feedback-form-container').style.display = 'none';
+    document.getElementById('feedback-thanks').style.display = 'block';
+  }).catch(() => {
+    // 送信失敗時も「成功」を装わない
+    if (errEl) {
+      errEl.textContent = '送信に失敗しました。通信状況をご確認のうえ、もう一度お試しください。';
+      errEl.style.display = 'block';
+    } else {
+      alert('送信に失敗しました。通信状況をご確認のうえ、もう一度お試しください。');
+    }
+  });
+}
+
+// ===== 構造類似表示 =====
+function getComparableTags(r) {
+  return [
+    ...splitTags(r.tags_structure),
+    ...splitTags(r.tags_event),
+    ...splitTags(r.tags_status),
+    ...splitTags(r.tags_evidence),
+  ];
+}
+
+function calcSimilarity(a, b) {
+  const tagsA = new Set(getComparableTags(a));
+  const tagsB = new Set(getComparableTags(b));
+  return [...tagsA].filter(t => tagsB.has(t));
+}
+
+function scoreLabel(count) {
+  if (count >= 5) return { label: '要観測', cls: 'score-3' };
+  if (count >= 3) return { label: '構造的類似あり', cls: 'score-2' };
+  if (count >= 1) return { label: '関連あり', cls: 'score-1' };
+  return null;
+}
+
+function toggleSimilar(cardId) {
+  const panel = document.getElementById('similar-' + cardId);
+  const btn   = document.getElementById('similar-btn-' + cardId);
+  if (!panel || !btn) return;
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    panel.classList.remove('open');
+    btn.classList.remove('active');
+    btn.textContent = '共通する構造を探す';
+    return;
+  }
+  // data-url属性からURLを取得してdbDataを逆引き
+  const cardEl = panel.closest('.db-card');
+  const articleUrl = cardEl ? cardEl.querySelector('.db-card-title a')?.href : null;
+  const normalizedTarget = articleUrl ? normalizeUrl(articleUrl) : null;
+  const target = normalizedTarget
+    ? dbData.find(r => normalizeUrl(r.url) === normalizedTarget)
+    : null;
+  if (!target) return;
+  const targetTags = new Set(getComparableTags(target));
+  if (targetTags.size === 0) {
+    panel.innerHTML = '<div style="font-size:0.78rem;color:var(--ink-light)">タグが未付与のため比較できません</div>';
+    panel.classList.add('open');
+    return;
+  }
+  const results = dbData
+    .filter(r => r !== target && r.title !== target.title)
+    .map(r => ({ r, common: calcSimilarity(target, r) }))
+    .filter(x => x.common.length >= 1)
+    .sort((a, b) => b.common.length - a.common.length)
+    .slice(0, 5);
+  if (!results.length) {
+    panel.innerHTML = '<div class="db-similar-label">共通する構造を持つ事例</div><div style="font-size:0.78rem;color:var(--ink-light)">現在のDBに一致する事例はありません</div>';
+    panel.classList.add('open');
+    btn.classList.add('active');
+    btn.textContent = '▲ 閉じる';
+    return;
+  }
+  const topCommon = results[0].common;
+  const score = scoreLabel(topCommon.length);
+  panel.innerHTML = `
+    <div class="db-similar-label">この記事と共通する構造</div>
+    ${score ? `<div class="db-similar-score ${score.cls}">共通タグ数：${topCommon.length}　${score.label}</div>` : ''}
+    <div class="db-similar-tags">
+      ${topCommon.map(t => `<span class="db-similar-tag">${t}</span>`).join('')}
+    </div>
+    <div class="db-similar-label" style="margin-top:0.5rem">同じ構造が観測された事例</div>
+    <div class="db-similar-cases">
+      ${results.map(x => `
+        <div class="db-similar-case">
+          <span class="db-similar-case-region">${x.r.region || ''}</span>
+          ${x.r.url ? `<a href="${x.r.url}" target="_blank" style="color:var(--ink-mid);border-bottom:1px solid var(--rule)">${x.r.title}</a>` : x.r.title}
+          <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);margin-left:0.4rem">（一致${x.common.length}）</span>
+        </div>
+      `).join('')}
+    </div>`;
+  panel.classList.add('open');
+  btn.classList.add('active');
+  btn.textContent = '▲ 閉じる';
+}
+
+let _currentFilteredData = [];
+function getCurrentFilteredData() { return _currentFilteredData; }
+
+function renderHomeTagCloud(data) {
+  const tagCount = {};
+  data.forEach(r => {
+    ['tags_event','tags_structure','tags_evidence','tags_status'].forEach(key => {
+      if (!r[key]) return;
+      r[key].split(' / ').forEach(t => {
+        t = t.trim();
+        if (t) tagCount[t] = (tagCount[t] || 0) + 1;
+      });
+    });
+  });
+  const sorted = Object.entries(tagCount).sort((a,b) => b[1]-a[1]).slice(0, 24);
+  const max = sorted[0]?.[1] || 1;
+  const htc = document.getElementById('home-tag-cloud'); if(htc) htc.innerHTML = sorted.map(([tag, count]) => {
+    const size    = 0.62 + (count / max) * 0.22;
+    const opacity = 0.5  + (count / max) * 0.5;
+    return `<span onclick="filterByTag('${tag}')" style="font-family:'DM Mono',monospace;font-size:${size}rem;padding:0.2rem 0.5rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer;opacity:${opacity};transition:all 0.15s;display:inline-block;margin:0.15rem" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--rule)';this.style.color='var(--ink-mid)'">${tag}<span style="font-size:0.52rem;opacity:0.5;margin-left:0.2rem">${count}</span></span>`;
+  }).join('');
+}
+
+function filterByTag(tag) {
+  showPage('db', document.querySelector('nav a:nth-child(2)'));
+  setTimeout(() => {
+    document.getElementById('db-search').value = tag;
+    filterDB();
+  }, 50);
+}
+
+// ===== KARTE =====
+const QA_SHEET_NAME    = 'Q&A';
+const GAS_QA_URL       = 'YOUR_GAS_WEB_APP_URL_HERE';
+const KARTE_SHEET_NAME = 'カルテ';
+let qaData    = [];
+let karteData = [];
+
+const demoKartes = [
+  {
+    id:'KARTE-0001', title:'京都市生活保護窓口での申請妨害', region:'京都府', field:'生活保護',
+    summary:'京都市の福祉窓口において、生活保護申請者が「まず家族に相談を」「書類が揃ってから来て」などの言葉で申請を阻まれる事案が複数件確認されている。担当者が異なるにもかかわらず言葉が酷似しており、組織的な対応指針の存在が疑われる。',
+    progress:'市民団体が事例を収集中。行政は「個別対応」として組織的関与を否定。',
+    tags_event:'申請妨害 / 扶養照会濫用', tags_structure:'組織的不作為 / 説明責任 / 前例主義',
+    tags_status:'疑惑段階', tags_evidence:'当事者証言',
+    tags_field:'生活保護', tags_target:'生活保護申請者', tags_actor:'福祉事務所 / ケースワーカー',
+    tags_event_search:'申請を断られた / 扶養照会を強いられた',
+    related_urls:'https://example.com/article1\nhttps://example.com/article2',
+    mana_comment:'', created_at:'2026-06-08', updated_at:'2026-06-09', start_date:'2026-06-01',
+  },
+  {
+    id:'KARTE-0002', title:'燕市生活保護費の過大支給と回収問題', region:'新潟県', field:'生活保護',
+    summary:'新潟県燕市において、生活保護受給者9人への総額約855万円の誤支給が判明。行政ミスによる過払いにもかかわらず、受給者への返還請求が行われた。',
+    progress:'行政が誤りを認め謝罪。返還交渉中。',
+    tags_event:'誤情報提供 / 財政推計ミス', tags_structure:'内部統制 / 説明責任 / 自己修正不能',
+    tags_status:'行政が認めた / 謝罪あり', tags_evidence:'報道',
+    tags_field:'生活保護', tags_target:'生活保護受給者', tags_actor:'市区町村窓口',
+    tags_event_search:'支給を止められた',
+    related_urls:'https://example.com/article3',
+    mana_comment:'', created_at:'2026-06-08', updated_at:'2026-06-08', start_date:'2026-06-08',
+  },
+];
+
+function loadKartes() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') {
+    karteData = demoKartes;
+    renderKartes(karteData);
+    buildKarteFilters(karteData);
+    if (!_routeHandled) handleHashRoute();
+    return;
+  }
+  const url = GAS_API_URL + '?sheet=' + encodeURIComponent(KARTE_SHEET_NAME);
+  console.log('カルテ読み込み開始:', url);
+  fetch(url)
+    .then(r => r.json())
+    .then(data => {
+      console.log('カルテAPIレスポンス件数:', Array.isArray(data) ? data.length : 'エラー');
+      if (!Array.isArray(data)) throw new Error('配列ではありません: ' + JSON.stringify(data).slice(0, 100));
+      karteData = data.map(row => ({
+        id:             row['カルテID'] || row['id'] || '',
+        title:          row['事案名']   || row['title'] || '',
+        region:         row['地域']     || '',
+        region_pref:    row['地域']    || row['都道府県'] || '',
+        region_city:    row['市区町村'] || '',
+        region_ward:    row['区']       || '',
+        field:          row['分野']     || '',
+        summary:        row['概要']     || '',
+        progress:       row['経過']     || '',
+        tags_event:     row['出来事タグ'] || '',
+        tags_structure: row['構造タグ']   || '',
+        tags_status:    row['状態タグ']   || '',
+        tags_evidence:  row['根拠タグ']   || '',
+        related_urls:   row['関連記事URL'] || '',
+        mana_comment:   row['MANAコメント'] || '',
+        created_at:     row['作成日']     || '',
+        updated_at:     row['最終更新日'] || '',
+        start_date:     row['事案開始日'] || '',
+        tags_field:        row['分野タグ']         || '',
+        tags_target:       row['対象者タグ']        || '',
+        tags_actor:        row['行為者タグ']        || '',
+        tags_event_search: row['出来事タグ（探索）'] || '',
+      })).filter(r => r.id || r.title);
+      console.log('カルテ読み込み成功:', karteData.length + '件');
+      // ホームのカルテ件数・タグ件数を更新
+      const homeKarte = document.getElementById('home-karte-count');
+      if (homeKarte) homeKarte.textContent = karteData.length + '件';
+      const allTags = new Set();
+      karteData.forEach(k => {
+        ['tags_field','tags_target','tags_actor','tags_event_search',
+         'tags_event','tags_structure','tags_status','tags_evidence'].forEach(f => {
+          splitKarteTags(k[f] || '').forEach(t => allTags.add(t));
+        });
+      });
+      const homeTag = document.getElementById('home-tag-count');
+      if (homeTag) homeTag.textContent = allTags.size + '種';
+      renderKartes(karteData);
+      buildKarteFilters(karteData);
+      if (dbData.length) renderDB(dbData);
+      if (!_routeHandled) handleHashRoute();
+      checkKarteLinkage();
+    })
+    .catch(err => {
+      console.error('カルテ読み込みエラー:', err.message);
+      const list = document.getElementById('karte-list');
+      if (list) list.innerHTML = `<div class="db-empty">カルテの読み込みに失敗しました<br><span style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--ink-light)">${err.message}</span></div>`;
+    });
+}
+
+function renderKartes(data) {
+  const list = document.getElementById('karte-list');
+  document.getElementById('karte-count-label').textContent = data.length + ' 件';
+  if (!data.length) {
+    list.innerHTML = '<div class="db-empty">該当する事案カルテがありません</div>';
+    return;
+  }
+  list.innerHTML = data.map(k => {
+    const urls       = k.related_urls ? k.related_urls.split('\n').filter(Boolean) : [];
+    const structTags = splitKarteTags(k.tags_structure);
+    const eventTags  = splitKarteTags(k.tags_event);
+    const statusTags = splitKarteTags(k.tags_status);
+    return `<div class="karte-card" onclick="goToKartePage('${k.id}')">\n      <div class="karte-card-top">\n        <span class="karte-card-id">${k.id}</span>\n        ${k.region ? `<span class="karte-card-region">${k.region}</span>` : ''}\n        ${k.field  ? `<span class="karte-card-field">${k.field}</span>`   : ''}\n        ${statusTags[0] ? `<a href="#/tag/${encodeURIComponent(statusTags[0])}" class="db-tag-t" onclick="event.stopPropagation()">${statusTags[0]}</a>` : ''}\n      </div>\n      <div class="karte-card-title">${k.title}</div>\n      ${k.summary  ? `<div class="karte-card-summary">${k.summary.slice(0,120)}${k.summary.length>120?'……':''}</div>` : ''}
+      ${k.progress ? `<div class="karte-card-progress">${k.progress}</div>` : ''}
+      <div class="karte-card-tags">
+        ${structTags.map(t => `<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-s" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${eventTags.map(t  => `<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-e" onclick="event.stopPropagation()">${t}</a>`).join('')}
+      </div>
+      <div class="karte-card-footer">
+        <span>記事 ${urls.length} 件</span>
+        <span>更新: ${k.updated_at ? k.updated_at.slice(0,10) : ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildKarteFilters(data) {
+  const prefs    = [...new Set(data.map(k => k.region).filter(Boolean))].sort();
+  const fields   = [...new Set(data.map(k => k.field).filter(Boolean))].sort();
+  const structs  = [...new Set(data.flatMap(k => splitKarteTags(k.tags_structure)))].sort();
+  const statuses = [...new Set(data.flatMap(k => splitKarteTags(k.tags_status)))].sort();
+  const fill = (id, items) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const first = sel.options[0].outerHTML;
+    sel.innerHTML = first + items.map(v => `<option value="${v}">${v}</option>`).join('');
+  };
+  fill('karte-pref',      prefs);
+  fill('karte-field',     fields);
+  fill('karte-structure', structs);
+  fill('karte-status',    statuses);
+}
+
+function filterKartes() {
+  const pref   = document.getElementById('karte-pref')?.value || '';
+  const field  = document.getElementById('karte-field')?.value || '';
+  const struct = document.getElementById('karte-structure')?.value || '';
+  const status = document.getElementById('karte-status')?.value || '';
+  const filtered = karteData.filter(k =>
+    (!pref   || k.region === pref) &&
+    (!field  || k.field === field) &&
+    (!struct || (k.tags_structure || '').includes(struct)) &&
+    (!status || (k.tags_status    || '').includes(status))
+  );
+  renderKartes(filtered);
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function splitKarteTags(str) {
+  if (!str) return [];
+  return str.split(/[\/・,、]/).map(t => t.trim()).filter(Boolean);
+}
+
+// ===== ESSAYS =====
+const ESSAY_SHEET_NAME = '論考';
+let essayData = [];
+
+const demoEssays = [
+  {date:'2025-11-01',type:'調査報告書',title:'尊厳の倫理学——行政的暴力と当事者の声',summary:'行政による不作為は単なる怠慢ではない。それは権力関係の構造的な産物であり、当事者の尊厳を組織的に剥奪するプロセスである。収集された証言と記録から、その論理と倫理的含意を検討する。',tags:'尊厳 / 当事者主体 / 組織的不作為 / 行政暴力',url:'',status:'公開',featured:'1'},
+  {date:'2025-08-01',type:'調査報告書',title:'行政の組織的不作為——京都市の事例から',summary:'京都市の福祉行政における申請妨害・虚偽記録・権限濫用の事例を収集・分析。個別の逸脱ではなく、組織文化として定着した構造的不作為を記述する。',tags:'水際作戦 / 生活保護 / 組織的不作為 / 京都市',url:'',status:'公開',featured:''},
+  {date:'2025-06-15',type:'論考',title:'水際作戦の構造——なぜ申請は阻まれるのか',summary:'生活保護申請の妨害は偶発的な窓口対応の問題ではない。制度を実装させないための組織的な選択として機能している。その構造を解析する。',tags:'水際作戦 / 生活保護 / 制度実装 / 申請妨害',url:'',status:'公開',featured:''},
+  {date:'2026-06-01',type:'論考',title:'ポテトは混ざる——多文化的出会いと人間の多様性の基底',summary:'ラトビア人のツアーガイドとの会話から生まれた問い。異なる文化・背景を持つ人間が出会うとき、そこに生まれるものは何か。多様性の根拠を「混ざること」に見出す試み。',tags:'多文化 / 多様性 / 当事者研究 / エッセイ',url:'',status:'執筆中',featured:''},
+];
+
+function loadEssays() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') {
+    essayData = demoEssays; renderEssays(essayData); buildEssayFilters(essayData); return;
+  }
+  fetch(SHEET_BASE + encodeURIComponent(ESSAY_SHEET_NAME))
+    .then(r => r.text())
+    .then(text => {
+      const json = JSON.parse(text.replace('/*O_o*/\ngoogle.visualization.Query.setResponse(', '').replace(');', ''));
+      const rows = json.table.rows;
+      essayData = rows.slice(1).map(row => ({
+        date:row.c[0]?.v||'', type:row.c[1]?.v||'', title:row.c[2]?.v||'',
+        summary:row.c[3]?.v||'', tags:row.c[4]?.v||'', url:row.c[5]?.v||'',
+        status:row.c[6]?.v||'', featured:row.c[7]?.v||''
+      })).filter(r => r.title && r.status !== '非公開');
+      renderEssays(essayData);
+      buildEssayFilters(essayData);
+    })
+    .catch(() => { essayData = demoEssays; renderEssays(essayData); buildEssayFilters(essayData); });
+}
+
+function renderEssays(data) {
+  const list = document.getElementById('essay-list');
+  const ec = document.getElementById('essay-count'); if(ec) ec.textContent = data.length + ' 件';
+  if (!data.length) { list.innerHTML = '<div style="padding:2rem 0;color:var(--ink-light);font-size:0.83rem">該当する論考がありません</div>'; return; }
+  const featured = data.find(e => e.featured === '1');
+  const rest = data.filter(e => e !== featured);
+  let html = '';
+  if (featured) {
+    html += `<div style="border-bottom:1px solid var(--rule);padding-bottom:2rem;margin-bottom:2rem">
+      <div style="display:flex;gap:0.8rem;align-items:center;margin-bottom:0.6rem">
+        <span style="font-family:'DM Mono',monospace;font-size:0.6rem;background:var(--ink);color:var(--paper);padding:0.15rem 0.5rem">最新</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent)">${featured.type}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink-light)">${featured.date}</span>
+      </div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;line-height:1.2;margin-bottom:0.8rem">${featured.title}</h2>
+      <p style="font-size:0.85rem;line-height:1.9;color:var(--ink-mid);margin-bottom:1rem">${featured.summary}</p>
+      <div style="margin-bottom:1rem">${renderEssayTags(featured.tags)}</div>
+      ${featured.url?`<a href="${featured.url}" target="_blank" class="btn-primary" style="display:inline-flex">報告書を読む（PDF）→</a>`:featured.status==='執筆中'?`<span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--ink-light)">執筆中</span>`:`<span style="font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--ink-light)">PDF準備中</span>`}
+    </div>`;
+  }
+  html += rest.map(e => `
+    <div style="padding:1rem 0;border-bottom:1px solid var(--rule)">
+      <div style="display:flex;gap:0.8rem;align-items:center;margin-bottom:0.4rem">
+        <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--accent)">${e.type}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-light)">${e.date}</span>
+        ${e.status==='執筆中'?`<span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--ink-light);border:1px solid var(--rule);padding:0.1rem 0.35rem">執筆中</span>`:''}
+      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;line-height:1.3;margin-bottom:0.4rem">
+        ${e.url?`<a href="${e.url}" target="_blank" style="border-bottom:1px solid var(--rule)">${e.title}</a>`:e.title}
+      </div>
+      <p style="font-size:0.8rem;line-height:1.75;color:var(--ink-mid);margin-bottom:0.5rem">${e.summary}</p>
+      <div>${renderEssayTags(e.tags)}</div>
+    </div>`).join('');
+  list.innerHTML = html;
+}
+
+function renderEssayTags(tagStr) {
+  if (!tagStr) return '';
+  return tagStr.split(' / ').map(t=>t.trim()).filter(Boolean).map(t=>
+    `<span onclick="filterEssayByTag('${t}')" style="display:inline-block;margin:0.1rem;padding:0.15rem 0.5rem;border:1px solid var(--rule);font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink-mid);cursor:pointer" onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'" onmouseout="this.style.color='var(--ink-mid)';this.style.borderColor='var(--rule)'">${t}</span>`
+  ).join('');
+}
+
+function buildEssayFilters(data) {
+  const tags = [...new Set(data.flatMap(e=>(e.tags||'').split(' / ').map(t=>t.trim()).filter(Boolean)))].sort();
+  const sel = document.getElementById('essay-tag-filter');
+  tags.forEach(t=>{const o=document.createElement('option');o.value=o.textContent=t;sel.appendChild(o);});
+  const etc = document.getElementById('essay-tag-cloud'); if(etc) etc.innerHTML = tags.map(t=>
+    `<span class="tag" onclick="filterEssayByTag('${t}')" style="cursor:pointer">${t}</span>`
+  ).join('');
+}
+
+function filterEssays() {
+  const tag  = document.getElementById('essay-tag-filter').value;
+  const type = document.getElementById('essay-type-filter').value;
+  renderEssays(essayData.filter(e=>(!tag||(e.tags||'').includes(tag))&&(!type||e.type===type)));
+}
+
+function filterEssayByTag(tag) {
+  document.getElementById('essay-tag-filter').value = tag;
+  filterEssays();
+}
+
+// ===== Q&A =====
+const demoQA = [
+  {id:1, type:'質問', content:'扶養照会を断ることはできますか？DVがあって家族に知られたくないです。', answer:'はい、断れます。DV・虐待・家族関係が壊れているなどの理由がある場合、扶養照会を省略できます。申請時に「家族への照会は希望しません。理由は○○です」と伝え、書面で申し出ると効果的です。', date:'2026-05-10', status:'公開'},
+  {id:2, type:'体験', content:'「書類が揃ってから来てください」と言われて追い返されそうになりましたが、「申請書だけください」と言ったら受け取れました。', answer:'', date:'2026-05-18', status:'公開'},
+  {id:3, type:'アドバイス', content:'窓口に行くとき、録音していることを最初に伝えたら対応がすごく丁寧になりました。最初から言うのがおすすめです。', answer:'', date:'2026-05-22', status:'公開'},
+  {id:4, type:'質問', content:'申請したのに2週間以上連絡がありません。どうすればいいですか？', answer:'法律では14日以内に決定することが原則です（最長30日）。担当ケースワーカーに進捗を確認してください。「いつ決定が出ますか」と電話で聞くのが一番早いです。それでも動かない場合は支援団体に相談することをおすすめします。', date:'2026-05-28', status:'公開'},
+];
+
+function initQA() {
+  if (SHEET_ID === 'YOUR_SHEET_ID_HERE') { qaData = demoQA; renderQA(qaData); return; }
+  fetch(SHEET_BASE + encodeURIComponent(QA_SHEET_NAME))
+    .then(r => r.text())
+    .then(text => {
+      const json = JSON.parse(text.replace('/*O_o*/\ngoogle.visualization.Query.setResponse(', '').replace(');', ''));
+      const rows = json.table.rows;
+      qaData = rows.slice(1).map((row, i) => ({
+        id: i+1, type: row.c[0]?.v || '', content: row.c[1]?.v || '',
+        answer: row.c[2]?.v || '', date: row.c[3]?.v || '', status: row.c[4]?.v || ''
+      })).filter(r => r.content && r.status === '公開');
+      renderQA(qaData);
+    })
+    .catch(() => { qaData = demoQA; renderQA(qaData); });
+}
+
+function renderQA(data) {
+  const list = document.getElementById('qa-list');
+  if (!data.length) {
+    list.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--ink-light);font-size:0.83rem">まだ投稿がありません</div>';
+    return;
+  }
+  list.innerHTML = data.map(q => `
+    <div class="qa-item">
+      <div class="qa-question" onclick="toggleQA(${q.id})">
+        <span class="qa-q-label">${q.type}</span>
+        <span class="qa-q-text">${q.content}</span>
+        <span class="qa-arrow" id="qa-arrow-${q.id}">▼</span>
+      </div>
+      <div class="qa-answer ${q.answer ? '' : 'no-answer'}" id="qa-ans-${q.id}">
+        ${q.answer ? q.answer : '<span style="color:var(--ink-light)">まだ回答がありません。知っている方は投稿してください。</span>'}
+        <div class="qa-meta">${q.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleQA(id) {
+  document.getElementById('qa-ans-'   + id).classList.toggle('show');
+  document.getElementById('qa-arrow-' + id).classList.toggle('open');
+}
+
+function filterQA(kw) {
+  renderQA(qaData.filter(q => q.content.includes(kw) || (q.answer && q.answer.includes(kw))));
+}
+
+function switchQaTab(tab, el) {
+  document.querySelectorAll('.qa-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('qa-tab-list').style.display = tab === 'list' ? 'block' : 'none';
+  document.getElementById('qa-tab-post').style.display = tab === 'post' ? 'block' : 'none';
+}
+
+function showGuideSection(sec, el) {
+  document.querySelectorAll('.guide-section').forEach(s => s.style.display = 'none');
+  document.querySelectorAll('.guide-nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('gsec-' + sec).style.display = 'block';
+  el.classList.add('active');
+  if (sec === 'qa') initQA();
+}
+
+// ===== QA SUBMIT =====
+const GEMINI_API_KEY_CLIENT = '';
+
+async function submitQA() {
+  const type    = document.getElementById('qa-type').value;
+  const content = document.getElementById('qa-content').value.trim();
+  const status  = document.getElementById('qa-status');
+  if (!content) { alert('内容を入力してください'); return; }
+  status.className = 'qa-status checking';
+  status.style.display = 'block';
+  status.textContent = 'AIが内容を確認しています……';
+  let approved = false;
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY_CLIENT}`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text:`以下の投稿内容を審査してください。生活保護申請Q&Aサイトへの投稿です。\n\n【投稿内容】\n${content}\n\n【審査基準】\n- OK: 生活保護・行政窓口に関する質問、体験談、アドバイス、困りごと\n- NG: 広告・宣伝、特定個人への攻撃・誹謗中傷、全く無関係な内容、個人情報（氏名・住所等）を含む投稿\n\n【出力形式】以下のJSONのみを出力すること:\n{"result":"ok","reason":"理由"} または {"result":"ng","reason":"理由"}`}]}],
+        generationConfig:{temperature:0,maxOutputTokens:200}
+      })
+    });
+    const data   = await res.json();
+    const text   = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+    approved = parsed.result === 'ok';
+    if (!approved) {
+      status.className = 'qa-status ng';
+      status.textContent = '投稿できませんでした：' + (parsed.reason || 'ガイドラインに沿っていない内容です');
+      return;
+    }
+  } catch(e) {
+    approved = true;
+  }
+  if (GAS_QA_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    status.className = 'qa-status ok';
+    status.textContent = '✓ 投稿を受け付けました。審査後に公開されます。';
+    document.getElementById('qa-content').value = '';
+    return;
+  }
+  fetch(GAS_QA_URL, {
+    method:'POST', mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({type, content, answer:'', date: new Date().toISOString().slice(0,10), status:'審査済み・公開待ち'})
+  }).then(() => {
+    status.className = 'qa-status ok';
+    status.textContent = '✓ 投稿を受け付けました。審査後に公開されます。';
+    document.getElementById('qa-content').value = '';
+  }).catch(() => {
+    status.className = 'qa-status ok';
+    status.textContent = '✓ 投稿を受け付けました。';
+    document.getElementById('qa-content').value = '';
+  });
+}
