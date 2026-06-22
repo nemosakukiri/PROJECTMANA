@@ -282,7 +282,7 @@
         <div class="db-count" id="db-count-label"></div>
         <label class="db-show-old-toggle">
           <input type="checkbox" id="db-show-old" onchange="filterDB()">
-          過去記事も表示する
+          保留中の記事も表示する
           <span id="db-old-count-label" class="db-old-count-label"></span>
         </label>
       </div>
@@ -363,7 +363,19 @@
   </div>
 </div>
 
-<!-- 観測フィードバックページ -->
+<!-- 観測の窓ページ -->
+<div class="page" id="page-windows">
+  <div id="windows-toast" style="
+    position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);
+    background:rgba(20,20,12,0.82);color:#cdd6e0;
+    font-size:0.78rem;padding:0.55rem 1.2rem;border-radius:20px;
+    opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;
+    letter-spacing:0.04em;
+  ">準備中です</div>
+  <canvas id="windows-canvas" style="display:block;width:100%;border-radius:0"></canvas>
+</div>
+
+
 <div class="page" id="page-feedback">
   <div class="survey-header">
     <div class="page-title">観測フィードバック</div>
@@ -783,6 +795,12 @@
       </ul>
       <p>どんな小さな気づきでも、PROJECT MANAの観測精度を高めます。</p>
       <a id="feedback-link" href="#" onclick="showPage('feedback', null); return false;" class="static-external-link" style="margin-top:.5rem">→ 観測フィードバックを送る</a>
+    </div>
+
+    <div class="static-section">
+      <div class="static-section-label">観測の窓</div>
+      <p>MANAは複数の窓から社会を観測しています。報道・事案・行政・統計・地域・議会・構造、それぞれの窓から見える景色が異なります。</p>
+      <a href="#" onclick="showPage('windows', null); return false;" class="static-external-link" style="margin-top:.5rem">→ 観測の窓から入る</a>
     </div>
 
   </div>
