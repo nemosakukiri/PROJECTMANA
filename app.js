@@ -34,6 +34,7 @@ function showPage(name, navEl) {
   window.scrollTo(0, 0);
   if (name === 'essays') loadEssays();
   if (name === 'karte') loadKartes();
+  if (name === 'windows') renderWindowsPage();
   // hashルート以外のページへ遷移する場合のみhashをクリア
   // ただし現在 #/karte/xxx など hashルート表示中の場合は
   // pushState で空hashを履歴に積む（ブラウザバックで戻れるように）
@@ -1458,6 +1459,7 @@ function loadDB() {
         structure_note: row['構造メモ'] || '',
         collected_at:   row['収録日時'] || '',
         old_flag:       row['古い記事'] || '', // 「古い記事候補」が入っていればアーカイブ扱い
+        date_status:    row['date_status'] || '', // 確定 / 未確認 / 要確認
         karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
       })).filter(r => r.title);
       // [診断] カルテID列がAPIから来ているか確認
@@ -1485,7 +1487,7 @@ function loadDB() {
       console.log('DB読み込み成功:', dbData.length + '件');
       renderDB(dbData);
       updateStats();
-      renderHomeNews(dbData.filter(r => !r.old_flag).slice(0, 5));
+      renderHomeNews(dbData.filter(r => !isHeldBack(r)).slice(0, 5));
       buildFilters(dbData);
       updateTicker(dbData);
       renderHomeTagCloud(dbData);
@@ -1567,7 +1569,7 @@ function useDemoData() {
   ];
   renderDB(dbData);
   updateStats();
-  renderHomeNews(dbData.filter(r => !r.old_flag).slice(0, 5));
+  renderHomeNews(dbData.filter(r => !isHeldBack(r)).slice(0, 5));
   buildFilters(dbData);
   updateTicker(dbData);
   renderHomeTagCloud(dbData);
@@ -1609,17 +1611,18 @@ function renderDB(data) {
     }
   });
 
-  // ===== 古い記事候補は通常の新着一覧からは分離する（削除はしない） =====
-  // 「古い記事」列に値（例：「古い記事候補」）が入っている行はアーカイブ扱い。
+  // ===== 保留箱は通常の新着一覧からは分離する（削除はしない） =====
+  // 「古い記事候補」（確定的に古い）または「要確認」（日付未確認・再配信疑い）の
+  // いずれかに該当する行は保留箱扱い。
   // チェックボックス #db-show-old がオンの場合のみ表示に含める。
   const showOld = document.getElementById('db-show-old')?.checked || false;
-  const oldCount = data.filter(r => r.old_flag).length;
-  const visibleData = showOld ? data : data.filter(r => !r.old_flag);
+  const oldCount = data.filter(r => isHeldBack(r)).length;
+  const visibleData = showOld ? data : data.filter(r => !isHeldBack(r));
 
   const oldCountLabel = document.getElementById('db-old-count-label');
   if (oldCountLabel) {
     oldCountLabel.textContent = oldCount > 0
-      ? `（過去記事 ${oldCount}件を${showOld ? '表示中' : '非表示中'}）`
+      ? `（保留 ${oldCount}件を${showOld ? '表示中' : '非表示中'}）`
       : '';
   }
 
@@ -1631,7 +1634,7 @@ function renderDB(data) {
   }
 
   const cl = document.getElementById('db-count-label');
-  if (cl) cl.textContent = visibleData.length + ' 件表示中' + (!showOld && oldCount > 0 ? `（過去記事${oldCount}件は除く）` : '');
+  if (cl) cl.textContent = visibleData.length + ' 件表示中' + (!showOld && oldCount > 0 ? `（保留${oldCount}件は除く）` : '');
 
   container.innerHTML = visibleData.map((r, idx) => {
     const eventTags  = splitTags(r.tags_event);
@@ -1655,10 +1658,16 @@ function renderDB(data) {
     // idxではなくURLのハッシュ値でカードIDを生成（フィルタ後のズレを防止）
     const cardId = 'card-' + idx + '-' + (r.url || r.title || '').replace(/[^a-zA-Z0-9]/g, '').slice(-8);
 
-    return `<div class="db-card${r.old_flag ? ' db-card-old' : ''}" id="${cardId}">
+    return `<div class="db-card${isHeldBack(r) ? ' db-card-old' : ''}" id="${cardId}">
       <div class="db-card-top">
         <span class="db-card-date">${r.date}</span>
-        ${r.old_flag ? `<span class="db-card-old-badge" title="収集はされましたが、公開日が古い記事です">過去記事</span>` : ''}
+        ${r.old_flag
+          ? `<span class="db-card-old-badge" title="元記事公開日が古いと確認済みです">過去記事</span>`
+          : (r.date_status === '要確認'
+            ? `<span class="db-card-old-badge db-card-review-badge" title="日付の矛盾、またはGoogleニュース再配信の疑いが強いため確認が必要です">要確認</span>`
+            : (r.date_status === '未確認'
+              ? `<span class="db-card-unconfirmed-badge" title="RSSの日付は取得できていますが、元記事の公開日はまだ確認できていません">元記事日付未確認</span>`
+              : ''))}
         ${r.region ? `<span class="db-card-region">${r.region}${r.municipality ? ' / ' + r.municipality : ''}</span>` : ''}
         ${r.field ? `<span class="db-card-field">${r.field}</span>` : ''}
         ${sev}
@@ -1705,6 +1714,18 @@ function findKarteByUrl(articleUrl) {
       '→', allMatched.map(k => k.id).join(', '));
   }
   return allMatched[0] || null;
+}
+
+// ===== 保留箱判定（v4） =====
+// 保留（通常の新着表示・トップページ・ティッカーから外す）対象は以下のみ：
+//   - 「古い記事候補」（元記事公開日が古いと確認済み）
+//   - date_status = '要確認'（日付に矛盾、Googleニュース再配信疑いが強い等）
+// date_status = '未確認'（RSS日付はあるが元記事公開日が未確認なだけ）は保留しない。
+// 通常表示してよい。ただし弱いバッジ（「元記事日付未確認」）で明示する。
+function isHeldBack(r) {
+  if (r.old_flag) return true; // 確定的に古い記事
+  if (r.date_status === '要確認') return true; // 日付矛盾・再配信疑いが強いもの
+  return false; // 「未確認」は保留対象にしない
 }
 
 function splitTags(str) {
@@ -1830,7 +1851,7 @@ function renderHomeVoices(data) {
 
 function updateTicker(data) {
   // ティッカーは「現在進行中の新着」を見せる場所のため、過去記事（old_flag）は除外する
-  const liveData = data.filter(r => !r.old_flag);
+  const liveData = data.filter(r => !isHeldBack(r));
   const items = liveData.slice(0, 6).map(r => `${r.region||r.prefecture||''}・${r.title}`).join('　　');
   const doubled = items + '　　　　' + items;
   const tt = document.getElementById('ticker-text'); if(tt) tt.textContent = doubled;
@@ -1884,6 +1905,151 @@ function submitSurvey() {
 }
 
 // ===== 観測フィードバック送信 =====
+// ===== 観測の窓ページ =====
+function renderWindowsPage() {
+  const cv = document.getElementById('windows-canvas');
+  if (!cv) return;
+
+  const isMobile = window.innerWidth < 600;
+  const W = isMobile ? window.innerWidth : Math.min(window.innerWidth, 860);
+  const H = Math.round(W * 820 / 680);
+  cv.width = W;
+  cv.height = H;
+  cv.style.maxWidth = '100%';
+
+  const ctx = cv.getContext('2d');
+  const scale = W / 680;
+
+  ctx.fillStyle = '#cdd6e0';
+  ctx.fillRect(0, 0, W, H);
+  ctx.scale(scale, scale);
+
+  let _s = 31;
+  function r() { _s = (_s * 9301 + 49297) % 233280; return _s / 233280; }
+
+  function branch(x, y, a, len, d, maxD) {
+    if (d > maxD || len < 2.5) return;
+    const nx = x + Math.cos(a) * len, ny = y + Math.sin(a) * len;
+    const w = Math.max(0.5, Math.pow((maxD - d + 1) / maxD, 1.2) * 18);
+    const cx = x + Math.cos(a) * len * 0.5 + (r() - 0.5) * 12;
+    const cy = y + Math.sin(a) * len * 0.5 + (r() - 0.5) * 12;
+    ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(cx, cy, nx, ny);
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.stroke();
+    const sp = 0.28 + d * 0.032;
+    const j = () => (r() - 0.5) * 0.16;
+    const n = d < 3 ? 3 : d < 6 ? 3 : 2;
+    const f = () => 0.60 + r() * 0.10;
+    if (n === 3) {
+      branch(nx, ny, a - sp + j(), len * f(), d + 1, maxD);
+      branch(nx, ny, a + j() * 0.4, len * (f() + 0.06), d + 1, maxD);
+      branch(nx, ny, a + sp + j(), len * f(), d + 1, maxD);
+    } else {
+      branch(nx, ny, a - sp + j(), len * f(), d + 1, maxD);
+      branch(nx, ny, a + sp + j(), len * f(), d + 1, maxD);
+    }
+  }
+
+  const bx = 680 * 0.44, by = 820 - 55;
+  branch(bx, by, -Math.PI / 2, 152, 0, 10);
+
+  ctx.fillStyle = '#14140c';
+  ctx.beginPath(); ctx.ellipse(bx, 820 - 30, 680 * 0.58, 68, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(0, 820 - 44, 680, 44);
+
+  function bird(x, y, sz, al) {
+    ctx.save(); ctx.globalAlpha = al;
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = 1.3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - sz, y); ctx.quadraticCurveTo(x - sz * .5, y - sz * .65, x, y);
+    ctx.moveTo(x, y); ctx.quadraticCurveTo(x + sz * .5, y - sz * .65, x + sz, y);
+    ctx.stroke(); ctx.restore();
+  }
+  bird(80, 160, 10, .2); bird(100, 150, 7, .14);
+  bird(540, 120, 9, .18); bird(560, 132, 7, .12);
+  bird(300, 80, 8, .13); bird(318, 88, 6, .09);
+  bird(160, 240, 7, .1); bird(480, 200, 8, .12);
+
+  // 巣箱の定義（クリック判定用にhitbox情報も保持）
+  const windows = [
+    { label: '報道の窓', sub: '422件　稼働中', active: true,  href: '#/db',     x: bx - 265, y: 440, w: 84, h: 56 },
+    { label: '事案の窓', sub: '345件　稼働中', active: true,  href: '#/karte',  x: bx + 190, y: 360, w: 84, h: 56 },
+    { label: '行政の窓', sub: '設計中',        active: false, href: null,       x: bx - 220, y: 240, w: 76, h: 50 },
+    { label: '統計の窓', sub: '設計中',        active: false, href: null,       x: bx + 200, y: 280, w: 76, h: 50 },
+    { label: '地域の窓', sub: '構想中',        active: false, href: null,       x: bx - 60,  y: 160, w: 74, h: 48 },
+    { label: '議会の窓', sub: '構想中',        active: false, href: null,       x: bx + 140, y: 180, w: 74, h: 48 },
+    { label: '構造の窓', sub: '構想中',        active: false, href: null,       x: bx - 30,  y: 36,  w: 72, h: 46 },
+  ];
+
+  function drawBox(win) {
+    const { x, y, w, h, label, sub, active } = win;
+    ctx.fillStyle = active ? '#14140c' : 'rgba(20,20,12,0.48)';
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 + 5, y); ctx.lineTo(x, y - 14); ctx.lineTo(x + w / 2 - 5, y);
+    ctx.fill();
+    ctx.beginPath(); ctx.roundRect(x - w / 2, y, w, h, 3); ctx.fill();
+    const hr = active ? 8 : 5.5;
+    ctx.beginPath(); ctx.arc(x, y + h * .34, hr, 0, Math.PI * 2);
+    ctx.fillStyle = '#cdd6e0'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y + h * .34, hr * .35, 0, Math.PI * 2);
+    ctx.fillStyle = active ? '#14140c' : 'rgba(20,20,12,.5)'; ctx.fill();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = active ? '#cdd6e0' : 'rgba(200,210,220,.7)';
+    ctx.font = `${active ? '600 12' : '500 10.5'}px sans-serif`;
+    ctx.fillText(label, x, y + h * .65);
+    ctx.font = '400 8px sans-serif';
+    ctx.fillStyle = active ? 'rgba(160,185,210,.95)' : 'rgba(150,165,180,.55)';
+    ctx.fillText(sub, x, y + h * .81);
+  }
+
+  windows.forEach(drawBox);
+
+  // トースト表示
+  function showToast() {
+    const toast = document.getElementById('windows-toast');
+    if (!toast) return;
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 1600);
+  }
+
+  // クリック判定（スケール考慮）
+  function onCanvasClick(e) {
+    const rect = cv.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
+    for (const win of windows) {
+      const inBox = mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
+                 && my >= win.y - 14         && my <= win.y + win.h;
+      if (!inBox) continue;
+      if (win.active && win.href) {
+        location.hash = win.href;
+      } else {
+        showToast();
+      }
+      return;
+    }
+  }
+
+  // カーソル変更
+  function onCanvasMove(e) {
+    const rect = cv.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
+    const hit = windows.some(win =>
+      mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
+      && my >= win.y - 14 && my <= win.y + win.h
+    );
+    cv.style.cursor = hit ? 'pointer' : 'default';
+  }
+
+  cv.removeEventListener('click', cv._clickHandler);
+  cv.removeEventListener('mousemove', cv._moveHandler);
+  cv._clickHandler = onCanvasClick;
+  cv._moveHandler = onCanvasMove;
+  cv.addEventListener('click', onCanvasClick);
+  cv.addEventListener('mousemove', onCanvasMove);
+}
+
 const GAS_FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbw0MWRwN9ZgoXxtAsAQus3wDhsnZc1nESxp_imFe90-b9dAw4jbnBLpMQ4zJUm1Z2VsFQ/exec';
 
 function submitFeedback() {
