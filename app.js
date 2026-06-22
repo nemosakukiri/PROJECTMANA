@@ -1665,9 +1665,7 @@ function renderDB(data) {
           ? `<span class="db-card-old-badge" title="元記事公開日が古いと確認済みです">過去記事</span>`
           : (r.date_status === '要確認'
             ? `<span class="db-card-old-badge db-card-review-badge" title="日付の矛盾、またはGoogleニュース再配信の疑いが強いため確認が必要です">要確認</span>`
-            : (r.date_status === '未確認'
-              ? `<span class="db-card-unconfirmed-badge" title="RSSの日付は取得できていますが、元記事の公開日はまだ確認できていません">元記事日付未確認</span>`
-              : ''))}
+            : '')}
         ${r.region ? `<span class="db-card-region">${r.region}${r.municipality ? ' / ' + r.municipality : ''}</span>` : ''}
         ${r.field ? `<span class="db-card-field">${r.field}</span>` : ''}
         ${sev}
@@ -1972,8 +1970,8 @@ function renderWindowsPage() {
 
   // 巣箱の定義（クリック判定用にhitbox情報も保持）
   const windows = [
-    { label: '報道の窓', sub: '422件　稼働中', active: true,  href: '#/db',     x: bx - 265, y: 440, w: 84, h: 56 },
-    { label: '事案の窓', sub: '345件　稼働中', active: true,  href: '#/karte',  x: bx + 190, y: 360, w: 84, h: 56 },
+    { label: '報道の窓', sub: '422件　稼働中', active: true,  action: () => showPage('db',    document.querySelector('nav a:nth-child(2)')), x: bx - 265, y: 440, w: 84, h: 56 },
+    { label: '事案の窓', sub: '345件　稼働中', active: true,  action: () => showPage('karte', document.querySelector('nav a:nth-child(5)')), x: bx + 190, y: 360, w: 84, h: 56 },
     { label: '行政の窓', sub: '設計中',        active: false, href: null,       x: bx - 220, y: 240, w: 76, h: 50 },
     { label: '統計の窓', sub: '設計中',        active: false, href: null,       x: bx + 200, y: 280, w: 76, h: 50 },
     { label: '地域の窓', sub: '構想中',        active: false, href: null,       x: bx - 60,  y: 160, w: 74, h: 48 },
@@ -2021,8 +2019,8 @@ function renderWindowsPage() {
       const inBox = mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
                  && my >= win.y - 14         && my <= win.y + win.h;
       if (!inBox) continue;
-      if (win.active && win.href) {
-        location.hash = win.href;
+      if (win.active && win.action) {
+        win.action();
       } else {
         showToast();
       }
