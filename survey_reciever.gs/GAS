@@ -1,0 +1,98 @@
+// PROJECT MANA — アンケート受信 + データ配信API
+
+const SURVEY_SHEET_NAME = '市民の声';
+
+// ===== データ配信API（GETリクエスト）=====
+function doGet(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // sheetパラメータの正規化
+  // ?sheet=karte または ?sheet=カルテ のどちらでも「カルテ」シートを返す
+  let sheetName = 'kansokuDB'; // デフォルト
+  if (e && e.parameter && e.parameter.sheet) {
+    const param = e.parameter.sheet.toLowerCase().trim();
+    if (param === 'karte' || param === 'カルテ' || param === 'carte') {
+      sheetName = 'カルテ';
+    } else {
+      sheetName = e.parameter.sheet;
+    }
+  }
+
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    return ContentService
+      .createTextOutput(JSON.stringify({error: sheetName + 'シートが見つかりません', available_sheets: ss.getSheets().map(s => s.getName())}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const rows = sheet.getDataRange().getValues();
+  if (rows.length < 2) {
+    return ContentService
+      .createTextOutput(JSON.stringify([]))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const headers = rows[0];
+  const data = rows.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = row[i] !== undefined && row[i] !== null ? String(row[i]) : '';
+    });
+    return obj;
+  }).filter(r => {
+    return r['タイトル'] || r['事案名'] || r['カルテID'];
+  });
+
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ===== アンケート受信（POSTリクエスト）=====
+function doPost(e) {
+  const sheet = getOrCreateSurveySheet();
+  let data;
+  try {
+    data = JSON.parse(e.postData.contents);
+  } catch (err) {
+    return ContentService.createTextOutput('error').setMimeType(ContentService.MimeType.TEXT);
+  }
+  sheet.appendRow([
+    data.pref || '',
+    data.window || '',
+    data.types || '',
+    data.detail || '',
+    data.result || '',
+    data.when || '',
+    data.timestamp || new Date().toISOString()
+  ]);
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'ok' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ===== 市民の声シート 取得/作成 =====
+function getOrCreateSurveySheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SURVEY_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SURVEY_SHEET_NAME);
+    sheet.appendRow(['都道府県', '窓口種別', '体験種類', '詳細', '結果', '時期', '送信日時']);
+    sheet.setFrozenRows(1);
+    const h = sheet.getRange(1, 1, 1, 7);
+    h.setBackground('#0f0e0d');
+    h.setFontColor('#faf9f6');
+    h.setFontWeight('bold');
+    sheet.setColumnWidth(4, 500);
+  }
+  return sheet;
+}
+
+// ===== 集計レポート（手動実行）=====
+function generateReport() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SURVEY_SHEET_NAME);
+  if (!sheet) { Logger.log('シートが見つかりません'); return; }
+  const data = sheet.getDataRange().getValues().slice(1);
+  Logger.log('総件数: ' + data.length);
+}
