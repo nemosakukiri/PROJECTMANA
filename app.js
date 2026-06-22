@@ -1313,7 +1313,7 @@ function _runHomeSearch(kw) {
           type: 'karte',
           id:   k.id,
           title: k.title || '',
-                    sub:   (k.region || '') + (k.field ? '　' + k.field : ''),
+          sub:   (k.region || '') + (k.field ? '　' + k.field : ''),
         });
       }
     });
@@ -2010,11 +2010,11 @@ function renderWindowsPage() {
     setTimeout(() => { toast.style.opacity = '0'; }, 1600);
   }
 
-  // クリック判定（CSSによる表示サイズを基準に座標変換）
+  // クリック判定（スケール考慮）
   function onCanvasClick(e) {
     const rect = cv.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) * 680 / rect.width;
-    const my = (e.clientY - rect.top)  * 680 / rect.width;
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
     for (const win of windows) {
       const inBox = mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
                  && my >= win.y - 14         && my <= win.y + win.h;
@@ -2031,8 +2031,8 @@ function renderWindowsPage() {
   // カーソル変更
   function onCanvasMove(e) {
     const rect = cv.getBoundingClientRect();
-    const mx = (e.clientX - rect.left) * 680 / rect.width;
-    const my = (e.clientY - rect.top)  * 680 / rect.width;
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
     const hit = windows.some(win =>
       mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
       && my >= win.y - 14 && my <= win.y + win.h
