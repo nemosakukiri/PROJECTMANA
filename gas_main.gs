@@ -2496,7 +2496,7 @@ function migrateAddObservationColumns() {
 // 空欄の行のみ対象。既存値がある行は上書きしない。
 // 最初は limit=20 でテスト確認後、limit=200 を繰り返すこと。
 function backfillObservationFields(limit) {
-  limit = limit || 20;
+  limit = limit || 200;
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetNames = ['kansokuDB', '観測DB（全件ログ）'];
