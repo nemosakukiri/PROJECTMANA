@@ -1960,17 +1960,8 @@ function renderWindowsPage() {
 
   ctx.fillStyle = '#14140c';
   ctx.beginPath(); ctx.ellipse(bx, 820 - 30, 680 * 0.58, 68, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillRect(0, 820 - 44, 680, 44);
 
-  function bird(x, y, sz, al) {
-    ctx.save(); ctx.globalAlpha = al;
-    ctx.strokeStyle = '#14140c'; ctx.lineWidth = 1.3; ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(x - sz, y); ctx.quadraticCurveTo(x - sz * .5, y - sz * .65, x, y);
-    ctx.moveTo(x, y); ctx.quadraticCurveTo(x + sz * .5, y - sz * .65, x + sz, y);
-    ctx.stroke(); ctx.restore();
-  }
-  // 百葉箱
+  // 百葉箱（地面より前に描くことで脚が地平線に埋まる）
   function drawHygrometer(hx, groundY) {
     const legH = 18, boxW = 38, boxH = 34, roofH = 5;
     const boxTop = groundY - legH - boxH;
@@ -2010,8 +2001,18 @@ function renderWindowsPage() {
     ctx.restore();
   }
 
-  drawHygrometer(460, 820 - 44);
+  drawHygrometer(460, by + 22);  // 木の幹と同じ地平線、脚が地面に埋まる
 
+  ctx.fillRect(0, 820 - 44, 680, 44);
+
+  function bird(x, y, sz, al) {
+    ctx.save(); ctx.globalAlpha = al;
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = 1.3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - sz, y); ctx.quadraticCurveTo(x - sz * .5, y - sz * .65, x, y);
+    ctx.moveTo(x, y); ctx.quadraticCurveTo(x + sz * .5, y - sz * .65, x + sz, y);
+    ctx.stroke(); ctx.restore();
+  }
   bird(80, 160, 10, .2); bird(100, 150, 7, .14);
   bird(540, 120, 9, .18); bird(560, 132, 7, .12);
   bird(300, 80, 8, .13); bird(318, 88, 6, .09);
