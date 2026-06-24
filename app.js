@@ -1280,10 +1280,129 @@ function renderKarteDetailPage(karteId) {
             ${k.updated_at ? '更新 ' + k.updated_at.slice(0,10) : ''}
           </div>`, false)}
 
+        <!-- 展示に追加 -->
+        <div class="kp2-panel" style="grid-column:1/-1;border:1.5px dashed var(--rule,#ddd);background:transparent">
+          <div class="kp2-panel-body" style="padding:0.9rem 1rem">
+            <button class="exhibit-add-btn" onclick="openExhibitModal('${escapeAttr(k.id)}','karte','${escapeAttr(k.title)}')">
+              ＋ この事案を窓に展示する
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>`;
 }
+// ===== 展示登録モーダル =====
+function openExhibitModal(refId, refType, refTitle) {
+  let modal = document.getElementById('exhibit-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'exhibit-modal';
+    modal.style.cssText = `
+      position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;
+      display:flex;align-items:center;justify-content:center;padding:1rem;
+    `;
+    modal.onclick = e => { if (e.target === modal) closeExhibitModal(); };
+    document.body.appendChild(modal);
+  }
+
+  const windowOptions = (windowMasterData || []).map(w =>
+    `<option value="${w.window_id}">${w.window_name}</option>`
+  ).join('');
+
+  modal.innerHTML = `
+    <div style="
+      background:#faf9f6;border-radius:8px;max-width:480px;width:100%;
+      padding:1.6rem 1.8rem;box-shadow:0 8px 32px rgba(0,0,0,0.18);
+    ">
+      <div style="font-size:0.72rem;letter-spacing:0.1em;color:#888;margin-bottom:0.4rem">展示に追加</div>
+      <div style="font-size:0.9rem;font-weight:600;margin-bottom:1.4rem;line-height:1.4">${refTitle}</div>
+
+      <div style="margin-bottom:1rem">
+        <label style="font-size:0.78rem;color:#555;display:block;margin-bottom:0.3rem">展示する窓</label>
+        <select id="exhibit-window-select" style="width:100%;padding:0.5rem 0.7rem;border:1px solid #d0cdc8;border-radius:4px;font-size:0.88rem;background:#fff">
+          ${windowOptions}
+        </select>
+      </div>
+
+      <div style="margin-bottom:1rem">
+        <label style="font-size:0.78rem;color:#555;display:block;margin-bottom:0.3rem">視点のタイトル <span style="color:#aaa">（例：公益通報から見る民主主義）</span></label>
+        <input id="exhibit-title-input" type="text" placeholder="〜から見る〜" style="width:100%;padding:0.5rem 0.7rem;border:1px solid #d0cdc8;border-radius:4px;font-size:0.88rem;box-sizing:border-box">
+      </div>
+
+      <div style="margin-bottom:1.4rem">
+        <label style="font-size:0.78rem;color:#555;display:block;margin-bottom:0.3rem">展示理由・メモ</label>
+        <textarea id="exhibit-note-input" rows="3" placeholder="なぜこの窓に展示するか…" style="width:100%;padding:0.5rem 0.7rem;border:1px solid #d0cdc8;border-radius:4px;font-size:0.88rem;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+
+      <div style="display:flex;gap:0.8rem;justify-content:flex-end">
+        <button onclick="closeExhibitModal()" style="background:none;border:1px solid #d0cdc8;padding:0.5rem 1.2rem;border-radius:4px;cursor:pointer;font-size:0.84rem;color:#666">キャンセル</button>
+        <button onclick="saveExhibit('${refId}','${refType}')" style="background:#14140c;color:#fff;border:none;padding:0.5rem 1.4rem;border-radius:4px;cursor:pointer;font-size:0.84rem">登録する</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+
+function closeExhibitModal() {
+  const modal = document.getElementById('exhibit-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function saveExhibit(refId, refType) {
+  const windowId   = document.getElementById('exhibit-window-select')?.value;
+  const title      = document.getElementById('exhibit-title-input')?.value.trim();
+  const exhibitNote = document.getElementById('exhibit-note-input')?.value.trim();
+
+  if (!windowId || !title) {
+    alert('窓と視点タイトルは必須です');
+    return;
+  }
+
+  const entry = {
+    window_id:    windowId,
+    ref_id:       refId,
+    ref_type:     refType,
+    perspective:  'mana',
+    title,
+    exhibit_note: exhibitNote,
+    reasoning:    null,
+    confidence:   1.0,
+    status:       'published',
+    created_at:   new Date().toISOString().slice(0, 10),
+    approved_at:  new Date().toISOString().slice(0, 10),
+  };
+
+  const stored = JSON.parse(localStorage.getItem('mana_exhibits') || '[]');
+  stored.push(entry);
+  localStorage.setItem('mana_exhibits', JSON.stringify(stored));
+
+  closeExhibitModal();
+  showExhibitConfirm(entry);
+}
+
+function showExhibitConfirm(entry) {
+  const win = (windowMasterData || []).find(w => w.window_id === entry.window_id);
+  let popup = document.getElementById('canvas-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'canvas-popup';
+    document.body.appendChild(popup);
+  }
+  popup.style.cssText = `
+    position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);
+    background:rgba(20,20,12,0.92);color:#cdd6e0;
+    font-size:0.84rem;line-height:1.7;
+    padding:1.1rem 1.6rem;border-radius:7px;
+    max-width:300px;text-align:center;
+    opacity:1;transition:opacity 0.3s;pointer-events:none;z-index:999;
+  `;
+  popup.innerHTML = `登録しました<br><span style="opacity:0.6;font-size:0.78rem">${win?.window_name || entry.window_id} ／ ${entry.title}</span>`;
+  clearTimeout(popup._timer);
+  popup._timer = setTimeout(() => { popup.style.opacity = '0'; }, 3000);
+}
+
 // ===== トップ全文検索 =====
 let _homeSearchTimer = null;
 

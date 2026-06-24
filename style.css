@@ -2684,3 +2684,20 @@ a.kp2-chip-evidence:hover {
   font-size: 0.88rem;
   padding: 1rem 0;
 }
+
+/* ===== 展示登録ボタン ===== */
+.exhibit-add-btn {
+  background: none;
+  border: 1px solid var(--ink, #14140c);
+  color: var(--ink, #14140c);
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.exhibit-add-btn:hover {
+  background: var(--ink, #14140c);
+  color: #faf9f6;
+}
