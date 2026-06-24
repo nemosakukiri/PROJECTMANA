@@ -2135,9 +2135,11 @@ function renderWindowsPage() {
       if (win.active && win.action) {
         const wData = windowMasterData.find(w => w.window_name === win.label);
         if (wData) {
+          const body = (wData.popup_text || wData.question)
+            .replace(/\n/g, '<br>');
           showCanvasPopup({
             label: wData.window_name,
-            body: `問い：${wData.question}<br><br>${wData.description}`,
+            body,
             btnLabel: '展示室を開く',
             onOpen: win.action,
           });
