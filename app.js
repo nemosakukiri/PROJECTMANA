@@ -10,6 +10,7 @@ let dbData = [];
 let surveyData = [];
 let termsData = []; // 用語辞典
 let lawsData  = []; // 法律辞典
+let windowMasterData = []; // 窓マスター
 let _routeHandled = false; // 初回ルーティング済みフラグ
 
 // ===== INIT =====
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadKartes();
   loadDB();
   loadSurveyVoices();
+  loadWindowMaster();
   window.addEventListener('hashchange', handleHashRoute);
   handleHashRoute();
 });
@@ -35,6 +37,7 @@ function showPage(name, navEl) {
   if (name === 'essays') loadEssays();
   if (name === 'karte') loadKartes();
   if (name === 'windows') renderWindowsPage();
+  if (name === 'window-detail') { /* windowId passed separately via renderWindowDetailPage */ }
   // hashルート以外のページへ遷移する場合のみhashをクリア
   // ただし現在 #/karte/xxx など hashルート表示中の場合は
   // pushState で空hashを履歴に積む（ブラウザバックで戻れるように）
@@ -1976,11 +1979,11 @@ function renderWindowsPage() {
   const windows = [
     { label: '観測DB',      sub: '稼働中',  active: true,  action: () => showPage('db',    document.querySelector('nav a:nth-child(2)')), x: bx - 265, y: 440, w: 84, h: 56 },
     { label: '事案の窓',    sub: '稼働中',  active: true,  action: () => showPage('karte', document.querySelector('nav a:nth-child(5)')), x: bx + 190, y: 360, w: 84, h: 56 },
-    { label: '人権の窓',    sub: '設計中',  active: false, href: null, x: bx - 220, y: 240, w: 76, h: 50 },
-    { label: '民主主義の窓', sub: '設計中', active: false, href: null, x: bx + 200, y: 280, w: 76, h: 50 },
-    { label: '心の窓',      sub: '構想中',  active: false, href: null, x: bx - 60,  y: 160, w: 74, h: 48 },
-    { label: '戦争の窓',    sub: '構想中',  active: false, href: null, x: bx + 140, y: 180, w: 74, h: 48 },
-    { label: 'メディアの窓', sub: '構想中', active: false, href: null, x: bx - 30,  y: 36,  w: 72, h: 46 },
+    { label: '人権の窓',    sub: '仮実装',  active: true, action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
+    { label: '民主主義の窓', sub: '仮実装', active: true, action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 76, h: 50 },
+    { label: '心の窓',      sub: '仮実装',  active: true, action: () => renderWindowDetailPage('mental'),        x: bx - 60,  y: 160, w: 74, h: 48 },
+    { label: '戦争の窓',    sub: '仮実装',  active: true, action: () => renderWindowDetailPage('war'),           x: bx + 140, y: 180, w: 74, h: 48 },
+    { label: 'メディアの窓', sub: '仮実装', active: true, action: () => renderWindowDetailPage('media'),         x: bx - 30,  y: 36,  w: 72, h: 46 },
   ];
 
   function drawBox(win) {
@@ -2050,6 +2053,82 @@ function renderWindowsPage() {
   cv._moveHandler = onCanvasMove;
   cv.addEventListener('click', onCanvasClick);
   cv.addEventListener('mousemove', onCanvasMove);
+}
+
+// ===== 窓マスター読み込み =====
+function loadWindowMaster() {
+  fetch('/window_master.json')
+    .then(r => r.json())
+    .then(data => { windowMasterData = data; })
+    .catch(e => console.warn('window_master.json 読み込み失敗', e));
+}
+
+// 記事テキストに窓のキーワード・タグ・法令・機関が含まれるか判定
+function matchesWindow(row, win) {
+  const text = [
+    row['タイトル'] || row.title || '',
+    row['出来事タグ'] || '',
+    row['構造タグ'] || '',
+    row['状態タグ'] || '',
+    row['law_refs_raw'] || '',
+    row['institution_refs_raw'] || '',
+  ].join(' ');
+  return (win.keywords   || []).some(k => text.includes(k))
+      || (win.tags       || []).some(t => text.includes(t))
+      || (win.law_refs   || []).some(l => text.includes(l))
+      || (win.institution_refs || []).some(i => text.includes(i));
+}
+
+// ===== 窓詳細ページ =====
+function renderWindowDetailPage(windowId) {
+  const win = windowMasterData.find(w => w.window_id === windowId);
+  const el = document.getElementById('page-window-detail');
+  if (!el) return;
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+
+  if (!win) {
+    el.innerHTML = '<div class="page-inner"><p>窓データが読み込まれていません。</p></div>';
+    return;
+  }
+
+  const candidates = dbData.filter(row => matchesWindow(row, win));
+
+  const candidateHtml = candidates.length === 0
+    ? '<p class="window-empty">現在この窓に表示できる候補記事がありません。</p>'
+    : candidates.slice(0, 30).map(row => {
+        const title = row['タイトル'] || row.title || '';
+        const date  = row['公開日'] || row['日付'] || '';
+        const tags  = [row['出来事タグ'], row['構造タグ']].filter(Boolean).join('　');
+        const url   = row['URL'] || row.url || '';
+        return `<div class="window-candidate-item">
+          <div class="window-cand-date">${date ? String(date).slice(0,10) : ''}</div>
+          <div class="window-cand-title">${url ? `<a href="${url}" target="_blank" rel="noopener">${title}</a>` : title}</div>
+          ${tags ? `<div class="window-cand-tags">${tags}</div>` : ''}
+        </div>`;
+      }).join('');
+
+  el.innerHTML = `
+    <div class="page-inner window-detail-page">
+      <button class="window-back-btn" onclick="showPage('windows',null)">← 観測の窓へ戻る</button>
+      <div class="window-detail-header">
+        <h1 class="window-detail-name">${win.window_name}</h1>
+        <p class="window-detail-question">問い：${win.question}</p>
+        <p class="window-detail-desc">${win.description}</p>
+        ${win.model_case ? `<p class="window-detail-model">モデルケース：<strong>${win.model_case}</strong></p>` : ''}
+      </div>
+      <div class="window-candidates">
+        <div class="window-cand-header">
+          <span class="window-cand-label">候補記事</span>
+          <span class="window-cand-count">${candidates.length}件</span>
+          <span class="window-cand-note">※自動抽出・未選定</span>
+        </div>
+        ${candidateHtml}
+      </div>
+    </div>`;
 }
 
 const GAS_FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbw0MWRwN9ZgoXxtAsAQus3wDhsnZc1nESxp_imFe90-b9dAw4jbnBLpMQ4zJUm1Z2VsFQ/exec';

@@ -2564,3 +2564,123 @@ a.kp2-chip-evidence:hover {
   color: #8a8070;
   border: 1px solid #c8c0b0;
 }
+
+/* ===== 窓詳細ページ ===== */
+.window-detail-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.5rem 1.2rem 4rem;
+}
+
+.window-back-btn {
+  background: none;
+  border: none;
+  color: var(--ink-light, #6b7280);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 1.8rem;
+  letter-spacing: 0.02em;
+}
+.window-back-btn:hover { color: var(--ink, #14140c); }
+
+.window-detail-header {
+  border-left: 3px solid var(--ink, #14140c);
+  padding-left: 1.2rem;
+  margin-bottom: 2.5rem;
+}
+
+.window-detail-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin: 0 0 0.6rem;
+}
+
+.window-detail-question {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink, #14140c);
+  margin: 0 0 0.8rem;
+  line-height: 1.6;
+}
+
+.window-detail-desc {
+  font-size: 0.88rem;
+  color: var(--ink-mid, #444);
+  line-height: 1.8;
+  margin: 0 0 0.6rem;
+}
+
+.window-detail-model {
+  font-size: 0.82rem;
+  color: var(--ink-light, #6b7280);
+  margin: 0;
+}
+
+.window-candidates {
+  margin-top: 1rem;
+}
+
+.window-cand-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e0ddd8;
+  padding-bottom: 0.5rem;
+}
+
+.window-cand-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ink, #14140c);
+  text-transform: uppercase;
+}
+
+.window-cand-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--ink, #14140c);
+}
+
+.window-cand-note {
+  font-size: 0.72rem;
+  color: var(--ink-light, #6b7280);
+}
+
+.window-candidate-item {
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #f0ede8;
+}
+
+.window-cand-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--ink-light, #6b7280);
+  margin-bottom: 0.2rem;
+}
+
+.window-cand-title {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 0.25rem;
+}
+
+.window-cand-title a {
+  color: var(--ink, #14140c);
+  text-decoration: none;
+}
+.window-cand-title a:hover { text-decoration: underline; }
+
+.window-cand-tags {
+  font-size: 0.72rem;
+  color: var(--ink-light, #6b7280);
+}
+
+.window-empty {
+  color: var(--ink-light, #6b7280);
+  font-size: 0.88rem;
+  padding: 1rem 0;
+}
