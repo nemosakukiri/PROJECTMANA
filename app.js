@@ -2055,35 +2055,59 @@ function renderWindowsPage() {
 
   windows.forEach(drawBox);
 
-  // トースト表示
-  function showToast() {
-    const toast = document.getElementById('windows-toast');
-    if (!toast) return;
-    toast.style.opacity = '1';
-    setTimeout(() => { toast.style.opacity = '0'; }, 1600);
-  }
-
-  // 百葉箱ポップアップ
-  function showHygrometerPopup() {
-    let popup = document.getElementById('hygrometer-popup');
+  // 共通ポップアップ（問いを表示し、ボタンで遷移）
+  function showCanvasPopup({ label, body, btnLabel, onOpen }) {
+    let popup = document.getElementById('canvas-popup');
     if (!popup) {
       popup = document.createElement('div');
-      popup.id = 'hygrometer-popup';
+      popup.id = 'canvas-popup';
       popup.style.cssText = `
         position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);
-        background:rgba(20,20,12,0.90);color:#cdd6e0;
-        font-size:0.85rem;line-height:1.8;
-        padding:1.2rem 1.6rem;border-radius:6px;
-        max-width:280px;text-align:center;
+        background:rgba(20,20,12,0.92);color:#cdd6e0;
+        font-size:0.84rem;line-height:1.85;
+        padding:1.3rem 1.8rem 1rem;border-radius:7px;
+        max-width:300px;width:calc(100% - 3rem);text-align:center;
         opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;
         letter-spacing:0.03em;
       `;
       document.body.appendChild(popup);
     }
-    popup.innerHTML = `<strong style="font-size:0.78rem;letter-spacing:0.1em;opacity:0.6">百葉箱</strong><br><br>MANAは社会を評価する場所ではありません。<br><br>まず観測し、記録し、残します。<br><br>ここには日々の観測が蓄積されています。`;
-    popup.style.opacity = '1';
     clearTimeout(popup._timer);
-    popup._timer = setTimeout(() => { popup.style.opacity = '0'; }, 3500);
+
+    const btnHtml = btnLabel
+      ? `<div style="margin-top:1rem">
+           <button id="canvas-popup-btn" style="
+             background:rgba(205,214,224,0.15);border:1px solid rgba(205,214,224,0.35);
+             color:#cdd6e0;font-size:0.78rem;letter-spacing:0.06em;
+             padding:0.4rem 1.1rem;border-radius:20px;cursor:pointer;
+           ">${btnLabel} →</button>
+         </div>`
+      : '';
+
+    popup.innerHTML = `<strong style="font-size:0.72rem;letter-spacing:0.1em;opacity:0.55">${label}</strong><br><br>${body}${btnHtml}`;
+    popup.style.opacity = '1';
+    popup.style.pointerEvents = 'auto';
+
+    if (btnLabel && onOpen) {
+      document.getElementById('canvas-popup-btn').onclick = () => {
+        popup.style.opacity = '0';
+        popup.style.pointerEvents = 'none';
+        onOpen();
+      };
+    }
+
+    popup._timer = setTimeout(() => {
+      popup.style.opacity = '0';
+      popup.style.pointerEvents = 'none';
+    }, 5000);
+  }
+
+  // トースト（準備中）
+  function showToast() {
+    const toast = document.getElementById('windows-toast');
+    if (!toast) return;
+    toast.style.opacity = '1';
+    setTimeout(() => { toast.style.opacity = '0'; }, 1600);
   }
 
   // クリック判定（スケール考慮）
@@ -2095,7 +2119,12 @@ function renderWindowsPage() {
     // 百葉箱ヒット判定
     if (mx >= hygroHit.x - hygroHit.hw && mx <= hygroHit.x + hygroHit.hw
      && my >= hygroHit.top && my <= hygroHit.bottom) {
-      showHygrometerPopup();
+      showCanvasPopup({
+        label: '百葉箱',
+        body: 'MANAは社会を評価する場所ではありません。<br><br>まず観測し、記録し、残します。<br><br>ここには日々の観測が蓄積されています。',
+        btnLabel: '観測DBを開く',
+        onOpen: () => showPage('db', document.querySelector('nav a:nth-child(2)')),
+      });
       return;
     }
 
@@ -2104,7 +2133,17 @@ function renderWindowsPage() {
                  && my >= win.y - 14         && my <= win.y + win.h;
       if (!inBox) continue;
       if (win.active && win.action) {
-        win.action();
+        const wData = windowMasterData.find(w => w.window_name === win.label);
+        if (wData) {
+          showCanvasPopup({
+            label: wData.window_name,
+            body: `問い：${wData.question}<br><br>${wData.description}`,
+            btnLabel: '展示室を開く',
+            onOpen: win.action,
+          });
+        } else {
+          win.action();
+        }
       } else {
         showToast();
       }
