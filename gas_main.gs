@@ -2585,3 +2585,78 @@ function backfillObservationFields(limit) {
 
   Logger.log('===== backfillObservationFields 完了 =====');
 }
+
+// ===== 窓（展示室）候補抽出 =====
+
+const WINDOW_MASTER_FILE_ID  = '1JFxiFddm-km8rTwiIMY_wHMgpIv7l3glWYc0TScH-Y8';
+const WINDOW_EXHIBITS_FILE_ID = '1aDKAW1AH6mi-xgBS3G_o7IsNwvmrCygIvqZnmoRI83Q';
+
+function loadWindowMaster() {
+  const ss = SpreadsheetApp.openById(WINDOW_MASTER_FILE_ID);
+  const sheet = ss.getSheets()[0];
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  return data.slice(1).map(function(row) {
+    const obj = {};
+    headers.forEach(function(h, i) { obj[h] = row[i]; });
+    obj._keywords    = String(obj.keywords    || '').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    obj._tags        = String(obj.tags        || '').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    obj._law_refs    = String(obj.law_refs    || '').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    obj._inst_refs   = String(obj.institution_refs || '').split(',').map(function(s){return s.trim();}).filter(Boolean);
+    return obj;
+  });
+}
+
+// 1記事に対し、候補となる窓IDのリストを返す
+function matchWindowsForRow(row, windows) {
+  const text = [
+    row['タイトル']      || '',
+    row['出来事タグ']    || '',
+    row['構造タグ']      || '',
+    row['状態タグ']      || '',
+    row['law_refs_raw']  || '',
+    row['institution_refs_raw'] || '',
+  ].join(' ');
+
+  return windows
+    .filter(function(w) {
+      return w._keywords.some(function(k){ return k && text.includes(k); })
+          || w._tags.some(function(t){ return t && text.includes(t); })
+          || w._law_refs.some(function(l){ return l && text.includes(l); })
+          || w._inst_refs.some(function(i){ return i && text.includes(i); });
+    })
+    .map(function(w){ return w.window_id; });
+}
+
+// kansokuDB から指定窓の候補記事を取得して返す
+function getWindowCandidates(windowId) {
+  const windows = loadWindowMaster();
+  const target  = windows.filter(function(w){ return w.window_id === windowId; });
+  if (!target.length) { Logger.log('窓ID不明: ' + windowId); return []; }
+
+  const ss      = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet   = ss.getSheetByName('kansokuDB');
+  const data    = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const candidates = [];
+  data.slice(1).forEach(function(row) {
+    const obj = {};
+    headers.forEach(function(h, i){ obj[h] = row[i]; });
+    if (!obj['タイトル']) return;
+    const matched = matchWindowsForRow(obj, target);
+    if (matched.length) candidates.push(obj);
+  });
+
+  Logger.log('[窓候補] ' + windowId + ': ' + candidates.length + '件');
+  return candidates;
+}
+
+// テスト用：全窓の候補件数をログに出す
+function testWindowCandidates() {
+  const windows = loadWindowMaster();
+  windows.forEach(function(w) {
+    const results = getWindowCandidates(w.window_id);
+    Logger.log(w.window_name + '（' + w.window_id + '）: ' + results.length + '件');
+  });
+}
