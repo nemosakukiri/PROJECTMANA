@@ -1970,6 +1970,48 @@ function renderWindowsPage() {
     ctx.moveTo(x, y); ctx.quadraticCurveTo(x + sz * .5, y - sz * .65, x + sz, y);
     ctx.stroke(); ctx.restore();
   }
+  // 百葉箱
+  function drawHygrometer(hx, groundY) {
+    const legH = 18, boxW = 38, boxH = 34, roofH = 5;
+    const boxTop = groundY - legH - boxH;
+    ctx.save();
+
+    // 脚（2本）
+    ctx.strokeStyle = '#d4cfc0'; ctx.lineWidth = 2.2; ctx.lineCap = 'square';
+    ctx.beginPath();
+    ctx.moveTo(hx - boxW * 0.28, groundY); ctx.lineTo(hx - boxW * 0.28, groundY - legH);
+    ctx.moveTo(hx + boxW * 0.28, groundY); ctx.lineTo(hx + boxW * 0.28, groundY - legH);
+    ctx.stroke();
+
+    // 本体（白い箱）
+    ctx.fillStyle = '#eceae2';
+    ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.rect(hx - boxW / 2, boxTop, boxW, boxH); ctx.fill(); ctx.stroke();
+
+    // 鎧戸（水平スリット）
+    ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 0.8;
+    const slats = 6;
+    for (let s = 1; s < slats; s++) {
+      const sy = boxTop + (boxH / slats) * s;
+      ctx.beginPath(); ctx.moveTo(hx - boxW / 2, sy); ctx.lineTo(hx + boxW / 2, sy); ctx.stroke();
+    }
+    // スリットの斜め影（鎧戸らしさ）
+    ctx.strokeStyle = 'rgba(100,95,85,0.18)'; ctx.lineWidth = 3;
+    for (let s = 0; s < slats; s++) {
+      const sy = boxTop + (boxH / slats) * s + boxH / slats * 0.5;
+      ctx.beginPath(); ctx.moveTo(hx - boxW / 2 + 1, sy); ctx.lineTo(hx + boxW / 2 - 1, sy); ctx.stroke();
+    }
+
+    // 屋根（少し張り出す）
+    ctx.fillStyle = '#d4cfc0';
+    ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.rect(hx - boxW / 2 - 3, boxTop - roofH, boxW + 6, roofH + 1); ctx.fill(); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  drawHygrometer(460, 820 - 44);
+
   bird(80, 160, 10, .2); bird(100, 150, 7, .14);
   bird(540, 120, 9, .18); bird(560, 132, 7, .12);
   bird(300, 80, 8, .13); bird(318, 88, 6, .09);
