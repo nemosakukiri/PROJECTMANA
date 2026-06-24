@@ -81,6 +81,14 @@ const COL = {
   ORIGINAL_URL:        'original_url',          // 元記事の実URL（取得できた場合のみ）
   ORIGINAL_PUBLISHED_AT: 'original_published_at', // 元記事の実際の公開日（取得できた場合のみ）
   DATE_STATUS:         'date_status',           // 確定 / 未確認 / 要確認
+
+  // ===== 観測メタデータ（Step1：記事から直接取得）=====
+  TITLE_NORMALIZED:     'title_normalized',     // 表記揺れを除去した正規化タイトル（重複判定用）
+  SOURCE_DOMAIN:        'source_domain',        // 出典URLのドメイン（例: www3.nhk.or.jp）
+  DEDUP_HASH:           'dedup_hash',           // title_normalized + rss_pubDate + source_domain のMD5前半16桁
+  LAW_REFS_RAW:         'law_refs_raw',         // 記事テキストに含まれる法令名（カンマ区切り・記事直接抽出）
+  INSTITUTION_REFS_RAW: 'institution_refs_raw', // 記事テキストに含まれる機関名（カンマ区切り・記事直接抽出）
+  TAG_SOURCE:           'tag_source',           // タグ付与の由来：'rule'=ルールベース / 'gemini'=AI推定
 };
 
 // ===== date_status の値 =====
@@ -275,6 +283,18 @@ function buildRowLayerA(item, sheet) {
   set(COL.GEMINI_DONE,     false); // 後方互換
   set(COL.GEMINI_TRIED_AT, '');
   set(COL.CLASSIFY_STATUS, CLASSIFY_STATUS.UNCLASSIFIED);
+
+  // ===== 観測メタデータ（Step1：記事から直接取得・AI不使用）=====
+  const titleNorm   = normalizeTitle(item.title);
+  const domain      = extractDomain(item.url);
+  const rawTextForMeta = (item.title || '') + ' ' + (item.description || '');
+
+  set(COL.TITLE_NORMALIZED,     titleNorm);
+  set(COL.SOURCE_DOMAIN,        domain);
+  set(COL.DEDUP_HASH,           computeDedupHash(titleNorm, rssPubDate, domain));
+  set(COL.LAW_REFS_RAW,         extractLawRefs(rawTextForMeta));
+  set(COL.INSTITUTION_REFS_RAW, extractInstitutionRefs(rawTextForMeta));
+  set(COL.TAG_SOURCE,           'rule');
 
   return row;
 }
@@ -587,6 +607,39 @@ const STATUS_RULES = [
   { keywords: ['撤回せず','継続','変わらず'], tag: '撤回なし' },
 ];
 
+// ===== 法令名リスト（laws.json の name / short_name から直接引用）=====
+// 記事テキストとの文字列マッチに使用。AI推定なし・記事から直接取得。
+const LAW_NAMES = [
+  '生活保護法',
+  '障害者総合支援法',
+  '障害者の日常生活及び社会生活を総合的に支援するための法律',
+  '介護保険法',
+  '児童福祉法',
+  '行政手続法',
+  '行政不服審査法',
+  '情報公開法',
+  '行政機関の保有する情報の公開に関する法律',
+  '国民健康保険法',
+  '社会福祉法',
+  '行政事件訴訟法',
+];
+
+// ===== 機関名リスト（省庁・行政機関）=====
+// 都道府県・市区町村は既存の region / municipality 列で管理済みのため除外。
+// ここでは国の省庁・広域機関・専門機関のみを対象とする。
+const INSTITUTION_NAMES = [
+  '厚生労働省', '厚労省', '総務省', '内閣府', '財務省',
+  '文部科学省', '国土交通省', '法務省', '経済産業省',
+  '農林水産省', '環境省', '防衛省', '内閣官房',
+  '福祉事務所', '児童相談所', '社会福祉協議会',
+  '介護保険審査会', '社会保険審査官', '社会保険審査会',
+  'ハローワーク', '公共職業安定所',
+  '地方裁判所', '高等裁判所', '最高裁判所',
+  '後期高齢者医療広域連合', '国民健康保険団体連合会',
+  '監査委員', '行政委員会', '人事委員会', '教育委員会',
+  '国民健康保険', '社会保険事務所',
+];
+
 const STRUCTURE_RULES = [
   { keywords: ['説明責任','説明すべき','公表すべき','情報開示'], tag: '説明責任' },
   { keywords: ['繰り返し','同様の事案','類似事案','また同じ'], tag: '反復構造' },
@@ -834,6 +887,53 @@ function mergeTagStr(existing, newTags) {
   return merged.join(' / ');
 }
 
+// ===== 観測メタデータ抽出ユーティリティ（Step1）=====
+// 記事から直接取得。AI推定なし。
+
+// タイトル正規化：記号・全角英数を除去・統一して重複判定に使う
+function normalizeTitle(title) {
+  if (!title) return '';
+  return title
+    .replace(/[　\s]+/g, ' ')
+    .replace(/[「」『』【】〔〕［］〈〉《》""'']/g, '')
+    .replace(/[、。！？!?・…‥〜～―－]/g, '')
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(s) {
+      return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    })
+    .trim()
+    .toLowerCase();
+}
+
+// URLからドメインを抽出（www. は除去）
+function extractDomain(url) {
+  if (!url) return '';
+  try {
+    const m = String(url).match(/^https?:\/\/([^\/\?#]+)/);
+    return m ? m[1].replace(/^www\./, '') : '';
+  } catch(e) { return ''; }
+}
+
+// 重複判定用ハッシュ：title_normalized + pubDate + domain のMD5前半16文字
+function computeDedupHash(titleNorm, pubDate, domain) {
+  const str = [titleNorm, pubDate || '', domain].join('|');
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, str);
+  return bytes.map(function(b) {
+    return (b < 0 ? b + 256 : b).toString(16).padStart(2, '0');
+  }).join('').slice(0, 16);
+}
+
+// 法令名抽出：テキスト中に含まれる法令名をカンマ区切りで返す（記事直接抽出）
+function extractLawRefs(text) {
+  if (!text) return '';
+  return LAW_NAMES.filter(function(name) { return text.includes(name); }).join(', ');
+}
+
+// 機関名抽出：テキスト中に含まれる機関名をカンマ区切りで返す（記事直接抽出）
+function extractInstitutionRefs(text) {
+  if (!text) return '';
+  return INSTITUTION_NAMES.filter(function(name) { return text.includes(name); }).join(', ');
+}
+
 function classifyWithGemini(articles, tags, apiKey) {
   const results = [];
   const batchSize = 5;
@@ -1006,7 +1106,10 @@ function getOrCreateFullLogSheet(ss) {
       'タイトル','要約','出来事タグ','構造タグ','根拠タグ','状態タグ',
       '重要度','構造メモ','収録日時','公開日','古い記事',
       // ===== v3で追加（層A/層B分離設計）=====
-      'RSS要約','本文キャッシュ有無','原本ID','Gemini分類済み','Gemini分類試行日時'
+      'RSS要約','本文キャッシュ有無','原本ID','Gemini分類済み','Gemini分類試行日時',
+      // ===== Step1追加（観測メタデータ・記事直接取得）=====
+      'title_normalized','source_domain','dedup_hash',
+      'law_refs_raw','institution_refs_raw','tag_source'
     ];
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
@@ -1027,7 +1130,10 @@ function getOrCreatePublicSheet(ss) {
       'タイトル','要約','出来事タグ','構造タグ','根拠タグ','状態タグ',
       '重要度','構造メモ','収録日時','公開日','古い記事',
       // ===== v3で追加（層A/層B分離設計）=====
-      'RSS要約','本文キャッシュ有無','原本ID','Gemini分類済み','Gemini分類試行日時'
+      'RSS要約','本文キャッシュ有無','原本ID','Gemini分類済み','Gemini分類試行日時',
+      // ===== Step1追加（観測メタデータ・記事直接取得）=====
+      'title_normalized','source_domain','dedup_hash',
+      'law_refs_raw','institution_refs_raw','tag_source'
     ];
     sheet.appendRow(headers);
     sheet.setFrozenRows(1);
@@ -2346,4 +2452,136 @@ function resetFakeClassifiedToUnclassified(limit) {
   Logger.log('保護した件数（地域・分野ともにあり）: ' + skippedCount + '件');
   Logger.log('次のステップ: classifyUnclassifiedBatch(10) を実行してください');
   Logger.log('===== 完了 =====');
+}
+
+// ===== Step1 マイグレーション：既存シートに観測メタデータ列を追加 =====
+// 1回だけ手動実行する。既存の列・データは一切変更しない。
+// 実行後に backfillObservationFields() で既存行へ遡及付与する。
+function migrateAddObservationColumns() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ['kansokuDB', '観測DB（全件ログ）'];
+
+  const NEW_COLS = [
+    'title_normalized', 'source_domain', 'dedup_hash',
+    'law_refs_raw', 'institution_refs_raw', 'tag_source'
+  ];
+
+  sheetNames.forEach(function(name) {
+    const sheet = ss.getSheetByName(name);
+    if (!sheet) { Logger.log(name + ': シートなし・スキップ'); return; }
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const missing = NEW_COLS.filter(function(c) { return !headers.includes(c); });
+
+    if (missing.length === 0) {
+      Logger.log(name + ': 全列が既に存在します・スキップ');
+      return;
+    }
+
+    let lastCol = sheet.getLastColumn();
+    missing.forEach(function(colName) {
+      lastCol++;
+      sheet.getRange(1, lastCol).setValue(colName);
+      Logger.log(name + ': 「' + colName + '」列を追加（' + lastCol + '列目）');
+    });
+  });
+
+  Logger.log('');
+  Logger.log('===== migrateAddObservationColumns 完了 =====');
+  Logger.log('既存データは一切変更していません。');
+  Logger.log('次のステップ: backfillObservationFields(20) で20件テスト後、backfillObservationFields(200) を繰り返してください。');
+}
+
+// ===== Step1 遡及バッチ：既存行に観測メタデータを付与 =====
+// 空欄の行のみ対象。既存値がある行は上書きしない。
+// 最初は limit=20 でテスト確認後、limit=200 を繰り返すこと。
+function backfillObservationFields(limit) {
+  limit = limit || 20;
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ['kansokuDB', '観測DB（全件ログ）'];
+
+  sheetNames.forEach(function(name) {
+    const sheet = ss.getSheetByName(name);
+    if (!sheet) { Logger.log(name + ': シートなし・スキップ'); return; }
+
+    const colMap = getColMap(sheet);
+
+    // dedup_hash 列がなければ先にマイグレーションが必要
+    const idxHash = colMap['dedup_hash'];
+    if (idxHash === undefined) {
+      Logger.log(name + ': 「dedup_hash」列が見つかりません。先に migrateAddObservationColumns() を実行してください。');
+      return;
+    }
+
+    // 各列のインデックス（なければ undefined のままで安全に処理する）
+    const idxTitle       = colMap[COL.TITLE];
+    const idxUrl         = colMap[COL.URL];
+    const idxRssPubDate  = colMap[COL.RSS_PUBDATE] !== undefined ? colMap[COL.RSS_PUBDATE] : colMap[COL.PUB_DATE];
+    const idxDesc        = colMap[COL.RSS_SUMMARY];
+    const idxTitleNorm   = colMap['title_normalized'];
+    const idxDomain      = colMap['source_domain'];
+    const idxLawRefs     = colMap['law_refs_raw'];
+    const idxInstRefs    = colMap['institution_refs_raw'];
+    const idxTagSource   = colMap['tag_source'];
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) { Logger.log(name + ': データなし'); return; }
+
+    const data = sheet.getDataRange().getValues();
+    let processed = 0;
+    let skipped   = 0;
+
+    for (let i = 1; i < data.length && processed < limit; i++) {
+      const row = data[i];
+
+      // dedup_hash が既に入っている行はスキップ（上書きしない）
+      if (row[idxHash] && String(row[idxHash]).trim() !== '') {
+        skipped++;
+        continue;
+      }
+
+      // 元データの取得（列が存在しない場合は空文字）
+      const title   = idxTitle       !== undefined ? String(row[idxTitle]      || '') : '';
+      const url     = idxUrl         !== undefined ? String(row[idxUrl]        || '') : '';
+      const pubDate = idxRssPubDate  !== undefined ? String(row[idxRssPubDate] || '') : '';
+      const desc    = idxDesc        !== undefined ? String(row[idxDesc]       || '') : '';
+
+      if (!title && !url) {
+        skipped++;
+        continue; // タイトル・URL両方空の行は処理対象外
+      }
+
+      const titleNorm = normalizeTitle(title);
+      const domain    = extractDomain(url);
+      const rawText   = title + ' ' + desc;
+
+      // 空欄のみ埋める（既存値がある列は触らない）
+      function setIfEmpty(idx, value) {
+        if (idx === undefined) return;
+        if (row[idx] !== undefined && String(row[idx]).trim() !== '') return; // 既存値あり・スキップ
+        sheet.getRange(i + 1, idx + 1).setValue(value);
+      }
+
+      setIfEmpty(idxTitleNorm, titleNorm);
+      setIfEmpty(idxDomain,    domain);
+      setIfEmpty(idxHash,      computeDedupHash(titleNorm, pubDate, domain));
+      setIfEmpty(idxLawRefs,   extractLawRefs(rawText));
+      setIfEmpty(idxInstRefs,  extractInstitutionRefs(rawText));
+      setIfEmpty(idxTagSource, 'rule');
+
+      processed++;
+      Logger.log('[付与] ' + name + ' 行' + (i + 1) + ' 「' + title.slice(0, 40) + '」'
+        + ' domain:' + domain
+        + (extractLawRefs(rawText) ? ' law:' + extractLawRefs(rawText) : '')
+        + (extractInstitutionRefs(rawText) ? ' inst:' + extractInstitutionRefs(rawText) : ''));
+    }
+
+    Logger.log('');
+    Logger.log('===== ' + name + ' backfill サマリ =====');
+    Logger.log('付与件数: ' + processed + '件 / スキップ（既存値あり or 空行）: ' + skipped + '件');
+    Logger.log('残件確認：dedup_hashが空欄の行が残っている場合は再度 backfillObservationFields(' + limit + ') を実行してください。');
+  });
+
+  Logger.log('===== backfillObservationFields 完了 =====');
 }
