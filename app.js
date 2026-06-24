@@ -1908,16 +1908,20 @@ function renderWindowsPage() {
   const cv = document.getElementById('windows-canvas');
   if (!cv) return;
 
+  const dpr = window.devicePixelRatio || 1;
   const isMobile = window.innerWidth < 600;
   const W = isMobile ? window.innerWidth : Math.min(window.innerWidth, 860);
   const H = Math.round(W * 820 / 680);
-  cv.width = W;
-  cv.height = H;
+  cv.width = W * dpr;
+  cv.height = H * dpr;
+  cv.style.width = W + 'px';
+  cv.style.height = H + 'px';
   cv.style.maxWidth = '100%';
 
   const ctx = cv.getContext('2d');
   const scale = W / 680;
 
+  ctx.scale(dpr, dpr);
   ctx.fillStyle = '#cdd6e0';
   ctx.fillRect(0, 0, W, H);
   ctx.scale(scale, scale);
