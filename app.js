@@ -1970,13 +1970,13 @@ function renderWindowsPage() {
 
   // 巣箱の定義（クリック判定用にhitbox情報も保持）
   const windows = [
-    { label: '報道の窓', sub: '422件　稼働中', active: true,  action: () => showPage('db',    document.querySelector('nav a:nth-child(2)')), x: bx - 265, y: 440, w: 84, h: 56 },
-    { label: '事案の窓', sub: '345件　稼働中', active: true,  action: () => showPage('karte', document.querySelector('nav a:nth-child(5)')), x: bx + 190, y: 360, w: 84, h: 56 },
-    { label: '行政の窓', sub: '設計中',        active: false, href: null,       x: bx - 220, y: 240, w: 76, h: 50 },
-    { label: '統計の窓', sub: '設計中',        active: false, href: null,       x: bx + 200, y: 280, w: 76, h: 50 },
-    { label: '地域の窓', sub: '構想中',        active: false, href: null,       x: bx - 60,  y: 160, w: 74, h: 48 },
-    { label: '議会の窓', sub: '構想中',        active: false, href: null,       x: bx + 140, y: 180, w: 74, h: 48 },
-    { label: '構造の窓', sub: '構想中',        active: false, href: null,       x: bx - 30,  y: 36,  w: 72, h: 46 },
+    { label: '観測DB',      sub: '稼働中',  active: true,  action: () => showPage('db',    document.querySelector('nav a:nth-child(2)')), x: bx - 265, y: 440, w: 84, h: 56 },
+    { label: '事案の窓',    sub: '稼働中',  active: true,  action: () => showPage('karte', document.querySelector('nav a:nth-child(5)')), x: bx + 190, y: 360, w: 84, h: 56 },
+    { label: '人権の窓',    sub: '設計中',  active: false, href: null, x: bx - 220, y: 240, w: 76, h: 50 },
+    { label: '民主主義の窓', sub: '設計中', active: false, href: null, x: bx + 200, y: 280, w: 76, h: 50 },
+    { label: '心の窓',      sub: '構想中',  active: false, href: null, x: bx - 60,  y: 160, w: 74, h: 48 },
+    { label: '戦争の窓',    sub: '構想中',  active: false, href: null, x: bx + 140, y: 180, w: 74, h: 48 },
+    { label: 'メディアの窓', sub: '構想中', active: false, href: null, x: bx - 30,  y: 36,  w: 72, h: 46 },
   ];
 
   function drawBox(win) {
