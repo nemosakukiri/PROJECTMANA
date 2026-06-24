@@ -1963,7 +1963,7 @@ function renderWindowsPage() {
 
   // 百葉箱（地面より前に描くことで脚が地平線に埋まる）
   function drawHygrometer(hx, groundY) {
-    const legH = 18, boxW = 38, boxH = 34, roofH = 5;
+    const legH = 21, boxW = 44, boxH = 39, roofH = 6;
     const boxTop = groundY - legH - boxH;
     ctx.save();
 
@@ -2001,7 +2001,10 @@ function renderWindowsPage() {
     ctx.restore();
   }
 
-  drawHygrometer(460, by + 22);  // 木の幹と同じ地平線、脚が地面に埋まる
+  const hygroX = 460, hygroGroundY = by + 22;
+  drawHygrometer(hygroX, hygroGroundY);
+  // ヒットボックス（屋根上端〜脚底）
+  const hygroHit = { x: hygroX, top: hygroGroundY - 21 - 39 - 6, bottom: hygroGroundY, hw: 25 };
 
   ctx.fillRect(0, 820 - 44, 680, 44);
 
@@ -2060,11 +2063,42 @@ function renderWindowsPage() {
     setTimeout(() => { toast.style.opacity = '0'; }, 1600);
   }
 
+  // 百葉箱ポップアップ
+  function showHygrometerPopup() {
+    let popup = document.getElementById('hygrometer-popup');
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.id = 'hygrometer-popup';
+      popup.style.cssText = `
+        position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);
+        background:rgba(20,20,12,0.90);color:#cdd6e0;
+        font-size:0.85rem;line-height:1.8;
+        padding:1.2rem 1.6rem;border-radius:6px;
+        max-width:280px;text-align:center;
+        opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;
+        letter-spacing:0.03em;
+      `;
+      document.body.appendChild(popup);
+    }
+    popup.innerHTML = `<strong style="font-size:0.78rem;letter-spacing:0.1em;opacity:0.6">百葉箱</strong><br><br>MANAは社会を評価する場所ではありません。<br><br>まず観測し、記録し、残します。<br><br>ここには日々の観測が蓄積されています。`;
+    popup.style.opacity = '1';
+    clearTimeout(popup._timer);
+    popup._timer = setTimeout(() => { popup.style.opacity = '0'; }, 3500);
+  }
+
   // クリック判定（スケール考慮）
   function onCanvasClick(e) {
     const rect = cv.getBoundingClientRect();
     const mx = (e.clientX - rect.left) / scale;
     const my = (e.clientY - rect.top) / scale;
+
+    // 百葉箱ヒット判定
+    if (mx >= hygroHit.x - hygroHit.hw && mx <= hygroHit.x + hygroHit.hw
+     && my >= hygroHit.top && my <= hygroHit.bottom) {
+      showHygrometerPopup();
+      return;
+    }
+
     for (const win of windows) {
       const inBox = mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
                  && my >= win.y - 14         && my <= win.y + win.h;
@@ -2083,11 +2117,13 @@ function renderWindowsPage() {
     const rect = cv.getBoundingClientRect();
     const mx = (e.clientX - rect.left) / scale;
     const my = (e.clientY - rect.top) / scale;
-    const hit = windows.some(win =>
+    const hitHyg = mx >= hygroHit.x - hygroHit.hw && mx <= hygroHit.x + hygroHit.hw
+                && my >= hygroHit.top && my <= hygroHit.bottom;
+    const hitWin = windows.some(win =>
       mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
       && my >= win.y - 14 && my <= win.y + win.h
     );
-    cv.style.cursor = hit ? 'pointer' : 'default';
+    cv.style.cursor = (hitHyg || hitWin) ? 'pointer' : 'default';
   }
 
   cv.removeEventListener('click', cv._clickHandler);
