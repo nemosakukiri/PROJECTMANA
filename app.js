@@ -2193,7 +2193,7 @@ function renderHomeCanvas() {
     { label: '民主主義の窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 76, h: 50 },
     { label: 'PROJECT MANAとは', sub: 'ポップアップ', active: true, draw: true,
       action: () => { document.getElementById('mana-about-overlay').classList.add('open'); },
-      x: bx - 155, y: 350, w: 80, h: 52 },
+      x: bx - 155, y: 350, w: 100, h: 56 },
     { label: 'フィードバック', sub: '声を届ける', active: true, draw: true,
       action: () => showPage('survey', document.querySelector('nav a:nth-child(3)')),
       x: bx + 250, y: 420, w: 80, h: 52 },
@@ -2216,7 +2216,8 @@ function renderHomeCanvas() {
     ctx.fillStyle = active ? '#14140c' : 'rgba(20,20,12,.5)'; ctx.fill();
     ctx.textAlign = 'center';
     ctx.fillStyle = active ? '#cdd6e0' : 'rgba(200,210,220,.7)';
-    ctx.font = `${active ? '600 11' : '500 10'}px sans-serif`;
+    const labelFontSize = active ? (w >= 96 ? 10 : 11) : (w >= 96 ? 9 : 10);
+    ctx.font = `${active ? '600' : '500'} ${labelFontSize}px sans-serif`;
     ctx.fillText(label, x, y + h * .66);
     ctx.font = '400 7.5px sans-serif';
     ctx.fillStyle = active ? 'rgba(160,185,210,.95)' : 'rgba(150,165,180,.55)';
