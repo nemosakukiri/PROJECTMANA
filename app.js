@@ -2188,9 +2188,9 @@ function renderHomeCanvas() {
     ctx.bezierCurveTo( lw * 0.9, -lh * 0.6,  lw * 0.9,  lh * 0.6,  0,  lh);
     ctx.bezierCurveTo(-lw * 0.9,  lh * 0.6, -lw * 0.9, -lh * 0.6,  0, -lh);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(62, 80, 46, 0.82)';
+    ctx.fillStyle = 'rgba(88, 168, 72, 0.88)';
     ctx.fill();
-    ctx.strokeStyle = 'rgba(40, 56, 28, 0.6)';
+    ctx.strokeStyle = 'rgba(52, 120, 44, 0.7)';
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -2206,7 +2206,7 @@ function renderHomeCanvas() {
     ctx.beginPath();
     ctx.moveTo(0, lh - 1);
     ctx.lineTo(4, lh + 11);
-    ctx.strokeStyle = 'rgba(40, 56, 28, 0.7)';
+    ctx.strokeStyle = 'rgba(52, 120, 44, 0.8)';
     ctx.lineWidth = 1.5;
     ctx.lineCap = 'round';
     ctx.stroke();
