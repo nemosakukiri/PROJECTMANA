@@ -2175,14 +2175,14 @@ function renderHomeCanvas() {
   const signHit = { x: signX, top: signGroundY - 52 - 30 - 4, bottom: signGroundY, hw: 40 };
 
   // 葉っぱ（PROJECT MANAとは）
-  const leafCx = 130, leafCy = 390;
+  const leafCx = bx - 220, leafCy = 345;
   function drawLeaf(cx, cy) {
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(-0.18);
 
     // 葉の形（左右ベジェ）
-    const lw = 72, lh = 36;
+    const lw = 82, lh = 44;
     ctx.beginPath();
     ctx.moveTo(0, -lh);
     ctx.bezierCurveTo( lw * 0.9, -lh * 0.6,  lw * 0.9,  lh * 0.6,  0,  lh);
@@ -2215,16 +2215,16 @@ function renderHomeCanvas() {
     ctx.rotate(0.18);
     ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(235,245,225,0.95)';
-    ctx.font = '700 10.5px sans-serif';
-    ctx.fillText('PROJECT MANA', 0, -6);
-    ctx.font = '400 10px sans-serif';
-    ctx.fillText('とは？', 0, 8);
+    ctx.font = '700 11px sans-serif';
+    ctx.fillText('PROJECT MANA', 0, -7);
+    ctx.font = '400 10.5px sans-serif';
+    ctx.fillText('とは？', 0, 9);
 
     ctx.restore();
   }
 
   drawLeaf(leafCx, leafCy);
-  const squirrelHit = { x: leafCx - 76, y: leafCy - 40, w: 152, h: 88 };
+  const squirrelHit = { x: leafCx - 86, y: leafCy - 48, w: 172, h: 100 };
 
   // 地面前景（地平線を隠す黒帯）
   ctx.fillStyle = '#14140c';
