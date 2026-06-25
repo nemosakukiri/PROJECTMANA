@@ -10,6 +10,7 @@ let dbData = [];
 let surveyData = [];
 let termsData = []; // 用語辞典
 let lawsData  = []; // 法律辞典
+let windowMasterData = []; // 窓マスター
 let _routeHandled = false; // 初回ルーティング済みフラグ
 
 // ===== INIT =====
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadKartes();
   loadDB();
   loadSurveyVoices();
+  loadWindowMaster();
   window.addEventListener('hashchange', handleHashRoute);
   handleHashRoute();
 });
@@ -35,6 +37,7 @@ function showPage(name, navEl) {
   if (name === 'essays') loadEssays();
   if (name === 'karte') loadKartes();
   if (name === 'windows') renderWindowsPage();
+  if (name === 'window-detail') { /* windowId passed separately via renderWindowDetailPage */ }
   // hashルート以外のページへ遷移する場合のみhashをクリア
   // ただし現在 #/karte/xxx など hashルート表示中の場合は
   // pushState で空hashを履歴に積む（ブラウザバックで戻れるように）
@@ -1277,10 +1280,129 @@ function renderKarteDetailPage(karteId) {
             ${k.updated_at ? '更新 ' + k.updated_at.slice(0,10) : ''}
           </div>`, false)}
 
+        <!-- 展示に追加 -->
+        <div class="kp2-panel" style="grid-column:1/-1;border:1.5px dashed var(--rule,#ddd);background:transparent">
+          <div class="kp2-panel-body" style="padding:0.9rem 1rem">
+            <button class="exhibit-add-btn" onclick="openExhibitModal('${escapeAttr(k.id)}','karte','${escapeAttr(k.title)}')">
+              ＋ この事案を窓に展示する
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>`;
 }
+// ===== 展示登録モーダル =====
+function openExhibitModal(refId, refType, refTitle) {
+  let modal = document.getElementById('exhibit-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'exhibit-modal';
+    modal.style.cssText = `
+      position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:2000;
+      display:flex;align-items:center;justify-content:center;padding:1rem;
+    `;
+    modal.onclick = e => { if (e.target === modal) closeExhibitModal(); };
+    document.body.appendChild(modal);
+  }
+
+  const windowOptions = (windowMasterData || []).map(w =>
+    `<option value="${w.window_id}">${w.window_name}</option>`
+  ).join('');
+
+  modal.innerHTML = `
+    <div style="
+      background:#faf9f6;border-radius:8px;max-width:480px;width:100%;
+      padding:1.6rem 1.8rem;box-shadow:0 8px 32px rgba(0,0,0,0.18);
+    ">
+      <div style="font-size:0.72rem;letter-spacing:0.1em;color:#888;margin-bottom:0.4rem">展示に追加</div>
+      <div style="font-size:0.9rem;font-weight:600;margin-bottom:1.4rem;line-height:1.4">${refTitle}</div>
+
+      <div style="margin-bottom:1rem">
+        <label style="font-size:0.78rem;color:#555;display:block;margin-bottom:0.3rem">展示する窓</label>
+        <select id="exhibit-window-select" style="width:100%;padding:0.5rem 0.7rem;border:1px solid #d0cdc8;border-radius:4px;font-size:0.88rem;background:#fff">
+          ${windowOptions}
+        </select>
+      </div>
+
+      <div style="margin-bottom:1rem">
+        <label style="font-size:0.78rem;color:#555;display:block;margin-bottom:0.3rem">視点のタイトル <span style="color:#aaa">（例：公益通報から見る民主主義）</span></label>
+        <input id="exhibit-title-input" type="text" placeholder="〜から見る〜" style="width:100%;padding:0.5rem 0.7rem;border:1px solid #d0cdc8;border-radius:4px;font-size:0.88rem;box-sizing:border-box">
+      </div>
+
+      <div style="margin-bottom:1.4rem">
+        <label style="font-size:0.78rem;color:#555;display:block;margin-bottom:0.3rem">展示理由・メモ</label>
+        <textarea id="exhibit-note-input" rows="3" placeholder="なぜこの窓に展示するか…" style="width:100%;padding:0.5rem 0.7rem;border:1px solid #d0cdc8;border-radius:4px;font-size:0.88rem;box-sizing:border-box;resize:vertical"></textarea>
+      </div>
+
+      <div style="display:flex;gap:0.8rem;justify-content:flex-end">
+        <button onclick="closeExhibitModal()" style="background:none;border:1px solid #d0cdc8;padding:0.5rem 1.2rem;border-radius:4px;cursor:pointer;font-size:0.84rem;color:#666">キャンセル</button>
+        <button onclick="saveExhibit('${refId}','${refType}')" style="background:#14140c;color:#fff;border:none;padding:0.5rem 1.4rem;border-radius:4px;cursor:pointer;font-size:0.84rem">登録する</button>
+      </div>
+    </div>
+  `;
+  modal.style.display = 'flex';
+}
+
+function closeExhibitModal() {
+  const modal = document.getElementById('exhibit-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function saveExhibit(refId, refType) {
+  const windowId   = document.getElementById('exhibit-window-select')?.value;
+  const title      = document.getElementById('exhibit-title-input')?.value.trim();
+  const exhibitNote = document.getElementById('exhibit-note-input')?.value.trim();
+
+  if (!windowId || !title) {
+    alert('窓と視点タイトルは必須です');
+    return;
+  }
+
+  const entry = {
+    window_id:    windowId,
+    ref_id:       refId,
+    ref_type:     refType,
+    perspective:  'mana',
+    title,
+    exhibit_note: exhibitNote,
+    reasoning:    null,
+    confidence:   1.0,
+    status:       'published',
+    created_at:   new Date().toISOString().slice(0, 10),
+    approved_at:  new Date().toISOString().slice(0, 10),
+  };
+
+  const stored = JSON.parse(localStorage.getItem('mana_exhibits') || '[]');
+  stored.push(entry);
+  localStorage.setItem('mana_exhibits', JSON.stringify(stored));
+
+  closeExhibitModal();
+  showExhibitConfirm(entry);
+}
+
+function showExhibitConfirm(entry) {
+  const win = (windowMasterData || []).find(w => w.window_id === entry.window_id);
+  let popup = document.getElementById('canvas-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'canvas-popup';
+    document.body.appendChild(popup);
+  }
+  popup.style.cssText = `
+    position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);
+    background:rgba(20,20,12,0.92);color:#cdd6e0;
+    font-size:0.84rem;line-height:1.7;
+    padding:1.1rem 1.6rem;border-radius:7px;
+    max-width:300px;text-align:center;
+    opacity:1;transition:opacity 0.3s;pointer-events:none;z-index:999;
+  `;
+  popup.innerHTML = `登録しました<br><span style="opacity:0.6;font-size:0.78rem">${win?.window_name || entry.window_id} ／ ${entry.title}</span>`;
+  clearTimeout(popup._timer);
+  popup._timer = setTimeout(() => { popup.style.opacity = '0'; }, 3000);
+}
+
 // ===== トップ全文検索 =====
 let _homeSearchTimer = null;
 
@@ -1908,16 +2030,20 @@ function renderWindowsPage() {
   const cv = document.getElementById('windows-canvas');
   if (!cv) return;
 
+  const dpr = window.devicePixelRatio || 1;
   const isMobile = window.innerWidth < 600;
   const W = isMobile ? window.innerWidth : Math.min(window.innerWidth, 860);
   const H = Math.round(W * 820 / 680);
-  cv.width = W;
-  cv.height = H;
+  cv.width = W * dpr;
+  cv.height = H * dpr;
+  cv.style.width = W + 'px';
+  cv.style.height = H + 'px';
   cv.style.maxWidth = '100%';
 
   const ctx = cv.getContext('2d');
   const scale = W / 680;
 
+  ctx.scale(dpr, dpr);
   ctx.fillStyle = '#cdd6e0';
   ctx.fillRect(0, 0, W, H);
   ctx.scale(scale, scale);
@@ -1953,6 +2079,52 @@ function renderWindowsPage() {
 
   ctx.fillStyle = '#14140c';
   ctx.beginPath(); ctx.ellipse(bx, 820 - 30, 680 * 0.58, 68, 0, 0, Math.PI * 2); ctx.fill();
+
+  // 百葉箱（地面より前に描くことで脚が地平線に埋まる）
+  function drawHygrometer(hx, groundY) {
+    const legH = 21, boxW = 44, boxH = 39, roofH = 6;
+    const boxTop = groundY - legH - boxH;
+    ctx.save();
+
+    // 脚（2本）
+    ctx.strokeStyle = '#d4cfc0'; ctx.lineWidth = 2.2; ctx.lineCap = 'square';
+    ctx.beginPath();
+    ctx.moveTo(hx - boxW * 0.28, groundY); ctx.lineTo(hx - boxW * 0.28, groundY - legH);
+    ctx.moveTo(hx + boxW * 0.28, groundY); ctx.lineTo(hx + boxW * 0.28, groundY - legH);
+    ctx.stroke();
+
+    // 本体（白い箱）
+    ctx.fillStyle = '#eceae2';
+    ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.rect(hx - boxW / 2, boxTop, boxW, boxH); ctx.fill(); ctx.stroke();
+
+    // 鎧戸（水平スリット）
+    ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 0.8;
+    const slats = 6;
+    for (let s = 1; s < slats; s++) {
+      const sy = boxTop + (boxH / slats) * s;
+      ctx.beginPath(); ctx.moveTo(hx - boxW / 2, sy); ctx.lineTo(hx + boxW / 2, sy); ctx.stroke();
+    }
+    // スリットの斜め影（鎧戸らしさ）
+    ctx.strokeStyle = 'rgba(100,95,85,0.18)'; ctx.lineWidth = 3;
+    for (let s = 0; s < slats; s++) {
+      const sy = boxTop + (boxH / slats) * s + boxH / slats * 0.5;
+      ctx.beginPath(); ctx.moveTo(hx - boxW / 2 + 1, sy); ctx.lineTo(hx + boxW / 2 - 1, sy); ctx.stroke();
+    }
+
+    // 屋根（少し張り出す）
+    ctx.fillStyle = '#d4cfc0';
+    ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.rect(hx - boxW / 2 - 3, boxTop - roofH, boxW + 6, roofH + 1); ctx.fill(); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  const hygroX = 460, hygroGroundY = by + 22;
+  drawHygrometer(hygroX, hygroGroundY);
+  // ヒットボックス（屋根上端〜脚底）
+  const hygroHit = { x: hygroX, top: hygroGroundY - 21 - 39 - 6, bottom: hygroGroundY, hw: 25 };
+
   ctx.fillRect(0, 820 - 44, 680, 44);
 
   function bird(x, y, sz, al) {
@@ -1972,11 +2144,11 @@ function renderWindowsPage() {
   const windows = [
     { label: '観測DB',      sub: '稼働中',  active: true,  action: () => showPage('db',    document.querySelector('nav a:nth-child(2)')), x: bx - 265, y: 440, w: 84, h: 56 },
     { label: '事案の窓',    sub: '稼働中',  active: true,  action: () => showPage('karte', document.querySelector('nav a:nth-child(5)')), x: bx + 190, y: 360, w: 84, h: 56 },
-    { label: '人権の窓',    sub: '設計中',  active: false, href: null, x: bx - 220, y: 240, w: 76, h: 50 },
-    { label: '民主主義の窓', sub: '設計中', active: false, href: null, x: bx + 200, y: 280, w: 76, h: 50 },
-    { label: '心の窓',      sub: '構想中',  active: false, href: null, x: bx - 60,  y: 160, w: 74, h: 48 },
-    { label: '戦争の窓',    sub: '構想中',  active: false, href: null, x: bx + 140, y: 180, w: 74, h: 48 },
-    { label: 'メディアの窓', sub: '構想中', active: false, href: null, x: bx - 30,  y: 36,  w: 72, h: 46 },
+    { label: '人権の窓',    sub: '仮実装',  active: true, action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
+    { label: '民主主義の窓', sub: '仮実装', active: true, action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 76, h: 50 },
+    { label: '心の窓',      sub: '仮実装',  active: true, action: () => renderWindowDetailPage('mental'),        x: bx - 60,  y: 160, w: 74, h: 48 },
+    { label: '戦争の窓',    sub: '仮実装',  active: true, action: () => renderWindowDetailPage('war'),           x: bx + 140, y: 180, w: 74, h: 48 },
+    { label: 'メディアの窓', sub: '仮実装', active: true, action: () => renderWindowDetailPage('media'),         x: bx - 30,  y: 36,  w: 72, h: 46 },
   ];
 
   function drawBox(win) {
@@ -2002,7 +2174,54 @@ function renderWindowsPage() {
 
   windows.forEach(drawBox);
 
-  // トースト表示
+  // 共通ポップアップ（問いを表示し、ボタンで遷移）
+  function showCanvasPopup({ label, body, btnLabel, onOpen }) {
+    let popup = document.getElementById('canvas-popup');
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.id = 'canvas-popup';
+      popup.style.cssText = `
+        position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);
+        background:rgba(20,20,12,0.92);color:#cdd6e0;
+        font-size:0.84rem;line-height:1.85;
+        padding:1.3rem 1.8rem 1rem;border-radius:7px;
+        max-width:300px;width:calc(100% - 3rem);text-align:center;
+        opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;
+        letter-spacing:0.03em;
+      `;
+      document.body.appendChild(popup);
+    }
+    clearTimeout(popup._timer);
+
+    const btnHtml = btnLabel
+      ? `<div style="margin-top:1rem">
+           <button id="canvas-popup-btn" style="
+             background:rgba(205,214,224,0.15);border:1px solid rgba(205,214,224,0.35);
+             color:#cdd6e0;font-size:0.78rem;letter-spacing:0.06em;
+             padding:0.4rem 1.1rem;border-radius:20px;cursor:pointer;
+           ">${btnLabel} →</button>
+         </div>`
+      : '';
+
+    popup.innerHTML = `<strong style="font-size:0.72rem;letter-spacing:0.1em;opacity:0.55">${label}</strong><br><br>${body}${btnHtml}`;
+    popup.style.opacity = '1';
+    popup.style.pointerEvents = 'auto';
+
+    if (btnLabel && onOpen) {
+      document.getElementById('canvas-popup-btn').onclick = () => {
+        popup.style.opacity = '0';
+        popup.style.pointerEvents = 'none';
+        onOpen();
+      };
+    }
+
+    popup._timer = setTimeout(() => {
+      popup.style.opacity = '0';
+      popup.style.pointerEvents = 'none';
+    }, 5000);
+  }
+
+  // トースト（準備中）
   function showToast() {
     const toast = document.getElementById('windows-toast');
     if (!toast) return;
@@ -2015,12 +2234,37 @@ function renderWindowsPage() {
     const rect = cv.getBoundingClientRect();
     const mx = (e.clientX - rect.left) / scale;
     const my = (e.clientY - rect.top) / scale;
+
+    // 百葉箱ヒット判定
+    if (mx >= hygroHit.x - hygroHit.hw && mx <= hygroHit.x + hygroHit.hw
+     && my >= hygroHit.top && my <= hygroHit.bottom) {
+      showCanvasPopup({
+        label: '百葉箱',
+        body: 'MANAは社会を評価する場所ではありません。<br><br>まず観測し、記録し、残します。<br><br>ここには日々の観測が蓄積されています。',
+        btnLabel: '観測DBを開く',
+        onOpen: () => showPage('db', document.querySelector('nav a:nth-child(2)')),
+      });
+      return;
+    }
+
     for (const win of windows) {
       const inBox = mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
                  && my >= win.y - 14         && my <= win.y + win.h;
       if (!inBox) continue;
       if (win.active && win.action) {
-        win.action();
+        const wData = windowMasterData.find(w => w.window_name === win.label);
+        if (wData) {
+          const body = (wData.popup_text || wData.question)
+            .replace(/\n/g, '<br>');
+          showCanvasPopup({
+            label: wData.window_name,
+            body,
+            btnLabel: '展示室を開く',
+            onOpen: win.action,
+          });
+        } else {
+          win.action();
+        }
       } else {
         showToast();
       }
@@ -2033,11 +2277,13 @@ function renderWindowsPage() {
     const rect = cv.getBoundingClientRect();
     const mx = (e.clientX - rect.left) / scale;
     const my = (e.clientY - rect.top) / scale;
-    const hit = windows.some(win =>
+    const hitHyg = mx >= hygroHit.x - hygroHit.hw && mx <= hygroHit.x + hygroHit.hw
+                && my >= hygroHit.top && my <= hygroHit.bottom;
+    const hitWin = windows.some(win =>
       mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
       && my >= win.y - 14 && my <= win.y + win.h
     );
-    cv.style.cursor = hit ? 'pointer' : 'default';
+    cv.style.cursor = (hitHyg || hitWin) ? 'pointer' : 'default';
   }
 
   cv.removeEventListener('click', cv._clickHandler);
@@ -2046,6 +2292,274 @@ function renderWindowsPage() {
   cv._moveHandler = onCanvasMove;
   cv.addEventListener('click', onCanvasClick);
   cv.addEventListener('mousemove', onCanvasMove);
+}
+
+// ===== 窓マスター読み込み =====
+function loadWindowMaster() {
+  fetch('/window_master.json')
+    .then(r => r.json())
+    .then(data => { windowMasterData = data; })
+    .catch(e => console.warn('window_master.json 読み込み失敗', e));
+}
+
+// 記事テキストに窓のキーワード・タグ・法令・機関が含まれるか判定
+function matchesWindow(row, win) {
+  const text = [
+    row['タイトル'] || row.title || '',
+    row['出来事タグ'] || '',
+    row['構造タグ'] || '',
+    row['状態タグ'] || '',
+    row['law_refs_raw'] || '',
+    row['institution_refs_raw'] || '',
+  ].join(' ');
+  return (win.keywords   || []).some(k => text.includes(k))
+      || (win.tags       || []).some(t => text.includes(t))
+      || (win.law_refs   || []).some(l => text.includes(l))
+      || (win.institution_refs || []).some(i => text.includes(i));
+}
+
+// ===== 窓詳細ページ =====
+function renderWindowDetailPage(windowId) {
+  const win = windowMasterData.find(w => w.window_id === windowId);
+  const el = document.getElementById('page-window-detail');
+  if (!el) return;
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+
+  if (!win) {
+    el.innerHTML = '<div class="page-inner"><p>窓データが読み込まれていません。</p></div>';
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="village-page">
+      <div class="village-header">
+        <button class="window-back-btn" onclick="showPage('windows',null)">← 観測の窓へ戻る</button>
+        <h1 class="village-title">${win.window_name}</h1>
+        <p class="village-question">${win.popup_text || win.question}</p>
+      </div>
+      <canvas id="village-canvas" style="display:block;margin:0 auto"></canvas>
+      <div id="village-content" class="village-content"></div>
+    </div>`;
+
+  renderVillageCanvas(win, windowId);
+}
+
+function renderVillageCanvas(win, windowId) {
+  const cv = document.getElementById('village-canvas');
+  if (!cv) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const isMobile = window.innerWidth < 600;
+  const W = isMobile ? window.innerWidth : Math.min(window.innerWidth, 860);
+  const H = Math.round(W * 0.62);
+  cv.width  = W * dpr; cv.height = H * dpr;
+  cv.style.width = W + 'px'; cv.style.height = H + 'px';
+
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const sc = W / 680;
+
+  // 空
+  ctx.fillStyle = '#cdd6e0';
+  ctx.fillRect(0, 0, W, H);
+
+  // 地面
+  const groundY = H * 0.78;
+  ctx.fillStyle = '#b8b4a0';
+  ctx.fillRect(0, groundY, W, H - groundY);
+  ctx.fillStyle = '#a8a490';
+  ctx.fillRect(0, groundY, W, 3 * sc);
+
+  // 小さな木（枝アルゴリズム再利用）
+  let _s = 17;
+  function r() { _s = (_s * 9301 + 49297) % 233280; return _s / 233280; }
+  function smallBranch(x, y, a, len, d, maxD) {
+    if (d > maxD || len < 1.5) return;
+    const nx = x + Math.cos(a) * len, ny = y + Math.sin(a) * len;
+    const w = Math.max(0.4, Math.pow((maxD - d + 1) / maxD, 1.2) * 6 * sc);
+    ctx.beginPath(); ctx.moveTo(x * sc, y * sc);
+    ctx.lineTo(nx * sc, ny * sc);
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.stroke();
+    const sp = 0.32 + d * 0.04, f = () => 0.62 + r() * 0.1, j = () => (r()-0.5)*0.18;
+    if (d < 4) {
+      smallBranch(nx, ny, a - sp + j(), len * f(), d+1, maxD);
+      smallBranch(nx, ny, a + j()*0.3, len*(f()+0.05), d+1, maxD);
+      smallBranch(nx, ny, a + sp + j(), len * f(), d+1, maxD);
+    } else {
+      smallBranch(nx, ny, a - sp + j(), len * f(), d+1, maxD);
+      smallBranch(nx, ny, a + sp + j(), len * f(), d+1, maxD);
+    }
+  }
+  const trees = [[90,groundY/sc],[580,groundY/sc],[340,groundY/sc-10],[160,groundY/sc+2],[500,groundY/sc-5]];
+  trees.forEach(([tx,ty]) => smallBranch(tx, ty, -Math.PI/2, 38, 0, 7));
+
+  // 石畳（楕円の連なり）
+  ctx.save();
+  [[200,groundY+8],[260,groundY+10],[320,groundY+7],[390,groundY+9],[450,groundY+8]].forEach(([px,py]) => {
+    ctx.fillStyle = 'rgba(160,155,140,0.45)';
+    ctx.beginPath(); ctx.ellipse(px * sc / sc * sc, py, 14*sc, 5*sc, (r()-0.5)*0.3, 0, Math.PI*2); ctx.fill();
+  });
+  ctx.restore();
+
+  // 家の定義（各声の住人）
+  const houses = [
+    { id:'law',        label:'法律・制度',       x:130, y:groundY/sc, w:52, h:44, roofH:22 },
+    { id:'researcher', label:'研究者・論考',      x:280, y:groundY/sc, w:48, h:40, roofH:20 },
+    { id:'voice',      label:'当事者の声',        x:200, y:groundY/sc, w:44, h:38, roofH:18 },
+    { id:'journalist', label:'ジャーナリスト',    x:420, y:groundY/sc, w:50, h:42, roofH:21 },
+    { id:'karte',      label:'カルテ',            x:520, y:groundY/sc, w:46, h:38, roofH:18 },
+    { id:'observation',label:'観測事案',          x:360, y:groundY/sc, w:48, h:40, roofH:20 },
+  ];
+
+  let hoveredId = null;
+
+  function drawHouse(h, hovered) {
+    const { x, y, w, h: ht, roofH, label } = h;
+    const sx = x * sc, sy = y * sc, sw = w * sc, sht = ht * sc, srf = roofH * sc;
+    const baseY = sy;
+
+    // 影
+    ctx.save(); ctx.globalAlpha = 0.08;
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(sx, baseY + 3*sc, sw*0.55, 4*sc, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    // 壁
+    ctx.fillStyle = hovered ? '#f0ece0' : '#e4dfd0';
+    ctx.strokeStyle = '#9a9280'; ctx.lineWidth = 1 * sc;
+    ctx.beginPath(); ctx.rect(sx - sw/2, baseY - sht, sw, sht); ctx.fill(); ctx.stroke();
+
+    // 屋根
+    ctx.fillStyle = hovered ? '#b0a080' : '#9a8e70';
+    ctx.strokeStyle = '#857a60'; ctx.lineWidth = 1 * sc;
+    ctx.beginPath();
+    ctx.moveTo(sx - sw/2 - 2*sc, baseY - sht);
+    ctx.lineTo(sx, baseY - sht - srf);
+    ctx.lineTo(sx + sw/2 + 2*sc, baseY - sht);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    // ドア
+    const dw = sw * 0.28, dht = sht * 0.42;
+    ctx.fillStyle = hovered ? '#5a4830' : '#3a2e18';
+    ctx.beginPath(); ctx.rect(sx - dw/2, baseY - dht, dw, dht); ctx.fill();
+    // ドアノブ
+    ctx.fillStyle = '#c8b888';
+    ctx.beginPath(); ctx.arc(sx + dw*0.22, baseY - dht*0.45, 1.5*sc, 0, Math.PI*2); ctx.fill();
+
+    // 小窓
+    const ww = sw * 0.22, wht = sht * 0.22, wy = baseY - sht * 0.72;
+    ctx.fillStyle = hovered ? '#d8e8f0' : '#c8dce8';
+    ctx.strokeStyle = '#9a9280'; ctx.lineWidth = 0.8 * sc;
+    ctx.beginPath(); ctx.rect(sx - ww/2, wy, ww, wht); ctx.fill(); ctx.stroke();
+
+    // ラベル
+    ctx.textAlign = 'center';
+    ctx.font = `${hovered ? '600' : '500'} ${10 * sc}px sans-serif`;
+    ctx.fillStyle = hovered ? '#14140c' : 'rgba(20,20,12,0.7)';
+    ctx.fillText(label, sx, baseY + 13*sc);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // 空・地面再描画
+    ctx.fillStyle = '#cdd6e0'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#b8b4a0'; ctx.fillRect(0, groundY, W, H - groundY);
+    ctx.fillStyle = '#a8a490'; ctx.fillRect(0, groundY, W, 3*sc);
+    trees.forEach(([tx,ty]) => { _s = 17 + tx; smallBranch(tx, ty, -Math.PI/2, 38, 0, 7); });
+    [[200,groundY+8],[260,groundY+10],[320,groundY+7],[390,groundY+9],[450,groundY+8]].forEach(([px,py]) => {
+      ctx.fillStyle = 'rgba(160,155,140,0.45)';
+      ctx.beginPath(); ctx.ellipse(px*sc, py, 14*sc, 5*sc, 0, 0, Math.PI*2); ctx.fill();
+    });
+    houses.forEach(h => drawHouse(h, h.id === hoveredId));
+  }
+
+  draw();
+
+  // ヒット判定
+  function hitTest(mx, my) {
+    return houses.find(h => {
+      const sx = h.x*sc, sy = h.y*sc, sw = h.w*sc, sht = h.h*sc, srf = h.roofH*sc;
+      return mx >= sx - sw/2 && mx <= sx + sw/2 && my >= sy - sht - srf && my <= sy + 13*sc;
+    });
+  }
+
+  cv.removeEventListener('mousemove', cv._vm); cv.removeEventListener('click', cv._vc);
+  cv._vm = e => {
+    const r = cv.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * dpr, my = (e.clientY - r.top) * dpr;
+    const hit = hitTest(mx / dpr * dpr / dpr * dpr, my / dpr * dpr / dpr * dpr);
+    // シンプルにdpr考慮
+    const hmx = (e.clientX - r.left), hmy = (e.clientY - r.top);
+    const hh = hitTest(hmx * sc, hmy * sc);
+    const newId = hh ? hh.id : null;
+    if (newId !== hoveredId) { hoveredId = newId; draw(); }
+    cv.style.cursor = hh ? 'pointer' : 'default';
+  };
+  cv._vc = e => {
+    const r = cv.getBoundingClientRect();
+    const mx = (e.clientX - r.left), my = (e.clientY - r.top);
+    const hh = hitTest(mx * sc, my * sc);
+    if (hh) showVillageContent(hh, win, windowId);
+  };
+  cv.addEventListener('mousemove', cv._vm);
+  cv.addEventListener('click', cv._vc);
+}
+
+function showVillageContent(house, win, windowId) {
+  const el = document.getElementById('village-content');
+  if (!el) return;
+
+  const labels = {
+    law:         '法律・制度',
+    researcher:  '研究者・論考',
+    voice:       '当事者の声',
+    journalist:  'ジャーナリスト',
+    karte:       'カルテ',
+    observation: '観測事案',
+  };
+
+  let items = [];
+
+  if (house.id === 'observation') {
+    items = dbData.filter(row => matchesWindow(row, win)).slice(0, 20).map(row => ({
+      title: row['タイトル'] || '',
+      sub:   String(row['公開日'] || '').slice(0,10),
+      url:   row['URL'] || '',
+      tags:  [row['出来事タグ'], row['構造タグ']].filter(Boolean).join('　'),
+    }));
+  } else if (house.id === 'karte') {
+    items = karteData.filter(k => {
+      const text = [k.tags_event,k.tags_structure,k.field,k.summary].join(' ');
+      return (win.keywords||[]).some(kw=>text.includes(kw)) || (win.tags||[]).some(t=>text.includes(t));
+    }).map(k => ({ title: k.title, sub: k.region, url: '#/karte/'+encodeURIComponent(k.id), tags: k.tags_event }));
+  } else if (house.id === 'law') {
+    items = (win.law_refs||[]).map(l => ({ title: l, sub: '関連法令', url: '', tags: '' }));
+  }
+
+  const isEmpty = items.length === 0;
+  el.innerHTML = `
+    <div class="village-room">
+      <div class="village-room-header">
+        <span class="village-room-name">${labels[house.id]}</span>
+        <button class="village-room-close" onclick="document.getElementById('village-content').innerHTML=''">✕</button>
+      </div>
+      ${isEmpty
+        ? `<p class="village-room-empty">この家はまだ準備中です。</p>`
+        : items.map(item => `
+          <div class="village-room-item">
+            <div class="village-room-title">${item.url
+              ? `<a href="${item.url}" ${item.url.startsWith('#') ? '' : 'target="_blank" rel="noopener"'}>${item.title}</a>`
+              : item.title}</div>
+            ${item.sub ? `<div class="village-room-sub">${item.sub}</div>` : ''}
+            ${item.tags ? `<div class="village-room-tags">${item.tags}</div>` : ''}
+          </div>`).join('')}
+    </div>`;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 }
 
 const GAS_FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbw0MWRwN9ZgoXxtAsAQus3wDhsnZc1nESxp_imFe90-b9dAw4jbnBLpMQ4zJUm1Z2VsFQ/exec';
