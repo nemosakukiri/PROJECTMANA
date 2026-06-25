@@ -1585,6 +1585,7 @@ function loadDB() {
         old_flag:       row['古い記事'] || '', // 「古い記事候補」が入っていればアーカイブ扱い
         date_status:    row['date_status'] || '', // 確定 / 未確認 / 要確認
         karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
+        article_type:   row['記事種別'] || 'news',
       })).filter(r => r.title);
       // [診断] カルテID列がAPIから来ているか確認
       const sampleRow = dbData.slice(0, 3);
@@ -3083,13 +3084,26 @@ function showVillageContent(house, win, windowId) {
 
   let items = [];
 
+  // 窓に関連する記事を article_type で絞り込むヘルパー
+  function dbByType(type) {
+    return dbData.filter(r => matchesWindow(r, win) && r.article_type === type)
+      .slice(0, 20).map(r => ({
+        title: r.title || '',
+        sub:   String(r.date || r.collected_at || '').slice(0,10),
+        url:   r.url || '',
+        tags:  [r.tags_event, r.tags_structure].filter(Boolean).join('　'),
+      }));
+  }
+
   if (house.id === 'observation') {
-    items = dbData.filter(row => matchesWindow(row, win)).slice(0, 20).map(row => ({
-      title: row['タイトル'] || '',
-      sub:   String(row['公開日'] || '').slice(0,10),
-      url:   row['URL'] || '',
-      tags:  [row['出来事タグ'], row['構造タグ']].filter(Boolean).join('　'),
-    }));
+    // ニュース記事（デフォルト。記事種別列がない間は全件が news 扱い → 従来通り）
+    items = dbByType('news');
+  } else if (house.id === 'journalist') {
+    // opinion：Wedge・ビッグイシュー等（列追加後に表示される）
+    items = dbByType('opinion');
+  } else if (house.id === 'researcher') {
+    // research：論考・研究（列追加後に表示される）
+    items = dbByType('research');
   } else if (house.id === 'karte') {
     items = karteData.filter(k => {
       const text = [k.tags_event,k.tags_structure,k.field,k.summary].join(' ');
