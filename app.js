@@ -1555,17 +1555,19 @@ function checkKarteLinkage() {
 // ===== LOAD DB =====
 // ドメインまたは明示的な記事種別フィールドから article_type を推論
 // 優先順位：明示列 > ドメインマッチ > デフォルト 'news'
-function inferArticleType(explicitType, domain) {
+function inferArticleType(explicitType, domain, sourceName) {
   if (explicitType && explicitType !== 'news') return explicitType;
+  // 出典名（RSSソース名）で判定
+  const s = (sourceName || '').toLowerCase();
+  if (/赤旗|調査報道/.test(s)) return 'investigative';
+  if (/wedge|slow.?news|現代ビジネス|bigissue|president|東洋経済/.test(s)) return 'opinion';
+  if (/シノドス|synodos|論考|研究|シンクタンク/.test(s)) return 'research';
+  // ドメインで判定（source_domainが来た場合）
   if (!domain) return 'news';
   const d = domain.toLowerCase();
-  // investigative：調査報道
   if (/jcp\.or\.jp/.test(d)) return 'investigative';
-  // opinion：論説・オピニオン系メディア
   if (/wedge\.ismedia\.jp|slowsnews\.com|slow-news\.|bigissue\.jp|gendai\.media|president\.jp|toyokeizai\.net/.test(d)) return 'opinion';
-  // research：研究・論考・シンクタンク系
   if (/synodos\.jp|jri\.co\.jp|nri\.com|rieti\.go\.jp|nira\.or\.jp|murc\.jp|chuokoron\.jp|ci\.nii\.ac\.jp|ndl\.go\.jp/.test(d)) return 'research';
-  // law：法令・議会系
   if (/e-gov\.go\.jp|shugiin\.go\.jp|sangiin\.go\.jp|courts\.go\.jp/.test(d)) return 'law';
   return 'news';
 }
@@ -1602,7 +1604,7 @@ function loadDB() {
         old_flag:       row['古い記事'] || '', // 「古い記事候補」が入っていればアーカイブ扱い
         date_status:    row['date_status'] || '', // 確定 / 未確認 / 要確認
         karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
-        article_type:   inferArticleType(row['記事種別'], row['source_domain'] || (() => { try { return new URL(row['URL'] || '').hostname; } catch(e) { return ''; } })()),
+        article_type:   inferArticleType(row['記事種別'], row['source_domain'] || (() => { try { return new URL(row['URL'] || '').hostname; } catch(e) { return ''; } })(), row['出典'] || ''),
       })).filter(r => r.title);
       // [診断] カルテID列がAPIから来ているか確認
       const sampleRow = dbData.slice(0, 3);
