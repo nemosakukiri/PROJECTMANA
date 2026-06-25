@@ -2685,3 +2685,124 @@ function testWindowCandidates() {
     Logger.log(w.window_name + '（' + w.window_id + '）: ' + results.length + '件');
   });
 }
+
+// ===== 当事者・市民メディア RSS テスト =====
+
+function testTojishaRss() {
+  const sources = [
+    { name: 'ビッグイシュー',         url: 'https://www.bigissue.jp/feed/' },
+    { name: 'マガジン9',              url: 'https://www.magazine9.jp/feed/' },
+    { name: 'POSSE（FC2）',           url: 'https://magazine-posse.blog.fc2.com/?xml' },
+    { name: 'DPI日本会議',            url: 'https://dpi-japan.org/feed/' },
+    { name: '反貧困ネット',           url: 'https://antipoverty-network.org/feed/' },
+    { name: '生活保護問題対策全国会議', url: 'http://seikatuhogotaisaku.blog.fc2.com/?xml' },
+    { name: '移住連',                 url: 'https://migrants.jp/feed/' },
+    { name: 'ヒューライツ大阪',        url: 'https://www.hurights.or.jp/archives/feed' },
+    { name: 'NPO法人ホームレス支援',  url: 'https://www.homeless-net.org/feed/' },
+    { name: '女性の貧困ネットワーク',  url: 'https://joseipoverty.wordpress.com/feed/' },
+    { name: 'JCLU自由人権協会',       url: 'https://jclu.or.jp/feed/' },
+    { name: 'コモンズ(Commons)',       url: 'https://commonsonline.co.jp/feed/' },
+    { name: 'Dialogue for People',    url: 'https://d4p.world/feed/' },
+    { name: 'OurPlanet-TV',           url: 'https://www.ourplanet-tv.org/?q=feeds/all' },
+    { name: 'IWJ',                    url: 'https://iwj.co.jp/wj/open/feed' },
+    { name: '週刊金曜日',             url: 'https://www.kinyobi.co.jp/feed/' },
+    { name: 'ReBit',                  url: 'https://rebitlgbt.org/feed/' },
+    { name: '難民支援協会',           url: 'https://www.refugee.or.jp/feed/' },
+    { name: 'CALL4',                  url: 'https://www.call4.jp/feed/' },
+    { name: '自治労連',               url: 'https://www.jichiroren.jp/feed/' },
+  ];
+
+  sources.forEach(function(s) {
+    try {
+      const res = UrlFetchApp.fetch(s.url, { muteHttpExceptions: true, followRedirects: true });
+      const code = res.getResponseCode();
+      const ct   = res.getHeaders()['Content-Type'] || '';
+      const isXml = ct.includes('xml') || ct.includes('rss') || ct.includes('atom');
+      Logger.log('[' + code + '] ' + (isXml ? '✅' : '⚠️ ') + ' ' + s.name + ' — ' + s.url);
+    } catch(e) {
+      Logger.log('[ERR] ' + s.name + ' — ' + e.message);
+    }
+  });
+}
+
+// ===== Gemini API で記事を窓に振り分ける =====
+// GASのスクリプトプロパティに GEMINI_API_KEY を設定しておくこと
+
+function classifyArticleWithGemini(title, description) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) { Logger.log('GEMINI_API_KEY が設定されていません'); return []; }
+
+  const prompt = `以下の記事タイトルと本文冒頭を読んで、この記事が関連する観点をJSONの配列で答えてください。
+選択肢（複数選択可、該当なければ空配列）:
+- "democracy"  … 民主主義・行政・議会・公益通報・情報公開・選挙
+- "human_rights" … 人権・差別・生存権・福祉・医療
+- "mental"     … 心・精神・トラウマ・孤立・自己肯定
+- "war"        … 戦争・軍事・平和・安保
+- "media"      … メディア・報道・情報・SNS
+
+回答形式は必ずJSONのみ。例: ["democracy","human_rights"]
+
+タイトル: ${title}
+本文冒頭: ${description || '（なし）'}`;
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+  const payload = JSON.stringify({
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.1, maxOutputTokens: 64 }
+  });
+
+  try {
+    const res = UrlFetchApp.fetch(url, {
+      method: 'POST',
+      contentType: 'application/json',
+      payload: payload,
+      muteHttpExceptions: true
+    });
+    const json = JSON.parse(res.getContentText());
+    const text = json.candidates[0].content.parts[0].text.trim();
+    const match = text.match(/\[.*?\]/s);
+    if (!match) return [];
+    return JSON.parse(match[0]);
+  } catch(e) {
+    Logger.log('Gemini API エラー: ' + e.message);
+    return [];
+  }
+}
+
+// 全件ログの未分類記事にGeminiで窓IDを付与する
+function classifyUnlabeledRows() {
+  const ss    = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('観測DB（全件ログ）');
+  if (!sheet) { Logger.log('シートが見つかりません'); return; }
+
+  const data    = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const titleCol  = headers.indexOf('タイトル');
+  const descCol   = headers.indexOf('description');
+
+  // window_ids 列がなければ末尾に追加
+  let winCol = headers.indexOf('window_ids');
+  if (winCol === -1) {
+    winCol = headers.length;
+    sheet.getRange(1, winCol + 1).setValue('window_ids');
+  }
+
+  let count = 0;
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    if (row[winCol]) continue; // 既に分類済みはスキップ
+    const title = row[titleCol] || '';
+    const desc  = row[descCol]  || '';
+    if (!title) continue;
+
+    const windows = classifyArticleWithGemini(title, desc);
+    if (windows.length > 0) {
+      sheet.getRange(i + 1, winCol + 1).setValue(windows.join(','));
+      count++;
+      Logger.log('[' + count + '] ' + title.slice(0, 40) + ' → ' + windows.join(','));
+    }
+    Utilities.sleep(500); // API制限対策
+    if (count >= 50) { Logger.log('50件処理しました。続きは再実行してください。'); break; }
+  }
+  Logger.log('完了: ' + count + '件に窓IDを付与しました');
+}
