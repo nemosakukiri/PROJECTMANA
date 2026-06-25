@@ -45,181 +45,35 @@
 
 <!-- HOME -->
 <div class="page active" id="page-home">
-  <section class="hero">
-    <div class="hero-museum">
-      <div class="hero-museum-kicker">PROJECT MANA — 市民の観測アーカイブ</div>
-      <h1 class="hero-museum-title">制度はある。<br>実装されていないだけだ。</h1>
-      <p class="hero-museum-desc">行政・福祉・制度運用の現場で繰り返し現れる出来事を記録し、その背後にある構造的パターンを観測する市民アーカイブです。</p>
+  <div class="home-tree-wrap">
+    <canvas id="home-canvas" style="display:block;width:100%;cursor:default"></canvas>
+    <div class="home-catch">制度はある。実装されていないだけだ。</div>
+  </div>
 
-      <!-- 全文検索 -->
-      <div class="home-search-wrap">
-        <div class="home-search-inner">
-          <input type="text" id="home-search-input"
-            class="home-search-input"
-            placeholder="キーワードで探す　例：申請妨害、京都市、生活保護"
-            oninput="homeSearch(this.value)"
-            autocomplete="off">
-          <span class="home-search-icon">🔍</span>
-        </div>
-        <div id="home-search-results" class="home-search-results" style="display:none"></div>
-      </div>
-
-      <!-- 探索ボタン4つ -->
-      <!-- 3ブロック構成の探索入口 -->
-      <div class="home-blocks">
-
-        <div class="home-block">
-          <div class="home-block-label">観測する</div>
-          <div class="home-block-grid home-block-grid-3">
-            <a href="#" onclick="showPage('windows', null); return false;" class="home-block-btn">
-              <span class="home-block-icon">🌳</span>
-              <span class="home-block-name">観測の窓</span>
-              <span class="home-block-sub">世界への入口</span>
-            </a>
-            <a href="#" onclick="showPage('karte',document.querySelector('nav a:nth-child(5)'))" class="home-block-btn">
-              <span class="home-block-icon">📋</span>
-              <span class="home-block-name">事案カルテ</span>
-              <span class="home-block-sub">記録された事案</span>
-            </a>
-            <a href="#" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))" class="home-block-btn">
-              <span class="home-block-icon">📰</span>
-              <span class="home-block-name">観測DB</span>
-              <span class="home-block-sub">全収録記事</span>
-            </a>
-            <a href="#/tags" class="home-block-btn">
-              <span class="home-block-icon">🏷</span>
-              <span class="home-block-name">タグから探す</span>
-              <span class="home-block-sub">分野・対象・行為者</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="home-block">
-          <div class="home-block-label">調べる</div>
-          <div class="home-block-grid home-block-grid-2">
-            <a href="#/terms" class="home-block-btn">
-              <span class="home-block-icon">📚</span>
-              <span class="home-block-name">用語辞典</span>
-              <span class="home-block-sub">制度用語を調べる</span>
-            </a>
-            <a href="#/laws" class="home-block-btn">
-              <span class="home-block-icon">⚖️</span>
-              <span class="home-block-name">法律辞典</span>
-              <span class="home-block-sub">根拠法を調べる</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="home-block">
-          <div class="home-block-label">知る</div>
-          <div class="home-block-grid home-block-grid-2">
-            <a href="#" onclick="showPage('about',null)" class="home-block-btn">
-              <span class="home-block-icon">ℹ️</span>
-              <span class="home-block-name">PROJECT MANAについて</span>
-              <span class="home-block-sub">このサイトとは</span>
-            </a>
-            <a href="#" onclick="showPage('citation',null)" class="home-block-btn">
-              <span class="home-block-icon">📜</span>
-              <span class="home-block-name">利用と引用について</span>
-              <span class="home-block-sub">著作権・CC BY 4.0</span>
-            </a>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- 観測状況（クリックで各ページへ） -->
-      <div class="hero-stats-row">
-        <a href="#" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))" class="hero-stat-item">
-          <span class="hero-stat-num" id="home-db-count">—</span>
-          <span class="hero-stat-label">観測記録</span>
-        </a>
-        <a href="#" onclick="showPage('karte',document.querySelector('nav a:nth-child(5)'))" class="hero-stat-item">
-          <span class="hero-stat-num" id="home-karte-count">—</span>
-          <span class="hero-stat-label">事案カルテ</span>
-        </a>
-        <a href="#/map" class="hero-stat-item">
-          <span class="hero-stat-num">47<small>都道府県</small></span>
-          <span class="hero-stat-label">対象地域</span>
-        </a>
-        <a href="#/tags" class="hero-stat-item">
-          <span class="hero-stat-num" id="home-tag-count">—</span>
-          <span class="hero-stat-label">探索タグ</span>
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <div class="pillars">
-    <div class="pillar" onclick="showPage('db',document.querySelector('nav a:nth-child(2)'))">
-      <div class="pillar-num">01 —</div>
-      <div class="pillar-badge">AI自動収集</div>
-      <h2 class="pillar-title">全国観測<br>データベース</h2>
-      <p class="pillar-desc">全国の行政・福祉・制度に関する記録をAIが毎日自動収集・分類。地域・タグ・時系列で検索可能。</p>
-      <div class="pillar-link">観測DBを開く →</div>
-    </div>
-    <div class="pillar" onclick="showPage('survey',document.querySelector('nav a:nth-child(3)'))">
-      <div class="pillar-num">02 —</div>
-      <div class="pillar-badge">匿名OK</div>
-      <h2 class="pillar-title">市民の声<br>アンケート</h2>
-      <p class="pillar-desc">行政窓口での体験を記録してください。匿名で投稿でき、集まった声はデータとして公開されます。</p>
-      <div class="pillar-link">声を届ける →</div>
-    </div>
-    <div class="pillar" onclick="showPage('essays',document.querySelector('nav a:nth-child(4)'))">
-      <div class="pillar-num">03 —</div>
-      <div class="pillar-badge">随時更新</div>
-      <h2 class="pillar-title">調査報告と<br>論考</h2>
-      <p class="pillar-desc">収集データと証言をもとに行政の構造的問題を分析・記述する独立市民調査報告。</p>
-      <div class="pillar-link">論考を読む →</div>
-    </div>
-    <div class="pillar" onclick="showPage('guide',document.querySelector('nav a:nth-child(5)'))">
-      <div class="pillar-num">04 —</div>
-      <div class="pillar-badge">京都市対応</div>
-      <h2 class="pillar-title">生活保護<br>申請の手引き</h2>
-      <p class="pillar-desc">申請の流れ・窓口対策・使える言葉。当事者の声から生まれたノウハウ集。Q&amp;Aに投稿もできます。</p>
-      <div class="pillar-link">手引きを見る →</div>
+  <!-- PROJECT MANAとは ポップアップ -->
+  <div class="mana-about-overlay" id="mana-about-overlay">
+    <div class="mana-about-popup">
+      <button class="mana-about-close" onclick="document.getElementById('mana-about-overlay').classList.remove('open')">✕</button>
+      <h2>PROJECT MANA とは</h2>
+      <p>PROJECT MANAは、行政・福祉・制度運用の現場で繰り返し起きる出来事を記録し、その背後にある構造的パターンを観測する市民アーカイブです。</p>
+      <p>ここでは、社会を評価したり、誰かを裁いたりすることは目的としません。まず観測し、記録し、残す。それがMANAの立場です。</p>
+      <p>収集された記事・事案・市民の声は、村の各家に展示されます。観測DBには日々の記録が蓄積されています。</p>
+      <p>この村を歩くことで、社会の輪郭が少しずつ見えてくることを願っています。</p>
     </div>
   </div>
 
-  <!-- 今週の注目パターン -->
-  <div style="border-bottom:1px solid var(--rule);padding:1.8rem 0">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3rem">
-      <div>
-        <div class="section-label navy" style="margin-bottom:1rem">今週の注目パターン — MANA編集</div>
-        <div id="pattern-spotlight">
-          <div style="font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--accent);margin-bottom:0.5rem">2026.06.05 — 京都市 × 生活保護 × 水際</div>
-          <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;line-height:1.3;margin-bottom:0.8rem">京都市で今月3件目の申請妨害——偶然か、構造か</div>
-          <div style="font-size:0.82rem;line-height:1.85;color:var(--ink-mid);margin-bottom:1rem">今月だけで京都市の生活福祉課において「書類が揃ってから来て」「家族に相談してから」という申請妨害の証言が3件集まった。担当者が異なるにもかかわらず言葉が酷似している。これは個人の問題ではなく、窓口文化として定着している可能性がある。</div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-            <span style="font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer" onclick="filterByTag('京都市')">京都市</span>
-            <span style="font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer" onclick="filterByTag('生活保護')">生活保護</span>
-            <span style="font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer" onclick="filterByTag('水際')">水際</span>
-            <span style="font-family:'DM Mono',monospace;font-size:0.62rem;padding:0.2rem 0.6rem;border:1px solid var(--rule);color:var(--ink-mid);cursor:pointer" onclick="filterByTag('組織的')">組織的</span>
-          </div>
-        </div>
-      </div>
-      <div style="border-left:1px solid var(--rule);padding-left:3rem">
-        <div class="section-label" style="margin-bottom:1rem">タグから掘る</div>
-        <div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.2rem" id="home-tag-cloud"></div>
-        <div style="font-size:0.72rem;color:var(--ink-light);line-height:1.7">タグをクリックするとDBで絞り込めます。複数のタグを組み合わせることで、構造的なパターンが見えてきます。</div>
-      </div>
-    </div>
+  <!-- 検索・統計は後日観測DBページへ移設予定 -->
+  <div style="display:none">
+    <input type="text" id="home-search-input" oninput="homeSearch(this.value)" autocomplete="off">
+    <div id="home-search-results"></div>
+    <span id="home-db-count"></span>
+    <span id="home-karte-count"></span>
+    <span id="home-tag-count"></span>
+    <div id="home-news-list"></div>
+    <div id="home-voices"></div>
+    <div id="home-tag-cloud"></div>
   </div>
 
-  <div class="home-bottom">
-    <div>
-      <div class="section-label navy">最新 観測記録 — AI自動収集</div>
-      <div id="home-news-list"></div>
-    </div>
-    <div>
-      <div class="section-label">市民の声 — 最新投稿</div>
-      <div class="voice-panel">
-        <div id="home-voices"></div>
-        <br>
-        <button class="btn-outline" style="width:100%;justify-content:center" onclick="showPage('survey',document.querySelector('nav a:nth-child(3)'))">あなたの体験を記録する</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- DB PAGE -->
