@@ -2186,11 +2186,11 @@ function renderHomeCanvas() {
   // 巣箱定義（activeのみ描画; hiddenは構造保持のみ）
   const windows = [
     // 表示する巣箱
-    { label: 'メディアの窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('media'),        x: bx - 30,  y: 36,  w: 74, h: 48 },
-    { label: '心の窓',        sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('mental'),        x: bx - 60,  y: 160, w: 74, h: 48 },
-    { label: '戦争の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('war'),           x: bx + 140, y: 180, w: 74, h: 48 },
-    { label: '人権の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
-    { label: '民主主義の窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 76, h: 50 },
+    { label: 'メディアの言葉',  winKey: 'メディアの窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('media'),        x: bx - 30,  y: 36,  w: 80, h: 48 },
+    { label: '心の言葉',        winKey: '心の窓',        sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('mental'),        x: bx - 60,  y: 160, w: 74, h: 48 },
+    { label: '戦争の言葉',      winKey: '戦争の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('war'),           x: bx + 140, y: 180, w: 74, h: 48 },
+    { label: '人権の言葉',      winKey: '人権の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
+    { label: '民主主義の言葉',  winKey: '民主主義の窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 84, h: 50 },
     { label: 'PROJECT MANAとは', sub: 'ポップアップ', active: true, draw: true,
       action: () => { document.getElementById('mana-about-overlay').classList.add('open'); },
       x: bx - 155, y: 350, w: 100, h: 56 },
@@ -2303,10 +2303,10 @@ function renderHomeCanvas() {
       if (win.label === 'PROJECT MANAとは' || win.label === 'フィードバック') {
         win.action();
       } else {
-        const wData = windowMasterData.find(w => w.window_name === win.label);
+        const wData = windowMasterData.find(w => w.window_name === (win.winKey || win.label));
         if (wData) {
           showCanvasPopup({
-            label: wData.window_name,
+            label: win.label,
             body: (wData.popup_text || wData.question).replace(/\n/g, '<br>'),
             btnLabel: '展示室を開く',
             onOpen: win.action,

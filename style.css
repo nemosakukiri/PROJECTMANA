@@ -14,7 +14,7 @@ a{color:inherit;text-decoration:none}
 
 /* HEADER */
 header{border-bottom:3px solid var(--ink);padding:0 2rem;position:sticky;top:0;background:var(--paper);z-index:100}
-.header-top{display:flex;align-items:baseline;justify-content:space-between;padding:1rem 0 0.5rem}
+.header-top{display:flex;align-items:baseline;justify-content:space-between;padding:0.45rem 0 0.25rem}
 .site-name{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;letter-spacing:-0.02em}
 .site-name span{color:var(--accent)}
 .tagline{font-size:0.88rem;font-weight:400;color:var(--ink-mid);letter-spacing:0.06em}
