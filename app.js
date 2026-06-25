@@ -2175,7 +2175,7 @@ function renderHomeCanvas() {
   const signHit = { x: signX, top: signGroundY - 52 - 30 - 4, bottom: signGroundY, hw: 40 };
 
   // 葉っぱ（PROJECT MANAとは）
-  const leafCx = 520, leafCy = 455;
+  const leafCx = 120, leafCy = 455;
   function drawLeaf(cx, cy) {
     ctx.save();
     ctx.translate(cx, cy);
