@@ -3337,6 +3337,66 @@ function renderVillageCanvas(win, windowId) {
   sketchHouse(572,106,303,'#9c3628','#d6d2bc',38,34,{});
   sketchHouse(600,276,304,'#9a3228','#dedad4',48,44,{glowLeft:true});
 
+  // 喫茶店
+  (function() {
+    const cx = 295, cy = 438, w = 52, h = 44;
+    setSeed(310);
+    const j = 2.2;
+    // 影
+    ctx.save(); ctx.globalAlpha = 0.09; ctx.fillStyle = '#2a1808';
+    ctx.beginPath(); ctx.ellipse(cx+w*.15,cy+4,w*.52,6,.08,0,Math.PI*2); ctx.fill(); ctx.restore();
+    // 屋根
+    ctx.fillStyle = '#4a6878'; ctx.strokeStyle = '#2a3e4c'; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx-w/2-4+jit(j), cy-h*.38+jit(j));
+    ctx.lineTo(cx+jit(j),       cy-h*.38-h*.5+jit(j));
+    ctx.lineTo(cx+w/2+4+jit(j), cy-h*.38+jit(j));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 壁
+    ctx.fillStyle = '#f2ede0'; ctx.strokeStyle = '#3a1e0c'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(cx-w/2+jit(j),cy-h*.38+jit(j)); ctx.lineTo(cx+w/2+jit(j),cy-h*.38+jit(j));
+    ctx.lineTo(cx+w/2+jit(j),cy+jit(j)); ctx.lineTo(cx-w/2+jit(j),cy+jit(j));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // ひさし（スカラップ）
+    const awY = cy - h*.38 + 2;
+    ctx.fillStyle = '#c04820'; ctx.strokeStyle = '#7a2c10'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - w/2 - 6, awY);
+    for (let i = 0; i < 5; i++) {
+      const ax = cx - w/2 - 6 + (w + 12) / 5 * i;
+      const ax2 = ax + (w + 12) / 5;
+      ctx.quadraticCurveTo(ax + (w + 12) / 10, awY + 9, ax2, awY);
+    }
+    ctx.lineTo(cx + w/2 + 6, awY - 1);
+    ctx.lineTo(cx - w/2 - 6, awY - 1);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // ドア
+    const dw = w*.24, dh = h*.38;
+    ctx.fillStyle = '#6a4428'; ctx.strokeStyle = '#28160a'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(cx-dw/2+jit(j),cy+jit(j));
+    ctx.lineTo(cx+dw/2+jit(j),cy+jit(j));
+    ctx.lineTo(cx+dw/2+jit(j),cy-dh+dw/3+jit(j));
+    ctx.quadraticCurveTo(cx+jit(j),cy-dh-dw/4+jit(j),cx-dw/2+jit(j),cy-dh+dw/3+jit(j));
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // 窓2つ
+    [[-.3,.47],[.3,.47]].forEach(([dx,dy]) => {
+      ctx.fillStyle = '#f5e8c8'; ctx.strokeStyle = '#3a1e0c'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.rect(cx+w*dx-4.5+jit(j),cy-h*dy-1+jit(j),9,9); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(38,20,8,0.25)'; ctx.lineWidth = 0.7;
+      ctx.beginPath(); ctx.moveTo(cx+w*dx,cy-h*dy-1); ctx.lineTo(cx+w*dx,cy-h*dy+8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+w*dx-4.5,cy-h*dy+3.5); ctx.lineTo(cx+w*dx+4.5,cy-h*dy+3.5); ctx.stroke();
+    });
+    // 看板「喫茶」
+    ctx.save(); ctx.translate(cx, cy - h*.38 - h*.28); ctx.rotate(-0.04);
+    ctx.fillStyle = '#f0e0b0'; ctx.strokeStyle = '#8a5828'; ctx.lineWidth = 0.9;
+    ctx.beginPath(); ctx.roundRect(-14, -8, 28, 14, 2); ctx.fill(); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillStyle = '#5a2c10';
+    ctx.font = '700 7.5px serif'; ctx.fillText('喫茶', 0, 3);
+    ctx.restore();
+  })();
+
   // カルテ（資料館・4窓）
   (function() {
     const cx = 548, cy = 448, w = 58, h = 44;
@@ -3380,6 +3440,7 @@ function renderVillageCanvas(win, windowId) {
   mapLabel(584,  90, '観測事案',       0.05);
   mapLabel(618, 294, 'ジャーナリスト', 0.03);
   mapLabel(556, 470, 'カルテ',        -0.06);
+  mapLabel(248, 462, '喫茶店',         0.04);
 
   // 左上：戻る矢印（絵の中に手書き風で）
   ctx.save();
@@ -3400,6 +3461,7 @@ function renderVillageCanvas(win, windowId) {
     { id:'observation', cx:572, cy:106, w:38, h:34 },
     { id:'journalist',  cx:600, cy:276, w:48, h:44 },
     { id:'karte',       cx:548, cy:448, w:58, h:44 },
+    { id:'cafe',        cx:295, cy:438, w:52, h:44 },
   ];
   // 広場の案内板ヒット領域
   const plazaHit = { cx:344, cy:260, w:60, h:62 };
@@ -3477,6 +3539,19 @@ function showVillageContent(house, win, windowId) {
         url:   r.url || '',
         tags:  [r.tags_event, r.tags_structure].filter(Boolean).join('　'),
       }));
+  }
+
+  if (house.id === 'cafe') {
+    el.innerHTML = `
+      <div class="village-room village-room-cafe">
+        <div class="village-room-header">
+          <span class="village-room-name">喫茶店</span>
+          <button class="village-room-close" onclick="document.getElementById('village-content').innerHTML=''">✕</button>
+        </div>
+        <p class="village-cafe-msg">少し休憩していきますか。<br>コーヒーを一杯どうぞ。</p>
+      </div>`;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
   }
 
   if (house.id === 'observation') {
