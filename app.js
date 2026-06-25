@@ -1559,6 +1559,8 @@ function inferArticleType(explicitType, domain) {
   if (explicitType && explicitType !== 'news') return explicitType;
   if (!domain) return 'news';
   const d = domain.toLowerCase();
+  // investigative：調査報道
+  if (/jcp\.or\.jp/.test(d)) return 'investigative';
   // opinion：論説・オピニオン系メディア
   if (/wedge\.ismedia\.jp|slowsnews\.com|slow-news\.|bigissue\.jp|gendai\.media|president\.jp|toyokeizai\.net/.test(d)) return 'opinion';
   // research：研究・論考・シンクタンク系
@@ -3114,8 +3116,9 @@ function showVillageContent(house, win, windowId) {
     // ニュース記事（デフォルト。記事種別列がない間は全件が news 扱い → 従来通り）
     items = dbByType('news');
   } else if (house.id === 'journalist') {
-    // opinion：Wedge・ビッグイシュー等（列追加後に表示される）
-    items = dbByType('opinion');
+    // opinion + investigative（調査報道も同居）
+    items = dbData.filter(r => matchesWindow(r, win) && (r.article_type === 'opinion' || r.article_type === 'investigative'))
+      .slice(0, 20).map(r => ({ title: r.title || '', url: r.url || '', source: r.source || '', date: r.date || '' }));
   } else if (house.id === 'researcher') {
     // research：論考・研究（列追加後に表示される）
     items = dbByType('research');
