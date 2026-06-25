@@ -2996,8 +2996,14 @@ function renderVillageCanvas(win, windowId) {
   mapLabel(618, 294, 'ジャーナリスト', 0.03);
   mapLabel(556, 470, 'カルテ',        -0.06);
 
-  ctx.strokeStyle = '#8a7638'; ctx.lineWidth = 4; ctx.strokeRect(2,2,W-4,H-4);
-  ctx.strokeStyle = '#c0a450'; ctx.lineWidth = 1; ctx.strokeRect(8,8,W-16,H-16);
+  // 左上：戻る矢印（絵の中に手書き風で）
+  ctx.save();
+  ctx.font = '500 10px serif';
+  ctx.strokeStyle = 'rgba(234,222,178,0.85)'; ctx.lineWidth = 3;
+  ctx.strokeText('← 観測の窓へ', 18, 22);
+  ctx.fillStyle = 'rgba(60,36,12,0.70)';
+  ctx.fillText('← 観測の窓へ', 18, 22);
+  ctx.restore();
 
   // ヒット領域（base coord → CSSピクセルに sc 倍）
   const sc = dispW / BASE_W;
@@ -3012,6 +3018,8 @@ function renderVillageCanvas(win, windowId) {
   ];
   // 広場の案内板ヒット領域
   const plazaHit = { cx:344, cy:260, w:60, h:62 };
+  // 左上の戻るリンク（CSS pixel座標で判定）
+  const backHitCSS = { x1:0, y1:0, x2:110*sc, y2:30*sc };
 
   function inBox(mx, my, o, topRatio) {
     const ox=o.cx*sc, oy=o.cy*sc, ow=o.w*sc, oh=o.h*sc;
@@ -3019,6 +3027,8 @@ function renderVillageCanvas(win, windowId) {
   }
 
   function hitTest(mx, my) {
+    if (mx>=backHitCSS.x1 && mx<=backHitCSS.x2 && my>=backHitCSS.y1 && my<=backHitCSS.y2)
+      return { id:'__back__' };
     if (inBox(mx, my, plazaHit, 1.0)) return { id:'__plaza__' };
     return houses.find(h => inBox(mx, my, h, 1.52));
   }
@@ -3036,11 +3046,9 @@ function renderVillageCanvas(win, windowId) {
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
     const hit = hitTest(mx, my);
     if (!hit) return;
-    if (hit.id === '__plaza__') {
-      showVillagePlazaMsg(win);
-    } else {
-      showVillageContent(hit, win, windowId);
-    }
+    if (hit.id === '__back__') { showPage('windows', null); }
+    else if (hit.id === '__plaza__') { showVillagePlazaMsg(win); }
+    else { showVillageContent(hit, win, windowId); }
   };
   cv.addEventListener('mousemove', cv._vm);
   cv.addEventListener('click', cv._vc);

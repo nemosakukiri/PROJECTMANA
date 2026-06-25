@@ -2757,9 +2757,7 @@ a.kp2-chip-evidence:hover {
 }
 
 .village-topbar {
-  padding: 0.6rem 1.5rem;
-  border-bottom: 1px solid rgba(138,118,56,0.2);
-  background: #ece2bc;
+  display: none;
 }
 
 .village-map-wrap {
