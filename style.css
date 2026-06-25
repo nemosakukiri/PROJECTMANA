@@ -2702,6 +2702,50 @@ a.kp2-chip-evidence:hover {
   color: #faf9f6;
 }
 
+/* ===== ホーム村マップ ===== */
+.home-village-wrap {
+  width: 100%;
+  background: #ece2bc;
+  position: relative;
+  overflow: hidden;
+}
+.home-village-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.home-village-msg {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(236,226,188,0.96);
+  border-top: 2px solid #8a7638;
+  padding: 1.6rem 2rem 1.8rem;
+  text-align: center;
+  font-family: 'Noto Sans JP', serif;
+}
+.home-village-msg-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2c1e08;
+  margin-bottom: 0.7rem;
+  letter-spacing: 0.05em;
+}
+.home-village-msg-body {
+  font-size: 0.88rem;
+  color: #3e2c10;
+  line-height: 2.0;
+  white-space: pre-line;
+}
+.home-village-msg-close {
+  position: absolute;
+  top: 0.6rem; right: 1rem;
+  background: none; border: none;
+  font-size: 1rem; color: #8a7638;
+  cursor: pointer; line-height: 1;
+}
+.home-village-msg-close:hover { color: #2c1e08; }
+
 /* ===== 村の展示室（窓詳細ページ） ===== */
 .village-page {
   max-width: 860px;
