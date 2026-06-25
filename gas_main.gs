@@ -31,6 +31,19 @@ const RSS_SOURCES = [
     url: 'https://news.google.com/rss/search?q=%E8%A1%8C%E8%B2%A1%E6%94%BF%E6%94%B9%E9%9D%A9+%E6%8C%87%E5%AE%9A%E7%AE%A1%E7%90%86+%E5%85%AC%E5%85%B1%E6%96%BD%E8%A8%AD&hl=ja&gl=JP&ceid=JP:ja',
     name: 'Googleニュース（行財政改革）'
   },
+  // ===== オピニオン・論考メディア（article_type: opinion）=====
+  // Wedge ONLINE：行政・政策・社会課題の論説記事
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Awedge.ismedia.jp+%E8%A1%8C%E6%94%BF+OR+%E7%A6%8F%E7%A5%89+OR+%E6%B0%91%E4%B8%BB%E4%B8%BB%E7%BE%A9&hl=ja&gl=JP&ceid=JP:ja',
+    name: 'Wedge ONLINE（行政・福祉・民主主義）',
+    article_type: 'opinion'
+  },
+  // Slow News：調査報道・社会課題
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Aslownews.com&hl=ja&gl=JP&ceid=JP:ja',
+    name: 'Slow News',
+    article_type: 'opinion'
+  },
 ];
 
 // 公開DBに自動反映するキーワード（これを含む記事はタグ未分類でも即公開）

@@ -1553,6 +1553,21 @@ function checkKarteLinkage() {
 }
 
 // ===== LOAD DB =====
+// ドメインまたは明示的な記事種別フィールドから article_type を推論
+// 優先順位：明示列 > ドメインマッチ > デフォルト 'news'
+function inferArticleType(explicitType, domain) {
+  if (explicitType && explicitType !== 'news') return explicitType;
+  if (!domain) return 'news';
+  const d = domain.toLowerCase();
+  // opinion：論説・オピニオン系メディア
+  if (/wedge\.ismedia\.jp|slowsnews\.com|slow-news\.|bigissue\.jp|diamond\.jp\/category\/opinion|president\.jp|toyokeizai\.net|gendai\.media/.test(d)) return 'opinion';
+  // research：研究・シンクタンク系
+  if (/jri\.co\.jp|nri\.com|rieti\.go\.jp|nira\.or\.jp|murc\.jp|chuokoron\.jp|ci\.nii\.ac\.jp|ndl\.go\.jp/.test(d)) return 'research';
+  // law：法令・議会系
+  if (/e-gov\.go\.jp|shugiin\.go\.jp|sangiin\.go\.jp|courts\.go\.jp/.test(d)) return 'law';
+  return 'news';
+}
+
 function loadDB() {
   console.log('DB読み込み開始（GAS API）:', GAS_API_URL);
   fetch(GAS_API_URL)
@@ -1585,7 +1600,7 @@ function loadDB() {
         old_flag:       row['古い記事'] || '', // 「古い記事候補」が入っていればアーカイブ扱い
         date_status:    row['date_status'] || '', // 確定 / 未確認 / 要確認
         karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
-        article_type:   row['記事種別'] || 'news',
+        article_type:   inferArticleType(row['記事種別'], row['source_domain']),
       })).filter(r => r.title);
       // [診断] カルテID列がAPIから来ているか確認
       const sampleRow = dbData.slice(0, 3);
