@@ -44,6 +44,18 @@ const RSS_SOURCES = [
     name: 'Slow News',
     article_type: 'opinion'
   },
+  // シノドス：社会科学の論考・研究者執筆
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Asynodos.jp+%E8%A1%8C%E6%94%BF+OR+%E7%A4%BE%E4%BC%9A+OR+%E7%A6%8F%E7%A5%89&hl=ja&gl=JP&ceid=JP:ja',
+    name: 'シノドス（社会・行政・福祉）',
+    article_type: 'research'
+  },
+  // 現代ビジネス：行政・制度の読み物（玉石混交のためキーワード絞り込み）
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Agendai.media+%E8%A1%8C%E6%94%BF+OR+%E7%94%9F%E6%B4%BB%E4%BF%9D%E8%AD%B7+OR+%E7%A6%8F%E7%A5%89+OR+%E6%B0%91%E4%B8%BB%E4%B8%BB%E7%BE%A9&hl=ja&gl=JP&ceid=JP:ja',
+    name: '現代ビジネス（行政・福祉・民主主義）',
+    article_type: 'opinion'
+  },
 ];
 
 // 公開DBに自動反映するキーワード（これを含む記事はタグ未分類でも即公開）

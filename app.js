@@ -1560,9 +1560,9 @@ function inferArticleType(explicitType, domain) {
   if (!domain) return 'news';
   const d = domain.toLowerCase();
   // opinion：論説・オピニオン系メディア
-  if (/wedge\.ismedia\.jp|slowsnews\.com|slow-news\.|bigissue\.jp|diamond\.jp\/category\/opinion|president\.jp|toyokeizai\.net|gendai\.media/.test(d)) return 'opinion';
-  // research：研究・シンクタンク系
-  if (/jri\.co\.jp|nri\.com|rieti\.go\.jp|nira\.or\.jp|murc\.jp|chuokoron\.jp|ci\.nii\.ac\.jp|ndl\.go\.jp/.test(d)) return 'research';
+  if (/wedge\.ismedia\.jp|slowsnews\.com|slow-news\.|bigissue\.jp|gendai\.media|president\.jp|toyokeizai\.net/.test(d)) return 'opinion';
+  // research：研究・論考・シンクタンク系
+  if (/synodos\.jp|jri\.co\.jp|nri\.com|rieti\.go\.jp|nira\.or\.jp|murc\.jp|chuokoron\.jp|ci\.nii\.ac\.jp|ndl\.go\.jp/.test(d)) return 'research';
   // law：法令・議会系
   if (/e-gov\.go\.jp|shugiin\.go\.jp|sangiin\.go\.jp|courts\.go\.jp/.test(d)) return 'law';
   return 'news';
