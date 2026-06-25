@@ -3123,13 +3123,27 @@ function showVillageContent(house, win, windowId) {
   if (house.id === 'observation') {
     // ニュース記事（デフォルト。記事種別列がない間は全件が news 扱い → 従来通り）
     items = dbByType('news');
-  } else if (house.id === 'journalist') {
-    // opinion + investigative（調査報道も同居）
-    items = dbData.filter(r => matchesWindow(r, win) && (r.article_type === 'opinion' || r.article_type === 'investigative'))
-      .slice(0, 20).map(r => ({ title: r.title || '', url: r.url || '', source: r.source || '', date: r.date || '' }));
-  } else if (house.id === 'researcher') {
-    // research：論考・研究（列追加後に表示される）
-    items = dbByType('research');
+  } else if (house.id === 'journalist' || house.id === 'researcher') {
+    const types = house.id === 'journalist'
+      ? ['opinion', 'investigative']
+      : ['research'];
+    const el2 = el;
+    el2.innerHTML = `<div class="village-room"><div class="village-room-header"><span class="village-room-name">${labels[house.id]}</span><button class="village-room-close" onclick="document.getElementById('village-content').innerHTML=''">✕</button></div><p style="padding:1rem">読み込み中...</p></div>`;
+    fetch(GAS_API_URL + '?sheet=' + encodeURIComponent('観測DB（全件ログ）'))
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data)) throw new Error('not array');
+        const fullItems = data.map(row => ({
+          title:        row['タイトル'] || '',
+          url:          row['URL'] || '',
+          source:       row['出典'] || '',
+          date:         row['rss_pubDate'] || row['公開日'] || '',
+          article_type: inferArticleType(row['記事種別'], row['source_domain'], row['出典'] || ''),
+        })).filter(r => r.title && types.includes(r.article_type)).slice(0, 20);
+        renderVillageRoomItems(el2, house, labels, fullItems);
+      })
+      .catch(() => renderVillageRoomItems(el2, house, labels, []));
+    return;
   } else if (house.id === 'karte') {
     items = karteData.filter(k => {
       const text = [k.tags_event,k.tags_structure,k.field,k.summary].join(' ');
@@ -3154,6 +3168,29 @@ function showVillageContent(house, win, windowId) {
               ? `<a href="${item.url}" ${item.url.startsWith('#') ? '' : 'target="_blank" rel="noopener"'}>${item.title}</a>`
               : item.title}</div>
             ${item.sub ? `<div class="village-room-sub">${item.sub}</div>` : ''}
+            ${item.tags ? `<div class="village-room-tags">${item.tags}</div>` : ''}
+          </div>`).join('')}
+    </div>`;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderVillageRoomItems(el, house, labels, items) {
+  const isEmpty = items.length === 0;
+  el.innerHTML = `
+    <div class="village-room">
+      <div class="village-room-header">
+        <span class="village-room-name">${labels[house.id]}</span>
+        <button class="village-room-close" onclick="document.getElementById('village-content').innerHTML=''">✕</button>
+      </div>
+      ${isEmpty
+        ? `<p class="village-room-empty">この家はまだ準備中です。</p>`
+        : items.map(item => `
+          <div class="village-room-item">
+            <div class="village-room-title">${item.url
+              ? `<a href="${item.url}" ${item.url.startsWith('#') ? '' : 'target="_blank" rel="noopener"'}>${item.title}</a>`
+              : item.title}</div>
+            ${item.sub ? `<div class="village-room-sub">${item.sub}</div>` : ''}
+            ${item.source ? `<div class="village-room-sub">${item.source}</div>` : ''}
             ${item.tags ? `<div class="village-room-tags">${item.tags}</div>` : ''}
           </div>`).join('')}
     </div>`;
