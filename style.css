@@ -2723,6 +2723,10 @@ a.kp2-chip-evidence:hover {
   text-align: center;
   font-family: 'Noto Sans JP', serif;
 }
+.village-plaza-msg .home-village-msg-title,
+.village-plaza-msg .home-village-msg-body,
+.village-plaza-msg .home-village-msg-close { }
+
 .home-village-msg-title {
   font-family: 'Playfair Display', serif;
   font-size: 1.05rem;
@@ -2748,13 +2752,39 @@ a.kp2-chip-evidence:hover {
 
 /* ===== 村の展示室（窓詳細ページ） ===== */
 .village-page {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
+  width: 100%;
+  padding: 0;
+}
+
+.village-topbar {
+  padding: 0.6rem 1.5rem;
+  border-bottom: 1px solid rgba(138,118,56,0.2);
+  background: #ece2bc;
+}
+
+.village-map-wrap {
+  width: 100%;
+  background: #ece2bc;
+  position: relative;
+  overflow: hidden;
+}
+.village-map-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.village-plaza-msg {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(236,226,188,0.97);
+  border-top: 2px solid #8a7638;
+  padding: 1.6rem 2rem 1.8rem;
+  text-align: center;
+  font-family: 'Noto Sans JP', serif;
 }
 
 .village-header {
-  margin-bottom: 1.5rem;
+  display: none;
 }
 
 .village-back-btn {
@@ -2788,6 +2818,10 @@ a.kp2-chip-evidence:hover {
 
 .village-content {
   margin-top: 1.5rem;
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1rem 3rem;
 }
 
 /* ===== 展示室パネル ===== */

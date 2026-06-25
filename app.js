@@ -2338,12 +2338,13 @@ function renderWindowDetailPage(windowId) {
 
   el.innerHTML = `
     <div class="village-page">
-      <div class="village-header">
+      <div class="village-topbar">
         <button class="window-back-btn" onclick="showPage('windows',null)">← 観測の窓へ戻る</button>
-        <h1 class="village-title">${win.window_name}</h1>
-        <p class="village-question">${win.popup_text || win.question}</p>
       </div>
-      <canvas id="village-canvas" style="display:block;margin:0 auto"></canvas>
+      <div class="village-map-wrap">
+        <canvas id="village-canvas" style="display:block;width:100%;"></canvas>
+        <div id="village-plaza-msg" class="village-plaza-msg" style="display:none"></div>
+      </div>
       <div id="village-content" class="village-content"></div>
     </div>`;
 
@@ -2678,8 +2679,7 @@ function renderVillageCanvas(win, windowId) {
 
   const dpr = window.devicePixelRatio || 1;
   const BASE_W = 720, BASE_H = 510;
-  const isMobile = window.innerWidth < 600;
-  const dispW = isMobile ? window.innerWidth - 16 : Math.min(window.innerWidth - 32, BASE_W);
+  const dispW = cv.parentElement ? cv.parentElement.clientWidth : window.innerWidth;
   const dispH = Math.round(dispW * BASE_H / BASE_W);
   cv.width  = dispW * dpr; cv.height = dispH * dpr;
   cv.style.width = dispW + 'px'; cv.style.height = dispH + 'px';
@@ -2858,8 +2858,9 @@ function renderVillageCanvas(win, windowId) {
     });
     ctx.restore();
     ctx.textAlign = 'center';
-    ctx.font = '700 8.5px serif'; ctx.fillStyle = 'rgba(40,24,4,0.86)'; ctx.fillText('民主主義の窓', 0, 11);
-    ctx.font = '500 6.5px serif'; ctx.fillStyle = 'rgba(40,24,4,0.64)'; ctx.fillText('権力はどこで補正されるか', 0, 23);
+    const signTitle = win && win.window_name ? win.window_name : '民主主義の窓';
+    ctx.font = '700 8.5px serif'; ctx.fillStyle = 'rgba(40,24,4,0.86)'; ctx.fillText(signTitle, 0, 11);
+    ctx.font = '500 6px serif'; ctx.fillStyle = 'rgba(40,24,4,0.60)'; ctx.fillText('▶ クリックして読む', 0, 23);
     ctx.restore();
   })();
 
@@ -2998,8 +2999,9 @@ function renderVillageCanvas(win, windowId) {
   ctx.strokeStyle = '#8a7638'; ctx.lineWidth = 4; ctx.strokeRect(2,2,W-4,H-4);
   ctx.strokeStyle = '#c0a450'; ctx.lineWidth = 1; ctx.strokeRect(8,8,W-16,H-16);
 
-  // 家のヒット領域（base coord）
+  // ヒット領域（base coord → CSSピクセルに sc 倍）
   const sc = dispW / BASE_W;
+  // 家（id付き）
   const houses = [
     { id:'law',         cx:122, cy:192, w:48, h:44 },
     { id:'voice',       cx:192, cy:452, w:50, h:46 },
@@ -3008,14 +3010,17 @@ function renderVillageCanvas(win, windowId) {
     { id:'journalist',  cx:600, cy:276, w:48, h:44 },
     { id:'karte',       cx:548, cy:448, w:58, h:44 },
   ];
+  // 広場の案内板ヒット領域
+  const plazaHit = { cx:344, cy:260, w:60, h:62 };
+
+  function inBox(mx, my, o, topRatio) {
+    const ox=o.cx*sc, oy=o.cy*sc, ow=o.w*sc, oh=o.h*sc;
+    return mx>=ox-ow/2-4 && mx<=ox+ow/2+4 && my>=oy-oh*(topRatio||1.5)-4 && my<=oy+8;
+  }
 
   function hitTest(mx, my) {
-    // mx, my are CSS pixel coords; house coords are base coords, scale by sc
-    return houses.find(h => {
-      const hx = h.cx * sc, hy = h.cy * sc, hw = h.w * sc, hh = h.h * sc;
-      return mx >= hx - hw/2 - 4 && mx <= hx + hw/2 + 4
-          && my >= hy - hh - hh*.52 - 4 && my <= hy + 6;
-    });
+    if (inBox(mx, my, plazaHit, 1.0)) return { id:'__plaza__' };
+    return houses.find(h => inBox(mx, my, h, 1.52));
   }
 
   cv.removeEventListener('mousemove', cv._vm);
@@ -3024,17 +3029,36 @@ function renderVillageCanvas(win, windowId) {
   cv._vm = e => {
     const rect = cv.getBoundingClientRect();
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    const hh = hitTest(mx, my);
-    cv.style.cursor = hh ? 'pointer' : 'default';
+    cv.style.cursor = hitTest(mx, my) ? 'pointer' : 'default';
   };
   cv._vc = e => {
     const rect = cv.getBoundingClientRect();
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    const hh = hitTest(mx, my);
-    if (hh) showVillageContent(hh, win, windowId);
+    const hit = hitTest(mx, my);
+    if (!hit) return;
+    if (hit.id === '__plaza__') {
+      showVillagePlazaMsg(win);
+    } else {
+      showVillageContent(hit, win, windowId);
+    }
   };
   cv.addEventListener('mousemove', cv._vm);
   cv.addEventListener('click', cv._vc);
+}
+
+function showVillagePlazaMsg(win) {
+  const el = document.getElementById('village-plaza-msg');
+  if (!el) return;
+  const title = win && win.window_name ? win.window_name : '民主主義の窓';
+  const question = win && (win.popup_text || win.question) ? (win.popup_text || win.question) : '';
+  el.style.display = 'block';
+  el.innerHTML = `
+    <button class="home-village-msg-close" onclick="document.getElementById('village-plaza-msg').style.display='none'">✕</button>
+    <div class="home-village-msg-title">${title}</div>
+    <div class="home-village-msg-body">${question ? question + '\n\n' : ''}民主主義とは、選挙だけなのだろうか。
+
+MANAは答えを示しません。
+ここでは、社会の出来事から考える材料を展示しています。</div>`;
 }
 
 function showVillageContent(house, win, windowId) {
