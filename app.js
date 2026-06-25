@@ -2174,101 +2174,57 @@ function renderHomeCanvas() {
   drawSignPost(signX, signGroundY);
   const signHit = { x: signX, top: signGroundY - 52 - 30 - 4, bottom: signGroundY, hw: 40 };
 
-  // リス（幹に座っている）
-  const sqX = bx - 18, sqY = 600;
-  function drawSquirrel(x, y) {
+  // 葉っぱ（PROJECT MANAとは）
+  const leafCx = 560, leafCy = 390;
+  function drawLeaf(cx, cy) {
     ctx.save();
-    ctx.fillStyle = '#14140c';
-    ctx.strokeStyle = '#14140c';
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.translate(cx, cy);
+    ctx.rotate(-0.18);
 
-    // しっぽ（大きく丸まる）
+    // 葉の形（左右ベジェ）
+    const lw = 58, lh = 28;
     ctx.beginPath();
-    ctx.moveTo(x - 2, y + 12);
-    ctx.bezierCurveTo(x - 28, y + 18, x - 36, y - 10, x - 20, y - 22);
-    ctx.bezierCurveTo(x - 8,  y - 30, x + 8,  y - 18, x + 2,  y - 4);
+    ctx.moveTo(0, -lh);
+    ctx.bezierCurveTo( lw * 0.9, -lh * 0.6,  lw * 0.9,  lh * 0.6,  0,  lh);
+    ctx.bezierCurveTo(-lw * 0.9,  lh * 0.6, -lw * 0.9, -lh * 0.6,  0, -lh);
     ctx.closePath();
-    ctx.globalAlpha = 0.82;
+    ctx.fillStyle = 'rgba(62, 80, 46, 0.82)';
     ctx.fill();
-
-    // 胴体
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.ellipse(x + 4, y + 6, 7, 10, -0.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 頭
-    ctx.beginPath();
-    ctx.ellipse(x + 9, y - 5, 6, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 耳
-    ctx.beginPath();
-    ctx.moveTo(x + 6, y - 10);
-    ctx.lineTo(x + 4, y - 17);
-    ctx.lineTo(x + 10, y - 13);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(x + 12, y - 9);
-    ctx.lineTo(x + 16, y - 16);
-    ctx.lineTo(x + 16, y - 9);
-    ctx.closePath();
-    ctx.fill();
-
-    // 目（白）
-    ctx.beginPath();
-    ctx.arc(x + 12, y - 5, 1.4, 0, Math.PI * 2);
-    ctx.fillStyle = '#cdd6e0';
-    ctx.fill();
-
-    // 前足
-    ctx.strokeStyle = '#14140c'; ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(x + 6, y + 2);
-    ctx.lineTo(x + 3, y + 14);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  // 吹き出し
-  function drawSpeechBubble(x, y) {
-    ctx.save();
-    const bw = 88, bh = 26, br = 7;
-    const bx2 = x + 16, by2 = y - 38;
-    ctx.fillStyle = 'rgba(245,243,238,0.93)';
-    ctx.strokeStyle = 'rgba(20,20,12,0.45)';
+    ctx.strokeStyle = 'rgba(40, 56, 28, 0.6)';
     ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(bx2, by2, bw, bh, br);
-    ctx.fill(); ctx.stroke();
-    // 三角しっぽ
-    ctx.beginPath();
-    ctx.moveTo(bx2 + 10, by2 + bh);
-    ctx.lineTo(bx2 + 4,  by2 + bh + 9);
-    ctx.lineTo(bx2 + 20, by2 + bh);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(bx2 + 10, by2 + bh - 0.5);
-    ctx.lineTo(bx2 + 4,  by2 + bh + 9);
-    ctx.lineTo(bx2 + 20, by2 + bh - 0.5);
-    ctx.strokeStyle = 'rgba(20,20,12,0.25)';
     ctx.stroke();
+
+    // 中心の葉脈
+    ctx.beginPath();
+    ctx.moveTo(0, -lh + 2);
+    ctx.lineTo(0, lh - 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // 茎
+    ctx.beginPath();
+    ctx.moveTo(0, lh - 1);
+    ctx.lineTo(4, lh + 11);
+    ctx.strokeStyle = 'rgba(40, 56, 28, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // テキスト2行
+    ctx.rotate(0.18);
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#3a3028';
-    ctx.font = '600 10px sans-serif';
-    ctx.fillText('PROJECT MANAとは？', bx2 + bw / 2, by2 + bh * 0.65);
+    ctx.fillStyle = 'rgba(235,245,225,0.95)';
+    ctx.font = '700 9px sans-serif';
+    ctx.fillText('PROJECT MANA', 0, -5);
+    ctx.font = '400 8.5px sans-serif';
+    ctx.fillText('とは？', 0, 7);
+
     ctx.restore();
   }
 
-  drawSquirrel(sqX, sqY);
-  drawSpeechBubble(sqX, sqY);
-
-  // リスのヒットボックス（吹き出しも含む）
-  const squirrelHit = { x: sqX + 52, y: sqY - 64, w: 92, h: 80 };
+  drawLeaf(leafCx, leafCy);
+  const squirrelHit = { x: leafCx - 62, y: leafCy - 32, w: 124, h: 72 };
 
   // 地面前景（地平線を隠す黒帯）
   ctx.fillStyle = '#14140c';
