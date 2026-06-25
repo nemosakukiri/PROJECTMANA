@@ -45,24 +45,34 @@
 
 <!-- HOME -->
 <div class="page active" id="page-home">
-  <section class="hero">
-    <div class="hero-museum">
-      <div class="hero-museum-kicker">PROJECT MANA — 市民の観測アーカイブ</div>
-      <h1 class="hero-museum-title">制度はある。<br>実装されていないだけだ。</h1>
-      <p class="hero-museum-desc">行政・福祉・制度運用の現場で繰り返し現れる出来事を記録し、その背後にある構造的パターンを観測する市民アーカイブです。</p>
+  <div class="home-tree-wrap">
+    <canvas id="home-canvas" style="display:block;width:100%;cursor:default"></canvas>
+    <div class="home-catch">制度はある。実装されていないだけだ。</div>
+  </div>
 
-      <!-- 全文検索 -->
-      <div class="home-search-wrap">
-        <div class="home-search-inner">
-          <input type="text" id="home-search-input"
-            class="home-search-input"
-            placeholder="キーワードで探す　例：申請妨害、京都市、生活保護"
-            oninput="homeSearch(this.value)"
-            autocomplete="off">
-          <span class="home-search-icon">🔍</span>
-        </div>
-        <div id="home-search-results" class="home-search-results" style="display:none"></div>
-      </div>
+  <!-- PROJECT MANAとは ポップアップ -->
+  <div class="mana-about-overlay" id="mana-about-overlay">
+    <div class="mana-about-popup">
+      <button class="mana-about-close" onclick="document.getElementById('mana-about-overlay').classList.remove('open')">✕</button>
+      <h2>PROJECT MANA とは</h2>
+      <p>PROJECT MANAは、行政・福祉・制度運用の現場で繰り返し起きる出来事を記録し、その背後にある構造的パターンを観測する市民アーカイブです。</p>
+      <p>ここでは、社会を評価したり、誰かを裁いたりすることは目的としません。まず観測し、記録し、残す。それがMANAの立場です。</p>
+      <p>収集された記事・事案・市民の声は、村の各家に展示されます。観測DBには日々の記録が蓄積されています。</p>
+      <p>この村を歩くことで、社会の輪郭が少しずつ見えてくることを願っています。</p>
+    </div>
+  </div>
+
+  <!-- 検索・統計は後日観測DBページへ移設予定 -->
+  <div style="display:none">
+    <input type="text" id="home-search-input" oninput="homeSearch(this.value)" autocomplete="off">
+    <div id="home-search-results"></div>
+    <span id="home-db-count"></span>
+    <span id="home-karte-count"></span>
+    <span id="home-tag-count"></span>
+    <div id="home-news-list"></div>
+    <div id="home-voices"></div>
+    <div id="home-tag-cloud"></div>
+  </div>
 
       <!-- 探索ボタン4つ -->
       <!-- 3ブロック構成の探索入口 -->
