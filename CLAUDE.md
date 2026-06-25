@@ -78,10 +78,20 @@ GASプロジェクトID：`1E81FSnKqj3FYn1qXYswU5PrHo9q4ARBHCR4FuZWtI8fAC19RNKik
 
 ## セッション間の申し送りルール
 
-- 毎回 `docs/WORKLOG/YYYY-MM-DD.md` を作成する
+### セッション開始時に必ずやること（順番通りに）
+
+1. `docs/WORKLOG/` の最新ファイルを読む
+2. 未完了タスクと前回の状態を把握してから作業開始
+3. GASを触る場合は `download_file_content` で全ファイル確認
+
+この手順を踏まずに作業を始めてはならない。
+
+### セッション中・終了時
+
+- 毎回 `docs/WORKLOG/YYYY-MM-DD.md` を作成・更新する
+- 今日やったこと・未完了タスク・事故を記録してpushする
 - 事故・失敗は必ず記録する（隠さない）
 - 「できる」と申し送った内容が次セッションで再現できるか確認してから作業開始
-- GASの状態（どのファイルに何があるか）はセッション開始時に必ず `download_file_content` で確認
 
 ---
 
