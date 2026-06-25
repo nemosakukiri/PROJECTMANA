@@ -2105,6 +2105,15 @@ function renderHomeCanvas() {
   const bx = 680 * 0.44, by = 820 - 55;
   branch(bx, by, -Math.PI / 2, 152, 0, 10);
 
+  // 問いかけテキスト
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(20,20,12,0.28)';
+  ctx.font = 'italic 400 15px "Noto Sans JP", sans-serif';
+  ctx.letterSpacing = '0.12em';
+  ctx.fillText('今日はどこを歩きますか？', bx + 20, 530);
+  ctx.restore();
+
   // 地面
   ctx.fillStyle = '#14140c';
   ctx.beginPath(); ctx.ellipse(bx, 820 - 30, 680 * 0.58, 68, 0, 0, Math.PI * 2); ctx.fill();
