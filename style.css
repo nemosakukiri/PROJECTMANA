@@ -2812,3 +2812,75 @@ a.kp2-chip-evidence:hover {
   font-style: italic;
   margin: 0;
 }
+
+/* ===== トップページ 木キャンバス ===== */
+.home-tree-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  background: #cdd6e0;
+}
+.home-catch {
+  width: 100%;
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #14140c;
+  padding: 1.1rem 1rem 1.4rem;
+  background: #cdd6e0;
+  border-bottom: 1px solid rgba(20,20,12,0.15);
+}
+
+/* PROJECT MANAとは オーバーレイ */
+.mana-about-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20,20,12,0.72);
+  z-index: 1200;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.mana-about-overlay.open {
+  display: flex;
+}
+.mana-about-popup {
+  background: #f5f3ee;
+  max-width: 520px;
+  width: 100%;
+  border-radius: 8px;
+  padding: 2.2rem 2.4rem 2rem;
+  position: relative;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.mana-about-popup h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0 0 1.2rem;
+  color: #14140c;
+}
+.mana-about-popup p {
+  font-size: 0.88rem;
+  line-height: 1.9;
+  color: #3a3830;
+  margin: 0 0 0.9rem;
+}
+.mana-about-close {
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #6b6050;
+  line-height: 1;
+  padding: 0.2rem 0.4rem;
+}
+.mana-about-close:hover { color: #14140c; }

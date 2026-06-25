@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDB();
   loadSurveyVoices();
   loadWindowMaster();
+  renderHomeCanvas();
   window.addEventListener('hashchange', handleHashRoute);
   handleHashRoute();
 });
@@ -34,6 +35,7 @@ function showPage(name, navEl) {
   pageEl.classList.add('active');
   if (navEl) navEl.classList.add('active');
   window.scrollTo(0, 0);
+  if (name === 'home') renderHomeCanvas();
   if (name === 'essays') loadEssays();
   if (name === 'karte') loadKartes();
   if (name === 'windows') renderWindowsPage();
@@ -2025,6 +2027,293 @@ function submitSurvey() {
 }
 
 // ===== 観測フィードバック送信 =====
+// ===== トップページ キャンバス =====
+function renderHomeCanvas() {
+  const cv = document.getElementById('home-canvas');
+  if (!cv) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const isMobile = window.innerWidth < 600;
+  const W = isMobile ? window.innerWidth : Math.min(window.innerWidth, 860);
+  const H = Math.round(W * 820 / 680);
+  cv.width  = W * dpr;
+  cv.height = H * dpr;
+  cv.style.width  = W + 'px';
+  cv.style.height = H + 'px';
+  cv.style.maxWidth = '100%';
+
+  const ctx = cv.getContext('2d');
+  const scale = W / 680;
+  ctx.scale(dpr, dpr);
+  ctx.fillStyle = '#cdd6e0';
+  ctx.fillRect(0, 0, W, H);
+  ctx.scale(scale, scale);
+
+  let _s = 31;
+  function r() { _s = (_s * 9301 + 49297) % 233280; return _s / 233280; }
+
+  function branch(x, y, a, len, d, maxD) {
+    if (d > maxD || len < 2.5) return;
+    const nx = x + Math.cos(a) * len, ny = y + Math.sin(a) * len;
+    const w = Math.max(0.5, Math.pow((maxD - d + 1) / maxD, 1.2) * 18);
+    const cx2 = x + Math.cos(a) * len * 0.5 + (r() - 0.5) * 12;
+    const cy2 = y + Math.sin(a) * len * 0.5 + (r() - 0.5) * 12;
+    ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(cx2, cy2, nx, ny);
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.stroke();
+    const sp = 0.28 + d * 0.032;
+    const j = () => (r() - 0.5) * 0.16;
+    const n = d < 3 ? 3 : d < 6 ? 3 : 2;
+    const f = () => 0.60 + r() * 0.10;
+    if (n === 3) {
+      branch(nx, ny, a - sp + j(), len * f(), d + 1, maxD);
+      branch(nx, ny, a + j() * 0.4, len * (f() + 0.06), d + 1, maxD);
+      branch(nx, ny, a + sp + j(), len * f(), d + 1, maxD);
+    } else {
+      branch(nx, ny, a - sp + j(), len * f(), d + 1, maxD);
+      branch(nx, ny, a + sp + j(), len * f(), d + 1, maxD);
+    }
+  }
+
+  const bx = 680 * 0.44, by = 820 - 55;
+  branch(bx, by, -Math.PI / 2, 152, 0, 10);
+
+  // 地面
+  ctx.fillStyle = '#14140c';
+  ctx.beginPath(); ctx.ellipse(bx, 820 - 30, 680 * 0.58, 68, 0, 0, Math.PI * 2); ctx.fill();
+
+  // 百葉箱（大きめ）
+  function drawHygrometer(hx, groundY) {
+    const legH = 30, boxW = 62, boxH = 54, roofH = 9;
+    const boxTop = groundY - legH - boxH;
+    ctx.save();
+    ctx.strokeStyle = '#d4cfc0'; ctx.lineWidth = 2.5; ctx.lineCap = 'square';
+    ctx.beginPath();
+    ctx.moveTo(hx - boxW * 0.28, groundY); ctx.lineTo(hx - boxW * 0.28, groundY - legH);
+    ctx.moveTo(hx + boxW * 0.28, groundY); ctx.lineTo(hx + boxW * 0.28, groundY - legH);
+    ctx.stroke();
+    ctx.fillStyle = '#eceae2'; ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.rect(hx - boxW / 2, boxTop, boxW, boxH); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 0.8;
+    const slats = 7;
+    for (let s = 1; s < slats; s++) {
+      const sy = boxTop + (boxH / slats) * s;
+      ctx.beginPath(); ctx.moveTo(hx - boxW / 2, sy); ctx.lineTo(hx + boxW / 2, sy); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(100,95,85,0.18)'; ctx.lineWidth = 3;
+    for (let s = 0; s < slats; s++) {
+      const sy = boxTop + (boxH / slats) * s + boxH / slats * 0.5;
+      ctx.beginPath(); ctx.moveTo(hx - boxW / 2 + 1, sy); ctx.lineTo(hx + boxW / 2 - 1, sy); ctx.stroke();
+    }
+    ctx.fillStyle = '#d4cfc0'; ctx.strokeStyle = '#b0aa9a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.rect(hx - boxW / 2 - 4, boxTop - roofH, boxW + 8, roofH + 1); ctx.fill(); ctx.stroke();
+    // ラベル
+    ctx.textAlign = 'center'; ctx.fillStyle = '#7a7060'; ctx.font = '500 9px sans-serif';
+    ctx.fillText('百葉箱', hx, boxTop + boxH * 0.55);
+    ctx.restore();
+  }
+
+  const hygroX = 460, hygroGroundY = by + 22;
+  drawHygrometer(hygroX, hygroGroundY);
+  const hygroHit = { x: hygroX, top: hygroGroundY - 30 - 54 - 9, bottom: hygroGroundY, hw: 34 };
+
+  // 立て札（大きめ）
+  function drawSignPost(sx, groundY) {
+    const poleH = 52, boardW = 74, boardH = 30, poleX = sx;
+    const poleTop = groundY - poleH;
+    const boardTop = poleTop - 4;
+    ctx.save();
+    ctx.strokeStyle = '#c8c0a8'; ctx.lineWidth = 3; ctx.lineCap = 'square';
+    ctx.beginPath(); ctx.moveTo(poleX, groundY); ctx.lineTo(poleX, poleTop); ctx.stroke();
+    ctx.fillStyle = '#ddd8c4'; ctx.strokeStyle = '#b0a888'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(poleX - boardW / 2, boardTop, boardW, boardH, 3); ctx.fill(); ctx.stroke();
+    ctx.textAlign = 'center'; ctx.fillStyle = '#5a5240';
+    ctx.font = '600 9.5px sans-serif'; ctx.fillText('この村について', poleX, boardTop + boardH * 0.45);
+    ctx.font = '400 7.5px sans-serif'; ctx.fillStyle = '#8a7e60';
+    ctx.fillText('▸ タップして読む', poleX, boardTop + boardH * 0.78);
+    ctx.restore();
+  }
+
+  const signX = 145, signGroundY = by + 22;
+  drawSignPost(signX, signGroundY);
+  const signHit = { x: signX, top: signGroundY - 52 - 30 - 4, bottom: signGroundY, hw: 40 };
+
+  // 地面前景（地平線を隠す黒帯）
+  ctx.fillStyle = '#14140c';
+  ctx.fillRect(0, 820 - 44, 680, 44);
+
+  // 鳥
+  function bird(x, y, sz, al) {
+    ctx.save(); ctx.globalAlpha = al;
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = 1.3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - sz, y); ctx.quadraticCurveTo(x - sz * .5, y - sz * .65, x, y);
+    ctx.moveTo(x, y); ctx.quadraticCurveTo(x + sz * .5, y - sz * .65, x + sz, y);
+    ctx.stroke(); ctx.restore();
+  }
+  bird(80, 160, 10, .2); bird(100, 150, 7, .14);
+  bird(540, 120, 9, .18); bird(560, 132, 7, .12);
+  bird(300, 80, 8, .13); bird(318, 88, 6, .09);
+  bird(160, 240, 7, .1); bird(480, 200, 8, .12);
+
+  // 巣箱定義（activeのみ描画; hiddenは構造保持のみ）
+  const windows = [
+    // 表示する巣箱
+    { label: 'メディアの窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('media'),        x: bx - 30,  y: 36,  w: 74, h: 48 },
+    { label: '心の窓',        sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('mental'),        x: bx - 60,  y: 160, w: 74, h: 48 },
+    { label: '戦争の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('war'),           x: bx + 140, y: 180, w: 74, h: 48 },
+    { label: '人権の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
+    { label: '民主主義の窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 76, h: 50 },
+    { label: 'PROJECT MANAとは', sub: 'ポップアップ', active: true, draw: true,
+      action: () => { document.getElementById('mana-about-overlay').classList.add('open'); },
+      x: bx - 155, y: 350, w: 80, h: 52 },
+    { label: 'フィードバック', sub: '声を届ける', active: true, draw: true,
+      action: () => showPage('survey', document.querySelector('nav a:nth-child(3)')),
+      x: bx + 250, y: 420, w: 80, h: 52 },
+    // 非表示（コード保持）
+    { label: '事案の窓',  sub: '稼働中', active: true, draw: false, action: () => showPage('karte', document.querySelector('nav a:nth-child(5)')), x: bx + 190, y: 360, w: 84, h: 56 },
+    { label: '観測DB',    sub: '稼働中', active: true, draw: false, action: () => showPage('db',    document.querySelector('nav a:nth-child(2)')), x: bx - 265, y: 440, w: 84, h: 56 },
+  ];
+
+  function drawBox(win) {
+    const { x, y, w, h, label, sub, active } = win;
+    ctx.fillStyle = active ? '#14140c' : 'rgba(20,20,12,0.48)';
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 + 5, y); ctx.lineTo(x, y - 14); ctx.lineTo(x + w / 2 - 5, y);
+    ctx.fill();
+    ctx.beginPath(); ctx.roundRect(x - w / 2, y, w, h, 3); ctx.fill();
+    const hr = active ? 8 : 5.5;
+    ctx.beginPath(); ctx.arc(x, y + h * .34, hr, 0, Math.PI * 2);
+    ctx.fillStyle = '#cdd6e0'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x, y + h * .34, hr * .35, 0, Math.PI * 2);
+    ctx.fillStyle = active ? '#14140c' : 'rgba(20,20,12,.5)'; ctx.fill();
+    ctx.textAlign = 'center';
+    ctx.fillStyle = active ? '#cdd6e0' : 'rgba(200,210,220,.7)';
+    ctx.font = `${active ? '600 11' : '500 10'}px sans-serif`;
+    ctx.fillText(label, x, y + h * .66);
+    ctx.font = '400 7.5px sans-serif';
+    ctx.fillStyle = active ? 'rgba(160,185,210,.95)' : 'rgba(150,165,180,.55)';
+    ctx.fillText(sub, x, y + h * .83);
+  }
+
+  windows.filter(w => w.draw).forEach(drawBox);
+
+  // 共通キャンバスポップアップ
+  function showCanvasPopup({ label, body, btnLabel, onOpen }) {
+    let popup = document.getElementById('home-canvas-popup');
+    if (!popup) {
+      popup = document.createElement('div');
+      popup.id = 'home-canvas-popup';
+      popup.style.cssText = `
+        position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);
+        background:rgba(20,20,12,0.92);color:#cdd6e0;
+        font-size:0.84rem;line-height:1.85;
+        padding:1.3rem 1.8rem 1rem;border-radius:7px;
+        max-width:320px;width:calc(100% - 3rem);text-align:center;
+        opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999;
+        letter-spacing:0.03em;
+      `;
+      document.body.appendChild(popup);
+    }
+    clearTimeout(popup._timer);
+    const btnHtml = btnLabel
+      ? `<div style="margin-top:1rem">
+           <button id="home-popup-btn" style="
+             background:rgba(205,214,224,0.15);border:1px solid rgba(205,214,224,0.35);
+             color:#cdd6e0;font-size:0.78rem;letter-spacing:0.06em;
+             padding:0.4rem 1.1rem;border-radius:20px;cursor:pointer;
+           ">${btnLabel} →</button>
+         </div>`
+      : '';
+    popup.innerHTML = `<strong style="font-size:0.72rem;letter-spacing:0.1em;opacity:0.55">${label}</strong><br><br>${body}${btnHtml}`;
+    popup.style.opacity = '1';
+    popup.style.pointerEvents = 'auto';
+    if (btnLabel && onOpen) {
+      document.getElementById('home-popup-btn').onclick = () => {
+        popup.style.opacity = '0'; popup.style.pointerEvents = 'none';
+        onOpen();
+      };
+    }
+    popup._timer = setTimeout(() => {
+      popup.style.opacity = '0'; popup.style.pointerEvents = 'none';
+    }, 6000);
+  }
+
+  function onCanvasClick(e) {
+    const rect = cv.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
+
+    // 百葉箱
+    if (mx >= hygroHit.x - hygroHit.hw && mx <= hygroHit.x + hygroHit.hw
+     && my >= hygroHit.top && my <= hygroHit.bottom) {
+      showCanvasPopup({
+        label: '百葉箱',
+        body: 'MANAは社会を評価する場所ではありません。<br><br>まず観測し、記録し、残します。<br><br>ここには日々の観測が蓄積されています。',
+        btnLabel: '観測DBを開く',
+        onOpen: () => showPage('db', document.querySelector('nav a:nth-child(2)')),
+      });
+      return;
+    }
+
+    // 立て札
+    if (mx >= signHit.x - signHit.hw && mx <= signHit.x + signHit.hw
+     && my >= signHit.top && my <= signHit.bottom) {
+      showCanvasPopup({
+        label: 'この村について',
+        body: 'ここは制度の外側にいる人たちが、それでも社会と繋がり続けるための観測所です。<br><br>村の各家には、集まった記事・記録・声が展示されています。',
+      });
+      return;
+    }
+
+    // 巣箱
+    for (const win of windows) {
+      if (!win.draw) continue;
+      const inBox = mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
+                 && my >= win.y - 14         && my <= win.y + win.h;
+      if (!inBox) continue;
+      if (win.label === 'PROJECT MANAとは' || win.label === 'フィードバック') {
+        win.action();
+      } else {
+        const wData = windowMasterData.find(w => w.window_name === win.label);
+        if (wData) {
+          showCanvasPopup({
+            label: wData.window_name,
+            body: (wData.popup_text || wData.question).replace(/\n/g, '<br>'),
+            btnLabel: '展示室を開く',
+            onOpen: win.action,
+          });
+        } else {
+          win.action();
+        }
+      }
+      return;
+    }
+  }
+
+  function onCanvasMove(e) {
+    const rect = cv.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / scale;
+    const my = (e.clientY - rect.top) / scale;
+    const hitHyg = mx >= hygroHit.x - hygroHit.hw && mx <= hygroHit.x + hygroHit.hw
+                && my >= hygroHit.top && my <= hygroHit.bottom;
+    const hitSign = mx >= signHit.x - signHit.hw && mx <= signHit.x + signHit.hw
+                 && my >= signHit.top && my <= signHit.bottom;
+    const hitWin = windows.filter(w => w.draw).some(win =>
+      mx >= win.x - win.w / 2 && mx <= win.x + win.w / 2
+      && my >= win.y - 14 && my <= win.y + win.h
+    );
+    cv.style.cursor = (hitHyg || hitSign || hitWin) ? 'pointer' : 'default';
+  }
+
+  cv.removeEventListener('click', cv._homeClickHandler);
+  cv.removeEventListener('mousemove', cv._homeMoveHandler);
+  cv._homeClickHandler = onCanvasClick;
+  cv._homeMoveHandler  = onCanvasMove;
+  cv.addEventListener('click', onCanvasClick);
+  cv.addEventListener('mousemove', onCanvasMove);
+}
+
 // ===== 観測の窓ページ =====
 function renderWindowsPage() {
   const cv = document.getElementById('windows-canvas');
