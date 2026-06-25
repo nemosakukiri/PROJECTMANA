@@ -2560,7 +2560,6 @@ function showVillageContent(house, win, windowId) {
     </div>`;
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-}
 
 const GAS_FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbw0MWRwN9ZgoXxtAsAQus3wDhsnZc1nESxp_imFe90-b9dAw4jbnBLpMQ4zJUm1Z2VsFQ/exec';
 

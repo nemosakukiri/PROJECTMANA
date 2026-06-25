@@ -1,0 +1,68 @@
+[
+  {
+    "_comment": "スキーマ: perspective(mana/ai/visitor) + title(視点名) + reasoning(AI必須・接続理由のみ・結論を言わない) + confidence(AI:0-1 / MANA:1.0 / visitor:null)",
+    "window_id": "__example_only__",
+    "ref_id": "KARTE-0001",
+    "ref_type": "karte",
+    "perspective": "mana",
+    "title": "（MANAによる展示例）",
+    "exhibit_note": "このレコードはスキーマ例示用です。",
+    "reasoning": null,
+    "confidence": 1.0,
+    "status": "draft",
+    "created_at": "2026-06-24",
+    "approved_at": null
+  },
+  {
+    "window_id": "human_rights",
+    "ref_id": "KARTE-0001",
+    "ref_type": "karte",
+    "perspective": "ai",
+    "title": "生存権の行使を阻む壁から見る人権",
+    "exhibit_note": "京都市の窓口で繰り返された「まず家族に相談を」という言葉。担当者が変わっても同じ言葉が出ることは、個人の問題ではなく制度・組織の構造を示している。支援を届けないという不作為そのものが、人権問題として問われる。",
+    "reasoning": "・「生存権とは何か」という問いと接続できると考えた\n・申請者が複数の窓口で同じ言葉を経験していることが、この窓から見る入り口になると判断した\n・生活保護法第7条（申請権の保護）という制度との照合が、この問いを考える材料になりうる",
+    "confidence": 0.95,
+    "status": "proposed",
+    "created_at": "2026-06-24",
+    "approved_at": null
+  },
+  {
+    "window_id": "democracy",
+    "ref_id": "KARTE-0001",
+    "ref_type": "karte",
+    "perspective": "ai",
+    "title": "行政の説明責任から見る民主主義",
+    "exhibit_note": "行政は「個別対応」として組織的関与を否定している。しかし市民団体が収集した複数証言は、組織的な対応指針の存在を示唆する。市民の側に記録が積み上がり、行政が否定し続ける構造——この事案を通じて、民主主義の窓が問うことを考えられると判断した。",
+    "reasoning": "・「市民の声はどこへ届くか」という問いと接続できると考えた\n・情報公開・監査・議会という制度がこの事案にどう関わるかを考える材料になりうる\n・行政の応答と市民の記録の間にある非対称性が、この窓から見るとき浮かびやすいと判断した",
+    "confidence": 0.87,
+    "status": "proposed",
+    "created_at": "2026-06-24",
+    "approved_at": null
+  },
+  {
+    "window_id": "mental",
+    "ref_id": "KARTE-0001",
+    "ref_type": "karte",
+    "perspective": "ai",
+    "title": "窓口で跳ね返される経験が人に何を残すか",
+    "exhibit_note": "助けを求めて窓口に来た人が「家族に相談してから」と言われる。この経験が単なる手続きの話にとどまらない可能性を、心の窓から考えられると判断した。",
+    "reasoning": "・「制度は人の心に何を残すのだろう」という問いと接続できると考えた\n・窓口での経験が、その後の行動や自己認識にどう影響するかを考える材料になりうる\n・制度論や法律論では見えにくい角度から、この事案を見ることができると判断した",
+    "confidence": 0.78,
+    "status": "proposed",
+    "created_at": "2026-06-24",
+    "approved_at": null
+  },
+  {
+    "window_id": "media",
+    "ref_id": "KARTE-0001",
+    "ref_type": "karte",
+    "perspective": "ai",
+    "title": "市民が記録し、行政が沈黙する——情報の非対称性",
+    "exhibit_note": "この事案では当事者証言が記録の主な根拠となり、行政は公式情報を出していない。誰が何を記録するかによって、何が「事実」として残るかが変わる。その構造を、メディアの窓から考えられると判断した。",
+    "reasoning": "・「私たちは何を知り、何を知らないままなのだろう」という問いと接続できると考えた\n・報道ではなく市民団体の収集によって記録が成立していることが、この問いを考える入り口になりうる\n・ただし直接的な接続は弱く、この角度から考えるには補助的な材料が必要かもしれない",
+    "confidence": 0.65,
+    "status": "proposed",
+    "created_at": "2026-06-24",
+    "approved_at": null
+  }
+]
