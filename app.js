@@ -1602,7 +1602,7 @@ function loadDB() {
         old_flag:       row['古い記事'] || '', // 「古い記事候補」が入っていればアーカイブ扱い
         date_status:    row['date_status'] || '', // 確定 / 未確認 / 要確認
         karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
-        article_type:   inferArticleType(row['記事種別'], row['source_domain']),
+        article_type:   inferArticleType(row['記事種別'], row['source_domain'] || (() => { try { return new URL(row['URL'] || '').hostname; } catch(e) { return ''; } })()),
       })).filter(r => r.title);
       // [診断] カルテID列がAPIから来ているか確認
       const sampleRow = dbData.slice(0, 3);
