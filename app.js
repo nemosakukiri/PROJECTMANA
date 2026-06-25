@@ -2355,7 +2355,7 @@ function renderVillageCanvas(win, windowId) {
   const dpr = window.devicePixelRatio || 1;
   const isMobile = window.innerWidth < 600;
   const W = isMobile ? window.innerWidth : Math.min(window.innerWidth, 860);
-  const H = Math.round(W * 0.62);
+  const H = Math.round(W * 0.60);
   cv.width  = W * dpr; cv.height = H * dpr;
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
 
@@ -2363,146 +2363,166 @@ function renderVillageCanvas(win, windowId) {
   ctx.scale(dpr, dpr);
   const sc = W / 680;
 
-  // 空
-  ctx.fillStyle = '#cdd6e0';
-  ctx.fillRect(0, 0, W, H);
+  // 地平線（CSS pixel）
+  const groundY = H * 0.82;
 
-  // 地面
-  const groundY = H * 0.78;
-  ctx.fillStyle = '#b8b4a0';
-  ctx.fillRect(0, groundY, W, H - groundY);
-  ctx.fillStyle = '#a8a490';
-  ctx.fillRect(0, groundY, W, 3 * sc);
-
-  // 小さな木（枝アルゴリズム再利用）
+  // 擬似乱数（シード固定）
   let _s = 17;
   function r() { _s = (_s * 9301 + 49297) % 233280; return _s / 233280; }
-  function smallBranch(x, y, a, len, d, maxD) {
-    if (d > maxD || len < 1.5) return;
+
+  // 枝アルゴリズム（virtual coord → canvas pixel 変換なし：x,yはCSS px直接渡す）
+  function branch(x, y, a, len, d, maxD) {
+    if (d > maxD || len < 1.5 * sc) return;
     const nx = x + Math.cos(a) * len, ny = y + Math.sin(a) * len;
-    const w = Math.max(0.4, Math.pow((maxD - d + 1) / maxD, 1.2) * 6 * sc);
-    ctx.beginPath(); ctx.moveTo(x * sc, y * sc);
-    ctx.lineTo(nx * sc, ny * sc);
-    ctx.strokeStyle = '#14140c'; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.stroke();
-    const sp = 0.32 + d * 0.04, f = () => 0.62 + r() * 0.1, j = () => (r()-0.5)*0.18;
+    const lw = Math.max(0.4, Math.pow((maxD - d + 1) / maxD, 1.2) * 6 * sc);
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny);
+    ctx.strokeStyle = '#14140c'; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.stroke();
+    const sp = 0.30 + d * 0.04, f = () => 0.62 + r() * 0.1, j = () => (r()-0.5)*0.18;
     if (d < 4) {
-      smallBranch(nx, ny, a - sp + j(), len * f(), d+1, maxD);
-      smallBranch(nx, ny, a + j()*0.3, len*(f()+0.05), d+1, maxD);
-      smallBranch(nx, ny, a + sp + j(), len * f(), d+1, maxD);
+      branch(nx, ny, a - sp + j(), len * f(), d+1, maxD);
+      branch(nx, ny, a + j()*0.3, len*(f()+0.05), d+1, maxD);
+      branch(nx, ny, a + sp + j(), len * f(), d+1, maxD);
     } else {
-      smallBranch(nx, ny, a - sp + j(), len * f(), d+1, maxD);
-      smallBranch(nx, ny, a + sp + j(), len * f(), d+1, maxD);
+      branch(nx, ny, a - sp + j(), len * f(), d+1, maxD);
+      branch(nx, ny, a + sp + j(), len * f(), d+1, maxD);
     }
   }
-  const trees = [[90,groundY/sc],[580,groundY/sc],[340,groundY/sc-10],[160,groundY/sc+2],[500,groundY/sc-5]];
-  trees.forEach(([tx,ty]) => smallBranch(tx, ty, -Math.PI/2, 38, 0, 7));
 
-  // 石畳（楕円の連なり）
-  ctx.save();
-  [[200,groundY+8],[260,groundY+10],[320,groundY+7],[390,groundY+9],[450,groundY+8]].forEach(([px,py]) => {
-    ctx.fillStyle = 'rgba(160,155,140,0.45)';
-    ctx.beginPath(); ctx.ellipse(px * sc / sc * sc, py, 14*sc, 5*sc, (r()-0.5)*0.3, 0, Math.PI*2); ctx.fill();
-  });
-  ctx.restore();
+  // 木の定義：[css_x, base_css_y, trunk_len, seed]
+  // 背景の大きい木（上部）と前景の小さい木（地面付近）
+  const trees = [
+    { x: 60*sc,  y: groundY - 10*sc, len: 52*sc, seed: 17,  depth: 7 },
+    { x: 240*sc, y: groundY - 80*sc, len: 38*sc, seed: 42,  depth: 7 },
+    { x: 460*sc, y: groundY - 60*sc, len: 44*sc, seed: 83,  depth: 7 },
+    { x: 618*sc, y: groundY - 5*sc,  len: 56*sc, seed: 61,  depth: 7 },
+    { x: 150*sc, y: groundY,         len: 28*sc, seed: 29,  depth: 6 },
+    { x: 540*sc, y: groundY,         len: 30*sc, seed: 55,  depth: 6 },
+  ];
 
-  // 家の定義（各声の住人）
+  // 家の定義：baseY = 足元のCSS y座標
+  // x, baseY はCSS px（sc掛け済み）で持つ
   const houses = [
-    { id:'law',        label:'法律・制度',       x:130, y:groundY/sc, w:52, h:44, roofH:22 },
-    { id:'researcher', label:'研究者・論考',      x:280, y:groundY/sc, w:48, h:40, roofH:20 },
-    { id:'voice',      label:'当事者の声',        x:200, y:groundY/sc, w:44, h:38, roofH:18 },
-    { id:'journalist', label:'ジャーナリスト',    x:420, y:groundY/sc, w:50, h:42, roofH:21 },
-    { id:'karte',      label:'カルテ',            x:520, y:groundY/sc, w:46, h:38, roofH:18 },
-    { id:'observation',label:'観測事案',          x:360, y:groundY/sc, w:48, h:40, roofH:20 },
+    { id:'law',         label:'法律・制度',    x:115*sc, baseY:groundY - 52*sc, w:52*sc, ht:44*sc, roofH:22*sc },
+    { id:'researcher',  label:'研究者・論考',  x:330*sc, baseY:groundY - 38*sc, w:48*sc, ht:40*sc, roofH:20*sc },
+    { id:'voice',       label:'当事者の声',    x:220*sc, baseY:groundY - 8*sc,  w:44*sc, ht:38*sc, roofH:18*sc },
+    { id:'journalist',  label:'ジャーナリスト',x:510*sc, baseY:groundY - 18*sc, w:50*sc, ht:42*sc, roofH:21*sc },
+    { id:'karte',       label:'カルテ',        x:600*sc, baseY:groundY - 55*sc, w:46*sc, ht:38*sc, roofH:18*sc },
+    { id:'observation', label:'観測事案',      x:400*sc, baseY:groundY - 2*sc,  w:48*sc, ht:40*sc, roofH:20*sc },
   ];
 
   let hoveredId = null;
 
-  function drawHouse(h, hovered) {
-    const { x, y, w, h: ht, roofH, label } = h;
-    const sx = x * sc, sy = y * sc, sw = w * sc, sht = ht * sc, srf = roofH * sc;
-    const baseY = sy;
+  function drawScene() {
+    ctx.clearRect(0, 0, W, H);
 
-    // 影
-    ctx.save(); ctx.globalAlpha = 0.08;
+    // 空
+    ctx.fillStyle = '#cdd6e0';
+    ctx.fillRect(0, 0, W, H);
+
+    // 地面
+    ctx.fillStyle = '#b8b4a0';
+    ctx.fillRect(0, groundY, W, H - groundY);
+    // 地平線
+    ctx.fillStyle = '#9a9688';
+    ctx.fillRect(0, groundY, W, 2*sc);
+
+    // 木を描画（背景＝低いインデックスから）
+    trees.forEach(t => {
+      _s = t.seed;
+      branch(t.x, t.y, -Math.PI/2, t.len, 0, t.depth);
+    });
+
+    // 石畳：地面の上に、中央付近をS字に
+    const stones = [
+      [310*sc, groundY+6*sc,  18*sc, 5*sc,  0.08],
+      [345*sc, groundY+10*sc, 20*sc, 5.5*sc, -0.06],
+      [375*sc, groundY+7*sc,  16*sc, 4.5*sc, 0.12],
+      [405*sc, groundY+11*sc, 18*sc, 5*sc,  -0.05],
+      [285*sc, groundY+9*sc,  15*sc, 4.5*sc, 0.10],
+      [430*sc, groundY+8*sc,  17*sc, 5*sc,   0.07],
+    ];
+    stones.forEach(([sx, sy, rx, ry, angle]) => {
+      ctx.fillStyle = 'rgba(148,143,128,0.55)';
+      ctx.beginPath();
+      ctx.ellipse(sx, sy, rx, ry, angle, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    // 家（奥から手前の順＝baseYが小さい順）
+    const sorted = [...houses].sort((a,b) => a.baseY - b.baseY);
+    sorted.forEach(h => drawHouse(h, h.id === hoveredId));
+  }
+
+  function drawHouse(h, hovered) {
+    const { x, baseY, w, ht, roofH, label } = h;
+
+    // 壁の影（地面に落ちる）
+    ctx.save(); ctx.globalAlpha = 0.07;
     ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(sx, baseY + 3*sc, sw*0.55, 4*sc, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
+    ctx.beginPath(); ctx.ellipse(x, baseY + 2*sc, w*0.5, 3.5*sc, 0, 0, Math.PI*2);
+    ctx.fill(); ctx.restore();
 
     // 壁
     ctx.fillStyle = hovered ? '#f0ece0' : '#e4dfd0';
-    ctx.strokeStyle = '#9a9280'; ctx.lineWidth = 1 * sc;
-    ctx.beginPath(); ctx.rect(sx - sw/2, baseY - sht, sw, sht); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#9a9280'; ctx.lineWidth = sc;
+    ctx.beginPath(); ctx.rect(x - w/2, baseY - ht, w, ht);
+    ctx.fill(); ctx.stroke();
 
     // 屋根
     ctx.fillStyle = hovered ? '#b0a080' : '#9a8e70';
-    ctx.strokeStyle = '#857a60'; ctx.lineWidth = 1 * sc;
+    ctx.strokeStyle = '#857a60'; ctx.lineWidth = sc;
     ctx.beginPath();
-    ctx.moveTo(sx - sw/2 - 2*sc, baseY - sht);
-    ctx.lineTo(sx, baseY - sht - srf);
-    ctx.lineTo(sx + sw/2 + 2*sc, baseY - sht);
+    ctx.moveTo(x - w/2 - 2*sc, baseY - ht);
+    ctx.lineTo(x, baseY - ht - roofH);
+    ctx.lineTo(x + w/2 + 2*sc, baseY - ht);
     ctx.closePath(); ctx.fill(); ctx.stroke();
 
     // ドア
-    const dw = sw * 0.28, dht = sht * 0.42;
+    const dw = w * 0.28, dht = ht * 0.42;
     ctx.fillStyle = hovered ? '#5a4830' : '#3a2e18';
-    ctx.beginPath(); ctx.rect(sx - dw/2, baseY - dht, dw, dht); ctx.fill();
-    // ドアノブ
+    ctx.beginPath(); ctx.rect(x - dw/2, baseY - dht, dw, dht); ctx.fill();
     ctx.fillStyle = '#c8b888';
-    ctx.beginPath(); ctx.arc(sx + dw*0.22, baseY - dht*0.45, 1.5*sc, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + dw*0.22, baseY - dht*0.45, 1.5*sc, 0, Math.PI*2); ctx.fill();
 
     // 小窓
-    const ww = sw * 0.22, wht = sht * 0.22, wy = baseY - sht * 0.72;
+    const ww = w * 0.22, wht = ht * 0.22, wy = baseY - ht * 0.72;
     ctx.fillStyle = hovered ? '#d8e8f0' : '#c8dce8';
-    ctx.strokeStyle = '#9a9280'; ctx.lineWidth = 0.8 * sc;
-    ctx.beginPath(); ctx.rect(sx - ww/2, wy, ww, wht); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#9a9280'; ctx.lineWidth = 0.8*sc;
+    ctx.beginPath(); ctx.rect(x - ww/2, wy, ww, wht);
+    ctx.fill(); ctx.stroke();
 
     // ラベル
     ctx.textAlign = 'center';
-    ctx.font = `${hovered ? '600' : '500'} ${10 * sc}px sans-serif`;
-    ctx.fillStyle = hovered ? '#14140c' : 'rgba(20,20,12,0.7)';
-    ctx.fillText(label, sx, baseY + 13*sc);
+    ctx.font = `${hovered ? '600' : '500'} ${Math.round(10*sc)}px sans-serif`;
+    ctx.fillStyle = hovered ? '#14140c' : 'rgba(20,20,12,0.72)';
+    ctx.fillText(label, x, baseY + 14*sc);
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-    // 空・地面再描画
-    ctx.fillStyle = '#cdd6e0'; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#b8b4a0'; ctx.fillRect(0, groundY, W, H - groundY);
-    ctx.fillStyle = '#a8a490'; ctx.fillRect(0, groundY, W, 3*sc);
-    trees.forEach(([tx,ty]) => { _s = 17 + tx; smallBranch(tx, ty, -Math.PI/2, 38, 0, 7); });
-    [[200,groundY+8],[260,groundY+10],[320,groundY+7],[390,groundY+9],[450,groundY+8]].forEach(([px,py]) => {
-      ctx.fillStyle = 'rgba(160,155,140,0.45)';
-      ctx.beginPath(); ctx.ellipse(px*sc, py, 14*sc, 5*sc, 0, 0, Math.PI*2); ctx.fill();
-    });
-    houses.forEach(h => drawHouse(h, h.id === hoveredId));
-  }
+  drawScene();
 
-  draw();
-
-  // ヒット判定
+  // ヒット判定（CSS px座標で受け取る）
   function hitTest(mx, my) {
     return houses.find(h => {
-      const sx = h.x*sc, sy = h.y*sc, sw = h.w*sc, sht = h.h*sc, srf = h.roofH*sc;
-      return mx >= sx - sw/2 && mx <= sx + sw/2 && my >= sy - sht - srf && my <= sy + 13*sc;
+      return mx >= h.x - h.w/2 && mx <= h.x + h.w/2
+          && my >= h.baseY - h.ht - h.roofH && my <= h.baseY + 14*sc;
     });
   }
 
-  cv.removeEventListener('mousemove', cv._vm); cv.removeEventListener('click', cv._vc);
+  cv.removeEventListener('mousemove', cv._vm);
+  cv.removeEventListener('click', cv._vc);
+
   cv._vm = e => {
-    const r = cv.getBoundingClientRect();
-    const mx = (e.clientX - r.left) * dpr, my = (e.clientY - r.top) * dpr;
-    const hit = hitTest(mx / dpr * dpr / dpr * dpr, my / dpr * dpr / dpr * dpr);
-    // シンプルにdpr考慮
-    const hmx = (e.clientX - r.left), hmy = (e.clientY - r.top);
-    const hh = hitTest(hmx * sc, hmy * sc);
+    const rect = cv.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const hh = hitTest(mx, my);
     const newId = hh ? hh.id : null;
-    if (newId !== hoveredId) { hoveredId = newId; draw(); }
+    if (newId !== hoveredId) { hoveredId = newId; drawScene(); }
     cv.style.cursor = hh ? 'pointer' : 'default';
   };
   cv._vc = e => {
-    const r = cv.getBoundingClientRect();
-    const mx = (e.clientX - r.left), my = (e.clientY - r.top);
-    const hh = hitTest(mx * sc, my * sc);
+    const rect = cv.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const hh = hitTest(mx, my);
     if (hh) showVillageContent(hh, win, windowId);
   };
   cv.addEventListener('mousemove', cv._vm);
