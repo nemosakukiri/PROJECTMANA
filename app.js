@@ -1613,6 +1613,12 @@ function loadDB() {
       });
       const hasKarteId = dbData.some(r => r.karte_id);
       console.log('[loadDB診断] カルテID列が存在するか:', hasKarteId ? 'YES ✅' : 'NO ❌（GAS APIが列を返していない可能性）');
+      // source_domain / article_type 診断
+      const rawSample = data.slice(0, 3);
+      rawSample.forEach((row, i) => console.log('[loadDB診断] raw row' + i + ' keys:', Object.keys(row).join(', ')));
+      const opinionCount = dbData.filter(r => r.article_type === 'opinion').length;
+      const invCount = dbData.filter(r => r.article_type === 'investigative').length;
+      console.log('[loadDB診断] opinion件数:', opinionCount, '| investigative件数:', invCount);
 
       // ===== 表示順は必ず「収集日ベースの新着順」に統一する =====
       // 公開日(date)や文字列順ではなく、collected_at（収録日時）をDateとして比較する。
