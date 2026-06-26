@@ -2829,8 +2829,7 @@ const TOJISHA_SOURCES = [
   { name: '移住連', url: 'https://prtimes.jp/companyrdf.php?company_id=88687', category: '移民・外国籍' },
   { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
   // 在日コリアン
-  // 朝鮮新報: サイトRSS全501 → YouTube RSSで代替収集
-  { name: '朝鮮新報（YouTube）', url: 'https://www.youtube.com/feeds/videos.xml?channel_id=UCxkI5ows6xEee28Yhu3daHA', category: '在日コリアン' },
+  // 朝鮮新報: サイトRSS全501・YouTube RSS→GASからアクセス不可(404) → 収集不可
   { name: '在日本大韓民国民団', url: 'https://www.mindan.org/feed/', category: '在日コリアン' },
   // 民団大阪府本部（PR Times）
   { name: '在日本大韓民国民団大阪府本部', url: 'https://prtimes.jp/companyrdf.php?company_id=170584', category: '在日コリアン' },
@@ -2930,6 +2929,33 @@ function testChosonsinboRss() {
 }
 
 // 当事者ソースのRSS疎通確認（GASエディタから手動実行）
+// 0件ソースのRSS構造を診断する（GASエディタから手動実行）
+function debugZeroSources() {
+  const targets = [
+    { name: 'DPI日本会議', url: 'https://dpi-japan.org/feed/' },
+    { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/' },
+    { name: '民団', url: 'https://www.mindan.org/feed/' },
+  ];
+  targets.forEach(source => {
+    try {
+      const res = UrlFetchApp.fetch(source.url, { muteHttpExceptions: true, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const xml = res.getContentText();
+      // 最初の500文字を表示
+      Logger.log('=== ' + source.name + ' (先頭500文字) ===');
+      Logger.log(xml.slice(0, 500));
+      // <item>タグの数
+      const itemCount = (xml.match(/<item/gi) || []).length;
+      const entryCount = (xml.match(/<entry/gi) || []).length;
+      // <link>タグの種類
+      const linkSamples = xml.match(/<link[^>]*>/gi) || [];
+      Logger.log('itemタグ数: ' + itemCount + ' / entryタグ数: ' + entryCount);
+      Logger.log('linkタグ例: ' + linkSamples.slice(0, 3).join(' | '));
+    } catch(e) {
+      Logger.log('[ERR] ' + source.name + ': ' + e.message);
+    }
+  });
+}
+
 function testTojishaSources() {
   TOJISHA_SOURCES.forEach(source => {
     try {
