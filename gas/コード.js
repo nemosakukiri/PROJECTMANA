@@ -2822,25 +2822,23 @@ function classifyUnlabeledRows() {
 
 const TOJISHA_SOURCES = [
   // 障害・福祉
-  { name: 'DPI日本会議', url: 'https://dpi-japan.org/feed/', category: '障害' },
-  // 全国自立生活センター協議会（j-il.jp）はRSSなし
+  // DPI日本会議: /feed/ → GASからHTML返却（GASのIPブロック）→ 収集不可
   { name: 'POSSE', url: 'https://www.npoposse.jp/feed/', category: '労働・貧困' },
   // 外国籍・移民
   { name: '移住連', url: 'https://prtimes.jp/companyrdf.php?company_id=88687', category: '移民・外国籍' },
   { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
   // 在日コリアン
-  // 朝鮮新報: サイトRSS全501・YouTube RSS→GASからアクセス不可(404) → 収集不可
-  { name: '在日本大韓民国民団', url: 'https://www.mindan.org/feed/', category: '在日コリアン' },
-  // 民団大阪府本部（PR Times）
+  // 朝鮮新報: サイトRSS全501・YouTube RSS→GASから404 → 収集不可
+  // 在日本大韓民国民団: /feed/ → GASからHTML返却 → 収集不可
   { name: '在日本大韓民国民団大阪府本部', url: 'https://prtimes.jp/companyrdf.php?company_id=170584', category: '在日コリアン' },
   // 貧困・生活困窮
   { name: 'ビッグイシュー日本', url: 'https://www.bigissue.jp/feed/', category: '貧困' },
   // 反貧困ネットワーク（hanhinkonnetwork.org）はRSSなし
-  // 部落解放同盟（bll.gr.jp）はRSSなし・PR Timesなし → 要調査
-  // コリアNGOセンター（korea-ngo.org）はRSSなし → 要調査
+  // 部落解放同盟（bll.gr.jp）はRSSなし・PR Timesなし
+  // コリアNGOセンター（korea-ngo.org）はRSSなし
   // 戦争・沖縄（当事者メディアとして）
   { name: '沖縄タイムス', url: 'https://www.okinawatimes.co.jp/list/feed/rss', category: '沖縄・戦争' },
-  { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/', category: '沖縄・戦争' },
+  // 琉球新報: /rss/ → GASからHTML返却（GASのIPブロック）→ 収集不可
   // LGBTQ+
   { name: 'ReBit', url: 'https://prtimes.jp/companyrdf.php?company_id=47512', category: 'LGBTQ+' },
 ];
