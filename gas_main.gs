@@ -258,6 +258,10 @@ function collectNews() {
   }
 
   Logger.log('===== 層A収集完了。Gemini分類は classifyUnclassifiedBatch() で後続実行してください =====');
+
+  // 当事者メディアも同じタイミングで収集
+  Logger.log('===== 当事者メディア収集開始 =====');
+  collectTojishaSources();
 }
 
 // ===== 層A行データの組み立て（列名マップに基づく・列順非依存）=====
@@ -1274,10 +1278,12 @@ function formatDate(date) {
 }
 
 // ===== トリガー設定 =====
+// collectNews（6時）→ collectTojishaSources（collectNews内で呼ばれる）→ classifyUnclassifiedBatch（7時）
 function setDailyTrigger() {
   ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('collectNews').timeBased().everyDays(1).atHour(6).create();
-  Logger.log('毎日6時の自動実行を設定しました');
+  ScriptApp.newTrigger('classifyUnclassifiedBatch').timeBased().everyDays(1).atHour(7).create();
+  Logger.log('トリガー設定完了: collectNews（6時）+ classifyUnclassifiedBatch（7時）');
 }
 
 // ===== 既存kansokuDBシートに「公開日」「古い記事」列を追加 =====
