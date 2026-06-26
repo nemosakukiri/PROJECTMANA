@@ -2832,15 +2832,14 @@ const TOJISHA_SOURCES = [
   { name: '沖縄タイムス', url: 'https://www.okinawatimes.co.jp/list/feed/rss', category: '沖縄・戦争' },
   { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/', category: '沖縄・戦争' },
   // LGBTQ+
-  // ReBit（rebitlgbt.org）はRSSなし
+  { name: 'ReBit', url: 'https://prtimes.jp/companyrdf.php?company_id=47512', category: 'LGBTQ+' },
 ];
 
 // RSSを持たない当事者団体のXアカウント
 // RSSHub（https://rsshub.app）経由でXのタイムラインをRSSとして取得
 const X_SOURCES = [
   { name: '反貧困ネットワーク', account: 'anti_poverty_NW', category: '貧困' },
-  // 移住連はPR Times RSSで収集（TOJISHA_SOURCESへ移動）
-  { name: 'ReBit', account: 'Re__Bit', category: 'LGBTQ+' },
+  // 移住連・ReBitはPR Times RSSで収集（TOJISHA_SOURCESへ移動）
 ];
 
 const RSSHUB_BASE = 'https://rsshub.app/twitter/user/';
