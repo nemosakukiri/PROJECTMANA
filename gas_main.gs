@@ -2830,7 +2830,7 @@ const TOJISHA_SOURCES = [
   // 反貧困ネットワーク（hanhinkonnetwork.org）はRSSなし
   // 戦争・沖縄（当事者メディアとして）
   { name: '沖縄タイムス', url: 'https://www.okinawatimes.co.jp/list/feed/rss', category: '沖縄・戦争' },
-  { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/', category: '沖縄・戦争' },
+  { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/feed/news/', category: '沖縄・戦争' },
   // LGBTQ+
   { name: 'ReBit', url: 'https://prtimes.jp/companyrdf.php?company_id=47512', category: 'LGBTQ+' },
 ];
@@ -2940,15 +2940,22 @@ function collectTojishaSources() {
         return;
       }
       const xml = res.getContentText();
+      // 200KB超はパースが重すぎるのでスキップ
+      if (xml.length > 200000) {
+        Logger.log('[SKIP] ' + source.name + ': RSS大きすぎ (' + Math.round(xml.length/1000) + 'KB)');
+        return;
+      }
       const doc = XmlService.parse(xml);
       const root = doc.getRootElement();
       const ns = root.getNamespace();
 
       // RSS 2.0
       const channel = root.getChild('channel', ns) || root.getChild('channel');
-      const items = channel
+      const allItems = channel
         ? (channel.getChildren('item', ns).length > 0 ? channel.getChildren('item', ns) : channel.getChildren('item'))
         : root.getChildren('item');
+      // 最新20件のみ処理
+      const items = allItems.slice(0, 20);
 
       items.forEach(item => {
         const title = getTextSafe(item, ['title']);
