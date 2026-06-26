@@ -2826,7 +2826,7 @@ const TOJISHA_SOURCES = [
   { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
   // 貧困・生活困窮
   { name: 'ビッグイシュー日本', url: 'https://www.bigissue.jp/feed/', category: '貧困' },
-  { name: '反貧困ネットワーク', url: 'https://hanhinkonnetwork.org/feed/', category: '貧困' },
+  // 反貧困ネットワーク（hanhinkonnetwork.org）はRSSなし
   // 戦争・沖縄（当事者メディアとして）
   { name: '沖縄タイムス', url: 'https://www.okinawatimes.co.jp/rss/index.xml', category: '沖縄・戦争' },
   { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/', category: '沖縄・戦争' },
