@@ -2960,3 +2960,97 @@ function collectTojishaSources() {
   });
   Logger.log('当事者ソース収集完了: ' + added + '件追加');
 }
+
+// ===== 当事者の声 Gemini分類 =====
+// 「当事者の声」シートの未分類行をGeminiで分類し、結果を書き戻す
+function classifyTojishaArticles() {
+  const apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  if (!apiKey) { Logger.log('GEMINI_API_KEY が設定されていません'); return; }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('当事者の声');
+  if (!sheet) { Logger.log('「当事者の声」シートが見つかりません'); return; }
+
+  // ヘッダー確認・列追加
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const ensureCol = (name) => {
+    let idx = headers.indexOf(name);
+    if (idx === -1) {
+      idx = headers.length;
+      sheet.getRange(1, idx + 1).setValue(name);
+      headers.push(name);
+    }
+    return idx + 1; // 1-based
+  };
+  const COL_EXHIBIT  = ensureCol('展示対象');
+  const COL_TYPE     = ensureCol('種別');
+  const COL_VILLAGES = ensureCol('村');
+  const COL_SUMMARY  = ensureCol('要約');
+  const COL_QUOTE    = ensureCol('引用');
+  const COL_STATUS   = ensureCol('分類状態');
+
+  const rows = sheet.getDataRange().getValues();
+  let classified = 0;
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const status = row[COL_STATUS - 1];
+    if (status === '分類済み') continue; // スキップ
+
+    const title  = row[1] || '';
+    const url    = row[2] || '';
+    const desc   = row[3] || '';
+    const sender = row[4] || '';
+    if (!title) continue;
+
+    const prompt = `以下は当事者・当事者団体が発信した記事です。内容を読んで次の項目をJSONで答えてください。
+
+【記事情報】
+発信者: ${sender}
+タイトル: ${title}
+概要: ${desc}
+
+【回答形式】必ずJSONのみで返すこと。
+{
+  "exhibit": true か false,
+  "reason": "展示する/しない理由（1文）",
+  "type": "当事者の証言" | "団体の声明" | "調査・報告" | "イベント・告知" | "その他",
+  "villages": ["人権","民主主義","戦争","心","メディア"] の中から該当するものを配列で,
+  "summary": "何をどう訴えているかの1行要約（展示不要なら空文字）",
+  "quote": "記事中の核心的な一文（あれば。なければ空文字）"
+}
+
+exhibitがfalseになるのは：イベント告知・寄付依頼・採用情報など、制度や社会への訴えではないもの。`;
+
+    const url_api = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+    try {
+      const res = UrlFetchApp.fetch(url_api, {
+        method: 'POST',
+        contentType: 'application/json',
+        payload: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.1, maxOutputTokens: 300 }
+        }),
+        muteHttpExceptions: true
+      });
+      const json = JSON.parse(res.getContentText());
+      const text = json.candidates[0].content.parts[0].text.trim();
+      const match = text.match(/\{[\s\S]*\}/);
+      if (!match) { Logger.log('[SKIP] JSON取得失敗: ' + title); continue; }
+
+      const result = JSON.parse(match[0]);
+      sheet.getRange(i + 1, COL_EXHIBIT).setValue(result.exhibit ? '展示' : '非展示');
+      sheet.getRange(i + 1, COL_TYPE).setValue(result.type || '');
+      sheet.getRange(i + 1, COL_VILLAGES).setValue((result.villages || []).join('・'));
+      sheet.getRange(i + 1, COL_SUMMARY).setValue(result.summary || '');
+      sheet.getRange(i + 1, COL_QUOTE).setValue(result.quote || '');
+      sheet.getRange(i + 1, COL_STATUS).setValue('分類済み');
+      classified++;
+      Logger.log('[OK] ' + title.slice(0, 30) + ' → ' + (result.exhibit ? '展示' : '非展示') + ' ' + (result.villages || []).join('・'));
+      Utilities.sleep(500);
+    } catch(e) {
+      Logger.log('[ERR] ' + title.slice(0, 30) + ': ' + e.message);
+    }
+  }
+  Logger.log('分類完了: ' + classified + '件');
+}
