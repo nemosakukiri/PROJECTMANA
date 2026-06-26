@@ -2829,7 +2829,7 @@ const TOJISHA_SOURCES = [
   { name: '移住連', url: 'https://prtimes.jp/companyrdf.php?company_id=88687', category: '移民・外国籍' },
   { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
   // 在日コリアン
-  // 朝鮮新報: /feed/ は501（RSS非対応）→ testChosonsinboRss() で代替URL調査中
+  // 朝鮮新報（chosonsinbo.com）: 全RSSエンドポイント501 → RSS完全非対応・収集不可
   { name: '在日本大韓民国民団', url: 'https://www.mindan.org/feed/', category: '在日コリアン' },
   // 民団大阪府本部（PR Times）
   { name: '在日本大韓民国民団大阪府本部', url: 'https://prtimes.jp/companyrdf.php?company_id=170584', category: '在日コリアン' },
