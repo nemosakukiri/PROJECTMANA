@@ -2938,15 +2938,13 @@ function debugZeroSources() {
   ];
   targets.forEach(source => {
     try {
-      const res = UrlFetchApp.fetch(source.url, { muteHttpExceptions: true, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      // User-Agentなしで取得（サーバーによってはUser-Agent付きでHTMLを返す）
+      const res = UrlFetchApp.fetch(source.url, { muteHttpExceptions: true });
       const xml = res.getContentText();
-      // 最初の500文字を表示
       Logger.log('=== ' + source.name + ' (先頭500文字) ===');
       Logger.log(xml.slice(0, 500));
-      // <item>タグの数
       const itemCount = (xml.match(/<item/gi) || []).length;
       const entryCount = (xml.match(/<entry/gi) || []).length;
-      // <link>タグの種類
       const linkSamples = xml.match(/<link[^>]*>/gi) || [];
       Logger.log('itemタグ数: ' + itemCount + ' / entryタグ数: ' + entryCount);
       Logger.log('linkタグ例: ' + linkSamples.slice(0, 3).join(' | '));
@@ -3038,10 +3036,7 @@ function collectTojishaSources() {
 
   TOJISHA_SOURCES.forEach(source => {
     try {
-      const res = UrlFetchApp.fetch(source.url, {
-        muteHttpExceptions: true,
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GoogleAppsScript)' }
-      });
+      const res = UrlFetchApp.fetch(source.url, { muteHttpExceptions: true });
       if (res.getResponseCode() !== 200) {
         Logger.log('[SKIP] ' + source.name + ': HTTP ' + res.getResponseCode());
         return;
