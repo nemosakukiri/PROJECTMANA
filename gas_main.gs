@@ -2823,7 +2823,7 @@ const TOJISHA_SOURCES = [
   // 全国自立生活センター協議会（j-il.jp）はRSSなし
   { name: 'POSSE', url: 'https://www.npoposse.jp/feed/', category: '労働・貧困' },
   // 外国籍・移民
-  // 移住連（migrants.jp）はRSSなし
+  { name: '移住連', url: 'https://prtimes.jp/companyrdf.php?company_id=88687', category: '移民・外国籍' },
   { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
   // 貧困・生活困窮
   { name: 'ビッグイシュー日本', url: 'https://www.bigissue.jp/feed/', category: '貧困' },
@@ -2839,7 +2839,7 @@ const TOJISHA_SOURCES = [
 // RSSHub（https://rsshub.app）経由でXのタイムラインをRSSとして取得
 const X_SOURCES = [
   { name: '反貧困ネットワーク', account: 'anti_poverty_NW', category: '貧困' },
-  { name: '移住連', account: 'MigrantsSmj', category: '移民・外国籍' },
+  // 移住連はPR Times RSSで収集（TOJISHA_SOURCESへ移動）
   { name: 'ReBit', account: 'Re__Bit', category: 'LGBTQ+' },
 ];
 
