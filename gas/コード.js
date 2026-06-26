@@ -2951,9 +2951,9 @@ function collectTojishaSources() {
         : root.getChildren('item');
 
       items.forEach(item => {
-        const title = getTextSafe(item, 'title');
-        const link  = getTextSafe(item, 'link');
-        const desc  = getTextSafe(item, 'description').replace(/<[^>]+>/g, '').slice(0, 200);
+        const title = getTextSafe(item, ['title']);
+        const link  = getTextSafe(item, ['link', 'guid']);
+        const desc  = getTextSafe(item, ['description', 'summary']).replace(/<[^>]+>/g, '').slice(0, 200);
         if (!link || existingUrls.includes(link)) return;
         sheet.appendRow([new Date(), title, link, desc, source.name, source.category, source.url]);
         existingUrls.push(link);
