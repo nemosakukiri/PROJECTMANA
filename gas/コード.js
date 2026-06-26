@@ -2819,19 +2819,19 @@ function classifyUnlabeledRows() {
 const TOJISHA_SOURCES = [
   // 障害・福祉
   { name: 'DPI日本会議', url: 'https://dpi-japan.org/feed/', category: '障害' },
-  { name: '全国自立生活センター協議会', url: 'https://www.jil.gr.jp/feed/', category: '障害' },
+  { name: '全国自立生活センター協議会', url: 'https://www.j-il.jp/feed/', category: '障害' },
   { name: 'POSSE', url: 'https://www.npoposse.jp/feed/', category: '労働・貧困' },
   // 外国籍・移民
-  { name: '移住連', url: 'https://migrants.jp/feed/', category: '移民・外国籍' },
+  { name: '移住連', url: 'https://migrants.jp/news/feed/', category: '移民・外国籍' },
   { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
   // 貧困・生活困窮
   { name: 'ビッグイシュー日本', url: 'https://www.bigissue.jp/feed/', category: '貧困' },
-  { name: '反貧困ネットワーク', url: 'https://www.hinkyuu-net.com/feed/', category: '貧困' },
+  { name: '反貧困ネットワーク', url: 'https://hinkyuunet.com/feed/', category: '貧困' },
   // 戦争・沖縄（当事者メディアとして）
-  { name: '沖縄タイムス', url: 'https://www.okinawatimes.co.jp/rss/', category: '沖縄・戦争' },
-  { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/index.rdf', category: '沖縄・戦争' },
+  { name: '沖縄タイムス', url: 'https://www.okinawatimes.co.jp/rss/feed/', category: '沖縄・戦争' },
+  { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/', category: '沖縄・戦争' },
   // LGBTQ+
-  { name: 'ReBit', url: 'https://rebitlgbt.org/feed/', category: 'LGBTQ+' },
+  { name: 'ReBit', url: 'https://rebitlgbt.org/news/feed/', category: 'LGBTQ+' },
 ];
 
 // 当事者ソースのRSS疎通確認（GASエディタから手動実行）
