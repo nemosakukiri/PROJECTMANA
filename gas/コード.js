@@ -3022,7 +3022,7 @@ function classifyTojishaArticles() {
 
 exhibitがfalseになるのは：イベント告知・寄付依頼・採用情報など、制度や社会への訴えではないもの。`;
 
-    const url_api = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
+    const url_api = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey;
     try {
       const res = UrlFetchApp.fetch(url_api, {
         method: 'POST',
