@@ -2828,8 +2828,11 @@ const TOJISHA_SOURCES = [
   // 外国籍・移民
   { name: '移住連', url: 'https://prtimes.jp/companyrdf.php?company_id=88687', category: '移民・外国籍' },
   { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
-  // 在日コリアン（民団大阪府本部 PR Times）
-  { name: '在日本大韓民国民団大阪府本部', url: 'https://prtimes.jp/companyrdf.php?company_id=170584', category: '在日・外国籍' },
+  // 在日コリアン
+  { name: '朝鮮新報', url: 'https://chosonsinbo.com/feed/', category: '在日コリアン' },
+  { name: '在日本大韓民国民団', url: 'https://www.mindan.org/feed/', category: '在日コリアン' },
+  // 民団大阪府本部（PR Times）
+  { name: '在日本大韓民国民団大阪府本部', url: 'https://prtimes.jp/companyrdf.php?company_id=170584', category: '在日コリアン' },
   // 貧困・生活困窮
   { name: 'ビッグイシュー日本', url: 'https://www.bigissue.jp/feed/', category: '貧困' },
   // 反貧困ネットワーク（hanhinkonnetwork.org）はRSSなし
