@@ -262,6 +262,7 @@ function collectNews() {
   // 当事者メディアも同じタイミングで収集
   Logger.log('===== 当事者メディア収集開始 =====');
   collectTojishaSources();
+  collectXSources();
 }
 
 // ===== 層A行データの組み立て（列名マップに基づく・列順非依存）=====
@@ -2833,6 +2834,77 @@ const TOJISHA_SOURCES = [
   // LGBTQ+
   // ReBit（rebitlgbt.org）はRSSなし
 ];
+
+// RSSを持たない当事者団体のXアカウント
+// RSSHub（https://rsshub.app）経由でXのタイムラインをRSSとして取得
+const X_SOURCES = [
+  { name: '反貧困ネットワーク', account: 'anti_poverty_NW', category: '貧困' },
+  { name: '移住連', account: 'MigrantsSmj', category: '移民・外国籍' },
+  { name: 'ReBit', account: 'Re__Bit', category: 'LGBTQ+' },
+];
+
+const RSSHUB_BASE = 'https://rsshub.app/twitter/user/';
+
+// XソースのRSShub疎通確認（GASエディタから手動実行）
+function testXSources() {
+  X_SOURCES.forEach(source => {
+    const url = RSSHUB_BASE + source.account;
+    try {
+      const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+      const code = res.getResponseCode();
+      const len = res.getContentText().length;
+      Logger.log('[' + code + '] ' + source.name + ' (' + len + 'bytes) ' + url);
+    } catch(e) {
+      Logger.log('[ERR] ' + source.name + ': ' + e.message);
+    }
+  });
+}
+
+// XソースをRSSHub経由で収集
+function collectXSources() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName('当事者の声');
+  if (!sheet) {
+    sheet = ss.insertSheet('当事者の声');
+    sheet.appendRow(['収集日時', 'タイトル', 'URL', 'description', '発信者', 'カテゴリ', '収集元URL']);
+  }
+
+  const existingUrls = sheet.getDataRange().getValues().slice(1).map(r => r[2]);
+  let added = 0;
+
+  X_SOURCES.forEach(source => {
+    const url = RSSHUB_BASE + source.account;
+    try {
+      const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) {
+        Logger.log('[SKIP] ' + source.name + ': HTTP ' + res.getResponseCode());
+        return;
+      }
+      const xml = res.getContentText();
+      const doc = XmlService.parse(xml);
+      const root = doc.getRootElement();
+      const ns = root.getNamespace();
+      const channel = root.getChild('channel', ns) || root.getChild('channel');
+      const items = channel
+        ? (channel.getChildren('item', ns).length > 0 ? channel.getChildren('item', ns) : channel.getChildren('item'))
+        : root.getChildren('item');
+
+      items.forEach(item => {
+        const title = getTextSafe(item, 'title');
+        const link  = getTextSafe(item, 'link');
+        const desc  = getTextSafe(item, 'description').replace(/<[^>]+>/g, '').slice(0, 200);
+        if (!link || existingUrls.includes(link)) return;
+        sheet.appendRow([new Date(), title, link, desc, source.name, source.category, url]);
+        existingUrls.push(link);
+        added++;
+      });
+      Logger.log('[OK] ' + source.name + ': ' + items.length + '件');
+    } catch(e) {
+      Logger.log('[ERR] ' + source.name + ': ' + e.message);
+    }
+  });
+  Logger.log('X収集完了: ' + added + '件追加');
+}
 
 // 当事者ソースのRSS疎通確認（GASエディタから手動実行）
 function testTojishaSources() {
