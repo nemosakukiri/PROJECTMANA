@@ -2879,22 +2879,11 @@ function collectXSources() {
         Logger.log('[SKIP] ' + source.name + ': HTTP ' + res.getResponseCode());
         return;
       }
-      const xml = res.getContentText();
-      const doc = XmlService.parse(xml);
-      const root = doc.getRootElement();
-      const ns = root.getNamespace();
-      const channel = root.getChild('channel', ns) || root.getChild('channel');
-      const items = channel
-        ? (channel.getChildren('item', ns).length > 0 ? channel.getChildren('item', ns) : channel.getChildren('item'))
-        : root.getChildren('item');
-
+      const items = extractRssItems(res.getContentText());
       items.forEach(item => {
-        const title = getTextSafe(item, 'title');
-        const link  = getTextSafe(item, 'link');
-        const desc  = getTextSafe(item, 'description').replace(/<[^>]+>/g, '').slice(0, 200);
-        if (!link || existingUrls.includes(link)) return;
-        sheet.appendRow([new Date(), title, link, desc, source.name, source.category, url]);
-        existingUrls.push(link);
+        if (!item.link || existingUrls.includes(item.link)) return;
+        sheet.appendRow([new Date(), item.title, item.link, item.desc, source.name, source.category, url]);
+        existingUrls.push(item.link);
         added++;
       });
       Logger.log('[OK] ' + source.name + ': ' + items.length + '件');
@@ -2919,10 +2908,28 @@ function testTojishaSources() {
   });
 }
 
+// RSSから<item>を正規表現で抽出（壊れたXMLでも動作）
+function extractRssItems(xml) {
+  const items = [];
+  const re = /<item[^>]*>([\s\S]*?)<\/item>/gi;
+  let m;
+  while ((m = re.exec(xml)) !== null && items.length < 20) {
+    const body = m[1];
+    const getVal = (tag) => {
+      const r = new RegExp('<' + tag + '[^>]*>(?:<!\\[CDATA\\[)?([\\s\\S]*?)(?:\\]\\]>)?<\\/' + tag + '>', 'i');
+      return (body.match(r) || [])[1] || '';
+    };
+    const link = getVal('link') || getVal('guid');
+    const title = getVal('title');
+    const desc = getVal('description').replace(/<[^>]+>/g, '').slice(0, 200);
+    if (link.trim()) items.push({ title: title.trim(), link: link.trim(), desc: desc.trim() });
+  }
+  return items;
+}
+
 // 当事者メディアから記事を収集してスプレッドシートに保存
 function collectTojishaSources() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  // 当事者の声専用シート（なければ作成）
   let sheet = ss.getSheetByName('当事者の声');
   if (!sheet) {
     sheet = ss.insertSheet('当事者の声');
@@ -2939,28 +2946,11 @@ function collectTojishaSources() {
         Logger.log('[SKIP] ' + source.name + ': HTTP ' + res.getResponseCode());
         return;
       }
-      // 大きいRSSは先頭部分だけ使う（最大150KB）
-      const rawXml = res.getContentText();
-      const xml = rawXml.length > 150000 ? rawXml.slice(0, rawXml.lastIndexOf('</item>', 150000) + 7) + '</channel></rss>' : rawXml;
-      const doc = XmlService.parse(xml);
-      const root = doc.getRootElement();
-      const ns = root.getNamespace();
-
-      // RSS 2.0
-      const channel = root.getChild('channel', ns) || root.getChild('channel');
-      const allItems = channel
-        ? (channel.getChildren('item', ns).length > 0 ? channel.getChildren('item', ns) : channel.getChildren('item'))
-        : root.getChildren('item');
-      // 最新20件のみ処理
-      const items = allItems.slice(0, 20);
-
+      const items = extractRssItems(res.getContentText());
       items.forEach(item => {
-        const title = getTextSafe(item, ['title']);
-        const link  = getTextSafe(item, ['link', 'guid']);
-        const desc  = getTextSafe(item, ['description', 'summary']).replace(/<[^>]+>/g, '').slice(0, 200);
-        if (!link || existingUrls.includes(link)) return;
-        sheet.appendRow([new Date(), title, link, desc, source.name, source.category, source.url]);
-        existingUrls.push(link);
+        if (!item.link || existingUrls.includes(item.link)) return;
+        sheet.appendRow([new Date(), item.title, item.link, item.desc, source.name, source.category, source.url]);
+        existingUrls.push(item.link);
         added++;
       });
       Logger.log('[OK] ' + source.name + ': ' + items.length + '件');
