@@ -2806,3 +2806,86 @@ function classifyUnlabeledRows() {
   }
   Logger.log('完了: ' + count + '件に窓IDを付与しました');
 }
+
+// ===== 当事者メディア収集 =====
+// 思想：「誰が書いているか」が先にある。当事者自身の言葉・当事者メディアの記事だけを収集する。
+
+const TOJISHA_SOURCES = [
+  // 障害・福祉
+  { name: 'DPI日本会議', url: 'https://dpi-japan.org/feed/', category: '障害' },
+  { name: '全国自立生活センター協議会', url: 'https://www.jil.gr.jp/feed/', category: '障害' },
+  { name: 'POSSE', url: 'https://www.npoposse.jp/feed/', category: '労働・貧困' },
+  // 外国籍・移民
+  { name: '移住連', url: 'https://migrants.jp/feed/', category: '移民・外国籍' },
+  { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
+  // 貧困・生活困窮
+  { name: 'ビッグイシュー日本', url: 'https://www.bigissue.jp/feed/', category: '貧困' },
+  { name: '反貧困ネットワーク', url: 'https://www.hinkyuu-net.com/feed/', category: '貧困' },
+  // 戦争・沖縄（当事者メディアとして）
+  { name: '沖縄タイムス', url: 'https://www.okinawatimes.co.jp/rss/', category: '沖縄・戦争' },
+  { name: '琉球新報', url: 'https://ryukyushimpo.jp/rss/index.rdf', category: '沖縄・戦争' },
+  // LGBTQ+
+  { name: 'ReBit', url: 'https://rebitlgbt.org/feed/', category: 'LGBTQ+' },
+];
+
+// 当事者ソースのRSS疎通確認（GASエディタから手動実行）
+function testTojishaSources() {
+  TOJISHA_SOURCES.forEach(source => {
+    try {
+      const res = UrlFetchApp.fetch(source.url, { muteHttpExceptions: true });
+      const code = res.getResponseCode();
+      const len = res.getContentText().length;
+      Logger.log('[' + code + '] ' + source.name + ' (' + len + 'bytes) ' + source.url);
+    } catch(e) {
+      Logger.log('[ERR] ' + source.name + ': ' + e.message);
+    }
+  });
+}
+
+// 当事者メディアから記事を収集してスプレッドシートに保存
+function collectTojishaSources() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  // 当事者の声専用シート（なければ作成）
+  let sheet = ss.getSheetByName('当事者の声');
+  if (!sheet) {
+    sheet = ss.insertSheet('当事者の声');
+    sheet.appendRow(['収集日時', 'タイトル', 'URL', 'description', '発信者', 'カテゴリ', '収集元URL']);
+  }
+
+  const existingUrls = sheet.getDataRange().getValues().slice(1).map(r => r[2]);
+  let added = 0;
+
+  TOJISHA_SOURCES.forEach(source => {
+    try {
+      const res = UrlFetchApp.fetch(source.url, { muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) {
+        Logger.log('[SKIP] ' + source.name + ': HTTP ' + res.getResponseCode());
+        return;
+      }
+      const xml = res.getContentText();
+      const doc = XmlService.parse(xml);
+      const root = doc.getRootElement();
+      const ns = root.getNamespace();
+
+      // RSS 2.0
+      const channel = root.getChild('channel', ns) || root.getChild('channel');
+      const items = channel
+        ? (channel.getChildren('item', ns).length > 0 ? channel.getChildren('item', ns) : channel.getChildren('item'))
+        : root.getChildren('item');
+
+      items.forEach(item => {
+        const title = getTextSafe(item, 'title');
+        const link  = getTextSafe(item, 'link');
+        const desc  = getTextSafe(item, 'description').replace(/<[^>]+>/g, '').slice(0, 200);
+        if (!link || existingUrls.includes(link)) return;
+        sheet.appendRow([new Date(), title, link, desc, source.name, source.category, source.url]);
+        existingUrls.push(link);
+        added++;
+      });
+      Logger.log('[OK] ' + source.name + ': ' + items.length + '件');
+    } catch(e) {
+      Logger.log('[ERR] ' + source.name + ': ' + e.message);
+    }
+  });
+  Logger.log('当事者ソース収集完了: ' + added + '件追加');
+}
