@@ -3022,21 +3022,27 @@ function classifyTojishaArticles() {
 
 exhibitがfalseになるのは：イベント告知・寄付依頼・採用情報など、制度や社会への訴えではないもの。`;
 
-    const url_api = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey;
+    const url_api = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey;
     try {
       const res = UrlFetchApp.fetch(url_api, {
         method: 'POST',
         contentType: 'application/json',
         payload: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.1, maxOutputTokens: 300 }
+          generationConfig: { temperature: 0.1, maxOutputTokens: 400 }
         }),
         muteHttpExceptions: true
       });
-      const json = JSON.parse(res.getContentText());
+      const rawResponse = res.getContentText();
+      const json = JSON.parse(rawResponse);
+      if (!json.candidates || !json.candidates[0]) {
+        Logger.log('[ERR] Gemini応答なし: ' + rawResponse.slice(0, 200));
+        continue;
+      }
       const text = json.candidates[0].content.parts[0].text.trim();
+      // マークダウンのコードブロックも考慮
       const match = text.match(/\{[\s\S]*\}/);
-      if (!match) { Logger.log('[SKIP] JSON取得失敗: ' + title); continue; }
+      if (!match) { Logger.log('[SKIP] JSON取得失敗: ' + text.slice(0, 100)); continue; }
 
       const result = JSON.parse(match[0]);
       sheet.getRange(i + 1, COL_EXHIBIT).setValue(result.exhibit ? '展示' : '非展示');
