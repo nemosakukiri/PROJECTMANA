@@ -2938,8 +2938,10 @@ function debugZeroSources() {
   ];
   targets.forEach(source => {
     try {
-      // User-Agentなしで取得（サーバーによってはUser-Agent付きでHTMLを返す）
-      const res = UrlFetchApp.fetch(source.url, { muteHttpExceptions: true });
+      const res = UrlFetchApp.fetch(source.url, {
+        muteHttpExceptions: true,
+        headers: { 'Accept': 'application/rss+xml, application/xml, text/xml' }
+      });
       const xml = res.getContentText();
       Logger.log('=== ' + source.name + ' (先頭500文字) ===');
       Logger.log(xml.slice(0, 500));
