@@ -2829,7 +2829,7 @@ const TOJISHA_SOURCES = [
   { name: '移住連', url: 'https://prtimes.jp/companyrdf.php?company_id=88687', category: '移民・外国籍' },
   { name: '難民支援協会', url: 'https://www.refugee.or.jp/feed/', category: '難民' },
   // 在日コリアン
-  { name: '朝鮮新報', url: 'https://chosonsinbo.com/feed/', category: '在日コリアン' },
+  // 朝鮮新報: /feed/ は501（RSS非対応）→ testChosonsinboRss() で代替URL調査中
   { name: '在日本大韓民国民団', url: 'https://www.mindan.org/feed/', category: '在日コリアン' },
   // 民団大阪府本部（PR Times）
   { name: '在日本大韓民国民団大阪府本部', url: 'https://prtimes.jp/companyrdf.php?company_id=170584', category: '在日コリアン' },
@@ -2902,6 +2902,30 @@ function collectXSources() {
     }
   });
   Logger.log('X収集完了: ' + added + '件追加');
+}
+
+// 朝鮮新報のRSS候補URLをまとめて試す（GASエディタから手動実行）
+function testChosonsinboRss() {
+  const candidates = [
+    'https://chosonsinbo.com/feed/',
+    'https://chosonsinbo.com/feed/rss/',
+    'https://chosonsinbo.com/feed/atom/',
+    'https://chosonsinbo.com/rss.xml',
+    'https://chosonsinbo.com/atom.xml',
+    'https://chosonsinbo.com/jp/feed/',
+    'https://chosonsinbo.com/category/jp/feed/',
+  ];
+  candidates.forEach(url => {
+    try {
+      const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+      const code = res.getResponseCode();
+      const text = res.getContentText().slice(0, 200);
+      Logger.log('[' + code + '] ' + url);
+      if (code === 200) Logger.log('  → ' + text);
+    } catch(e) {
+      Logger.log('[ERR] ' + url + ': ' + e.message);
+    }
+  });
 }
 
 // 当事者ソースのRSS疎通確認（GASエディタから手動実行）
