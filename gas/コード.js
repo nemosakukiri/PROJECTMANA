@@ -2959,6 +2959,42 @@ function extractRssItems(xml) {
     const desc = getVal('description').replace(/<[^>]+>/g, '').slice(0, 200);
     if (link.trim()) items.push({ title: title.trim(), link: link.trim(), desc: desc.trim() });
   }
+  // Atom形式（YouTubeなど）も対応
+  if (items.length === 0) {
+    const reEntry = /<entry[^>]*>([\s\S]*?)<\/entry>/gi;
+    while ((reEntry.exec(xml)) !== null && items.length < 20) {
+      const body = reEntry.lastMatch || '';
+      const entryMatch = /<entry[^>]*>([\s\S]*?)<\/entry>/i.exec(xml.slice(reEntry.lastIndex - (reEntry.lastMatch || '').length));
+      if (!entryMatch) break;
+      const eb = entryMatch[1];
+      const linkMatch = eb.match(/<link[^>]+href="([^"]+)"/i);
+      const titleMatch = eb.match(/<title[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
+      const descMatch = eb.match(/<media:description[^>]*>([\s\S]*?)<\/media:description>/i) ||
+                        eb.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i);
+      const link = linkMatch ? linkMatch[1] : '';
+      const title = titleMatch ? titleMatch[1].trim() : '';
+      const desc = descMatch ? descMatch[1].replace(/<[^>]+>/g, '').slice(0, 200).trim() : '';
+      if (link) items.push({ title, link, desc });
+    }
+  }
+  return items;
+}
+
+// AtomフィードからYouTube動画エントリを抽出
+function extractAtomEntries(xml) {
+  const items = [];
+  const re = /<entry>([\s\S]*?)<\/entry>/gi;
+  let m;
+  while ((m = re.exec(xml)) !== null && items.length < 20) {
+    const body = m[1];
+    const linkMatch = body.match(/<link[^>]+href="([^"]+)"/i);
+    const titleMatch = body.match(/<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/i);
+    const descMatch = body.match(/<media:description>([\s\S]*?)<\/media:description>/i);
+    const link = linkMatch ? linkMatch[1] : '';
+    const title = titleMatch ? titleMatch[1].trim() : '';
+    const desc = descMatch ? descMatch[1].replace(/<[^>]+>/g, '').slice(0, 200).trim() : '';
+    if (link) items.push({ title, link, desc });
+  }
   return items;
 }
 
@@ -2976,12 +3012,17 @@ function collectTojishaSources() {
 
   TOJISHA_SOURCES.forEach(source => {
     try {
-      const res = UrlFetchApp.fetch(source.url, { muteHttpExceptions: true });
+      const res = UrlFetchApp.fetch(source.url, {
+        muteHttpExceptions: true,
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GoogleAppsScript)' }
+      });
       if (res.getResponseCode() !== 200) {
         Logger.log('[SKIP] ' + source.name + ': HTTP ' + res.getResponseCode());
         return;
       }
-      const items = extractRssItems(res.getContentText());
+      const xml = res.getContentText();
+      // YouTube Atom形式か通常RSS形式かを判別
+      const items = xml.includes('<entry>') ? extractAtomEntries(xml) : extractRssItems(xml);
       items.forEach(item => {
         if (!item.link || existingUrls.includes(item.link)) return;
         sheet.appendRow([new Date(), item.title, item.link, item.desc, source.name, source.category, source.url]);
