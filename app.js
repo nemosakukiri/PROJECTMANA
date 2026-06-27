@@ -3567,13 +3567,18 @@ function showVillageContent(house, win, windowId) {
       .then(r => r.json())
       .then(data => {
         if (!Array.isArray(data)) throw new Error('not array');
+        const keywords = (win && win.keywords) ? win.keywords : [];
         const fullItems = data.map(row => ({
           title:        row['タイトル'] || '',
           url:          row['URL'] || '',
           source:       row['出典'] || '',
           date:         row['rss_pubDate'] || row['公開日'] || '',
           article_type: inferArticleType(row['記事種別'], row['source_domain'], row['出典'] || ''),
-        })).filter(r => r.title && types.includes(r.article_type)).slice(0, 20);
+        })).filter(r => {
+          if (!r.title || !types.includes(r.article_type)) return false;
+          if (!keywords.length) return true;
+          return keywords.some(kw => r.title.includes(kw) || (r.source || '').includes(kw));
+        }).slice(0, 20);
         renderVillageRoomItems(el2, house, labels, fullItems);
       })
       .catch(() => renderVillageRoomItems(el2, house, labels, []));
