@@ -111,6 +111,7 @@ const COL = {
   TITLE_NORMALIZED:     'title_normalized',     // 表記揺れを除去した正規化タイトル（重複判定用）
   SOURCE_DOMAIN:        'source_domain',        // 出典URLのドメイン（例: www3.nhk.or.jp）
   DEDUP_HASH:           'dedup_hash',           // title_normalized + rss_pubDate + source_domain のMD5前半16桁
+  ARTICLE_TYPE:         '記事種別',             // opinion / research / investigative / news（RSSソース設定から保存）
   LAW_REFS_RAW:         'law_refs_raw',         // 記事テキストに含まれる法令名（カンマ区切り・記事直接抽出）
   INSTITUTION_REFS_RAW: 'institution_refs_raw', // 記事テキストに含まれる機関名（カンマ区切り・記事直接抽出）
   TAG_SOURCE:           'tag_source',           // タグ付与の由来：'rule'=ルールベース / 'gemini'=AI推定
@@ -344,6 +345,7 @@ function buildRowLayerA(item, sheet) {
   set(COL.LAW_REFS_RAW,         extractLawRefs(rawTextForMeta));
   set(COL.INSTITUTION_REFS_RAW, extractInstitutionRefs(rawTextForMeta));
   set(COL.TAG_SOURCE,           'rule');
+  set(COL.ARTICLE_TYPE,         item.article_type || '');
 
   return row;
 }
@@ -570,11 +572,12 @@ function fetchFromRSS() {
           seen.add(title);
 
           articles.push({
-            title:       title.trim(),
-            url:         link.trim(),
-            description: desc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 400),
-            source_name: source.name,
-            pub_date:    date,
+            title:        title.trim(),
+            url:          link.trim(),
+            description:  desc.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 400),
+            source_name:  source.name,
+            pub_date:     date,
+            article_type: source.article_type || '',
           });
         } catch(e) {}
       });
@@ -3547,4 +3550,41 @@ function applyJournalistClassification(changesJson) {
     applied++;
   });
   Logger.log('applyJournalistClassification完了: ' + applied + '件反映');
+}
+
+// ===== 既存記事の記事種別を出典名から一括補完 =====
+function backfillArticleType() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(FULL_LOG_SHEET);
+  if (!sheet) { Logger.log('観測DB（全件ログ）が見つかりません'); return; }
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const idxSource = headers.indexOf('出典');
+  const idxType   = headers.indexOf('記事種別');
+  if (idxType < 0) { Logger.log('記事種別列が見つかりません。列を追加してから実行してください'); return; }
+
+  // 出典名 → article_type のマッピング（RSS_SOURCESと同じロジック）
+  function typeFromSource(src) {
+    const s = (src || '').toLowerCase();
+    if (/wedge|slow.?news|現代ビジネス|bigissue|president|東洋経済/.test(s)) return 'opinion';
+    if (/シノドス|synodos|研究|論考/.test(s)) return 'research';
+    if (/赤旗|調査報道/.test(s)) return 'investigative';
+    return '';
+  }
+
+  let updated = 0;
+  const updates = [];
+  for (let i = 1; i < rows.length; i++) {
+    const currentType = rows[i][idxType];
+    if (currentType) continue; // 既に入っているものはスキップ
+    const src = rows[i][idxSource] || '';
+    const t = typeFromSource(src);
+    if (!t) continue;
+    updates.push({ row: i + 1, type: t });
+  }
+  updates.forEach(u => {
+    sheet.getRange(u.row, idxType + 1).setValue(u.type);
+    updated++;
+  });
+  Logger.log('backfillArticleType完了: ' + updated + '件を補完');
 }
