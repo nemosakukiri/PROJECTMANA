@@ -212,20 +212,18 @@ function collectNews() {
     return;
   }
 
-  // 3. 層Aのみで全件ログに保存（Gemini分類は後処理バッチに委譲）
-  let savedLog = 0;
-  let saveErrCount = 0;
-  newArticles.forEach(item => {
-    try {
-      logSheet.appendRow(buildRowLayerA(item, logSheet));
-      savedLog++;
-    } catch (e) {
-      saveErrCount++;
-      Logger.log('[全件ログ保存エラー] 「' + item.title + '」: ' + e.message);
-    }
-  });
+  // 3. 層Aのみで全件ログに一括保存（appendRowは遅いのでsetValuesで一括書き込み）
+  const logRows2Write = newArticles.map(item => buildRowLayerA(item, logSheet));
+  const logLastRow = logSheet.getLastRow();
+  const logNumCols = logSheet.getLastColumn();
+  try {
+    logSheet.getRange(logLastRow + 1, 1, logRows2Write.length, logNumCols).setValues(logRows2Write);
+  } catch(e) {
+    Logger.log('[全件ログ保存エラー] ' + e.message);
+  }
+  const savedLog = logRows2Write.length;
   Logger.log('--- Step3: 全件ログ（原本庫相当）保存 ---');
-  Logger.log('保存成功: ' + savedLog + '件 / 保存エラー: ' + saveErrCount + '件');
+  Logger.log('保存成功: ' + savedLog + '件');
 
   // 4. 公開DBにも同様に層Aのみで保存
   // 公開DBも同様にSetで一括読み込み
@@ -242,6 +240,7 @@ function collectNews() {
   let savedPublic  = 0;
   let notMatched   = 0;
   let dupInPublic  = 0;
+  const pubRows2Write = [];
   newArticles.forEach(item => {
     if (!shouldAutoPublish(item)) {
       notMatched++;
@@ -252,10 +251,15 @@ function collectNews() {
       dupInPublic++;
       return;
     }
-    publicSheet.appendRow(buildRowLayerA(item, publicSheet));
+    pubRows2Write.push(buildRowLayerA(item, publicSheet));
     existingPubKeys.add(key);
     savedPublic++;
   });
+  if (pubRows2Write.length > 0) {
+    const pubLastRow = publicSheet.getLastRow();
+    const pubNumCols = publicSheet.getLastColumn();
+    publicSheet.getRange(pubLastRow + 1, 1, pubRows2Write.length, pubNumCols).setValues(pubRows2Write);
+  }
 
   Logger.log('--- Step4: 観測DB（公開用）保存 ---');
   Logger.log('観測DB追加: ' + savedPublic + '件');
