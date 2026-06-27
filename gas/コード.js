@@ -3086,6 +3086,96 @@ function collectTojishaSources() {
   Logger.log('当事者ソース収集完了: ' + added + '件追加');
 }
 
+// ===== 当事者の声 Claude確認用データ出力 =====
+// 実行するとGemini分類済みデータをJSON形式でログ出力する
+// ログをコピーしてClaudeに貼ると、Claudeが再確認できる
+function exportTojishaForClaudeReview(offset, limit) {
+  offset = offset || 0;
+  limit  = limit  || 30;
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('当事者の声');
+  if (!sheet) { Logger.log('当事者の声シートが見つかりません'); return; }
+
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const idxTitle   = headers.indexOf('タイトル');
+  const idxDesc    = headers.indexOf('description');
+  const idxSender  = headers.indexOf('発信者');
+  const idxCat     = headers.indexOf('カテゴリ');
+  const idxExhibit = headers.indexOf('展示対象');
+  const idxType    = headers.indexOf('種別');
+  const idxVillage = headers.indexOf('村');
+  const idxSummary = headers.indexOf('要約');
+  const idxQuote   = headers.indexOf('引用');
+  const idxStatus  = headers.indexOf('分類状態');
+
+  const classified = rows.slice(1).filter(r => r[idxStatus] === '分類済み');
+  const chunk = classified.slice(offset, offset + limit);
+
+  const out = chunk.map((r, i) => ({
+    no: offset + i + 1,
+    sender: r[idxSender],
+    category: r[idxCat],
+    title: r[idxTitle],
+    desc: (r[idxDesc] || '').slice(0, 100),
+    gemini: r[idxExhibit],
+    type: r[idxType],
+    villages: r[idxVillage],
+    summary: r[idxSummary],
+    quote: r[idxQuote]
+  }));
+
+  Logger.log('=== 当事者の声 Gemini分類結果（' + offset + '〜' + (offset + chunk.length - 1) + '件目 / 全' + classified.length + '件）===');
+  Logger.log(JSON.stringify(out, null, 2));
+}
+
+// Claudeの再確認結果を反映する（上記exportの出力をClaudeに渡して判断してもらった後）
+// changesは [{no: 番号, exhibit: true/false, note: '理由'}] の配列をJSON文字列で渡す
+function applyClaudeReview(changesJson) {
+  const changes = JSON.parse(changesJson);
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('当事者の声');
+  if (!sheet) { Logger.log('当事者の声シートが見つかりません'); return; }
+
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const idxStatus      = headers.indexOf('分類状態');
+  const idxExhibit     = headers.indexOf('展示対象');
+  const idxClaudeCheck = headers.indexOf('Claude確認');
+  const idxClaudeNote  = headers.indexOf('Claudeメモ');
+
+  // Claude確認列がなければ追加
+  const ensureCol = (name) => {
+    let idx = headers.indexOf(name);
+    if (idx === -1) {
+      idx = headers.length;
+      sheet.getRange(1, idx + 1).setValue(name);
+      headers.push(name);
+    }
+    return idx + 1;
+  };
+  const colClaudeCheck = ensureCol('Claude確認');
+  const colClaudeNote  = ensureCol('Claudeメモ');
+  const colExhibit     = idxExhibit + 1;
+
+  const classified = rows.slice(1)
+    .map((r, i) => ({ row: i + 2, status: r[idxStatus], exhibit: r[idxExhibit] }))
+    .filter(r => r.status === '分類済み');
+
+  let updated = 0;
+  changes.forEach(c => {
+    const target = classified[c.no - 1];
+    if (!target) return;
+    const rowNum = target.row;
+    // 非展示→展示への救済
+    if (c.exhibit && target.exhibit === '非展示') {
+      sheet.getRange(rowNum, colExhibit).setValue('展示（Claude判断）');
+    }
+    sheet.getRange(rowNum, colClaudeCheck).setValue('確認済み');
+    sheet.getRange(rowNum, colClaudeNote).setValue(c.note || '');
+    updated++;
+  });
+  Logger.log('Claude再確認結果を反映: ' + updated + '件');
+}
+
 // ===== 当事者の声 Gemini分類 =====
 // 「当事者の声」シートの未分類行をGeminiで分類し、結果を書き戻す
 // limit: 1回の実行で処理する上限件数（デフォルト10件）
