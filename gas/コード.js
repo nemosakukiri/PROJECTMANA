@@ -258,11 +258,7 @@ function collectNews() {
   }
 
   Logger.log('===== 層A収集完了。Gemini分類は classifyUnclassifiedBatch() で後続実行してください =====');
-
-  // 当事者メディアも同じタイミングで収集
-  Logger.log('===== 当事者メディア収集開始 =====');
-  collectTojishaSources();
-  collectXSources();
+  // 当事者メディア収集は collectTojishaSources()（6時30分トリガー）で別実行
 }
 
 // ===== 層A行データの組み立て（列名マップに基づく・列順非依存）=====
@@ -1279,15 +1275,19 @@ function formatDate(date) {
 }
 
 // ===== トリガー設定 =====
-// collectNews（6時）→ collectTojishaSources（collectNews内で呼ばれる）→ classifyUnclassifiedBatch（7時）
-// → classifyTojishaArticles（8時, 10件/回）→ reviewTojishaWithClaude（9時, 5件/回）
+// 6:00 collectNews（一般ニュース収集）
+// 6:30 collectTojishaSources（当事者メディア収集・別関数で時間分散）
+// 7:00 classifyUnclassifiedBatch（観測DB Gemini分類）
+// 8:00 classifyTojishaArticles（当事者の声 Gemini分類、10件/回）
+// 9:00 reviewTojishaWithClaude（当事者の声 Claude再確認、5件/回）
 function setDailyTrigger() {
   ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('collectNews').timeBased().everyDays(1).atHour(6).create();
+  ScriptApp.newTrigger('collectTojishaSources').timeBased().everyDays(1).atHour(6).nearMinute(30).create();
   ScriptApp.newTrigger('classifyUnclassifiedBatch').timeBased().everyDays(1).atHour(7).create();
   ScriptApp.newTrigger('classifyTojishaArticles').timeBased().everyDays(1).atHour(8).create();
   ScriptApp.newTrigger('reviewTojishaWithClaude').timeBased().everyDays(1).atHour(9).create();
-  Logger.log('トリガー設定完了: collectNews（6時）+ classifyUnclassifiedBatch（7時）+ classifyTojishaArticles（8時）+ reviewTojishaWithClaude（9時）');
+  Logger.log('トリガー設定完了: collectNews（6:00）+ collectTojishaSources（6:30）+ classifyUnclassifiedBatch（7:00）+ classifyTojishaArticles（8:00）+ reviewTojishaWithClaude（9:00）');
 }
 
 // ===== 既存kansokuDBシートに「公開日」「古い記事」列を追加 =====
