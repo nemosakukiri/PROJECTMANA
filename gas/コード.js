@@ -3486,9 +3486,20 @@ function exportKansokuForJournalistClassification() {
     if (!title || !url) continue;
     // 既分類はスキップ
     if (exhibit) continue;
-    out.push({ url, title, source, desc: desc.slice(0, 200), domain, type });
+    // ジャーナリスト・研究者候補のみ抽出（NHKや単純ニュース集約は除外）
+    const skipSources = ['NHK','NHK NEWS WEB'];
+    if (skipSources.includes(source)) continue;
+    // Google News URLの場合、タイトル末尾の「- 出典名」を抽出
+    const titleSource = (title.match(/\s[-–]\s([^-–]+)$/) || [])[1] || '';
+    // 明らかにニュース速報のみのソースは除外
+    const skipTitleSources = ['NHK','NHK NEWS','産経ニュース','時事通信','共同通信','ロイター'];
+    if (skipTitleSources.some(s => titleSource.includes(s))) continue;
+    // 「ニュース(速報)」ぽいタイトルは除外（5W系：事件・火災・地震など）
+    const breakingNewsPattern = /津波|地震|台風|火災|事故|逮捕|死亡|解除|速報|号外|天気/;
+    if (breakingNewsPattern.test(title) && !desc) continue;
+    out.push({ url, title, source, titleSource, desc: desc.slice(0, 150), domain, type });
   }
-  Logger.log('exportKansokuForJournalistClassification: ' + out.length + '件 → 書き出しシートへ');
+  Logger.log('exportKansokuForJournalistClassification: ' + out.length + '件（候補絞り込み後） → 書き出しシートへ');
   // ログに収まらないため「分類作業用」シートに書き出す
   let workSheet = ss.getSheetByName('分類作業用_journalist');
   if (workSheet) ss.deleteSheet(workSheet);
