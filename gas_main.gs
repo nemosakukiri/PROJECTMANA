@@ -175,12 +175,23 @@ function collectNews() {
   }
 
   // 2. 全件ログで重複チェック（全件ログにない新着のみ処理）
+  // シート全体を1回だけ読み込んでSetにする（isDuplicate()を毎回呼ぶとAPIコールが爆発するため）
+  const logColMap   = getColMap(logSheet);
+  const logUrlIdx   = logColMap[COL.URL];
+  const logTitleIdx = logColMap[COL.TITLE];
+  const logRows     = logSheet.getDataRange().getValues();
+  const existingLogKeys = new Set();
+  logRows.slice(1).forEach(row => {
+    if (logUrlIdx   !== undefined && row[logUrlIdx])   existingLogKeys.add(row[logUrlIdx]);
+    if (logTitleIdx !== undefined && row[logTitleIdx]) existingLogKeys.add(row[logTitleIdx]);
+  });
+
   let dupCount = 0;
   let newCount = 0;
   const newArticles = [];
   articles.forEach(a => {
     const key = a.url || a.title;
-    if (isDuplicate(logSheet, key)) {
+    if (!key || existingLogKeys.has(key)) {
       dupCount++;
     } else {
       newCount++;
@@ -194,13 +205,9 @@ function collectNews() {
 
   if (!newArticles.length) {
     Logger.log('[原因切り分け] 重複判定：全件が既存扱いでスキップされました。');
-    Logger.log('  考えられる原因:');
-    Logger.log('  (a) RSS側が同じ記事しか返していない（フィード更新停止）');
-    Logger.log('  (b) isDuplicate()の列参照(row[5]/row[6])が現在のシート列構成とズレている');
-    Logger.log('  サンプル確認のため、直近のRSS取得記事のURL/タイトルを3件出力します:');
+    Logger.log('  (a) RSS側が同じ記事しか返していない  (b) 列マップのズレ');
     articles.slice(0, 3).forEach((a, i) => {
-      Logger.log('  [' + i + '] URL: ' + a.url);
-      Logger.log('      タイトル: ' + a.title);
+      Logger.log('  [' + i + '] URL: ' + a.url + ' / タイトル: ' + a.title);
     });
     return;
   }
@@ -221,7 +228,17 @@ function collectNews() {
   Logger.log('保存成功: ' + savedLog + '件 / 保存エラー: ' + saveErrCount + '件');
 
   // 4. 公開DBにも同様に層Aのみで保存
-  //    ※ shouldAutoPublish() はキーワードベースの判定のためGemini分類前でも機能する
+  // 公開DBも同様にSetで一括読み込み
+  const pubColMap   = getColMap(publicSheet);
+  const pubUrlIdx   = pubColMap[COL.URL];
+  const pubTitleIdx = pubColMap[COL.TITLE];
+  const pubRows     = publicSheet.getDataRange().getValues();
+  const existingPubKeys = new Set();
+  pubRows.slice(1).forEach(row => {
+    if (pubUrlIdx   !== undefined && row[pubUrlIdx])   existingPubKeys.add(row[pubUrlIdx]);
+    if (pubTitleIdx !== undefined && row[pubTitleIdx]) existingPubKeys.add(row[pubTitleIdx]);
+  });
+
   let savedPublic  = 0;
   let notMatched   = 0;
   let dupInPublic  = 0;
@@ -230,11 +247,13 @@ function collectNews() {
       notMatched++;
       return;
     }
-    if (isDuplicate(publicSheet, item.url || item.title)) {
+    const key = item.url || item.title;
+    if (existingPubKeys.has(key)) {
       dupInPublic++;
       return;
     }
     publicSheet.appendRow(buildRowLayerA(item, publicSheet));
+    existingPubKeys.add(key);
     savedPublic++;
   });
 
