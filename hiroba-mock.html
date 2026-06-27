@@ -3,431 +3,306 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ひろば — モック</title>
+<title>ひろば</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', sans-serif; overflow: hidden; }
+body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans JP', sans-serif; overflow: hidden; }
 
-/* ===== オンボーディング画面共通 ===== */
+/* ===== オンボーディング ===== */
 .screen {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(160deg, #0f2027, #203a43, #2c5364);
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #1a2a1a, #1e3a2e, #1a2e3a);
 }
 .screen.hidden { display: none; }
 
 .card {
-  background: rgba(255,255,255,0.07);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 24px;
-  padding: 40px 36px;
-  max-width: 460px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 36px 32px;
+  max-width: 440px;
   width: 90%;
   color: white;
 }
-.card h1 { font-size: 22px; font-weight: bold; margin-bottom: 6px; }
-.card .sub { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 28px; }
+.card h1 { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+.card .sub {
+  font-size: 13px; color: rgba(255,255,255,0.65);
+  margin-bottom: 28px; line-height: 1.9;
+}
 
-/* キャラ選択 */
 .avatar-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-  margin-bottom: 20px;
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  gap: 8px; margin-bottom: 18px;
 }
 .avatar-option {
-  font-size: 34px;
-  text-align: center;
-  cursor: pointer;
-  border-radius: 12px;
-  padding: 6px 0;
+  font-size: 30px; text-align: center; cursor: pointer;
+  border-radius: 10px; padding: 6px 0;
   border: 2px solid transparent;
-  transition: border-color 0.2s, background 0.2s;
-  background: rgba(255,255,255,0.05);
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.04);
 }
-.avatar-option:hover { background: rgba(255,255,255,0.12); }
-.avatar-option.selected { border-color: #74C0E8; background: rgba(116,192,232,0.2); }
+.avatar-option:hover { background: rgba(255,255,255,0.1); }
+.avatar-option.selected { border-color: rgba(160,210,160,0.7); background: rgba(100,180,100,0.12); }
 
 .name-input {
-  width: 100%;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 12px;
-  padding: 10px 14px;
-  color: white;
-  font-size: 14px;
-  outline: none;
-  margin-bottom: 20px;
-  font-family: inherit;
+  width: 100%; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px; padding: 10px 14px;
+  color: white; font-size: 14px; outline: none;
+  margin-bottom: 18px; font-family: inherit;
 }
-.name-input::placeholder { color: rgba(255,255,255,0.4); }
+.name-input::placeholder { color: rgba(255,255,255,0.35); }
 
-/* 役割選択 */
-.role-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 24px;
-}
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
 .role-card {
-  background: rgba(255,255,255,0.06);
-  border: 2px solid rgba(255,255,255,0.2);
-  border-radius: 14px;
-  padding: 18px 14px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 16px 12px;
+  cursor: pointer; text-align: center; transition: all 0.2s;
 }
-.role-card:hover { background: rgba(255,255,255,0.12); }
-.role-card.selected { border-color: #74C0E8; background: rgba(116,192,232,0.15); }
-.role-card .role-icon { font-size: 30px; margin-bottom: 6px; }
-.role-card .role-title { font-size: 13px; font-weight: bold; color: white; }
-.role-card .role-desc { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 3px; line-height: 1.4; }
+.role-card:hover { background: rgba(255,255,255,0.09); }
+.role-card.selected { border-color: rgba(160,210,160,0.6); background: rgba(100,180,100,0.1); }
+.role-card .role-icon { font-size: 26px; margin-bottom: 6px; }
+.role-card .role-title { font-size: 12px; font-weight: bold; color: white; }
+.role-card .role-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; line-height: 1.4; }
 
-/* 同意画面 */
 .consent-box {
-  background: rgba(0,0,0,0.25);
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 12px;
-  line-height: 1.8;
-  color: rgba(255,255,255,0.75);
-  max-height: 220px;
-  overflow-y: auto;
-  margin-bottom: 20px;
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.2); border-radius: 10px;
+  padding: 14px; font-size: 12px; line-height: 1.85;
+  color: rgba(255,255,255,0.65); max-height: 200px;
+  overflow-y: auto; margin-bottom: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
 }
-.consent-box h3 { color: white; font-size: 13px; margin-bottom: 8px; }
-.consent-box h3 + p { margin-bottom: 10px; }
+.consent-box h3 { color: rgba(255,255,255,0.85); font-size: 12px; margin-bottom: 5px; }
+.consent-box p { margin-bottom: 10px; }
+
 .consent-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 16px;
-  cursor: pointer;
-  font-size: 13px;
-  color: rgba(255,255,255,0.85);
-  line-height: 1.5;
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 14px; cursor: pointer;
+  font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5;
 }
 .consent-check input[type=checkbox] {
-  margin-top: 2px;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  accent-color: #74C0E8;
-  cursor: pointer;
+  margin-top: 2px; width: 15px; height: 15px;
+  flex-shrink: 0; accent-color: #7DC87D; cursor: pointer;
 }
 
-/* ボタン */
 .btn-primary {
   width: 100%;
-  background: linear-gradient(135deg, #4A9EDB, #2979AD);
-  border: none;
-  border-radius: 14px;
-  padding: 14px;
-  color: white;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
-  font-family: inherit;
+  background: rgba(100,170,100,0.35);
+  border: 1px solid rgba(160,210,160,0.4);
+  border-radius: 12px; padding: 13px;
+  color: rgba(255,255,255,0.9); font-size: 15px;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
 }
-.btn-primary:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { background: rgba(100,170,100,0.5); }
+.btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
 
-.step-indicator {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 28px;
-}
-.step-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.25);
-  transition: background 0.3s;
-}
-.step-dot.active { background: #74C0E8; }
-.step-dot.done { background: rgba(116,192,232,0.5); }
+.step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.3s; }
+.step-dot.active { background: rgba(160,210,160,0.8); }
+.step-dot.done { background: rgba(160,210,160,0.35); }
 
-/* preview avatar in corner of step 2/3 */
 .preview-char {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 12px;
-  padding: 8px 14px;
-  margin-bottom: 20px;
-  font-size: 13px;
-  color: rgba(255,255,255,0.8);
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border-radius: 10px;
+  padding: 8px 12px; margin-bottom: 18px;
+  font-size: 12px; color: rgba(255,255,255,0.7);
 }
-.preview-char .preview-emoji { font-size: 28px; }
+.preview-char .preview-emoji { font-size: 26px; }
 
 /* ===== 広場シーン ===== */
 #scene {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(180deg, #87CEEB 0%, #98D8C8 45%, #7EC8A4 45%, #6BBF95 100%);
+  position: relative; width: 100vw; height: 100vh;
+  /* 夕方前の落ち着いた空 */
+  background: linear-gradient(180deg,
+    #c8dff0 0%, #d4e8e0 40%,
+    #b5c9a8 40%, #a8bc98 60%,
+    #98ad88 60%, #8fa082 100%);
   overflow: hidden;
 }
 
+/* 雲（薄め） */
 .cloud {
-  position: absolute;
-  background: white;
-  border-radius: 50px;
-  opacity: 0.85;
-  animation: drift linear infinite;
+  position: absolute; background: rgba(255,255,255,0.6);
+  border-radius: 50px; animation: drift linear infinite;
 }
-.cloud::before, .cloud::after {
-  content: '';
-  position: absolute;
-  background: white;
-  border-radius: 50%;
-}
-@keyframes drift { from { transform: translateX(-120px); } to { transform: translateX(110vw); } }
+@keyframes drift { from { transform: translateX(-150px); } to { transform: translateX(110vw); } }
 
-.plaza {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 55%;
-}
-
+/* 地面 */
 .cobble {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70%;
-  height: 45%;
-  background: repeating-linear-gradient(
-    90deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 60px
-  ),
-  repeating-linear-gradient(
-    0deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 40px
-  ),
-  #8DB87E;
-  border-radius: 8px 8px 0 0;
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 60%; height: 40%;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 55px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 38px),
+    #7a9870;
+  border-radius: 6px 6px 0 0;
 }
 
-.tree { position: absolute; bottom: 10%; }
-.tree-trunk { width: 14px; height: 40px; background: #8B6914; border-radius: 4px; margin: 0 auto; }
-.tree-leaves { width: 60px; height: 60px; background: #3A8C3A; border-radius: 50% 50% 40% 40%; margin: 0 auto; position: relative; top: 10px; box-shadow: 0 -8px 0 #2D6E2D; }
+/* 木 */
+.tree { position: absolute; bottom: 8%; }
+.tree-trunk { width: 12px; height: 36px; background: #7a5c1a; border-radius: 3px; margin: 0 auto; }
+.tree-leaves { width: 52px; height: 52px; background: #4a7a3a; border-radius: 50% 50% 40% 40%; margin: 0 auto; position: relative; top: 8px; box-shadow: 0 -6px 0 #3a6228; }
 
-.fountain {
-  position: absolute;
-  bottom: 18%;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-}
-.fountain-base { width: 70px; height: 20px; background: #9BA8B5; border-radius: 35px; margin: 0 auto; }
-.fountain-water { width: 30px; height: 50px; background: linear-gradient(0deg, #74C0E8, transparent); border-radius: 50% 50% 0 0; margin: 0 auto; position: relative; top: -5px; opacity: 0.7; animation: splash 2s ease-in-out infinite alternate; }
-@keyframes splash { 0% { height: 50px; opacity: 0.7; } 100% { height: 65px; opacity: 0.5; } }
+/* 噴水 */
+.fountain { position: absolute; bottom: 17%; left: 50%; transform: translateX(-50%); text-align: center; }
+.fountain-base { width: 60px; height: 16px; background: #8a9aaa; border-radius: 30px; margin: 0 auto; }
+.fountain-water { width: 22px; height: 44px; background: linear-gradient(0deg, rgba(120,190,220,0.6), transparent); border-radius: 50% 50% 0 0; margin: 0 auto; position: relative; top: -4px; animation: splash 2.5s ease-in-out infinite alternate; }
+@keyframes splash { 0% { height: 44px; opacity: 0.6; } 100% { height: 58px; opacity: 0.4; } }
 
-.bench { position: absolute; bottom: 18%; }
-.bench-seat { width: 50px; height: 10px; background: #C8A86B; border-radius: 3px; }
-.bench-leg { width: 6px; height: 14px; background: #A0836A; border-radius: 2px; display: inline-block; margin: 0 5px; }
+/* ベンチ */
+.bench { position: absolute; bottom: 17%; }
+.bench-seat { width: 44px; height: 8px; background: #b8986a; border-radius: 2px; }
+.bench-leg { width: 5px; height: 12px; background: #9a7a5a; border-radius: 1px; display: inline-block; margin: 0 4px; }
 
+/* アバター（動きを穏やかに） */
 .avatar {
-  position: absolute;
-  bottom: 20%;
-  text-align: center;
-  cursor: pointer;
-  animation: walk 8s ease-in-out infinite;
+  position: absolute; bottom: 19%; text-align: center;
   user-select: none;
-  transition: transform 0.3s;
 }
-.avatar:hover { transform: scale(1.1) !important; }
-.avatar-body { font-size: 36px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-.avatar-name { font-size: 10px; color: white; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 1px 5px; margin-top: 2px; white-space: nowrap; }
+.avatar-body { font-size: 28px; line-height: 1; opacity: 0.85; }
+.avatar-name { font-size: 9px; color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.25); border-radius: 6px; padding: 1px 4px; margin-top: 2px; white-space: nowrap; }
 
-@keyframes walk {
-  0%   { transform: translateX(0px); }
-  25%  { transform: translateX(40px); }
-  50%  { transform: translateX(20px); }
-  75%  { transform: translateX(-30px); }
-  100% { transform: translateX(0px); }
+@keyframes wander {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(28px); }
+  45%  { transform: translateX(12px); }
+  70%  { transform: translateX(-22px); }
+  100% { transform: translateX(0); }
 }
-@keyframes walk2 {
-  0%   { transform: translateX(0px) scaleX(1); }
-  30%  { transform: translateX(-50px) scaleX(-1); }
-  60%  { transform: translateX(-20px) scaleX(-1); }
-  100% { transform: translateX(0px) scaleX(1); }
+@keyframes wander2 {
+  0%   { transform: translateX(0) scaleX(1); }
+  30%  { transform: translateX(-35px) scaleX(-1); }
+  65%  { transform: translateX(-15px) scaleX(-1); }
+  100% { transform: translateX(0) scaleX(1); }
 }
-@keyframes walk3 {
-  0%   { transform: translateX(0px); }
-  40%  { transform: translateX(60px); }
-  70%  { transform: translateX(30px); }
-  100% { transform: translateX(0px); }
+@keyframes wander3 {
+  0%   { transform: translateX(0); }
+  35%  { transform: translateX(45px); }
+  60%  { transform: translateX(20px); }
+  100% { transform: translateX(0); }
 }
-@keyframes idle {
+@keyframes float {
   0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-4px); }
+  50%       { transform: translateY(-3px); }
 }
 
+/* 吹き出し */
 .bubble {
-  position: absolute;
-  background: white;
-  border-radius: 16px;
-  padding: 8px 12px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #333;
-  max-width: 180px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-  animation: fadeup 8s ease-out forwards;
-  pointer-events: none;
-  white-space: normal;
-  word-break: break-all;
+  position: absolute; background: rgba(255,255,255,0.92);
+  border-radius: 14px; padding: 7px 11px;
+  font-size: 12px; line-height: 1.55; color: #444;
+  max-width: 170px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  animation: fadeup 9s ease-out forwards;
+  pointer-events: none; white-space: normal; word-break: break-all;
 }
 .bubble::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 16px;
-  border: 8px solid transparent;
-  border-top-color: white;
-  border-bottom: 0;
+  content: ''; position: absolute; bottom: -7px; left: 14px;
+  border: 7px solid transparent; border-top-color: rgba(255,255,255,0.92); border-bottom: 0;
 }
 @keyframes fadeup {
-  0%   { opacity: 0; transform: translateY(0px); }
-  10%  { opacity: 1; transform: translateY(-5px); }
-  70%  { opacity: 1; transform: translateY(-15px); }
-  100% { opacity: 0; transform: translateY(-30px); }
+  0%   { opacity: 0; transform: translateY(0); }
+  12%  { opacity: 1; transform: translateY(-6px); }
+  72%  { opacity: 1; transform: translateY(-14px); }
+  100% { opacity: 0; transform: translateY(-28px); }
 }
 
-#mana-char {
-  position: absolute;
-  bottom: 20%;
-  right: 12%;
-  text-align: center;
-  animation: idle 3s ease-in-out infinite;
-}
-.mana-body { font-size: 42px; filter: drop-shadow(0 0 8px rgba(120,200,255,0.8)); }
-.mana-label { font-size: 10px; color: #C8F0FF; background: rgba(0,80,120,0.6); border-radius: 8px; padding: 2px 6px; margin-top: 2px; }
-
-#input-area {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(8px);
-  border-radius: 40px;
-  padding: 10px 16px;
-  border: 1px solid rgba(255,255,255,0.3);
-}
-#input-area input {
-  width: 320px;
-  background: none;
-  border: none;
-  outline: none;
-  color: white;
-  font-size: 14px;
-  font-family: inherit;
-}
-#input-area input::placeholder { color: rgba(255,255,255,0.6); }
-#say-btn {
-  background: rgba(255,255,255,0.25);
-  border: 1px solid rgba(255,255,255,0.5);
-  color: white;
-  border-radius: 20px;
-  padding: 6px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.2s;
-}
-#say-btn:hover { background: rgba(255,255,255,0.4); }
-
-.record-btn {
-  display: inline-block;
-  margin-top: 5px;
-  font-size: 10px;
-  background: #4A9EDB;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  padding: 2px 8px;
-  cursor: pointer;
-  pointer-events: all;
-}
-
-#online-count {
-  position: fixed;
-  top: 16px;
-  right: 20px;
-  color: rgba(255,255,255,0.8);
-  font-size: 12px;
-  background: rgba(0,0,0,0.25);
-  border-radius: 12px;
-  padding: 4px 10px;
-}
-
-#my-badge {
-  position: fixed;
-  top: 16px;
-  left: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255,255,255,0.85);
-  font-size: 12px;
-  background: rgba(0,0,0,0.25);
-  border-radius: 12px;
-  padding: 4px 12px;
-}
-
+/* MANAキャラ */
+#mana-char { position: absolute; bottom: 19%; right: 11%; text-align: center; animation: float 4s ease-in-out infinite; }
+.mana-body { font-size: 30px; opacity: 0.75; }
+.mana-label { font-size: 9px; color: rgba(200,230,255,0.8); background: rgba(0,60,100,0.35); border-radius: 6px; padding: 1px 5px; margin-top: 2px; }
 #mana-bubble {
-  position: absolute;
-  right: 14%;
-  bottom: 46%;
-  background: rgba(200,240,255,0.95);
-  border-radius: 16px;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: #1a5f7a;
-  max-width: 160px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
-  animation: manafade 6s ease-in-out infinite alternate;
-}
-@keyframes manafade {
-  0%   { opacity: 0.9; }
-  50%  { opacity: 1; }
-  100% { opacity: 0.7; }
+  position: absolute; right: 13%; bottom: 44%;
+  background: rgba(220,238,255,0.9); border-radius: 12px;
+  padding: 7px 11px; font-size: 11px; color: #2a5a7a;
+  max-width: 148px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  line-height: 1.6;
 }
 #mana-bubble::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  right: 20px;
-  border: 8px solid transparent;
-  border-top-color: rgba(200,240,255,0.95);
-  border-bottom: 0;
+  content: ''; position: absolute; bottom: -7px; right: 18px;
+  border: 7px solid transparent; border-top-color: rgba(220,238,255,0.9); border-bottom: 0;
 }
+
+/* ===== 独り言ログ（左側） ===== */
+#log-panel {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+  background: rgba(10,20,10,0.45); backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden; padding-top: 56px;
+  display: none;
+}
+#log-title {
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: 14px 16px 10px;
+  font-size: 11px; color: rgba(255,255,255,0.4);
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+#log-inner {
+  height: 100%; overflow: hidden; position: relative;
+}
+.log-entry {
+  padding: 10px 16px;
+  font-size: 13px; color: rgba(255,255,255,0.75);
+  line-height: 1.6; border-bottom: 1px solid rgba(255,255,255,0.05);
+  animation: logfade 1s ease forwards;
+}
+.log-entry .log-icon { margin-right: 4px; }
+.log-entry .log-time { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+@keyframes logfade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* 入力エリア */
+#input-area {
+  position: fixed; bottom: 18px;
+  left: 50%; transform: translateX(-50%);
+  display: none; gap: 8px; align-items: center;
+  background: rgba(0,0,0,0.35); backdrop-filter: blur(12px);
+  border-radius: 32px; padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+#input-area input {
+  width: 280px; background: none; border: none; outline: none;
+  color: rgba(255,255,255,0.88); font-size: 14px; font-family: inherit;
+}
+#input-area input::placeholder { color: rgba(255,255,255,0.35); }
+#say-btn {
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.8); border-radius: 18px; padding: 5px 13px;
+  font-size: 13px; cursor: pointer; font-family: inherit; transition: background 0.2s;
+}
+#say-btn:hover { background: rgba(255,255,255,0.18); }
+
+/* 記録ボタン */
+.record-btn {
+  display: inline-block; margin-top: 5px; font-size: 10px;
+  background: rgba(80,150,80,0.6); color: rgba(255,255,255,0.9);
+  border: none; border-radius: 8px; padding: 2px 8px;
+  cursor: pointer; pointer-events: all;
+}
+
+/* 上部バー */
+#top-bar {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: none; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.2); backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+#online-count { color: rgba(255,255,255,0.75); font-size: 12px; }
+#my-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,0.65); }
 </style>
 </head>
 <body>
 
-<!-- ===== STEP 1: キャラクター作成 ===== -->
+<!-- STEP 1: キャラクター作成 -->
 <div class="screen" id="screen-create">
   <div class="card">
     <div class="step-indicator">
-      <div class="step-dot active" id="dot1-1"></div>
-      <div class="step-dot" id="dot1-2"></div>
-      <div class="step-dot" id="dot1-3"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
     </div>
     <h1>ひろばへようこそ</h1>
     <p class="sub">ここは、日々のことを気軽に置いていけるひろばです。<br>犬がかわいい、眠れない、病院つかれた、なんとなく話したい。<br>いいねもフォローもありません。</p>
@@ -442,18 +317,17 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', sans-serif;
       <div class="avatar-option" data-emoji="🐼" onclick="pickAvatar(this)">🐼</div>
       <div class="avatar-option" data-emoji="🦄" onclick="pickAvatar(this)">🦄</div>
       <div class="avatar-option" data-emoji="🐙" onclick="pickAvatar(this)">🐙</div>
-      <div class="avatar-option" data-emoji="🦖" onclick="pickAvatar(this)">🦖</div>
+      <div class="avatar-option" data-emoji="🌿" onclick="pickAvatar(this)">🌿</div>
       <div class="avatar-option" data-emoji="🌵" onclick="pickAvatar(this)">🌵</div>
       <div class="avatar-option" data-emoji="🍀" onclick="pickAvatar(this)">🍀</div>
     </div>
 
-    <input class="name-input" type="text" id="char-name" placeholder="ひろばでの呼び名（例：ぽにょ、なまえなし…）" maxlength="12">
-
-    <button class="btn-primary" id="btn-step1" onclick="goStep2()">次へ →</button>
+    <input class="name-input" type="text" id="char-name" placeholder="呼び名（なくてもOK）" maxlength="12">
+    <button class="btn-primary" onclick="goStep2()">次へ</button>
   </div>
 </div>
 
-<!-- ===== STEP 2: 役割選択 ===== -->
+<!-- STEP 2: 役割選択 -->
 <div class="screen hidden" id="screen-role">
   <div class="card">
     <div class="step-indicator">
@@ -461,33 +335,29 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', sans-serif;
       <div class="step-dot active"></div>
       <div class="step-dot"></div>
     </div>
-    <div class="preview-char" id="preview-role">
+    <div class="preview-char">
       <span class="preview-emoji" id="preview-emoji-role">🐱</span>
-      <span id="preview-name-role">名前なし</span>
-      <span style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.4);">あなたのキャラ</span>
+      <span id="preview-name-role">なまえなし</span>
     </div>
-
     <h1>あなたはどちらですか？</h1>
-    <p class="sub" style="margin-bottom:20px;">ひろばは誰でも同じキャラクターで過ごします。<br>役割は運営側にだけ見えます。</p>
-
+    <p class="sub" style="margin-bottom:18px;">広場では誰でも同じキャラクターで過ごします。<br>役割は運営側にだけ見えます。</p>
     <div class="role-grid">
       <div class="role-card selected" id="role-tojisha" onclick="pickRole('tojisha')">
         <div class="role-icon">🏠</div>
         <div class="role-title">当事者・家族・支援者</div>
-        <div class="role-desc">福祉・暮らしの当事者や、<br>身近で支える方</div>
+        <div class="role-desc">福祉・暮らしの当事者や身近で支える方</div>
       </div>
       <div class="role-card" id="role-kigyo" onclick="pickRole('kigyo')">
         <div class="role-icon">🏢</div>
         <div class="role-title">企業・研究・行政</div>
-        <div class="role-desc">調査・開発・政策づくりに<br>関わる方</div>
+        <div class="role-desc">調査・開発・政策づくりに関わる方</div>
       </div>
     </div>
-
-    <button class="btn-primary" onclick="goStep3()">次へ →</button>
+    <button class="btn-primary" onclick="goStep3()">次へ</button>
   </div>
 </div>
 
-<!-- ===== STEP 3: 同意 ===== -->
+<!-- STEP 3: 同意 -->
 <div class="screen hidden" id="screen-consent">
   <div class="card">
     <div class="step-indicator">
@@ -497,30 +367,23 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', sans-serif;
     </div>
     <div class="preview-char">
       <span class="preview-emoji" id="preview-emoji-consent">🐱</span>
-      <span id="preview-name-consent">名前なし</span>
-      <span id="preview-role-consent" style="margin-left:auto;font-size:11px;background:rgba(116,192,232,0.25);color:#74C0E8;border-radius:8px;padding:2px 8px;"></span>
+      <span id="preview-name-consent">なまえなし</span>
+      <span id="preview-role-consent" style="margin-left:auto;font-size:10px;color:rgba(200,230,200,0.7);"></span>
     </div>
-
     <h1>ひろばのルール</h1>
-    <p class="sub" style="margin-bottom:16px;">入る前に確認してください</p>
-
+    <p class="sub" style="margin-bottom:14px;">入る前に確認してください</p>
     <div class="consent-box">
-      <h3>🌿 ひろばはどんな場所？</h3>
-      <p>ここは、福祉・暮らし・社会のことを、気軽に独り言のように話せる場所です。いいねもフォローもありません。あなたのペースで、話したいときだけ話してください。</p>
-
+      <h3>🌿 ここはどんな場所？</h3>
+      <p>日々のことを、気軽に置いていける場所です。話すための場所というより、居るための場所です。</p>
       <h3>📝 投稿について</h3>
       <p>ひろばに書いたことは、個人が特定されない形で、生活の困りごとや社会課題を理解するために活用されることがあります。個人を特定できる情報は書かないでください。</p>
-
       <h3>🔒 プライバシーについて</h3>
-      <p>名前・住所・連絡先など、あなたや他者を特定できる情報は投稿しないでください。投稿内容はAI（MANA）が読み取ることがあります。</p>
-
+      <p>名前・住所・連絡先など、あなたや他者を特定できる情報は投稿しないでください。</p>
       <h3>🤝 お互いへの配慮</h3>
-      <p>誰かを傷つける言葉、誹謗中傷、差別的な表現は使わないでください。運営が判断した場合、投稿を非表示にすることがあります。</p>
-
+      <p>誰かを傷つける言葉、誹謗中傷、差別的な表現は使わないでください。</p>
       <h3>🏢 企業・研究目的の方へ</h3>
-      <p>ひろばでは、企業・研究・行政の方も同じキャラクターで過ごします。当事者の声を調査目的で収集する場合は、別途運営にお問い合わせください。</p>
+      <p>当事者の声を調査目的で収集する場合は、別途運営にお問い合わせください。</p>
     </div>
-
     <label class="consent-check">
       <input type="checkbox" id="chk1" onchange="updateConsentBtn()">
       <span>ひろばのルールを読み、理解しました</span>
@@ -529,75 +392,74 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', sans-serif;
       <input type="checkbox" id="chk2" onchange="updateConsentBtn()">
       <span>投稿内容が、個人が特定されない形で社会課題の理解に活用される場合があることに同意します</span>
     </label>
-
-    <button class="btn-primary" id="btn-enter" disabled onclick="enterHiroba()">ひろばに入る 🌟</button>
+    <button class="btn-primary" id="btn-enter" disabled onclick="enterHiroba()">ひろばに入る</button>
   </div>
 </div>
 
-<!-- ===== 広場シーン ===== -->
+<!-- 広場 -->
 <div id="scene" style="display:none;">
   <!-- 雲 -->
-  <div class="cloud" style="width:90px;height:28px;top:8%;left:-10%;animation-duration:40s;">
-    <div style="width:50px;height:40px;background:white;border-radius:50%;position:absolute;top:-20px;left:15px;"></div>
-    <div style="width:35px;height:35px;background:white;border-radius:50%;position:absolute;top:-15px;left:35px;"></div>
+  <div class="cloud" style="width:80px;height:22px;top:7%;left:-5%;animation-duration:44s;opacity:0.5;">
+    <div style="width:44px;height:36px;background:rgba(255,255,255,0.6);border-radius:50%;position:absolute;top:-18px;left:12px;"></div>
   </div>
-  <div class="cloud" style="width:70px;height:22px;top:14%;left:30%;animation-duration:55s;animation-delay:-20s;opacity:0.7;">
-    <div style="width:40px;height:32px;background:white;border-radius:50%;position:absolute;top:-16px;left:10px;"></div>
+  <div class="cloud" style="width:60px;height:18px;top:12%;left:38%;animation-duration:60s;animation-delay:-22s;opacity:0.4;">
+    <div style="width:36px;height:28px;background:rgba(255,255,255,0.6);border-radius:50%;position:absolute;top:-14px;left:8px;"></div>
   </div>
-  <div class="cloud" style="width:110px;height:32px;top:6%;left:60%;animation-duration:48s;animation-delay:-35s;">
-    <div style="width:55px;height:45px;background:white;border-radius:50%;position:absolute;top:-22px;left:20px;"></div>
-    <div style="width:40px;height:38px;background:white;border-radius:50%;position:absolute;top:-18px;left:45px;"></div>
+  <div class="cloud" style="width:100px;height:26px;top:5%;left:65%;animation-duration:50s;animation-delay:-38s;opacity:0.45;">
+    <div style="width:50px;height:40px;background:rgba(255,255,255,0.6);border-radius:50%;position:absolute;top:-20px;left:18px;"></div>
+    <div style="width:36px;height:32px;background:rgba(255,255,255,0.6);border-radius:50%;position:absolute;top:-16px;left:40px;"></div>
   </div>
 
-  <div class="plaza"></div>
   <div class="cobble"></div>
 
-  <div class="tree" style="left:6%;">
-    <div class="tree-leaves"></div>
+  <!-- 木 -->
+  <div class="tree" style="left:5%;">
+    <div class="tree-leaves"></div><div class="tree-trunk"></div>
+  </div>
+  <div class="tree" style="left:87%;">
+    <div class="tree-leaves" style="width:44px;height:44px;background:#3a6e2a;"></div>
     <div class="tree-trunk"></div>
   </div>
-  <div class="tree" style="left:88%;">
-    <div class="tree-leaves" style="width:50px;height:50px;background:#2D8C2D;"></div>
-    <div class="tree-trunk"></div>
-  </div>
-  <div class="tree" style="left:15%;bottom:8%;">
-    <div class="tree-leaves" style="width:45px;height:45px;background:#4A9C4A;"></div>
-    <div class="tree-trunk" style="height:30px;"></div>
+  <div class="tree" style="left:14%;bottom:6%;">
+    <div class="tree-leaves" style="width:40px;height:40px;background:#4a8038;"></div>
+    <div class="tree-trunk" style="height:28px;"></div>
   </div>
 
-  <div class="bench" style="left:22%;bottom:22%;">
+  <!-- ベンチ -->
+  <div class="bench" style="left:24%;bottom:21%;">
     <div class="bench-seat"></div>
     <div><span class="bench-leg"></span><span class="bench-leg"></span></div>
   </div>
-  <div class="bench" style="right:22%;bottom:22%;transform:scaleX(-1);">
+  <div class="bench" style="right:24%;bottom:21%;transform:scaleX(-1);">
     <div class="bench-seat"></div>
     <div><span class="bench-leg"></span><span class="bench-leg"></span></div>
   </div>
 
+  <!-- 噴水 -->
   <div class="fountain">
     <div class="fountain-water"></div>
     <div class="fountain-base"></div>
   </div>
 
-  <!-- NPC アバター群 -->
-  <div class="avatar" id="av1" style="left:28%;animation:walk 9s ease-in-out infinite;animation-delay:-2s;">
-    <div class="avatar-body">🐰</div>
-    <div class="avatar-name">うさぎ</div>
+  <!-- NPC -->
+  <div class="avatar" style="left:29%;animation:wander 14s ease-in-out infinite;animation-delay:-3s;">
+    <div class="avatar-body">🐕</div>
+    <div class="avatar-name">いぬ</div>
   </div>
-  <div class="avatar" id="av2" style="left:45%;bottom:22%;animation:walk2 11s ease-in-out infinite;animation-delay:-5s;">
-    <div class="avatar-body">🐻</div>
-    <div class="avatar-name">くま</div>
+  <div class="avatar" style="left:46%;bottom:21%;animation:wander2 18s ease-in-out infinite;animation-delay:-7s;">
+    <div class="avatar-body">🕊</div>
+    <div class="avatar-name">はと</div>
   </div>
-  <div class="avatar" id="av3" style="left:60%;animation:walk3 13s ease-in-out infinite;animation-delay:-8s;">
-    <div class="avatar-body">🦊</div>
-    <div class="avatar-name">きつね</div>
+  <div class="avatar" style="left:61%;animation:wander3 20s ease-in-out infinite;animation-delay:-11s;">
+    <div class="avatar-body">🐈</div>
+    <div class="avatar-name">ねこ</div>
   </div>
-  <div class="avatar" style="left:18%;bottom:26%;animation:idle 4s ease-in-out infinite;">
-    <div class="avatar-body">🐧</div>
-    <div class="avatar-name">ペンギン</div>
+  <div class="avatar" style="left:19%;bottom:25%;animation:float 5s ease-in-out infinite;">
+    <div class="avatar-body">🐦</div>
+    <div class="avatar-name">ことり</div>
   </div>
 
-  <!-- MANAのAIキャラ -->
+  <!-- MANA -->
   <div id="mana-char">
     <div class="mana-body">🌟</div>
     <div class="mana-label">MANA</div>
@@ -605,105 +467,88 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', sans-serif;
   <div id="mana-bubble">ここにいるよ。<br>話したいときに話してね。</div>
 </div>
 
-<!-- 広場UI -->
-<div id="online-count" style="display:none;">🟢 今ここにいる人 <span id="cnt">12</span></div>
-
-<div id="my-badge" style="display:none;">
-  <span id="badge-emoji">🐱</span>
-  <span id="badge-name">あなた</span>
+<!-- 独り言ログ -->
+<div id="log-panel">
+  <div id="log-title">みんなの独り言</div>
+  <div id="log-inner"></div>
 </div>
 
-<div id="input-area" style="display:none;">
+<!-- 上部バー -->
+<div id="top-bar">
+  <div id="my-badge">
+    <span id="badge-emoji">🐱</span>
+    <span id="badge-name">あなた</span>
+  </div>
+  <div id="online-count">🟢 今ここにいる人 <span id="cnt">13</span></div>
+</div>
+
+<!-- 入力 -->
+<div id="input-area">
   <input type="text" id="msg-input" placeholder="独り言をどうぞ…" maxlength="60">
   <button id="say-btn" onclick="say()">つぶやく</button>
 </div>
 
 <script>
-let myAvatar = '🐱';
-let myName = 'あなた';
-let myRole = 'tojisha';
-let myX = 40;
-let myEl = null;
+let myAvatar = '🐱', myName = 'あなた', myRole = 'tojisha';
+let myX = 40, myEl = null;
 
-// ---- STEP 1 ----
 function pickAvatar(el) {
   document.querySelectorAll('#avatar-grid-1 .avatar-option').forEach(e => e.classList.remove('selected'));
   el.classList.add('selected');
   myAvatar = el.dataset.emoji;
 }
-
 function goStep2() {
-  const nameVal = document.getElementById('char-name').value.trim();
-  myName = nameVal || 'なまえなし';
+  myName = document.getElementById('char-name').value.trim() || 'なまえなし';
   document.getElementById('preview-emoji-role').textContent = myAvatar;
   document.getElementById('preview-name-role').textContent = myName;
   document.getElementById('screen-create').classList.add('hidden');
   document.getElementById('screen-role').classList.remove('hidden');
 }
-
-// ---- STEP 2 ----
 function pickRole(role) {
   myRole = role;
   document.getElementById('role-tojisha').classList.toggle('selected', role === 'tojisha');
   document.getElementById('role-kigyo').classList.toggle('selected', role === 'kigyo');
 }
-
 function goStep3() {
   document.getElementById('preview-emoji-consent').textContent = myAvatar;
   document.getElementById('preview-name-consent').textContent = myName;
-  const roleLabel = myRole === 'kigyo' ? '企業・研究・行政' : '当事者・家族・支援者';
-  document.getElementById('preview-role-consent').textContent = roleLabel;
+  document.getElementById('preview-role-consent').textContent = myRole === 'kigyo' ? '企業・研究・行政' : '当事者・家族・支援者';
   document.getElementById('screen-role').classList.add('hidden');
   document.getElementById('screen-consent').classList.remove('hidden');
 }
-
-// ---- STEP 3 ----
 function updateConsentBtn() {
-  const ok = document.getElementById('chk1').checked && document.getElementById('chk2').checked;
-  document.getElementById('btn-enter').disabled = !ok;
+  document.getElementById('btn-enter').disabled =
+    !(document.getElementById('chk1').checked && document.getElementById('chk2').checked);
 }
-
 function enterHiroba() {
   document.getElementById('screen-consent').classList.add('hidden');
   document.getElementById('scene').style.display = 'block';
-  document.getElementById('online-count').style.display = '';
-  document.getElementById('my-badge').style.display = '';
-  document.getElementById('input-area').style.display = '';
-
+  document.getElementById('top-bar').style.display = 'flex';
+  document.getElementById('input-area').style.display = 'flex';
+  document.getElementById('log-panel').style.display = 'block';
   document.getElementById('badge-emoji').textContent = myAvatar;
   document.getElementById('badge-name').textContent = myName;
-
   createMyAvatar();
+  startLog();
   startNpcBubbles();
   startOnlineCounter();
-
-  // MANAがロール別に挨拶
   const greeting = myRole === 'kigyo'
-    ? `${myName}さん、いらっしゃい。\nここは当事者の声の場所。\nそっと聞いていてね。`
+    ? `${myName}さん、いらっしゃい。\nここは当事者の声の場所です。\nそっと聞いていてね。`
     : `${myName}さん、いらっしゃい。\nゆっくりしていってね。`;
-  setTimeout(() => showManaReply(greeting), 800);
+  setTimeout(() => showManaReply(greeting), 900);
 }
 
-// ---- 広場ロジック ----
 function createMyAvatar() {
   if (myEl) myEl.remove();
   myEl = document.createElement('div');
   myEl.className = 'avatar';
-  myEl.id = 'my-avatar';
-  myEl.style.cssText = `left:${myX}%;bottom:20%;animation:idle 3s ease-in-out infinite;`;
+  myEl.style.cssText = `left:${myX}%;bottom:19%;animation:float 3.5s ease-in-out infinite;`;
   myEl.innerHTML = `<div class="avatar-body">${myAvatar}</div><div class="avatar-name">${myName}</div>`;
   document.getElementById('scene').appendChild(myEl);
 }
 
-document.addEventListener('keydown', e => {
-  if (document.getElementById('scene').style.display === 'none') return;
-  if (e.key === 'Enter' && document.activeElement !== document.getElementById('msg-input')) {
-    document.getElementById('msg-input').focus();
-    return;
-  }
-});
-document.getElementById('msg-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') say();
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') say(); });
 });
 
 function say() {
@@ -711,25 +556,25 @@ function say() {
   const text = input.value.trim();
   if (!text) return;
   showBubble(text, myX, true);
+  addToLog(myAvatar, text, true);
   input.value = '';
 }
 
-function showBubble(text, xPercent, isMe) {
+function showBubble(text, xPct, isMe) {
   const scene = document.getElementById('scene');
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-  bubble.style.cssText = `left:${xPercent}%;bottom:42%;`;
-  const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
-  bubble.innerHTML = safeText.replace(/\n/g,'<br>') + (isMe
-    ? `<br><button class="record-btn" onclick="recordThis(this,'${safeText}')">📌 記録する</button>`
-    : '');
-  scene.appendChild(bubble);
-  setTimeout(() => bubble.remove(), 8000);
+  const el = document.createElement('div');
+  el.className = 'bubble';
+  el.style.cssText = `left:${xPct}%;bottom:40%;`;
+  const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
+  el.innerHTML = safe.replace(/\n/g,'<br>') + (isMe
+    ? `<br><button class="record-btn" onclick="recordThis(this,'${safe}')">📌 記録する</button>` : '');
+  scene.appendChild(el);
+  setTimeout(() => el.remove(), 9000);
 }
 
-function recordThis(btn, text) {
+function recordThis(btn) {
   btn.textContent = '✓ 記録しました';
-  btn.style.background = '#2ECC71';
+  btn.style.background = 'rgba(60,140,60,0.7)';
   btn.disabled = true;
   setTimeout(() => showManaReply('受け取ったよ。ありがとう。'), 500);
 }
@@ -740,32 +585,76 @@ function showManaReply(text) {
   setTimeout(() => { el.innerHTML = 'ここにいるよ。<br>話したいときに話してね。'; }, 6000);
 }
 
-const npcLines = [
-  { x: 28, text: '今日、窓口に行ったけど\nまた来週来てって言われた…' },
-  { x: 45, text: 'ヘルパーさん、今日は\n来られなかった。' },
-  { x: 60, text: 'なんか疲れたなあ' },
-  { x: 18, text: '申請、通るかな' },
-  { x: 55, text: '今日は天気いいね' },
-  { x: 35, text: 'また同じ書類\n出しなおしって言われた' },
-  { x: 70, text: 'ここ来ると少し\n楽になる気がする' },
-  { x: 25, text: 'ひとりじゃないんだって\n思えるな' },
+// ===== 独り言ログ =====
+const logLines = [
+  { icon: '🐶', text: '犬かわいい' },
+  { icon: '🌙', text: '眠い' },
+  { icon: '🍓', text: '病院つかれた' },
+  { icon: '☔', text: '雨だなあ' },
+  { icon: '🏥', text: '窓口にまた来週って言われた' },
+  { icon: '☕', text: 'コーヒーがおいしい朝' },
+  { icon: '💊', text: '薬が変わって少し不安' },
+  { icon: '🌸', text: 'ここ来るとすこし落ち着く' },
+  { icon: '😪', text: 'また書類書き直しって言われた' },
+  { icon: '🌳', text: 'なんとなく話したくて' },
+  { icon: '🕊', text: 'ひとりじゃないかもって思う' },
+  { icon: '🍵', text: 'お茶でも飲もう' },
 ];
 
+let logIdx = 0;
+const logTimes = ['さっき', '2分前', '5分前', '8分前', '11分前', '14分前'];
+
+function addToLog(icon, text, isMe) {
+  const inner = document.getElementById('log-inner');
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.innerHTML = `<span class="log-icon">${icon}</span>${escHtml(text)}${isMe ? ' <span style="font-size:10px;color:rgba(200,230,200,0.5)">（あなた）</span>' : ''}<div class="log-time">たったいま</div>`;
+  inner.insertBefore(el, inner.firstChild);
+  // 上限20件
+  while (inner.children.length > 20) inner.removeChild(inner.lastChild);
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+function startLog() {
+  // 初期ログを逆順で差し込む
+  [...logLines].reverse().forEach((l, i) => {
+    setTimeout(() => {
+      const inner = document.getElementById('log-inner');
+      const el = document.createElement('div');
+      el.className = 'log-entry';
+      const t = logTimes[Math.min(i, logTimes.length - 1)];
+      el.innerHTML = `<span class="log-icon">${l.icon}</span>${escHtml(l.text)}<div class="log-time">${t}</div>`;
+      inner.appendChild(el);
+    }, i * 600);
+  });
+}
+
+// NPCの吹き出し
+const npcLines = [
+  { x: 29, text: '窓口にまた\n来週来てって言われた' },
+  { x: 46, text: '今日は少し\n疲れたな' },
+  { x: 61, text: '申請、通るかな' },
+  { x: 19, text: 'ここ来ると\n落ち着く気がする' },
+  { x: 54, text: 'なんか話したかっただけ' },
+  { x: 38, text: 'また同じ書類\n書き直しって…' },
+  { x: 70, text: 'ひとりじゃないんだな' },
+  { x: 26, text: '犬がかわいかった' },
+];
 let npcIdx = 0;
 function showNpcBubble() {
-  const line = npcLines[npcIdx % npcLines.length];
-  showBubble(line.text, line.x, false);
+  const l = npcLines[npcIdx % npcLines.length];
+  showBubble(l.text, l.x, false);
+  addToLog(['🐕','🕊','🐈','🐦'][npcIdx % 4], l.text.replace(/\n/g,''), false);
   npcIdx++;
-  setTimeout(showNpcBubble, 4000 + Math.random() * 4000);
+  setTimeout(showNpcBubble, 5000 + Math.random() * 5000);
 }
-function startNpcBubbles() {
-  setTimeout(showNpcBubble, 2000);
-}
+function startNpcBubbles() { setTimeout(showNpcBubble, 3000); }
 
 function startOnlineCounter() {
   setInterval(() => {
-    document.getElementById('cnt').textContent = 12 + Math.floor(Math.random() * 5) - 2;
-  }, 8000);
+    document.getElementById('cnt').textContent = 13 + Math.floor(Math.random() * 4) - 1;
+  }, 10000);
 }
 </script>
 </body>
