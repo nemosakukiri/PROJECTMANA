@@ -3500,15 +3500,27 @@ function exportKansokuForJournalistClassification() {
     // 「ニュース(速報)」ぽいタイトルは除外（5W系：事件・火災・地震など）
     const breakingNewsPattern = /津波|地震|台風|火災|事故|逮捕|死亡|解除|速報|号外|天気/;
     if (breakingNewsPattern.test(title) && !desc) continue;
-    out.push({ url, title, source, titleSource, desc: desc.slice(0, 150), domain, type });
+    // opinion/research/investigativeのみ抽出（newはスキップ）
+    const articleType = type || (function(){
+      const s = source.toLowerCase();
+      if (/wedge|slow.?news|現代ビジネス|bigissue|president|東洋経済/.test(s)) return 'opinion';
+      if (/シノドス|synodos/.test(s)) return 'research';
+      if (/赤旗|調査報道/.test(s)) return 'investigative';
+      return 'news';
+    })();
+    if (articleType === 'news') continue;
+    out.push({ url, title, source, desc: desc.slice(0, 150), articleType });
   }
-  Logger.log('exportKansokuForJournalistClassification: ' + out.length + '件（候補絞り込み後） → 書き出しシートへ');
-  // ログに収まらないため「分類作業用」シートに書き出す
+  Logger.log('exportKansokuForJournalistClassification: ' + out.length + '件（opinion/research/investigative） → 書き出しシートへ');
+  // 50000文字制限を回避するため1行1記事で書き出す
   let workSheet = ss.getSheetByName('分類作業用_journalist');
   if (workSheet) ss.deleteSheet(workSheet);
   workSheet = ss.insertSheet('分類作業用_journalist');
-  workSheet.getRange(1, 1).setValue(JSON.stringify(out));
-  Logger.log('「分類作業用_journalist」シートのA1にJSONを書き出しました（' + out.length + '件）');
+  workSheet.getRange(1, 1).setValue('JSON');
+  out.forEach((item, i) => {
+    workSheet.getRange(i + 2, 1).setValue(JSON.stringify(item));
+  });
+  Logger.log('「分類作業用_journalist」シートに' + out.length + '行書き出しました');
 }
 
 // ===== 観測DB ジャーナリスト分類結果の反映 =====
