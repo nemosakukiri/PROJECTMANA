@@ -115,9 +115,8 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 /* ===== 広場シーン ===== */
 #scene {
   position: fixed; left: 0; top: 48px; right: 0; bottom: 64px;
-  background-image: url('https://lh3.googleusercontent.com/d/14xExpEUDxdpQbZoVZyn70pZ6NJDl3cS9');
+  background-image: url('hiroba-bg.webp');
   background-size: cover; background-position: center top;
-  /* フォールバック（画像が読み込めない場合） */
   background-color: #dce8d0;
   overflow: hidden;
 }
@@ -190,11 +189,11 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 }
 
 /* MANAキャラ */
-#mana-char { position: absolute; bottom: 19%; right: 11%; text-align: center; animation: float 4s ease-in-out infinite; }
+#mana-char { position: absolute; bottom: 38%; right: 14%; text-align: center; animation: float 4s ease-in-out infinite; }
 .mana-body { font-size: 30px; opacity: 0.75; }
 .mana-label { font-size: 9px; color: rgba(200,230,255,0.8); background: rgba(0,60,100,0.35); border-radius: 6px; padding: 1px 5px; margin-top: 2px; }
 #mana-bubble {
-  position: absolute; right: 13%; bottom: 44%;
+  position: absolute; right: 13%; bottom: 52%;
   background: rgba(220,238,255,0.9); border-radius: 12px;
   padding: 7px 11px; font-size: 11px; color: #2a5a7a;
   max-width: 148px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -408,35 +407,41 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 <!-- 広場 -->
 <div id="scene" style="display:none;">
 
-  <!-- NPC -->
-  <!-- いぬ：広場を歩いてる -->
-  <div class="avatar" style="left:34%;bottom:19%;animation:wander 16s ease-in-out infinite;animation-delay:-3s;">
-    <div class="avatar-body">🐕</div>
-    <div class="avatar-name">いぬ</div>
-  </div>
-  <!-- ねこ：左のベンチでくつろいでる -->
-  <div class="avatar sitting" style="left:22%;bottom:22%;animation:idle-sit 4.5s ease-in-out infinite;animation-delay:-1s;">
-    <div class="avatar-body">🐈</div>
+  <!-- NPC（水彩画の構図に合わせた配置・遠近感あり） -->
+
+  <!-- 左ベンチ（ランプ横）：ねこがくつろいでる -->
+  <div class="avatar sitting" style="left:8%;bottom:36%;animation:idle-sit 4.5s ease-in-out infinite;animation-delay:-1s;font-size:0;">
+    <div class="avatar-body" style="font-size:20px;">🐈</div>
     <div class="avatar-name">ねこ</div>
   </div>
-  <!-- はと：噴水のへりにとまってる -->
-  <div class="avatar" style="left:49%;bottom:24%;animation:perch 3.8s ease-in-out infinite;animation-delay:-0.5s;">
-    <div class="avatar-body">🕊</div>
-    <div class="avatar-name">はと</div>
-  </div>
-  <!-- うさぎ：右ベンチそばに座ってる -->
-  <div class="avatar sitting" style="right:22%;bottom:22%;animation:idle-sit 5s ease-in-out infinite;animation-delay:-2.5s;">
-    <div class="avatar-body">🐰</div>
+
+  <!-- カフェ前テーブル：うさぎが座ってる -->
+  <div class="avatar sitting" style="left:21%;bottom:38%;animation:idle-sit 5s ease-in-out infinite;animation-delay:-2s;font-size:0;">
+    <div class="avatar-body" style="font-size:20px;">🐰</div>
     <div class="avatar-name">うさぎ</div>
   </div>
-  <!-- ことり：木の上でのんびり -->
-  <div class="avatar on-tree" style="left:8%;animation:perch 6s ease-in-out infinite;animation-delay:-1.5s;">
-    <div class="avatar-body">🐦</div>
-    <div class="avatar-name">ことり</div>
+
+  <!-- 広場中央（やや手前）：いぬが歩いてる -->
+  <div class="avatar" style="left:36%;bottom:26%;animation:wander 16s ease-in-out infinite;animation-delay:-3s;">
+    <div class="avatar-body" style="font-size:30px;">🐕</div>
+    <div class="avatar-name">いぬ</div>
   </div>
-  <!-- りす：花壇のそばでちょこんと座ってる -->
-  <div class="avatar sitting" style="left:67%;bottom:21%;animation:idle-sit 5.5s ease-in-out infinite;animation-delay:-3s;">
-    <div class="avatar-body">🐿️</div>
+
+  <!-- 噴水のへり：はとがとまってる -->
+  <div class="avatar" style="left:60%;bottom:40%;animation:perch 3.8s ease-in-out infinite;animation-delay:-0.5s;font-size:0;">
+    <div class="avatar-body" style="font-size:18px;">🕊</div>
+    <div class="avatar-name">はと</div>
+  </div>
+
+  <!-- 右ベンチ：くまがコーヒー片手に座ってる -->
+  <div class="avatar sitting" style="left:70%;bottom:40%;animation:idle-sit 5.5s ease-in-out infinite;animation-delay:-2.5s;font-size:0;">
+    <div class="avatar-body" style="font-size:20px;">🐻</div>
+    <div class="avatar-name">くま</div>
+  </div>
+
+  <!-- 右花壇そば（手前）：りすがちょこんと -->
+  <div class="avatar sitting" style="left:80%;bottom:22%;animation:idle-sit 6s ease-in-out infinite;animation-delay:-3s;">
+    <div class="avatar-body" style="font-size:26px;">🐿️</div>
     <div class="avatar-name">りす</div>
   </div>
 
