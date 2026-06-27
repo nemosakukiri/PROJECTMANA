@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ひろば — モック</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', sans-serif; overflow: hidden; }
+
+/* ===== オンボーディング画面共通 ===== */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #0f2027, #203a43, #2c5364);
+}
+.screen.hidden { display: none; }
+
+.card {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 24px;
+  padding: 40px 36px;
+  max-width: 460px;
+  width: 90%;
+  color: white;
+}
+.card h1 { font-size: 22px; font-weight: bold; margin-bottom: 6px; }
+.card .sub { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 28px; }
+
+/* キャラ選択 */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.avatar-option {
+  font-size: 34px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 6px 0;
+  border: 2px solid transparent;
+  transition: border-color 0.2s, background 0.2s;
+  background: rgba(255,255,255,0.05);
+}
+.avatar-option:hover { background: rgba(255,255,255,0.12); }
+.avatar-option.selected { border-color: #74C0E8; background: rgba(116,192,232,0.2); }
+
+.name-input {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 20px;
+  font-family: inherit;
+}
+.name-input::placeholder { color: rgba(255,255,255,0.4); }
+
+/* 役割選択 */
+.role-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.role-card {
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 14px;
+  padding: 18px 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+.role-card:hover { background: rgba(255,255,255,0.12); }
+.role-card.selected { border-color: #74C0E8; background: rgba(116,192,232,0.15); }
+.role-card .role-icon { font-size: 30px; margin-bottom: 6px; }
+.role-card .role-title { font-size: 13px; font-weight: bold; color: white; }
+.role-card .role-desc { font-size: 11px; color: rgba(255,255,255,0.55); margin-top: 3px; line-height: 1.4; }
+
+/* 同意画面 */
+.consent-box {
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 12px;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.75);
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.consent-box h3 { color: white; font-size: 13px; margin-bottom: 8px; }
+.consent-box h3 + p { margin-bottom: 10px; }
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.5;
+}
+.consent-check input[type=checkbox] {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: #74C0E8;
+  cursor: pointer;
+}
+
+/* ボタン */
+.btn-primary {
+  width: 100%;
+  background: linear-gradient(135deg, #4A9EDB, #2979AD);
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  color: white;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  font-family: inherit;
+}
+.btn-primary:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  transition: background 0.3s;
+}
+.step-dot.active { background: #74C0E8; }
+.step-dot.done { background: rgba(116,192,232,0.5); }
+
+/* preview avatar in corner of step 2/3 */
+.preview-char {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 8px 14px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+}
+.preview-char .preview-emoji { font-size: 28px; }
+
+/* ===== 広場シーン ===== */
+#scene {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(180deg, #87CEEB 0%, #98D8C8 45%, #7EC8A4 45%, #6BBF95 100%);
+  overflow: hidden;
+}
+
+.cloud {
+  position: absolute;
+  background: white;
+  border-radius: 50px;
+  opacity: 0.85;
+  animation: drift linear infinite;
+}
+.cloud::before, .cloud::after {
+  content: '';
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+}
+@keyframes drift { from { transform: translateX(-120px); } to { transform: translateX(110vw); } }
+
+.plaza {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 55%;
+}
+
+.cobble {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 45%;
+  background: repeating-linear-gradient(
+    90deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 60px
+  ),
+  repeating-linear-gradient(
+    0deg, rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 40px
+  ),
+  #8DB87E;
+  border-radius: 8px 8px 0 0;
+}
+
+.tree { position: absolute; bottom: 10%; }
+.tree-trunk { width: 14px; height: 40px; background: #8B6914; border-radius: 4px; margin: 0 auto; }
+.tree-leaves { width: 60px; height: 60px; background: #3A8C3A; border-radius: 50% 50% 40% 40%; margin: 0 auto; position: relative; top: 10px; box-shadow: 0 -8px 0 #2D6E2D; }
+
+.fountain {
+  position: absolute;
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.fountain-base { width: 70px; height: 20px; background: #9BA8B5; border-radius: 35px; margin: 0 auto; }
+.fountain-water { width: 30px; height: 50px; background: linear-gradient(0deg, #74C0E8, transparent); border-radius: 50% 50% 0 0; margin: 0 auto; position: relative; top: -5px; opacity: 0.7; animation: splash 2s ease-in-out infinite alternate; }
+@keyframes splash { 0% { height: 50px; opacity: 0.7; } 100% { height: 65px; opacity: 0.5; } }
+
+.bench { position: absolute; bottom: 18%; }
+.bench-seat { width: 50px; height: 10px; background: #C8A86B; border-radius: 3px; }
+.bench-leg { width: 6px; height: 14px; background: #A0836A; border-radius: 2px; display: inline-block; margin: 0 5px; }
+
+.avatar {
+  position: absolute;
+  bottom: 20%;
+  text-align: center;
+  cursor: pointer;
+  animation: walk 8s ease-in-out infinite;
+  user-select: none;
+  transition: transform 0.3s;
+}
+.avatar:hover { transform: scale(1.1) !important; }
+.avatar-body { font-size: 36px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+.avatar-name { font-size: 10px; color: white; background: rgba(0,0,0,0.4); border-radius: 8px; padding: 1px 5px; margin-top: 2px; white-space: nowrap; }
+
+@keyframes walk {
+  0%   { transform: translateX(0px); }
+  25%  { transform: translateX(40px); }
+  50%  { transform: translateX(20px); }
+  75%  { transform: translateX(-30px); }
+  100% { transform: translateX(0px); }
+}
+@keyframes walk2 {
+  0%   { transform: translateX(0px) scaleX(1); }
+  30%  { transform: translateX(-50px) scaleX(-1); }
+  60%  { transform: translateX(-20px) scaleX(-1); }
+  100% { transform: translateX(0px) scaleX(1); }
+}
+@keyframes walk3 {
+  0%   { transform: translateX(0px); }
+  40%  { transform: translateX(60px); }
+  70%  { transform: translateX(30px); }
+  100% { transform: translateX(0px); }
+}
+@keyframes idle {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+.bubble {
+  position: absolute;
+  background: white;
+  border-radius: 16px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #333;
+  max-width: 180px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  animation: fadeup 8s ease-out forwards;
+  pointer-events: none;
+  white-space: normal;
+  word-break: break-all;
+}
+.bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 16px;
+  border: 8px solid transparent;
+  border-top-color: white;
+  border-bottom: 0;
+}
+@keyframes fadeup {
+  0%   { opacity: 0; transform: translateY(0px); }
+  10%  { opacity: 1; transform: translateY(-5px); }
+  70%  { opacity: 1; transform: translateY(-15px); }
+  100% { opacity: 0; transform: translateY(-30px); }
+}
+
+#mana-char {
+  position: absolute;
+  bottom: 20%;
+  right: 12%;
+  text-align: center;
+  animation: idle 3s ease-in-out infinite;
+}
+.mana-body { font-size: 42px; filter: drop-shadow(0 0 8px rgba(120,200,255,0.8)); }
+.mana-label { font-size: 10px; color: #C8F0FF; background: rgba(0,80,120,0.6); border-radius: 8px; padding: 2px 6px; margin-top: 2px; }
+
+#input-area {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  border-radius: 40px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255,255,255,0.3);
+}
+#input-area input {
+  width: 320px;
+  background: none;
+  border: none;
+  outline: none;
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+}
+#input-area input::placeholder { color: rgba(255,255,255,0.6); }
+#say-btn {
+  background: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.5);
+  color: white;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+#say-btn:hover { background: rgba(255,255,255,0.4); }
+
+.record-btn {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 10px;
+  background: #4A9EDB;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 2px 8px;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+#online-count {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  color: rgba(255,255,255,0.8);
+  font-size: 12px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  padding: 4px 10px;
+}
+
+#my-badge {
+  position: fixed;
+  top: 16px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.85);
+  font-size: 12px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+  padding: 4px 12px;
+}
+
+#mana-bubble {
+  position: absolute;
+  right: 14%;
+  bottom: 46%;
+  background: rgba(200,240,255,0.95);
+  border-radius: 16px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #1a5f7a;
+  max-width: 160px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+  animation: manafade 6s ease-in-out infinite alternate;
+}
+@keyframes manafade {
+  0%   { opacity: 0.9; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+#mana-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  right: 20px;
+  border: 8px solid transparent;
+  border-top-color: rgba(200,240,255,0.95);
+  border-bottom: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== STEP 1: キャラクター作成 ===== -->
+<div class="screen" id="screen-create">
+  <div class="card">
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot1-1"></div>
+      <div class="step-dot" id="dot1-2"></div>
+      <div class="step-dot" id="dot1-3"></div>
+    </div>
+    <h1>👋 ひろばへようこそ</h1>
+    <p class="sub">まず、あなたのキャラクターを作りましょう</p>
+
+    <div class="avatar-grid" id="avatar-grid-1">
+      <div class="avatar-option selected" data-emoji="🐱" onclick="pickAvatar(this)">🐱</div>
+      <div class="avatar-option" data-emoji="🐶" onclick="pickAvatar(this)">🐶</div>
+      <div class="avatar-option" data-emoji="🐸" onclick="pickAvatar(this)">🐸</div>
+      <div class="avatar-option" data-emoji="🦋" onclick="pickAvatar(this)">🦋</div>
+      <div class="avatar-option" data-emoji="🌸" onclick="pickAvatar(this)">🌸</div>
+      <div class="avatar-option" data-emoji="⭐" onclick="pickAvatar(this)">⭐</div>
+      <div class="avatar-option" data-emoji="🐼" onclick="pickAvatar(this)">🐼</div>
+      <div class="avatar-option" data-emoji="🦄" onclick="pickAvatar(this)">🦄</div>
+      <div class="avatar-option" data-emoji="🐙" onclick="pickAvatar(this)">🐙</div>
+      <div class="avatar-option" data-emoji="🦖" onclick="pickAvatar(this)">🦖</div>
+      <div class="avatar-option" data-emoji="🌵" onclick="pickAvatar(this)">🌵</div>
+      <div class="avatar-option" data-emoji="🍀" onclick="pickAvatar(this)">🍀</div>
+    </div>
+
+    <input class="name-input" type="text" id="char-name" placeholder="ひろばでの呼び名（例：ぽにょ、なまえなし…）" maxlength="12">
+
+    <button class="btn-primary" id="btn-step1" onclick="goStep2()">次へ →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 2: 役割選択 ===== -->
+<div class="screen hidden" id="screen-role">
+  <div class="card">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="preview-char" id="preview-role">
+      <span class="preview-emoji" id="preview-emoji-role">🐱</span>
+      <span id="preview-name-role">名前なし</span>
+      <span style="margin-left:auto;font-size:11px;color:rgba(255,255,255,0.4);">あなたのキャラ</span>
+    </div>
+
+    <h1>あなたはどちらですか？</h1>
+    <p class="sub" style="margin-bottom:20px;">ひろばは誰でも同じキャラクターで過ごします。<br>役割は運営側にだけ見えます。</p>
+
+    <div class="role-grid">
+      <div class="role-card selected" id="role-tojisha" onclick="pickRole('tojisha')">
+        <div class="role-icon">🏠</div>
+        <div class="role-title">当事者・家族・支援者</div>
+        <div class="role-desc">福祉・暮らしの当事者や、<br>身近で支える方</div>
+      </div>
+      <div class="role-card" id="role-kigyo" onclick="pickRole('kigyo')">
+        <div class="role-icon">🏢</div>
+        <div class="role-title">企業・研究・行政</div>
+        <div class="role-desc">調査・開発・政策づくりに<br>関わる方</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="goStep3()">次へ →</button>
+  </div>
+</div>
+
+<!-- ===== STEP 3: 同意 ===== -->
+<div class="screen hidden" id="screen-consent">
+  <div class="card">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+    </div>
+    <div class="preview-char">
+      <span class="preview-emoji" id="preview-emoji-consent">🐱</span>
+      <span id="preview-name-consent">名前なし</span>
+      <span id="preview-role-consent" style="margin-left:auto;font-size:11px;background:rgba(116,192,232,0.25);color:#74C0E8;border-radius:8px;padding:2px 8px;"></span>
+    </div>
+
+    <h1>ひろばのルール</h1>
+    <p class="sub" style="margin-bottom:16px;">入る前に確認してください</p>
+
+    <div class="consent-box">
+      <h3>🌿 ひろばはどんな場所？</h3>
+      <p>ここは、福祉・暮らし・社会のことを、気軽に独り言のように話せる場所です。いいねもフォローもありません。あなたのペースで、話したいときだけ話してください。</p>
+
+      <h3>📝 投稿について</h3>
+      <p>ひろばに書いたことは、支援の空白を記録する「支援の空白データベース」に匿名で保存されることがあります。個人を特定できる情報は書かないでください。</p>
+
+      <h3>🔒 プライバシーについて</h3>
+      <p>名前・住所・連絡先など、あなたや他者を特定できる情報は投稿しないでください。投稿内容はAI（MANA）が読み取ることがあります。</p>
+
+      <h3>🤝 お互いへの配慮</h3>
+      <p>誰かを傷つける言葉、誹謗中傷、差別的な表現は使わないでください。運営が判断した場合、投稿を非表示にすることがあります。</p>
+
+      <h3>🏢 企業・研究目的の方へ</h3>
+      <p>ひろばでは、企業・研究・行政の方も同じキャラクターで過ごします。当事者の声を調査目的で収集する場合は、別途運営にお問い合わせください。</p>
+    </div>
+
+    <label class="consent-check">
+      <input type="checkbox" id="chk1" onchange="updateConsentBtn()">
+      <span>ひろばのルールを読み、理解しました</span>
+    </label>
+    <label class="consent-check">
+      <input type="checkbox" id="chk2" onchange="updateConsentBtn()">
+      <span>投稿内容が匿名で記録・活用される場合があることに同意します</span>
+    </label>
+
+    <button class="btn-primary" id="btn-enter" disabled onclick="enterHiroba()">ひろばに入る 🌟</button>
+  </div>
+</div>
+
+<!-- ===== 広場シーン ===== -->
+<div id="scene" style="display:none;">
+  <!-- 雲 -->
+  <div class="cloud" style="width:90px;height:28px;top:8%;left:-10%;animation-duration:40s;">
+    <div style="width:50px;height:40px;background:white;border-radius:50%;position:absolute;top:-20px;left:15px;"></div>
+    <div style="width:35px;height:35px;background:white;border-radius:50%;position:absolute;top:-15px;left:35px;"></div>
+  </div>
+  <div class="cloud" style="width:70px;height:22px;top:14%;left:30%;animation-duration:55s;animation-delay:-20s;opacity:0.7;">
+    <div style="width:40px;height:32px;background:white;border-radius:50%;position:absolute;top:-16px;left:10px;"></div>
+  </div>
+  <div class="cloud" style="width:110px;height:32px;top:6%;left:60%;animation-duration:48s;animation-delay:-35s;">
+    <div style="width:55px;height:45px;background:white;border-radius:50%;position:absolute;top:-22px;left:20px;"></div>
+    <div style="width:40px;height:38px;background:white;border-radius:50%;position:absolute;top:-18px;left:45px;"></div>
+  </div>
+
+  <div class="plaza"></div>
+  <div class="cobble"></div>
+
+  <div class="tree" style="left:6%;">
+    <div class="tree-leaves"></div>
+    <div class="tree-trunk"></div>
+  </div>
+  <div class="tree" style="left:88%;">
+    <div class="tree-leaves" style="width:50px;height:50px;background:#2D8C2D;"></div>
+    <div class="tree-trunk"></div>
+  </div>
+  <div class="tree" style="left:15%;bottom:8%;">
+    <div class="tree-leaves" style="width:45px;height:45px;background:#4A9C4A;"></div>
+    <div class="tree-trunk" style="height:30px;"></div>
+  </div>
+
+  <div class="bench" style="left:22%;bottom:22%;">
+    <div class="bench-seat"></div>
+    <div><span class="bench-leg"></span><span class="bench-leg"></span></div>
+  </div>
+  <div class="bench" style="right:22%;bottom:22%;transform:scaleX(-1);">
+    <div class="bench-seat"></div>
+    <div><span class="bench-leg"></span><span class="bench-leg"></span></div>
+  </div>
+
+  <div class="fountain">
+    <div class="fountain-water"></div>
+    <div class="fountain-base"></div>
+  </div>
+
+  <!-- NPC アバター群 -->
+  <div class="avatar" id="av1" style="left:28%;animation:walk 9s ease-in-out infinite;animation-delay:-2s;">
+    <div class="avatar-body">🐰</div>
+    <div class="avatar-name">うさぎ</div>
+  </div>
+  <div class="avatar" id="av2" style="left:45%;bottom:22%;animation:walk2 11s ease-in-out infinite;animation-delay:-5s;">
+    <div class="avatar-body">🐻</div>
+    <div class="avatar-name">くま</div>
+  </div>
+  <div class="avatar" id="av3" style="left:60%;animation:walk3 13s ease-in-out infinite;animation-delay:-8s;">
+    <div class="avatar-body">🦊</div>
+    <div class="avatar-name">きつね</div>
+  </div>
+  <div class="avatar" style="left:18%;bottom:26%;animation:idle 4s ease-in-out infinite;">
+    <div class="avatar-body">🐧</div>
+    <div class="avatar-name">ペンギン</div>
+  </div>
+
+  <!-- MANAのAIキャラ -->
+  <div id="mana-char">
+    <div class="mana-body">🌟</div>
+    <div class="mana-label">MANA</div>
+  </div>
+  <div id="mana-bubble">ここにいるよ。<br>話したいときに話してね。</div>
+</div>
+
+<!-- 広場UI -->
+<div id="online-count" style="display:none;">🟢 今ここにいる人 <span id="cnt">12</span></div>
+
+<div id="my-badge" style="display:none;">
+  <span id="badge-emoji">🐱</span>
+  <span id="badge-name">あなた</span>
+</div>
+
+<div id="input-area" style="display:none;">
+  <input type="text" id="msg-input" placeholder="独り言をどうぞ…" maxlength="60">
+  <button id="say-btn" onclick="say()">つぶやく</button>
+</div>
+
+<script>
+let myAvatar = '🐱';
+let myName = 'あなた';
+let myRole = 'tojisha';
+let myX = 40;
+let myEl = null;
+
+// ---- STEP 1 ----
+function pickAvatar(el) {
+  document.querySelectorAll('#avatar-grid-1 .avatar-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  myAvatar = el.dataset.emoji;
+}
+
+function goStep2() {
+  const nameVal = document.getElementById('char-name').value.trim();
+  myName = nameVal || 'なまえなし';
+  document.getElementById('preview-emoji-role').textContent = myAvatar;
+  document.getElementById('preview-name-role').textContent = myName;
+  document.getElementById('screen-create').classList.add('hidden');
+  document.getElementById('screen-role').classList.remove('hidden');
+}
+
+// ---- STEP 2 ----
+function pickRole(role) {
+  myRole = role;
+  document.getElementById('role-tojisha').classList.toggle('selected', role === 'tojisha');
+  document.getElementById('role-kigyo').classList.toggle('selected', role === 'kigyo');
+}
+
+function goStep3() {
+  document.getElementById('preview-emoji-consent').textContent = myAvatar;
+  document.getElementById('preview-name-consent').textContent = myName;
+  const roleLabel = myRole === 'kigyo' ? '企業・研究・行政' : '当事者・家族・支援者';
+  document.getElementById('preview-role-consent').textContent = roleLabel;
+  document.getElementById('screen-role').classList.add('hidden');
+  document.getElementById('screen-consent').classList.remove('hidden');
+}
+
+// ---- STEP 3 ----
+function updateConsentBtn() {
+  const ok = document.getElementById('chk1').checked && document.getElementById('chk2').checked;
+  document.getElementById('btn-enter').disabled = !ok;
+}
+
+function enterHiroba() {
+  document.getElementById('screen-consent').classList.add('hidden');
+  document.getElementById('scene').style.display = 'block';
+  document.getElementById('online-count').style.display = '';
+  document.getElementById('my-badge').style.display = '';
+  document.getElementById('input-area').style.display = '';
+
+  document.getElementById('badge-emoji').textContent = myAvatar;
+  document.getElementById('badge-name').textContent = myName;
+
+  createMyAvatar();
+  startNpcBubbles();
+  startOnlineCounter();
+
+  // MANAがロール別に挨拶
+  const greeting = myRole === 'kigyo'
+    ? `${myName}さん、いらっしゃい。\nここは当事者の声の場所。\nそっと聞いていてね。`
+    : `${myName}さん、いらっしゃい。\nゆっくりしていってね。`;
+  setTimeout(() => showManaReply(greeting), 800);
+}
+
+// ---- 広場ロジック ----
+function createMyAvatar() {
+  if (myEl) myEl.remove();
+  myEl = document.createElement('div');
+  myEl.className = 'avatar';
+  myEl.id = 'my-avatar';
+  myEl.style.cssText = `left:${myX}%;bottom:20%;animation:idle 3s ease-in-out infinite;`;
+  myEl.innerHTML = `<div class="avatar-body">${myAvatar}</div><div class="avatar-name">${myName}</div>`;
+  document.getElementById('scene').appendChild(myEl);
+}
+
+document.addEventListener('keydown', e => {
+  if (document.getElementById('scene').style.display === 'none') return;
+  if (e.key === 'Enter' && document.activeElement !== document.getElementById('msg-input')) {
+    document.getElementById('msg-input').focus();
+    return;
+  }
+});
+document.getElementById('msg-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') say();
+});
+
+function say() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+  showBubble(text, myX, true);
+  input.value = '';
+}
+
+function showBubble(text, xPercent, isMe) {
+  const scene = document.getElementById('scene');
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.style.cssText = `left:${xPercent}%;bottom:42%;`;
+  const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
+  bubble.innerHTML = safeText.replace(/\n/g,'<br>') + (isMe
+    ? `<br><button class="record-btn" onclick="recordThis(this,'${safeText}')">📌 記録する</button>`
+    : '');
+  scene.appendChild(bubble);
+  setTimeout(() => bubble.remove(), 8000);
+}
+
+function recordThis(btn, text) {
+  btn.textContent = '✓ 記録しました';
+  btn.style.background = '#2ECC71';
+  btn.disabled = true;
+  setTimeout(() => showManaReply('受け取ったよ。ありがとう。'), 500);
+}
+
+function showManaReply(text) {
+  const el = document.getElementById('mana-bubble');
+  el.innerHTML = text.replace(/\n/g,'<br>');
+  setTimeout(() => { el.innerHTML = 'ここにいるよ。<br>話したいときに話してね。'; }, 6000);
+}
+
+const npcLines = [
+  { x: 28, text: '今日、窓口に行ったけど\nまた来週来てって言われた…' },
+  { x: 45, text: 'ヘルパーさん、今日は\n来られなかった。' },
+  { x: 60, text: 'なんか疲れたなあ' },
+  { x: 18, text: '申請、通るかな' },
+  { x: 55, text: '今日は天気いいね' },
+  { x: 35, text: 'また同じ書類\n出しなおしって言われた' },
+  { x: 70, text: 'ここ来ると少し\n楽になる気がする' },
+  { x: 25, text: 'ひとりじゃないんだって\n思えるな' },
+];
+
+let npcIdx = 0;
+function showNpcBubble() {
+  const line = npcLines[npcIdx % npcLines.length];
+  showBubble(line.text, line.x, false);
+  npcIdx++;
+  setTimeout(showNpcBubble, 4000 + Math.random() * 4000);
+}
+function startNpcBubbles() {
+  setTimeout(showNpcBubble, 2000);
+}
+
+function startOnlineCounter() {
+  setInterval(() => {
+    document.getElementById('cnt').textContent = 12 + Math.floor(Math.random() * 5) - 2;
+  }, 8000);
+}
+</script>
+</body>
+</html>
