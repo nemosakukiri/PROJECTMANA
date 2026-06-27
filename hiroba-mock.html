@@ -115,11 +115,9 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 /* ===== 広場シーン ===== */
 #scene {
   position: fixed; left: 0; top: 48px; right: 0; bottom: 64px;
-  /* 夕方前の落ち着いた空 */
-  background: linear-gradient(180deg,
-    #c8dff0 0%, #d4e8e0 40%,
-    #b5c9a8 40%, #a8bc98 60%,
-    #98ad88 60%, #8fa082 100%);
+  /* 背景画像（hiroba-bg.jpg）が入ったら下の行を有効に */
+  /* background-image: url('hiroba-bg.jpg'); background-size: cover; background-position: center top; */
+  background: linear-gradient(180deg, #e8f0e0 0%, #dce8d0 35%, #c8d8b8 35%, #b8c8a8 70%, #a8b898 100%);
   overflow: hidden;
 }
 
@@ -188,6 +186,20 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-3px); }
 }
+@keyframes idle-sit {
+  0%, 100% { transform: translateY(0) scale(1); }
+  40%       { transform: translateY(-2px) scale(1.03); }
+}
+@keyframes perch {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%       { transform: translateY(-2px) rotate(3deg); }
+}
+
+/* 座りアバター */
+.avatar.sitting .avatar-body { font-size: 22px; }
+/* 木の上アバター */
+.avatar.on-tree { bottom: 42% !important; }
+.avatar.on-tree .avatar-body { font-size: 18px; }
 
 /* 吹き出し */
 .bubble {
@@ -471,21 +483,35 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
   </div>
 
   <!-- NPC -->
-  <div class="avatar" style="left:29%;animation:wander 14s ease-in-out infinite;animation-delay:-3s;">
+  <!-- いぬ：広場を歩いてる -->
+  <div class="avatar" style="left:34%;bottom:19%;animation:wander 16s ease-in-out infinite;animation-delay:-3s;">
     <div class="avatar-body">🐕</div>
     <div class="avatar-name">いぬ</div>
   </div>
-  <div class="avatar" style="left:46%;bottom:21%;animation:wander2 18s ease-in-out infinite;animation-delay:-7s;">
-    <div class="avatar-body">🕊</div>
-    <div class="avatar-name">はと</div>
-  </div>
-  <div class="avatar" style="left:61%;animation:wander3 20s ease-in-out infinite;animation-delay:-11s;">
+  <!-- ねこ：左のベンチでくつろいでる -->
+  <div class="avatar sitting" style="left:22%;bottom:22%;animation:idle-sit 4.5s ease-in-out infinite;animation-delay:-1s;">
     <div class="avatar-body">🐈</div>
     <div class="avatar-name">ねこ</div>
   </div>
-  <div class="avatar" style="left:19%;bottom:25%;animation:float 5s ease-in-out infinite;">
+  <!-- はと：噴水のへりにとまってる -->
+  <div class="avatar" style="left:49%;bottom:24%;animation:perch 3.8s ease-in-out infinite;animation-delay:-0.5s;">
+    <div class="avatar-body">🕊</div>
+    <div class="avatar-name">はと</div>
+  </div>
+  <!-- うさぎ：右ベンチそばに座ってる -->
+  <div class="avatar sitting" style="right:22%;bottom:22%;animation:idle-sit 5s ease-in-out infinite;animation-delay:-2.5s;">
+    <div class="avatar-body">🐰</div>
+    <div class="avatar-name">うさぎ</div>
+  </div>
+  <!-- ことり：木の上でのんびり -->
+  <div class="avatar on-tree" style="left:8%;animation:perch 6s ease-in-out infinite;animation-delay:-1.5s;">
     <div class="avatar-body">🐦</div>
     <div class="avatar-name">ことり</div>
+  </div>
+  <!-- りす：花壇のそばでちょこんと座ってる -->
+  <div class="avatar sitting" style="left:67%;bottom:21%;animation:idle-sit 5.5s ease-in-out infinite;animation-delay:-3s;">
+    <div class="avatar-body">🐿️</div>
+    <div class="avatar-name">りす</div>
   </div>
 
   <!-- MANA -->
@@ -672,20 +698,21 @@ function startLog() {
 
 // NPCの吹き出し
 const npcLines = [
-  { x: 29, text: '窓口にまた\n来週来てって言われた' },
-  { x: 46, text: '今日は少し\n疲れたな' },
-  { x: 61, text: '申請、通るかな' },
-  { x: 19, text: 'ここ来ると\n落ち着く気がする' },
-  { x: 54, text: 'なんか話したかっただけ' },
-  { x: 38, text: 'また同じ書類\n書き直しって…' },
-  { x: 70, text: 'ひとりじゃないんだな' },
-  { x: 26, text: '犬がかわいかった' },
+  { x: 34, icon: '🐕', text: '犬かわいい（自分だけど）' },
+  { x: 22, icon: '🐈', text: 'ベンチ、あったかい' },
+  { x: 49, icon: '🕊', text: '申請、通るかな' },
+  { x: 70, icon: '🐿️', text: 'なんか話したかっただけ' },
+  { x: 34, icon: '🐕', text: '窓口にまた\n来週来てって言われた' },
+  { x: 22, icon: '🐈', text: 'ここ来ると\n落ち着く気がする' },
+  { x: 49, icon: '🕊', text: '今日は少し疲れたな' },
+  { x: 70, icon: '🐿️', text: 'また同じ書類\n書き直しって…' },
+  { x: 34, icon: '🐕', text: 'ひとりじゃないんだな' },
 ];
 let npcIdx = 0;
 function showNpcBubble() {
   const l = npcLines[npcIdx % npcLines.length];
   showBubble(l.text, l.x, false);
-  addToLog(['🐕','🕊','🐈','🐦'][npcIdx % 4], l.text.replace(/\n/g,''), false);
+  addToLog(l.icon, l.text.replace(/\n/g,''), false);
   npcIdx++;
   setTimeout(showNpcBubble, 5000 + Math.random() * 5000);
 }
