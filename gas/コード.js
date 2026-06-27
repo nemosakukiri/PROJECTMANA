@@ -3458,3 +3458,77 @@ function runFixClassificationNow() {
   const data = `[{"url":"https://news.google.com/rss/articles/CBMiZkFVX3lxTE8xSGp0MnN0OVBiUmticHhtR2h1eng4QnJYajNmLWlYc01td1BUZUdNTElZRnotTXFfRDU4djBFa185ZFZnRWk3TXNUT0VqaHpNbnJ4QURwcGFocmlFYXRCUURXcmFoUQ?oc=5","exhibit":true,"type":"調査・報告","villages":"人権,民主主義","summary":"2022年9月、国連障害者権利委員会が初めての建設的対話を実施し、日本政府へ勧告（総括所見）を出した","quote":""},{"url":"https://news.google.com/rss/articles/CBMiZEFVX3lxTE9yVUFsdFRNaVFXdWtCQjhrZER1Vkc5MWhMVE5vMEY1bWRPQWphR1pzWHlyRVpIT3dRcVI1TnQzdUVwbURtYjZ5bGVDeDQ0MG5CYnhKN0RaMXlsTTNMc1Q4VnFtcWo?oc=5","exhibit":true,"type":"団体の声明","villages":"人権,民主主義","summary":"差別ビラを配布した人物に名誉毀損罪で有罪・執行猶予の判決。差別行為に司法が向き合った事例","quote":""},{"url":"https://news.google.com/rss/articles/CBMiZEFVX3lxTE5vQ01jU3lYMURHZDc0clpwYUprWlMwTUhtakIyY19ZNVpCWXBKRzF3VG4tcEVwaDdhdHEwVWg4SXo5alNLN0V5ODE2VlVIV25JbDl0WXowTThWVFMzdThQYWNLTXI?oc=5","exhibit":true,"type":"団体の声明","villages":"人権","summary":"埼玉県での地区問い合わせ事件（不動産業者が部落地名を開示）に対し、宅建・不動産協会に要請","quote":""},{"url":"https://news.google.com/rss/articles/CBMiZEFVX3lxTE1mM2t0eno4RURCdnI4bTNZdnhvWE1iT1dSb1loOElqTExudzZpWldLSHo4MkYtWWJfN2VzUUtReDVjUEQyN1VoOU9UUG9yRUhhWmpqcFBvdWVQLXM4ODY3WGk4Yjk?oc=5","exhibit":true,"type":"団体の声明","villages":"人権,民主主義","summary":"日本維新の会の議員による差別発言に対し、部落解放同盟が抗議し話し合いを求めた","quote":""},{"url":"https://news.google.com/rss/articles/CBMiZEFVX3lxTFBwbDJHX1NYYmpMUWIwUml4SXpaaHNnZFhWRzJzcFA0UUF4X25LbjJqaFR1a2VTcTVSWkNBVTBhbVpTLWwxTFk4SmtRQldLd0w2MUpDV01FU1pqWTE0ZWpWZjhLbU8?oc=5","exhibit":true,"type":"イベント・告知","villages":"人権,メディア","summary":"報道関係者が差別問題について学ぶ学習会を開催。差別撤廃へ積極的な情報発信の必要性を訴える","quote":""},{"url":"https://news.google.com/rss/articles/CBMiYkFVX3lxTFB1dF9BZkF2a1ZfTkg1Wmx1TWlia3FHMVU2QWxGM2wzZkQ3dGx5TnduVjY4cUpYQkk0ZHVHUVZZcDBOTHNTbUM0Q1V6djB5TjR4ZFZiUG5ucW55Nk8wV0EwZmJR?oc=5","exhibit":true,"type":"団体の声明","villages":"戦争","summary":"慰霊の日2026の平和宣言について、沖縄戦体験の継承は沖縄の使命と訴える琉球新報の社説","quote":""},{"url":"https://news.google.com/rss/articles/CBMiW0FVX3lxTE1YcTlUN2Z3aDNGZlBlS1lLeTVWS08wN0VpRWRTWjEwVDdKaGRQOEFiTHJ3ZDBoa010aTNtUVZGc0UxTG8tRUlKUFJwWU1mZl9BeXk4RG9WTG1xc3c?oc=5","exhibit":true,"type":"当事者の証言","villages":"戦争","summary":"慰霊の日2026のドキュメント。平和の詩、高市首相へのヤジ、デニー知事の平和宣言を記録","quote":""}]`;
   applyDirectClassification(data);
 }
+
+// ===== 観測DB ジャーナリスト分類用エクスポート =====
+function exportKansokuForJournalistClassification() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('観測DB（全件ログ）');
+  if (!sheet) { Logger.log('観測DB（全件ログ）シートが見つかりません'); return; }
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const idxUrl    = headers.indexOf('URL');
+  const idxTitle  = headers.indexOf('タイトル');
+  const idxSource = headers.indexOf('出典');
+  const idxDesc   = headers.indexOf('RSS要約');
+  const idxDomain = headers.indexOf('source_domain');
+  const idxType   = headers.indexOf('記事種別');
+  const idxExhibit = headers.indexOf('展示対象_journalist');
+
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const url    = rows[i][idxUrl]    || '';
+    const title  = rows[i][idxTitle]  || '';
+    const source = rows[i][idxSource] || '';
+    const desc   = rows[i][idxDesc]   || '';
+    const domain = rows[i][idxDomain] || '';
+    const type   = rows[i][idxType]   || '';
+    const exhibit= rows[i][idxExhibit] || '';
+    if (!title || !url) continue;
+    // 既分類はスキップ
+    if (exhibit) continue;
+    out.push({ url, title, source, desc: desc.slice(0, 200), domain, type });
+  }
+  Logger.log('exportKansokuForJournalistClassification: ' + out.length + '件');
+  Logger.log(JSON.stringify(out));
+}
+
+// ===== 観測DB ジャーナリスト分類結果の反映 =====
+function applyJournalistClassification(changesJson) {
+  const changes = JSON.parse(changesJson);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('観測DB（全件ログ）');
+  if (!sheet) { Logger.log('観測DB（全件ログ）シートが見つかりません'); return; }
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const idxUrl = headers.indexOf('URL');
+
+  const ensureCol = (name) => {
+    let idx = headers.indexOf(name);
+    if (idx >= 0) return idx + 1;
+    const newCol = sheet.getLastColumn() + 1;
+    sheet.getRange(1, newCol).setValue(name);
+    headers.push(name);
+    return newCol;
+  };
+  const COL_EXHIBIT  = ensureCol('展示対象_journalist');
+  const COL_TYPE     = ensureCol('種別_journalist');
+  const COL_VILLAGES = ensureCol('村_journalist');
+  const COL_SUMMARY  = ensureCol('要約_journalist');
+
+  const urlToRow = {};
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][idxUrl]) urlToRow[rows[i][idxUrl]] = i + 1;
+  }
+
+  let applied = 0;
+  changes.forEach(c => {
+    const rowNum = urlToRow[c.url];
+    if (!rowNum) { Logger.log('[SKIP] URL未一致: ' + (c.url||'').slice(0, 60)); return; }
+    sheet.getRange(rowNum, COL_EXHIBIT).setValue(c.exhibit ? '展示' : '非展示');
+    sheet.getRange(rowNum, COL_TYPE).setValue(c.type || '');
+    sheet.getRange(rowNum, COL_VILLAGES).setValue(Array.isArray(c.villages) ? c.villages.join(',') : (c.villages || ''));
+    sheet.getRange(rowNum, COL_SUMMARY).setValue(c.summary || '');
+    applied++;
+  });
+  Logger.log('applyJournalistClassification完了: ' + applied + '件反映');
+}
