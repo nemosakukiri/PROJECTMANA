@@ -1,6 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/hiroba", "destination": "/hiroba-mock.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
