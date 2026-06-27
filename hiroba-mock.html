@@ -115,45 +115,13 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 /* ===== 広場シーン ===== */
 #scene {
   position: fixed; left: 0; top: 48px; right: 0; bottom: 64px;
-  /* 背景画像（hiroba-bg.jpg）が入ったら下の行を有効に */
-  /* background-image: url('hiroba-bg.jpg'); background-size: cover; background-position: center top; */
-  background: linear-gradient(180deg, #e8f0e0 0%, #dce8d0 35%, #c8d8b8 35%, #b8c8a8 70%, #a8b898 100%);
+  background-image: url('https://drive.google.com/uc?export=view&id=14xExpEUDxdpQbZoVZyn70pZ6NJDl3cS9');
+  background-size: cover; background-position: center top;
+  /* フォールバック（画像が読み込めない場合） */
+  background-color: #dce8d0;
   overflow: hidden;
 }
 
-/* 雲（薄め） */
-.cloud {
-  position: absolute; background: rgba(255,255,255,0.6);
-  border-radius: 50px; animation: drift linear infinite;
-}
-@keyframes drift { from { transform: translateX(-150px); } to { transform: translateX(110vw); } }
-
-/* 地面 */
-.cobble {
-  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-  width: 60%; height: 40%;
-  background:
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 55px),
-    repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 38px),
-    #7a9870;
-  border-radius: 6px 6px 0 0;
-}
-
-/* 木 */
-.tree { position: absolute; bottom: 8%; }
-.tree-trunk { width: 12px; height: 36px; background: #7a5c1a; border-radius: 3px; margin: 0 auto; }
-.tree-leaves { width: 52px; height: 52px; background: #4a7a3a; border-radius: 50% 50% 40% 40%; margin: 0 auto; position: relative; top: 8px; box-shadow: 0 -6px 0 #3a6228; }
-
-/* 噴水 */
-.fountain { position: absolute; bottom: 17%; left: 50%; transform: translateX(-50%); text-align: center; }
-.fountain-base { width: 60px; height: 16px; background: #8a9aaa; border-radius: 30px; margin: 0 auto; }
-.fountain-water { width: 22px; height: 44px; background: linear-gradient(0deg, rgba(120,190,220,0.6), transparent); border-radius: 50% 50% 0 0; margin: 0 auto; position: relative; top: -4px; animation: splash 2.5s ease-in-out infinite alternate; }
-@keyframes splash { 0% { height: 44px; opacity: 0.6; } 100% { height: 58px; opacity: 0.4; } }
-
-/* ベンチ */
-.bench { position: absolute; bottom: 17%; }
-.bench-seat { width: 44px; height: 8px; background: #b8986a; border-radius: 2px; }
-.bench-leg { width: 5px; height: 12px; background: #9a7a5a; border-radius: 1px; display: inline-block; margin: 0 4px; }
 
 /* アバター（動きを穏やかに） */
 .avatar {
@@ -161,7 +129,7 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
   user-select: none;
 }
 .avatar-body { font-size: 28px; line-height: 1; opacity: 0.85; }
-.avatar-name { font-size: 9px; color: rgba(255,255,255,0.7); background: rgba(0,0,0,0.25); border-radius: 6px; padding: 1px 4px; margin-top: 2px; white-space: nowrap; }
+.avatar-name { font-size: 9px; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.38); border-radius: 6px; padding: 1px 5px; margin-top: 3px; white-space: nowrap; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
 
 @keyframes wander {
   0%   { transform: translateX(0); }
@@ -439,48 +407,6 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 
 <!-- 広場 -->
 <div id="scene" style="display:none;">
-  <!-- 雲 -->
-  <div class="cloud" style="width:80px;height:22px;top:7%;left:-5%;animation-duration:44s;opacity:0.5;">
-    <div style="width:44px;height:36px;background:rgba(255,255,255,0.6);border-radius:50%;position:absolute;top:-18px;left:12px;"></div>
-  </div>
-  <div class="cloud" style="width:60px;height:18px;top:12%;left:38%;animation-duration:60s;animation-delay:-22s;opacity:0.4;">
-    <div style="width:36px;height:28px;background:rgba(255,255,255,0.6);border-radius:50%;position:absolute;top:-14px;left:8px;"></div>
-  </div>
-  <div class="cloud" style="width:100px;height:26px;top:5%;left:65%;animation-duration:50s;animation-delay:-38s;opacity:0.45;">
-    <div style="width:50px;height:40px;background:rgba(255,255,255,0.6);border-radius:50%;position:absolute;top:-20px;left:18px;"></div>
-    <div style="width:36px;height:32px;background:rgba(255,255,255,0.6);border-radius:50%;position:absolute;top:-16px;left:40px;"></div>
-  </div>
-
-  <div class="cobble"></div>
-
-  <!-- 木 -->
-  <div class="tree" style="left:5%;">
-    <div class="tree-leaves"></div><div class="tree-trunk"></div>
-  </div>
-  <div class="tree" style="left:87%;">
-    <div class="tree-leaves" style="width:44px;height:44px;background:#3a6e2a;"></div>
-    <div class="tree-trunk"></div>
-  </div>
-  <div class="tree" style="left:14%;bottom:6%;">
-    <div class="tree-leaves" style="width:40px;height:40px;background:#4a8038;"></div>
-    <div class="tree-trunk" style="height:28px;"></div>
-  </div>
-
-  <!-- ベンチ -->
-  <div class="bench" style="left:24%;bottom:21%;">
-    <div class="bench-seat"></div>
-    <div><span class="bench-leg"></span><span class="bench-leg"></span></div>
-  </div>
-  <div class="bench" style="right:24%;bottom:21%;transform:scaleX(-1);">
-    <div class="bench-seat"></div>
-    <div><span class="bench-leg"></span><span class="bench-leg"></span></div>
-  </div>
-
-  <!-- 噴水 -->
-  <div class="fountain">
-    <div class="fountain-water"></div>
-    <div class="fountain-base"></div>
-  </div>
 
   <!-- NPC -->
   <!-- いぬ：広場を歩いてる -->
