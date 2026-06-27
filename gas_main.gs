@@ -3488,8 +3488,13 @@ function exportKansokuForJournalistClassification() {
     if (exhibit) continue;
     out.push({ url, title, source, desc: desc.slice(0, 200), domain, type });
   }
-  Logger.log('exportKansokuForJournalistClassification: ' + out.length + '件');
-  Logger.log(JSON.stringify(out));
+  Logger.log('exportKansokuForJournalistClassification: ' + out.length + '件 → 書き出しシートへ');
+  // ログに収まらないため「分類作業用」シートに書き出す
+  let workSheet = ss.getSheetByName('分類作業用_journalist');
+  if (workSheet) ss.deleteSheet(workSheet);
+  workSheet = ss.insertSheet('分類作業用_journalist');
+  workSheet.getRange(1, 1).setValue(JSON.stringify(out));
+  Logger.log('「分類作業用_journalist」シートのA1にJSONを書き出しました（' + out.length + '件）');
 }
 
 // ===== 観測DB ジャーナリスト分類結果の反映 =====
