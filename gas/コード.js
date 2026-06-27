@@ -3560,8 +3560,14 @@ function backfillArticleType() {
   const rows = sheet.getDataRange().getValues();
   const headers = rows[0];
   const idxSource = headers.indexOf('出典');
-  const idxType   = headers.indexOf('記事種別');
-  if (idxType < 0) { Logger.log('記事種別列が見つかりません。列を追加してから実行してください'); return; }
+  let idxType = headers.indexOf('記事種別');
+  if (idxType < 0) {
+    const newCol = sheet.getLastColumn() + 1;
+    sheet.getRange(1, newCol).setValue('記事種別');
+    headers.push('記事種別');
+    idxType = headers.length - 1;
+    Logger.log('記事種別列を列' + newCol + 'に新規追加しました');
+  }
 
   // 出典名 → article_type のマッピング（RSS_SOURCESと同じロジック）
   function typeFromSource(src) {
@@ -3573,18 +3579,14 @@ function backfillArticleType() {
   }
 
   let updated = 0;
-  const updates = [];
   for (let i = 1; i < rows.length; i++) {
-    const currentType = rows[i][idxType];
-    if (currentType) continue; // 既に入っているものはスキップ
+    const currentType = rows[i][idxType] || '';
+    if (currentType) continue;
     const src = rows[i][idxSource] || '';
     const t = typeFromSource(src);
     if (!t) continue;
-    updates.push({ row: i + 1, type: t });
-  }
-  updates.forEach(u => {
-    sheet.getRange(u.row, idxType + 1).setValue(u.type);
+    sheet.getRange(i + 1, idxType + 1).setValue(t);
     updated++;
-  });
+  }
   Logger.log('backfillArticleType完了: ' + updated + '件を補完');
 }
