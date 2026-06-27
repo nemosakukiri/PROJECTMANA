@@ -32,19 +32,44 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
   margin-bottom: 28px; line-height: 1.9;
 }
 
+/* ===== キャラクタースプライト ===== */
+/* 1536×1024px、7列×3行（row0-1=正面, row2=後ろ） */
+.char-sprite {
+  display: block;
+  background-image: url('characters.webp');
+  background-repeat: no-repeat;
+  mix-blend-mode: multiply;
+  image-rendering: -webkit-optimize-contrast;
+}
+/* 選択画面サイズ: 66×90px、シート全体: 462×270px */
+.char-sprite.sm {
+  width: 66px; height: 90px;
+  background-size: 462px 270px;
+}
+/* 広場内サイズ: 80×108px、シート全体: 560×324px */
+.char-sprite.lg {
+  width: 80px; height: 108px;
+  background-size: 560px 324px;
+}
+/* 小アバター（インプット欄用） */
+.char-sprite.xs {
+  width: 40px; height: 54px;
+  background-size: 280px 162px;
+}
+
 .avatar-grid {
-  display: grid; grid-template-columns: repeat(6, 1fr);
-  gap: 8px; margin-bottom: 18px;
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 6px; margin-bottom: 18px;
 }
 .avatar-option {
-  font-size: 30px; text-align: center; cursor: pointer;
-  border-radius: 10px; padding: 6px 0;
-  border: 2px solid transparent;
-  transition: all 0.2s;
+  cursor: pointer; border-radius: 10px; padding: 4px;
+  border: 2px solid transparent; transition: all 0.2s;
   background: rgba(255,255,255,0.04);
+  display: flex; flex-direction: column; align-items: center;
 }
-.avatar-option:hover { background: rgba(255,255,255,0.1); }
-.avatar-option.selected { border-color: rgba(160,210,160,0.7); background: rgba(100,180,100,0.12); }
+.avatar-option:hover { background: rgba(255,255,255,0.12); }
+.avatar-option.selected { border-color: rgba(160,210,160,0.8); background: rgba(100,180,100,0.15); }
+.avatar-option .av-name { font-size: 9px; color: rgba(255,255,255,0.6); margin-top: 2px; }
 
 .name-input {
   width: 100%; background: rgba(255,255,255,0.06);
@@ -110,7 +135,7 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
   padding: 8px 12px; margin-bottom: 18px;
   font-size: 12px; color: rgba(255,255,255,0.7);
 }
-.preview-char .preview-emoji { font-size: 26px; }
+.preview-char .preview-sprite { flex-shrink: 0; }
 
 /* ===== 広場シーン ===== */
 #scene {
@@ -315,20 +340,7 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
     <h1>ひろばへようこそ</h1>
     <p class="sub">ここは、日々のことを気軽に置いていけるひろばです。<br>犬がかわいい、眠れない、病院つかれた、なんとなく話したい。<br>いいねもフォローもありません。</p>
 
-    <div class="avatar-grid" id="avatar-grid-1">
-      <div class="avatar-option selected" data-emoji="🐱" onclick="pickAvatar(this)">🐱</div>
-      <div class="avatar-option" data-emoji="🐶" onclick="pickAvatar(this)">🐶</div>
-      <div class="avatar-option" data-emoji="🐸" onclick="pickAvatar(this)">🐸</div>
-      <div class="avatar-option" data-emoji="🦋" onclick="pickAvatar(this)">🦋</div>
-      <div class="avatar-option" data-emoji="🌸" onclick="pickAvatar(this)">🌸</div>
-      <div class="avatar-option" data-emoji="⭐" onclick="pickAvatar(this)">⭐</div>
-      <div class="avatar-option" data-emoji="🐼" onclick="pickAvatar(this)">🐼</div>
-      <div class="avatar-option" data-emoji="🦄" onclick="pickAvatar(this)">🦄</div>
-      <div class="avatar-option" data-emoji="🐙" onclick="pickAvatar(this)">🐙</div>
-      <div class="avatar-option" data-emoji="🌿" onclick="pickAvatar(this)">🌿</div>
-      <div class="avatar-option" data-emoji="🌵" onclick="pickAvatar(this)">🌵</div>
-      <div class="avatar-option" data-emoji="🍀" onclick="pickAvatar(this)">🍀</div>
-    </div>
+    <div class="avatar-grid" id="avatar-grid-1"></div>
 
     <input class="name-input" type="text" id="char-name" placeholder="呼び名（なくてもOK）" maxlength="12">
     <button class="btn-primary" onclick="goStep2()">次へ</button>
@@ -344,7 +356,7 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
       <div class="step-dot"></div>
     </div>
     <div class="preview-char">
-      <span class="preview-emoji" id="preview-emoji-role">🐱</span>
+      <div class="preview-sprite" id="preview-sprite-role"></div>
       <span id="preview-name-role">なまえなし</span>
     </div>
     <h1>あなたはどちらですか？</h1>
@@ -374,7 +386,7 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
       <div class="step-dot active"></div>
     </div>
     <div class="preview-char">
-      <span class="preview-emoji" id="preview-emoji-consent">🐱</span>
+      <div class="preview-sprite" id="preview-sprite-consent"></div>
       <span id="preview-name-consent">なまえなし</span>
       <span id="preview-role-consent" style="margin-left:auto;font-size:10px;color:rgba(200,230,200,0.7);"></span>
     </div>
@@ -407,47 +419,47 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 <!-- 広場 -->
 <div id="scene" style="display:none;">
 
-  <!-- NPC（水彩画の構図に合わせた配置・遠近感あり） -->
+  <!-- NPC（スプライトキャラ、水彩画構図に合わせた配置） -->
 
-  <!-- 左ベンチ（ランプ横）：ねこがくつろいでる -->
-  <div class="avatar sitting" style="left:8%;bottom:36%;animation:idle-sit 4.5s ease-in-out infinite;animation-delay:-1s;font-size:0;">
-    <div class="avatar-body" style="font-size:20px;">🐈</div>
-    <div class="avatar-name">ねこ</div>
-  </div>
-
-  <!-- カフェ前テーブル：うさぎが座ってる -->
-  <div class="avatar sitting" style="left:21%;bottom:38%;animation:idle-sit 5s ease-in-out infinite;animation-delay:-2s;font-size:0;">
-    <div class="avatar-body" style="font-size:20px;">🐰</div>
+  <!-- 左ベンチ：うさぎ(col1,row0) -->
+  <div class="avatar sitting" style="left:7%;bottom:35%;animation:idle-sit 4.5s ease-in-out infinite;animation-delay:-1s;">
+    <div class="char-sprite sm" style="background-position:-66px 0;"></div>
     <div class="avatar-name">うさぎ</div>
   </div>
 
-  <!-- 広場中央（やや手前）：いぬが歩いてる -->
-  <div class="avatar" style="left:36%;bottom:26%;animation:wander 16s ease-in-out infinite;animation-delay:-3s;">
-    <div class="avatar-body" style="font-size:30px;">🐕</div>
-    <div class="avatar-name">いぬ</div>
+  <!-- カフェ前テーブル：しばいぬ(col2,row0) -->
+  <div class="avatar sitting" style="left:20%;bottom:37%;animation:idle-sit 5s ease-in-out infinite;animation-delay:-2s;">
+    <div class="char-sprite sm" style="background-position:-132px 0;"></div>
+    <div class="avatar-name">しばいぬ</div>
   </div>
 
-  <!-- 噴水のへり：はとがとまってる -->
-  <div class="avatar" style="left:60%;bottom:40%;animation:perch 3.8s ease-in-out infinite;animation-delay:-0.5s;font-size:0;">
-    <div class="avatar-body" style="font-size:18px;">🕊</div>
-    <div class="avatar-name">はと</div>
+  <!-- 広場中央：パンダ(col4,row0) 歩いてる -->
+  <div class="avatar" style="left:37%;bottom:24%;animation:wander 18s ease-in-out infinite;animation-delay:-3s;">
+    <div class="char-sprite lg" style="background-position:-320px 0;"></div>
+    <div class="avatar-name">パンダ</div>
   </div>
 
-  <!-- 右ベンチ：くまがコーヒー片手に座ってる -->
-  <div class="avatar sitting" style="left:70%;bottom:40%;animation:idle-sit 5.5s ease-in-out infinite;animation-delay:-2.5s;font-size:0;">
-    <div class="avatar-body" style="font-size:20px;">🐻</div>
+  <!-- 噴水そば：きつね(col3,row1) -->
+  <div class="avatar" style="left:58%;bottom:38%;animation:idle-sit 5s ease-in-out infinite;animation-delay:-1.5s;">
+    <div class="char-sprite sm" style="background-position:-198px -90px;"></div>
+    <div class="avatar-name">きつね</div>
+  </div>
+
+  <!-- 右ベンチ：くま(col0,row0) -->
+  <div class="avatar sitting" style="left:69%;bottom:39%;animation:idle-sit 5.5s ease-in-out infinite;animation-delay:-2.5s;">
+    <div class="char-sprite sm" style="background-position:0 0;"></div>
     <div class="avatar-name">くま</div>
   </div>
 
-  <!-- 右花壇そば（手前）：りすがちょこんと -->
-  <div class="avatar sitting" style="left:80%;bottom:22%;animation:idle-sit 6s ease-in-out infinite;animation-delay:-3s;">
-    <div class="avatar-body" style="font-size:26px;">🐿️</div>
-    <div class="avatar-name">りす</div>
+  <!-- 右花壇そば（手前大き目）：ハムスター(col6,row1) -->
+  <div class="avatar sitting" style="left:79%;bottom:20%;animation:idle-sit 6s ease-in-out infinite;animation-delay:-3s;">
+    <div class="char-sprite lg" style="background-position:-480px -108px;"></div>
+    <div class="avatar-name">ハムスター</div>
   </div>
 
-  <!-- MANA -->
+  <!-- MANA（ひつじ col4,row1 をMANAとして使用） -->
   <div id="mana-char">
-    <div class="mana-body">🌟</div>
+    <div class="char-sprite sm" style="background-position:-264px -90px;filter:hue-rotate(200deg) brightness(1.1);"></div>
     <div class="mana-label">MANA</div>
   </div>
   <div id="mana-bubble">ここにいるよ。<br>話したいときに話してね。</div>
@@ -478,7 +490,7 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 <!-- 入力 -->
 <div id="input-wrap">
   <div id="input-area">
-    <span id="input-my-avatar">🐱</span>
+    <div id="input-my-avatar"></div>
     <input type="text" id="msg-input" placeholder="独り言をどうぞ…" maxlength="60">
     <button id="say-btn" onclick="say()">つぶやく</button>
   </div>
@@ -486,17 +498,63 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 </div>
 
 <script>
-let myAvatar = '🐱', myName = 'あなた', myRole = 'tojisha';
+// キャラクターデータ（col, row, 名前）
+const CHARS = [
+  {col:0,row:0,name:'くま'},    {col:1,row:0,name:'うさぎ'},
+  {col:2,row:0,name:'しばいぬ'},{col:3,row:0,name:'ねこ'},
+  {col:4,row:0,name:'パンダ'},  {col:5,row:0,name:'いぬ'},
+  {col:6,row:0,name:'りす'},    {col:0,row:1,name:'はりねずみ'},
+  {col:1,row:1,name:'ペンギン'},{col:2,row:1,name:'カワウソ'},
+  {col:3,row:1,name:'きつね'},  {col:4,row:1,name:'ひつじ'},
+  {col:5,row:1,name:'ねずみ'},  {col:6,row:1,name:'ハムスター'},
+];
+
+function spritePos(col, row, size) {
+  const w = size === 'sm' ? 66 : size === 'lg' ? 80 : 40;
+  const h = size === 'sm' ? 90 : size === 'lg' ? 108 : 54;
+  return `background-position:${-col*w}px ${-row*h}px;`;
+}
+
+function makeSprite(col, row, size) {
+  const el = document.createElement('div');
+  el.className = `char-sprite ${size}`;
+  el.style.cssText = spritePos(col, row, size);
+  return el;
+}
+
+let myCharIdx = 0, myName = 'あなた', myRole = 'tojisha';
 let myX = 40, myEl = null;
 
-function pickAvatar(el) {
-  document.querySelectorAll('#avatar-grid-1 .avatar-option').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-  myAvatar = el.dataset.emoji;
+function buildAvatarGrid() {
+  const grid = document.getElementById('avatar-grid-1');
+  CHARS.forEach((c, i) => {
+    const opt = document.createElement('div');
+    opt.className = 'avatar-option' + (i === 0 ? ' selected' : '');
+    opt.dataset.idx = i;
+    opt.onclick = () => pickAvatar(i);
+    opt.appendChild(makeSprite(c.col, c.row, 'sm'));
+    const nm = document.createElement('div');
+    nm.className = 'av-name'; nm.textContent = c.name;
+    opt.appendChild(nm);
+    grid.appendChild(opt);
+  });
 }
+
+function pickAvatar(idx) {
+  myCharIdx = idx;
+  document.querySelectorAll('#avatar-grid-1 .avatar-option').forEach((e,i) => e.classList.toggle('selected', i===idx));
+}
+
+function setPreviewSprite(containerId, idx) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  const c = CHARS[idx];
+  el.appendChild(makeSprite(c.col, c.row, 'sm'));
+}
+
 function goStep2() {
   myName = document.getElementById('char-name').value.trim() || 'なまえなし';
-  document.getElementById('preview-emoji-role').textContent = myAvatar;
+  setPreviewSprite('preview-sprite-role', myCharIdx);
   document.getElementById('preview-name-role').textContent = myName;
   document.getElementById('screen-create').classList.add('hidden');
   document.getElementById('screen-role').classList.remove('hidden');
@@ -507,7 +565,7 @@ function pickRole(role) {
   document.getElementById('role-kigyo').classList.toggle('selected', role === 'kigyo');
 }
 function goStep3() {
-  document.getElementById('preview-emoji-consent').textContent = myAvatar;
+  setPreviewSprite('preview-sprite-consent', myCharIdx);
   document.getElementById('preview-name-consent').textContent = myName;
   document.getElementById('preview-role-consent').textContent = myRole === 'kigyo' ? '企業・研究・行政' : '当事者・家族・支援者';
   document.getElementById('screen-role').classList.add('hidden');
@@ -523,7 +581,11 @@ function enterHiroba() {
   document.getElementById('top-bar').style.display = 'flex';
   document.getElementById('input-wrap').style.display = 'flex';
   document.getElementById('log-panel').style.display = 'block';
-  document.getElementById('input-my-avatar').textContent = myAvatar;
+  // 入力欄アバター
+  const inputAv = document.getElementById('input-my-avatar');
+  inputAv.innerHTML = '';
+  const c = CHARS[myCharIdx];
+  inputAv.appendChild(makeSprite(c.col, c.row, 'xs'));
   createMyAvatar();
   startLog();
   startNpcBubbles();
@@ -536,14 +598,19 @@ function enterHiroba() {
 
 function createMyAvatar() {
   if (myEl) myEl.remove();
+  const c = CHARS[myCharIdx];
   myEl = document.createElement('div');
   myEl.className = 'avatar';
-  myEl.style.cssText = `left:${myX}%;bottom:19%;animation:float 3.5s ease-in-out infinite;`;
-  myEl.innerHTML = `<div class="avatar-body">${myAvatar}</div><div class="avatar-name">${myName}</div>`;
+  myEl.style.cssText = `left:${myX}%;bottom:22%;animation:float 3.5s ease-in-out infinite;`;
+  myEl.appendChild(makeSprite(c.col, c.row, 'lg'));
+  const nm = document.createElement('div');
+  nm.className = 'avatar-name'; nm.textContent = myName;
+  myEl.appendChild(nm);
   document.getElementById('scene').appendChild(myEl);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  buildAvatarGrid();
   document.getElementById('msg-input').addEventListener('keydown', e => { if (e.key === 'Enter') say(); });
 });
 
@@ -552,7 +619,7 @@ function say() {
   const text = input.value.trim();
   if (!text) return;
   showBubble(text, myX, true);
-  addToLog(myAvatar, text, true);
+  addToLog(myCharIdx, text, true);
   input.value = '';
 }
 
@@ -583,36 +650,43 @@ function showManaReply(text) {
 
 // ===== 独り言ログ =====
 const logLines = [
-  { icon: '🐶', text: '犬かわいい' },
-  { icon: '🌙', text: '眠い' },
-  { icon: '🍓', text: '病院つかれた' },
-  { icon: '☔', text: '雨だなあ' },
-  { icon: '🏥', text: '窓口にまた来週って言われた' },
-  { icon: '☕', text: 'コーヒーがおいしい朝' },
-  { icon: '💊', text: '薬が変わって少し不安' },
-  { icon: '🌸', text: 'ここ来るとすこし落ち着く' },
-  { icon: '😪', text: 'また書類書き直しって言われた' },
-  { icon: '🌳', text: 'なんとなく話したくて' },
-  { icon: '🕊', text: 'ひとりじゃないかもって思う' },
-  { icon: '🍵', text: 'お茶でも飲もう' },
+  { ci: 2, text: '犬かわいい' },
+  { ci: 7, text: '眠い' },
+  { ci: 3, text: '病院つかれた' },
+  { ci: 1, text: '雨だなあ' },
+  { ci: 5, text: '窓口にまた来週って言われた' },
+  { ci: 0, text: 'コーヒーがおいしい朝' },
+  { ci: 9, text: '薬が変わって少し不安' },
+  { ci: 4, text: 'ここ来るとすこし落ち着く' },
+  { ci: 8, text: 'また書類書き直しって言われた' },
+  { ci: 6, text: 'なんとなく話したくて' },
+  { ci: 11, text: 'ひとりじゃないかもって思う' },
+  { ci: 13, text: 'お茶でも飲もう' },
 ];
 
 let logIdx = 0;
 const logTimes = ['さっき', '2分前', '5分前', '8分前', '11分前', '14分前'];
 
-function addToLog(icon, text, isMe) {
+function addToLog(charIdx, text, isMe) {
   const inner = document.getElementById('log-inner');
   const el = document.createElement('div');
   el.className = 'log-entry';
-  const label = isMe ? 'あなた' : 'なまえなし';
-  el.innerHTML = `<div class="log-avatar">${icon}</div><div class="log-body"><div class="log-meta"><span class="log-user">${label}</span><span class="log-time">たったいま</span></div><div class="log-text">${escHtml(text)}</div></div>`;
+  const label = isMe ? myName : 'なまえなし';
+  const c = CHARS[charIdx % CHARS.length];
+  const spriteDiv = document.createElement('div');
+  spriteDiv.className = 'log-avatar';
+  spriteDiv.appendChild(makeSprite(c.col, c.row, 'xs'));
+  el.appendChild(spriteDiv);
+  const body = document.createElement('div');
+  body.className = 'log-body';
+  body.innerHTML = `<div class="log-meta"><span class="log-user">${label}</span><span class="log-time">たったいま</span></div><div class="log-text">${escHtml(text)}</div>`;
+  el.appendChild(body);
   inner.insertBefore(el, inner.firstChild);
   while (inner.children.length > 20) inner.removeChild(inner.lastChild);
 }
 
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
-const logAvatars = ['🐱','🐶','🐰','🐻','🦊','🐧','🐼','🌿'];
 function startLog() {
   [...logLines].forEach((l, i) => {
     setTimeout(() => {
@@ -620,8 +694,15 @@ function startLog() {
       const el = document.createElement('div');
       el.className = 'log-entry';
       const t = logTimes[Math.min(i, logTimes.length - 1)];
-      const av = logAvatars[i % logAvatars.length];
-      el.innerHTML = `<div class="log-avatar">${av}</div><div class="log-body"><div class="log-meta"><span class="log-user">なまえなし</span><span class="log-time">${t}</span></div><div class="log-text">${escHtml(l.text)}</div></div>`;
+      const c = CHARS[l.ci];
+      const spriteDiv = document.createElement('div');
+      spriteDiv.className = 'log-avatar';
+      spriteDiv.appendChild(makeSprite(c.col, c.row, 'xs'));
+      el.appendChild(spriteDiv);
+      const body = document.createElement('div');
+      body.className = 'log-body';
+      body.innerHTML = `<div class="log-meta"><span class="log-user">なまえなし</span><span class="log-time">${t}</span></div><div class="log-text">${escHtml(l.text)}</div>`;
+      el.appendChild(body);
       inner.appendChild(el);
     }, i * 500);
   });
@@ -629,21 +710,21 @@ function startLog() {
 
 // NPCの吹き出し
 const npcLines = [
-  { x: 34, icon: '🐕', text: '犬かわいい（自分だけど）' },
-  { x: 22, icon: '🐈', text: 'ベンチ、あったかい' },
-  { x: 49, icon: '🕊', text: '申請、通るかな' },
-  { x: 70, icon: '🐿️', text: 'なんか話したかっただけ' },
-  { x: 34, icon: '🐕', text: '窓口にまた\n来週来てって言われた' },
-  { x: 22, icon: '🐈', text: 'ここ来ると\n落ち着く気がする' },
-  { x: 49, icon: '🕊', text: '今日は少し疲れたな' },
-  { x: 70, icon: '🐿️', text: 'また同じ書類\n書き直しって…' },
-  { x: 34, icon: '🐕', text: 'ひとりじゃないんだな' },
+  { x: 37, ci: 4, text: 'パンダなう（自分だけど）' },
+  { x: 7,  ci: 1, text: 'ベンチ、あったかい' },
+  { x: 58, ci: 10, text: '申請、通るかな' },
+  { x: 79, ci: 13, text: 'なんか話したかっただけ' },
+  { x: 37, ci: 4,  text: '窓口にまた\n来週来てって言われた' },
+  { x: 20, ci: 2,  text: 'ここ来ると\n落ち着く気がする' },
+  { x: 58, ci: 10, text: '今日は少し疲れたな' },
+  { x: 79, ci: 13, text: 'また同じ書類\n書き直しって…' },
+  { x: 69, ci: 0,  text: 'ひとりじゃないんだな' },
 ];
 let npcIdx = 0;
 function showNpcBubble() {
   const l = npcLines[npcIdx % npcLines.length];
   showBubble(l.text, l.x, false);
-  addToLog(l.icon, l.text.replace(/\n/g,''), false);
+  addToLog(l.ci, l.text.replace(/\n/g,''), false);
   npcIdx++;
   setTimeout(showNpcBubble, 5000 + Math.random() * 5000);
 }
