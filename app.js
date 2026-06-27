@@ -3578,6 +3578,29 @@ function showVillageContent(house, win, windowId) {
       })
       .catch(() => renderVillageRoomItems(el2, house, labels, []));
     return;
+  } else if (house.id === 'voice') {
+    const villageMap = { democracy: '民主主義', human_rights: '人権', media: 'メディア', mental: '心', war: '戦争' };
+    const villageName = villageMap[windowId] || '';
+    const el2 = el;
+    el2.innerHTML = `<div class="village-room"><div class="village-room-header"><span class="village-room-name">${labels[house.id]}</span><button class="village-room-close" onclick="document.getElementById('village-content').innerHTML=''">✕</button></div><p style="padding:1rem">読み込み中...</p></div>`;
+    fetch(GAS_API_URL + '?sheet=' + encodeURIComponent('当事者の声'))
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data)) throw new Error('not array');
+        const voiceItems = data.filter(row =>
+          row['展示対象'] === '展示' &&
+          (!villageName || (row['村'] || '').split(',').map(s => s.trim()).includes(villageName))
+        ).slice(0, 30).map(row => ({
+          title:  row['タイトル'] || '',
+          url:    row['URL'] || '',
+          source: row['発信者'] || '',
+          sub:    row['種別'] || '',
+          tags:   row['要約'] || '',
+        }));
+        renderVillageRoomItems(el2, house, labels, voiceItems);
+      })
+      .catch(() => renderVillageRoomItems(el2, house, labels, []));
+    return;
   } else if (house.id === 'karte') {
     items = karteData.filter(k => {
       const text = [k.tags_event,k.tags_structure,k.field,k.summary].join(' ');
