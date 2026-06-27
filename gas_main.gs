@@ -272,7 +272,7 @@ function collectNews() {
   Logger.log('新着（重複除外後）: ' + newArticles.length + '件');
   Logger.log('全件ログ保存:       ' + savedLog + '件');
   Logger.log('観測DB追加:         ' + savedPublic + '件');
-  Logger.log('エラー:             ' + saveErrCount + '件');
+  Logger.log('===== 層A収集完了 =====');
 
   if (savedLog > 0 && savedPublic === 0) {
     Logger.log('[原因切り分け] 保存処理：全件ログには保存されたが観測DBには0件。');
