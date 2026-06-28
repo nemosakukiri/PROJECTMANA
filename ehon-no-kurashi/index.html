@@ -217,10 +217,11 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 #item-panel {
   position: fixed; bottom: 110px; right: 14px; z-index: 110;
   background: rgba(10,24,10,0.88); border: 1px solid rgba(160,210,160,0.2);
-  border-radius: 16px; padding: 12px; display: none;
+  border-radius: 16px; padding: 12px;
   backdrop-filter: blur(12px);
-  grid-template-columns: repeat(4, 64px);
-  gap: 8px;
+  display: flex; flex-wrap: wrap; gap: 8px; width: 280px;
+  visibility: hidden; opacity: 0; pointer-events: none;
+  transition: opacity 0.15s;
 }
 .item-opt {
   width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
@@ -667,9 +668,13 @@ function toggleItemPanel() {
   const panel = document.getElementById('item-panel');
   if (itemPanelOpen) {
     buildItemPanel();
-    panel.style.display = 'grid';
+    panel.style.visibility = 'visible';
+    panel.style.opacity = '1';
+    panel.style.pointerEvents = 'auto';
   } else {
-    panel.style.display = 'none';
+    panel.style.visibility = 'hidden';
+    panel.style.opacity = '0';
+    panel.style.pointerEvents = 'none';
   }
 }
 
@@ -678,7 +683,9 @@ function selectItem(idx) {
   buildItemPanel();
   createMyAvatar();
   const panel = document.getElementById('item-panel');
-  panel.style.display = 'none';
+  panel.style.visibility = 'hidden';
+  panel.style.opacity = '0';
+  panel.style.pointerEvents = 'none';
   itemPanelOpen = false;
 }
 
