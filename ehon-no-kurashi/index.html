@@ -689,23 +689,24 @@ function addItemOverlay(avatarEl) {
   if (myItemIdx === null) return;
   const item = ITEMS[myItemIdx];
   const offsets = [
-    {bottom:'10px', right:'-30px'},
-    {bottom:'20px', right:'-35px'},
-    {top:'-10px',  right:'-20px'},
-    {top:'-15px',  left:'50%', transform:'translateX(-50%)'},
-    {bottom:'10px', left:'-30px'},
-    {bottom:'-10px', left:'50%', transform:'translateX(-50%)'},
-    {bottom:'5px',  right:'-18px'},
+    {bottom:'8px',  right:'-36px'},
+    {bottom:'16px', right:'-40px'},
+    {top:'-14px',   right:'-24px'},
+    {top:'-20px',   left:'50%', transform:'translateX(-50%)'},
+    {bottom:'8px',  left:'-36px'},
+    {bottom:'-16px',left:'50%', transform:'translateX(-50%)'},
+    {bottom:'4px',  right:'-22px'},
   ];
-  const off = offsets[myItemIdx] || {bottom:'10px', right:'-30px'};
+  const off = offsets[myItemIdx] || {bottom:'8px', right:'-36px'};
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:absolute;pointer-events:none;';
-  Object.entries(off).forEach(([k,v]) => overlay.style[k] = v);
+  overlay.style.position = 'absolute';
+  overlay.style.pointerEvents = 'none';
+  overlay.style.zIndex = '2';
+  Object.entries(off).forEach(([k,v]) => { overlay.style[k] = v; });
   const img = document.createElement('img');
   img.src = item.url;
-  img.style.cssText = 'width:44px;height:44px;object-fit:contain;';
+  img.style.cssText = 'width:48px;height:48px;object-fit:contain;display:block;';
   overlay.appendChild(img);
-  avatarEl.style.position = 'relative';
   avatarEl.appendChild(overlay);
 }
 
