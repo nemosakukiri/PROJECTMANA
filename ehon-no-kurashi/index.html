@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>絵本のくらし</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans JP', sans-serif; overflow: hidden; }
+
+/* ===== オンボーディング ===== */
+.screen {
+  position: fixed; inset: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #1a2a1a, #1e3a2e, #1a2e3a);
+}
+.screen.hidden { display: none; }
+.card {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px; padding: 36px 32px;
+  max-width: 820px; width: 95%;
+  max-height: 92vh; overflow-y: auto; color: white;
+}
+.card h1 { font-size: 20px; font-weight: bold; margin-bottom: 8px; }
+.card .sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-bottom: 28px; line-height: 1.9; }
+
+/* ===== キャラクタースプライト (1536×1024, 7列×3行) ===== */
+.char-sprite {
+  display: block;
+  background-image: url('characters.webp');
+  background-repeat: no-repeat;
+  image-rendering: -webkit-optimize-contrast;
+}
+/* SM: 70×109px / BG: 490×327px */
+.char-sprite.sm { width: 70px; height: 109px; background-size: 490px 327px; }
+/* LG: 80×125px / BG: 560×373px */
+.char-sprite.lg { width: 80px; height: 125px; background-size: 560px 373px; }
+/* XS: 40×62px / BG: 280px 187px */
+.char-sprite.xs { width: 40px; height: 62px; background-size: 280px 187px; }
+
+/* ===== アバター選択グリッド ===== */
+.avatar-grid {
+  display: grid; grid-template-columns: repeat(14, 1fr);
+  gap: 6px; margin-bottom: 18px;
+}
+.avatar-option {
+  cursor: pointer; border-radius: 10px; padding: 4px;
+  border: 2px solid transparent; transition: all 0.2s;
+  background: rgba(255,255,255,0.04);
+  display: flex; flex-direction: column; align-items: center; overflow: hidden;
+}
+.avatar-option:hover { background: rgba(255,255,255,0.12); }
+.avatar-option.selected { border-color: rgba(160,210,160,0.8); background: rgba(100,180,100,0.15); }
+.avatar-option .av-name { font-size: 9px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+
+.name-input {
+  width: 100%; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 10px;
+  padding: 10px 14px; color: white; font-size: 14px; outline: none;
+  margin-bottom: 18px; font-family: inherit;
+}
+.name-input::placeholder { color: rgba(255,255,255,0.35); }
+
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+.role-card {
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 16px 12px; cursor: pointer; text-align: center; transition: all 0.2s;
+}
+.role-card:hover { background: rgba(255,255,255,0.09); }
+.role-card.selected { border-color: rgba(160,210,160,0.6); background: rgba(100,180,100,0.1); }
+.role-card .role-icon { font-size: 26px; margin-bottom: 6px; }
+.role-card .role-title { font-size: 12px; font-weight: bold; color: white; }
+.role-card .role-desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; line-height: 1.4; }
+
+.consent-box {
+  background: rgba(0,0,0,0.2); border-radius: 10px; padding: 14px;
+  font-size: 12px; line-height: 1.85; color: rgba(255,255,255,0.65);
+  max-height: 200px; overflow-y: auto; margin-bottom: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.consent-box h3 { color: rgba(255,255,255,0.85); font-size: 12px; margin-bottom: 5px; }
+.consent-box p { margin-bottom: 10px; }
+.consent-check {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 14px; cursor: pointer;
+  font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5;
+}
+.consent-check input[type=checkbox] { margin-top: 2px; width: 15px; height: 15px; flex-shrink: 0; accent-color: #7DC87D; cursor: pointer; }
+
+.btn-primary {
+  width: 100%; background: rgba(100,170,100,0.35);
+  border: 1px solid rgba(160,210,160,0.4); border-radius: 12px;
+  padding: 13px; color: rgba(255,255,255,0.9); font-size: 15px;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.btn-primary:hover:not(:disabled) { background: rgba(100,170,100,0.5); }
+.btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; }
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: background 0.3s; }
+.step-dot.active { background: rgba(160,210,160,0.8); }
+.step-dot.done { background: rgba(160,210,160,0.35); }
+
+.preview-char {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,0.04); border-radius: 10px;
+  padding: 8px 12px; margin-bottom: 18px;
+  font-size: 12px; color: rgba(255,255,255,0.7);
+}
+.preview-char .preview-sprite { flex-shrink: 0; }
+
+/* ===== 広場シーン ===== */
+#scene {
+  position: fixed; left: 0; top: 48px; right: 0; bottom: 64px;
+  background-image: url('/ehon-no-kurashi/hiroba-bg.webp');
+  background-size: cover; background-position: center top;
+  background-color: #dce8d0; overflow: hidden;
+}
+.avatar { position: absolute; text-align: center; user-select: none; }
+.avatar-name { font-size: 9px; color: rgba(255,255,255,0.9); background: rgba(0,0,0,0.38); border-radius: 6px; padding: 1px 5px; margin-top: 3px; white-space: nowrap; }
+
+@keyframes wander  { 0%{transform:translateX(0)} 20%{transform:translateX(28px)} 45%{transform:translateX(12px)} 70%{transform:translateX(-22px)} 100%{transform:translateX(0)} }
+@keyframes float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+@keyframes idle-sit{ 0%,100%{transform:translateY(0) scale(1)} 40%{transform:translateY(-2px) scale(1.03)} }
+@keyframes perch   { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-2px) rotate(3deg)} }
+
+.bubble {
+  position: absolute; background: rgba(255,255,255,0.92);
+  border-radius: 14px; padding: 7px 11px; font-size: 12px;
+  line-height: 1.55; color: #444; max-width: 170px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  animation: fadeup 9s ease-out forwards; pointer-events: none;
+  white-space: normal; word-break: break-all;
+}
+.bubble::after { content:''; position:absolute; bottom:-7px; left:14px; border:7px solid transparent; border-top-color:rgba(255,255,255,0.92); border-bottom:0; }
+@keyframes fadeup { 0%{opacity:0;transform:translateY(0)} 12%{opacity:1;transform:translateY(-6px)} 72%{opacity:1;transform:translateY(-14px)} 100%{opacity:0;transform:translateY(-28px)} }
+
+#mana-char { position:absolute; bottom:38%; right:14%; text-align:center; animation:float 4s ease-in-out infinite; }
+.mana-label { font-size:9px; color:rgba(200,230,255,0.8); background:rgba(0,60,100,0.35); border-radius:6px; padding:1px 5px; margin-top:2px; }
+#mana-bubble {
+  position:absolute; right:13%; bottom:52%;
+  background:rgba(220,238,255,0.9); border-radius:12px;
+  padding:7px 11px; font-size:11px; color:#2a5a7a;
+  max-width:148px; box-shadow:0 2px 8px rgba(0,0,0,0.1); line-height:1.6;
+}
+
+/* ===== トップバー ===== */
+#top-bar {
+  display: none; position: fixed; top: 0; left: 0; right: 0; height: 48px;
+  background: rgba(20,40,20,0.75); backdrop-filter: blur(12px);
+  align-items: center; padding: 0 14px; gap: 10px; z-index: 10;
+}
+#top-bar .logo { font-size: 13px; color: rgba(200,230,200,0.9); font-weight: bold; }
+#online-count { margin-left: auto; font-size: 11px; color: rgba(200,230,200,0.7); }
+#my-badge { display:flex; align-items:center; gap:6px; font-size:12px; color:#666; }
+
+/* ===== 独り言ログ ===== */
+#log-panel {
+  display: none; position: fixed; left: 0; top: 48px; width: 240px; bottom: 64px;
+  background: rgba(10,24,10,0.72); backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255,255,255,0.07); overflow: hidden;
+  display: flex; flex-direction: column;
+}
+#log-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: 11px; color: rgba(200,230,200,0.7); flex-shrink: 0;
+}
+#log-sort { cursor: pointer; color: rgba(180,210,180,0.6); }
+#log-inner { flex: 1; overflow-y: auto; padding: 6px 8px; }
+#log-more { flex-shrink:0; padding:8px; text-align:center; font-size:11px; color:rgba(200,230,200,0.4); cursor:pointer; border-top:1px solid rgba(255,255,255,0.06); }
+.log-entry { display:flex; gap:7px; padding:7px 4px; border-bottom:1px solid rgba(255,255,255,0.05); align-items:flex-start; }
+.log-avatar { flex-shrink:0; }
+.log-body { flex:1; min-width:0; }
+.log-meta { display:flex; align-items:center; gap:4px; margin-bottom:3px; }
+.log-user { font-size:10px; color:rgba(200,230,200,0.6); }
+.log-time { font-size:9px; color:rgba(255,255,255,0.25); margin-left:auto; }
+.log-text { font-size:12px; color:rgba(255,255,255,0.8); line-height:1.5; word-break:break-all; }
+
+/* ===== 入力欄 ===== */
+#input-wrap {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 64px;
+  background: rgba(15,30,15,0.82); backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  align-items: center; padding: 0 14px; gap: 10px;
+}
+#input-my-avatar { flex-shrink: 0; }
+#msg-input {
+  flex: 1; background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18); border-radius: 10px;
+  padding: 9px 13px; color: white; font-size: 13px; outline: none; font-family: inherit;
+}
+#msg-input::placeholder { color: rgba(255,255,255,0.3); }
+#say-btn {
+  background: rgba(80,140,80,0.6); border: 1px solid rgba(160,210,160,0.4);
+  border-radius: 10px; padding: 9px 16px; color: white; font-size: 13px;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+#say-btn:hover { background: #4a6a4a; }
+.record-btn {
+  display: inline-block; margin-top: 6px; padding: 3px 8px; font-size: 10px;
+  background: rgba(80,140,80,0.5); border: 1px solid rgba(160,210,160,0.4);
+  border-radius: 6px; color: white; cursor: pointer; pointer-events: auto; font-family: inherit;
+}
+
+/* ===== くらしアイテム ===== */
+#item-btn {
+  position: fixed; bottom: 72px; right: 14px; z-index: 110;
+  background: rgba(20,40,20,0.82); border: 1px solid rgba(160,210,160,0.35);
+  border-radius: 14px; padding: 8px 14px; color: rgba(200,230,200,0.9);
+  font-size: 12px; cursor: pointer; font-family: inherit;
+  display: none; backdrop-filter: blur(8px);
+}
+#item-btn:hover { background: rgba(40,70,40,0.9); }
+#item-panel {
+  position: fixed; bottom: 110px; right: 14px; z-index: 110;
+  background: rgba(10,24,10,0.88); border: 1px solid rgba(160,210,160,0.2);
+  border-radius: 16px; padding: 12px;
+  backdrop-filter: blur(12px);
+  flex-wrap: wrap; gap: 8px; width: 280px;
+}
+.item-opt {
+  width: 64px; height: 64px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer;
+  border: 2px solid transparent; transition: border-color 0.15s;
+}
+.item-opt:hover { background: rgba(255,255,255,0.12); }
+.item-opt.selected { border-color: rgba(160,210,160,0.7); background: rgba(80,140,80,0.25); }
+.item-opt img { max-width:54px; max-height:54px; object-fit:contain; }
+.item-name { font-size: 9px; color: rgba(200,230,200,0.6); text-align:center; margin-top:2px; }
+</style>
+</head>
+<body>
+
+<!-- STEP 1: キャラクター作成 -->
+<div class="screen" id="screen-create">
+  <div class="card">
+    <div class="step-indicator">
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+      <div class="step-dot"></div>
+    </div>
+    <h1>絵本のくらしへようこそ</h1>
+    <p class="sub">ここは、日々のことを気軽に置いていける場所です。<br>犬がかわいい、眠れない、病院つかれた、なんとなく話したい。<br>いいねもフォローもありません。</p>
+    <div class="avatar-grid" id="avatar-grid-1"></div>
+    <input class="name-input" type="text" id="char-name" placeholder="呼び名（なくてもOK）" maxlength="12">
+    <button class="btn-primary" onclick="goStep2()">次へ</button>
+  </div>
+</div>
+
+<!-- STEP 2: 役割選択 -->
+<div class="screen hidden" id="screen-role">
+  <div class="card">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+      <div class="step-dot"></div>
+    </div>
+    <div class="preview-char">
+      <div class="preview-sprite" id="preview-sprite-role"></div>
+      <span id="preview-name-role">なまえなし</span>
+    </div>
+    <h1>あなたはどちらですか？</h1>
+    <p class="sub" style="margin-bottom:18px;">広場では誰でも同じキャラクターで過ごします。<br>役割は運営側にだけ見えます。</p>
+    <div class="role-grid">
+      <div class="role-card selected" id="role-tojisha" onclick="pickRole('tojisha')">
+        <div class="role-icon">🏠</div>
+        <div class="role-title">当事者・家族・支援者</div>
+        <div class="role-desc">福祉・暮らしの当事者や身近で支える方</div>
+      </div>
+      <div class="role-card" id="role-kigyo" onclick="pickRole('kigyo')">
+        <div class="role-icon">🏢</div>
+        <div class="role-title">企業・研究・行政</div>
+        <div class="role-desc">調査・開発・政策づくりに関わる方</div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="goStep3()">次へ</button>
+  </div>
+</div>
+
+<!-- STEP 3: 同意 -->
+<div class="screen hidden" id="screen-consent">
+  <div class="card">
+    <div class="step-indicator">
+      <div class="step-dot done"></div>
+      <div class="step-dot done"></div>
+      <div class="step-dot active"></div>
+    </div>
+    <div class="preview-char">
+      <div class="preview-sprite" id="preview-sprite-consent"></div>
+      <span id="preview-name-consent">なまえなし</span>
+      <span id="preview-role-consent" style="margin-left:auto;font-size:10px;color:rgba(200,230,200,0.7);"></span>
+    </div>
+    <h1>絵本のくらしのルール</h1>
+    <p class="sub" style="margin-bottom:14px;">入る前に確認してください</p>
+    <div class="consent-box">
+      <h3>🌿 ここはどんな場所？</h3>
+      <p>絵本のくらしは、福祉・生活・社会課題に関わる人たちが匿名でゆるやかにつながる場所です。</p>
+      <h3>💬 独り言について</h3>
+      <p>ここに書いた言葉は、個人が特定されない形で生活課題の理解に活用されることがあります。個人を特定できる情報は書かないでください。</p>
+      <h3>🤝 お互いへの配慮</h3>
+      <p>他の人を傷つける言葉、誹謗中傷はご遠慮ください。</p>
+    </div>
+    <label class="consent-check"><input type="checkbox" id="chk1" onchange="updateConsentBtn()"><span>上記のルールを読み、理解しました</span></label>
+    <label class="consent-check"><input type="checkbox" id="chk2" onchange="updateConsentBtn()"><span>独り言がデータとして活用されることに同意します</span></label>
+    <button class="btn-primary" id="btn-enter" disabled onclick="enterHiroba()">絵本のくらしに入る</button>
+  </div>
+</div>
+
+<!-- 広場 -->
+<div id="scene" style="display:none;">
+  <!-- NPCは JS で挿入 -->
+  <div id="mana-char">
+    <div class="mana-label">MANA</div>
+  </div>
+  <div id="mana-bubble">ここにいるよ。<br>話したいときに話してね。</div>
+</div>
+
+
+<!-- くらしアイテム -->
+<button id="item-btn" onclick="toggleItemPanel(); this.textContent = itemPanelOpen ? '閉じる' : '持ち物 ＋'">持ち物 ＋</button>
+<div id="item-panel" hidden></div>
+<!-- 独り言ログ -->
+<div id="log-panel" style="display:none;">
+  <div id="log-header">
+    <span>みんなのつぶやき</span>
+    <span id="log-sort">最新順 ▾</span>
+  </div>
+  <div id="log-inner"></div>
+  <div id="log-more">もっと見る</div>
+</div>
+
+<!-- トップバー -->
+<div id="top-bar" style="display:none;">
+  <span class="logo">絵本のくらし</span>
+  <span id="online-count">今ここにいる人 ― 人</span>
+</div>
+
+<!-- 入力欄 -->
+<div id="input-wrap" style="display:none;">
+  <div id="input-my-avatar"></div>
+  <input id="msg-input" type="text" placeholder="ここにいるよ、と言ってみる…" maxlength="120">
+  <button id="say-btn" onclick="say()">つぶやく</button>
+</div>
+
+<script>
+const CHARS = [
+  {name:"くま", url:"/ehon-no-kurashi/chars/kuma.png"},
+  {name:"うさぎ", url:"/ehon-no-kurashi/chars/usagi.png"},
+  {name:"しばいぬ", url:"/ehon-no-kurashi/chars/shibainu.png"},
+  {name:"ねこ", url:"/ehon-no-kurashi/chars/neko.png"},
+  {name:"パンダ", url:"/ehon-no-kurashi/chars/panda.png"},
+  {name:"いぬ", url:"/ehon-no-kurashi/chars/inu.png"},
+  {name:"りす", url:"/ehon-no-kurashi/chars/risu.png"},
+  {name:"はりねずみ", url:"/ehon-no-kurashi/chars/harinezumi.png"},
+  {name:"ペンギン", url:"/ehon-no-kurashi/chars/penguin.png"},
+  {name:"カワウソ", url:"/ehon-no-kurashi/chars/kawauso.png"},
+  {name:"きつね", url:"/ehon-no-kurashi/chars/kitsune.png"},
+  {name:"ひつじ", url:"/ehon-no-kurashi/chars/hitsuji.png"},
+  {name:"ねずみ", url:"/ehon-no-kurashi/chars/nezumi.png"},
+  {name:"ハムスター", url:"/ehon-no-kurashi/chars/hamster.png"}
+];
+
+const ITEMS = [
+  {name:"コーヒー", url:"/ehon-no-kurashi/items/coffee.png"},
+  {name:"本", url:"/ehon-no-kurashi/items/book.png"},
+  {name:"傘", url:"/ehon-no-kurashi/items/umbrella.png"},
+  {name:"麦わら帽子", url:"/ehon-no-kurashi/items/hat.png"},
+  {name:"バッグ", url:"/ehon-no-kurashi/items/bag.png"},
+  {name:"車椅子", url:"/ehon-no-kurashi/items/wheelchair.png"},
+  {name:"白杖", url:"/ehon-no-kurashi/items/cane.png"}
+];
+
+function makeSprite(idx, size) {
+  const c = CHARS[idx % CHARS.length];
+  const img = document.createElement('img');
+  img.src = c.url;
+  img.alt = c.name;
+  if (size === 'sm') {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'width:64px;height:80px;display:flex;align-items:center;justify-content:center;';
+    img.style.cssText = 'max-width:64px;max-height:80px;width:auto;height:auto;object-fit:contain;display:block;';
+    wrap.appendChild(img);
+    return wrap;
+  }
+  const h = size === 'lg' ? 100 : 44;
+  img.style.cssText = `height:${h}px;width:auto;display:block;`;
+  return img;
+}
+
+let myCharIdx = 0, myName = 'あなた', myRole = 'tojisha';
+let myEl = null, myX = 45;
+
+// ===== アバターグリッド構築 =====
+function buildAvatarGrid() {
+  const grid = document.getElementById('avatar-grid-1');
+  CHARS.forEach((c, i) => {
+    const opt = document.createElement('div');
+    opt.className = 'avatar-option' + (i === 0 ? ' selected' : '');
+    opt.onclick = () => pickAvatar(i);
+    opt.appendChild(makeSprite(i, 'sm'));
+    const nm = document.createElement('div');
+    nm.className = 'av-name'; nm.textContent = c.name;
+    opt.appendChild(nm);
+    grid.appendChild(opt);
+  });
+}
+
+function pickAvatar(idx) {
+  myCharIdx = idx;
+  document.querySelectorAll('#avatar-grid-1 .avatar-option').forEach((e,i) => e.classList.toggle('selected', i===idx));
+}
+
+function setPreviewSprite(containerId, idx) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  el.appendChild(makeSprite(idx, 'sm'));
+}
+
+// ===== オンボーディング =====
+function goStep2() {
+  myName = document.getElementById('char-name').value.trim() || 'なまえなし';
+  setPreviewSprite('preview-sprite-role', myCharIdx);
+  document.getElementById('preview-name-role').textContent = myName;
+  document.getElementById('screen-create').classList.add('hidden');
+  document.getElementById('screen-role').classList.remove('hidden');
+}
+function pickRole(role) {
+  myRole = role;
+  document.getElementById('role-tojisha').classList.toggle('selected', role === 'tojisha');
+  document.getElementById('role-kigyo').classList.toggle('selected', role === 'kigyo');
+}
+function goStep3() {
+  setPreviewSprite('preview-sprite-consent', myCharIdx);
+  document.getElementById('preview-name-consent').textContent = myName;
+  document.getElementById('preview-role-consent').textContent = myRole === 'kigyo' ? '企業・研究・行政' : '当事者・家族・支援者';
+  document.getElementById('screen-role').classList.add('hidden');
+  document.getElementById('screen-consent').classList.remove('hidden');
+}
+function updateConsentBtn() {
+  document.getElementById('btn-enter').disabled =
+    !(document.getElementById('chk1').checked && document.getElementById('chk2').checked);
+}
+
+// ===== 広場入場 =====
+function enterHiroba() {
+  document.getElementById('screen-consent').classList.add('hidden');
+  document.getElementById('scene').style.display = 'block';
+  document.getElementById('item-btn').style.display = 'block';
+  document.getElementById('top-bar').style.display = 'flex';
+  document.getElementById('input-wrap').style.display = 'flex';
+  document.getElementById('log-panel').style.display = 'flex';
+
+  // 入力欄アバター
+  const inputAv = document.getElementById('input-my-avatar');
+  inputAv.innerHTML = '';
+  inputAv.appendChild(makeSprite(myCharIdx, 'xs'));
+
+  placeNpcs();
+  createMyAvatar();
+  startLog();
+  startNpcBubbles();
+  startOnlineCounter();
+
+  const greeting = myRole === 'kigyo'
+    ? `${myName}さん、いらっしゃい。\nここは当事者の声の場所です。\nそっと聞いていてね。`
+    : `${myName}さん、いらっしゃい。\nゆっくりしていってね。`;
+  setTimeout(() => showManaReply(greeting), 900);
+}
+
+// ===== NPC配置 =====
+const NPC_LIST = [
+  {idx:1,  style:'left:7%;bottom:35%;',  anim:'idle-sit 4.5s ease-in-out infinite', delay:'-1s',   size:'lg'},
+  {idx:2,  style:'left:20%;bottom:37%;', anim:'idle-sit 5s ease-in-out infinite',   delay:'-2s',   size:'lg'},
+  {idx:4,  style:'left:37%;bottom:24%;', anim:'wander 18s ease-in-out infinite',    delay:'-3s',   size:'lg'},
+  {idx:10, style:'left:58%;bottom:38%;', anim:'idle-sit 5s ease-in-out infinite',   delay:'-1.5s', size:'lg'},
+  {idx:0,  style:'left:69%;bottom:39%;', anim:'idle-sit 5.5s ease-in-out infinite', delay:'-2.5s', size:'lg'},
+  {idx:13, style:'left:79%;bottom:20%;', anim:'idle-sit 6s ease-in-out infinite',   delay:'-3s',   size:'lg'},
+];
+function placeNpcs() {
+  const scene = document.getElementById('scene');
+  NPC_LIST.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'avatar';
+    div.style.cssText = n.style + `animation:${n.anim};animation-delay:${n.delay};`;
+    div.appendChild(makeSprite(n.idx, n.size));
+    const nm = document.createElement('div');
+    nm.className = 'avatar-name'; nm.textContent = CHARS[n.idx].name;
+    div.appendChild(nm);
+    scene.appendChild(div);
+  });
+
+  // MANA（ひつじ）
+  const mana = document.getElementById('mana-char');
+  const sp = makeSprite(11, 'lg');
+  sp.style.filter = 'hue-rotate(180deg) brightness(1.1)';
+  mana.insertBefore(sp, mana.firstChild);
+}
+
+function createMyAvatar() {
+  if (myEl) myEl.remove();
+  myEl = document.createElement('div');
+  myEl.className = 'avatar';
+  myEl.style.cssText = `left:${myX}%;bottom:22%;animation:float 3.5s ease-in-out infinite;`;
+  myEl.appendChild(makeSprite(myCharIdx, 'lg'));
+  const nm = document.createElement('div');
+  nm.className = 'avatar-name'; nm.textContent = myName;
+  myEl.appendChild(nm);
+  addItemOverlay(myEl);
+  document.getElementById('scene').appendChild(myEl);
+}
+
+// ===== 吹き出し =====
+function say() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+  showBubble(text, myX, true);
+  addToLog(myCharIdx, text, true);
+  input.value = '';
+}
+function showBubble(text, xPct, isMe) {
+  const scene = document.getElementById('scene');
+  const el = document.createElement('div');
+  el.className = 'bubble';
+  el.style.cssText = `left:${xPct}%;bottom:40%;`;
+  const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/'/g,'&#39;');
+  el.innerHTML = safe.replace(/\n/g,'<br>') + (isMe
+    ? `<br><button class="record-btn" onclick="recordThis(this,'${safe}')">📌 記録する</button>` : '');
+  scene.appendChild(el);
+  setTimeout(() => el.remove(), 9000);
+}
+function recordThis(btn) {
+  btn.textContent = '✓ 記録しました';
+  btn.style.background = 'rgba(60,140,60,0.7)';
+  btn.disabled = true;
+  setTimeout(() => showManaReply('受け取ったよ。ありがとう。'), 500);
+}
+function showManaReply(text) {
+  const el = document.getElementById('mana-bubble');
+  el.innerHTML = text.replace(/\n/g,'<br>');
+  setTimeout(() => { el.innerHTML = 'ここにいるよ。<br>話したいときに話してね。'; }, 6000);
+}
+
+// ===== 独り言ログ =====
+const logLines = [
+  {ci:2,  text:'犬かわいい'},
+  {ci:7,  text:'眠い'},
+  {ci:3,  text:'病院つかれた'},
+  {ci:1,  text:'雨だなあ'},
+  {ci:5,  text:'窓口にまた来週って言われた'},
+  {ci:0,  text:'コーヒーがおいしい朝'},
+  {ci:9,  text:'薬が変わって少し不安'},
+  {ci:4,  text:'ここ来るとすこし落ち着く'},
+  {ci:8,  text:'また書類書き直しって言われた'},
+  {ci:6,  text:'なんとなく話したくて'},
+  {ci:11, text:'ひとりじゃないかもって思う'},
+  {ci:13, text:'お茶でも飲もう'},
+];
+let logIdx = 0;
+const logTimes = ['さっき','2分前','5分前','8分前','11分前','14分前'];
+
+function addToLog(charIdx, text, isMe) {
+  const inner = document.getElementById('log-inner');
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  const label = isMe ? myName : 'なまえなし';
+  const spriteDiv = document.createElement('div');
+  spriteDiv.className = 'log-avatar';
+  spriteDiv.appendChild(makeSprite(charIdx, 'xs'));
+  el.appendChild(spriteDiv);
+  const body = document.createElement('div');
+  body.className = 'log-body';
+  const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  body.innerHTML = `<div class="log-meta"><span class="log-user">${label}</span><span class="log-time">さっき</span></div><div class="log-text">${safe}</div>`;
+  el.appendChild(body);
+  inner.insertBefore(el, inner.firstChild);
+}
+
+function startLog() {
+  const inner = document.getElementById('log-inner');
+  logLines.slice().reverse().forEach((l, i) => {
+    const el = document.createElement('div');
+    el.className = 'log-entry';
+    const t = logTimes[Math.min(i, logTimes.length-1)];
+    const spriteDiv = document.createElement('div');
+    spriteDiv.className = 'log-avatar';
+    spriteDiv.appendChild(makeSprite(l.ci, 'xs'));
+    el.appendChild(spriteDiv);
+    const body = document.createElement('div');
+    body.className = 'log-body';
+    const safe = l.text.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+    body.innerHTML = `<div class="log-meta"><span class="log-user">なまえなし</span><span class="log-time">${t}</span></div><div class="log-text">${safe}</div>`;
+    el.appendChild(body);
+    inner.appendChild(el);
+  });
+
+  setInterval(() => {
+    const l = logLines[logIdx % logLines.length];
+    showBubble(l.text, 10 + Math.random()*70, false);
+    addToLog(l.ci, l.text, false);
+    logIdx++;
+  }, 14000 + Math.random()*8000);
+}
+
+// ===== NPC吹き出し =====
+const npcTexts = [
+  '今日はいい天気',
+  'なんとなくここに来た',
+  'お茶飲んでる',
+  'ゆっくりしてってね',
+  'ひとりじゃないよ',
+  'お疲れ様',
+];
+function startNpcBubbles() {
+  let ti = 0;
+  setInterval(() => {
+    const n = NPC_LIST[ti % NPC_LIST.length];
+    const xPct = parseFloat(n.style.match(/left:(\d+)%/)?.[1] || 30);
+    showBubble(npcTexts[ti % npcTexts.length], xPct, false);
+    ti++;
+  }, 7000);
+}
+
+// ===== オンラインカウンター =====
+function startOnlineCounter() {
+  let count = 3 + Math.floor(Math.random()*8);
+  document.getElementById('online-count').textContent = `今ここにいる人 ${count}人`;
+  setInterval(() => {
+    count = Math.max(1, count + (Math.random()>0.5?1:-1));
+    document.getElementById('online-count').textContent = `今ここにいる人 ${count}人`;
+  }, 18000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildAvatarGrid();
+  document.getElementById('msg-input').addEventListener('keydown', e => { if (e.key==='Enter') say(); });
+
+// ===== くらしアイテム =====
+let myItemIdx = null;
+let itemPanelOpen = false;
+
+function buildItemPanel() {
+  const panel = document.getElementById('item-panel');
+  if (!panel.dataset.built) {
+    ITEMS.forEach((item, idx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'item-opt';
+      wrap.id = 'item-opt-' + idx;
+      wrap.onclick = () => selectItem(idx);
+      const img = document.createElement('img');
+      img.src = item.url;
+      img.alt = item.name;
+      wrap.appendChild(img);
+      const nm = document.createElement('div');
+      nm.className = 'item-name';
+      nm.textContent = item.name;
+      wrap.appendChild(nm);
+      panel.appendChild(wrap);
+    });
+    panel.dataset.built = '1';
+  }
+  ITEMS.forEach((_, idx) => {
+    const el = document.getElementById('item-opt-' + idx);
+    if (el) el.className = 'item-opt' + (myItemIdx === idx ? ' selected' : '');
+  });
+}
+
+function toggleItemPanel() {
+  itemPanelOpen = !itemPanelOpen;
+  const panel = document.getElementById('item-panel');
+  if (!panel) { alert('panel not found'); return; }
+  if (itemPanelOpen) buildItemPanel();
+  panel.hidden = !itemPanelOpen;
+  panel.style.cssText = itemPanelOpen 
+    ? 'position:fixed;bottom:110px;right:14px;z-index:9999;background:#1a3a1a;border:2px solid #8f8;border-radius:16px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;width:280px;'
+    : '';
+}
+
+function selectItem(idx) {
+  myItemIdx = (myItemIdx === idx) ? null : idx;
+  buildItemPanel();
+  createMyAvatar();
+  document.getElementById('item-panel').hidden = true;
+  itemPanelOpen = false;
+}
+
+// avatar に item overlay を追加（createMyAvatar内で呼ぶ）
+function addItemOverlay(avatarEl) {
+  if (myItemIdx === null) return;
+  const item = ITEMS[myItemIdx];
+  // アイテムの位置オフセット（キャラのどこに置くか）
+  const offsets = [
+    {bottom:'10px', right:'-30px'},  // コーヒー: 右手
+    {bottom:'20px', right:'-35px'},  // 本: 右手
+    {top:'-10px',  right:'-20px'},   // 傘: 右上
+    {top:'-15px',  left:'50%', transform:'translateX(-50%)'},  // 帽子: 頭上
+    {bottom:'10px', left:'-30px'},   // バッグ: 左
+    {bottom:'-10px', left:'50%', transform:'translateX(-50%)'},// 車椅子: 下（乗る）
+    {bottom:'5px',  right:'-18px'},  // 白杖: 右
+  ];
+  const off = offsets[myItemIdx] || {bottom:'10px', right:'-30px'};
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:absolute;pointer-events:none;';
+  Object.entries(off).forEach(([k,v]) => overlay.style[k] = v);
+  const img = document.createElement('img');
+  img.src = item.url;
+  img.style.cssText = 'width:44px;height:44px;object-fit:contain;';
+  overlay.appendChild(img);
+  avatarEl.style.position = 'relative';
+  avatarEl.appendChild(overlay);
+}
+
+});
+</script>
+</body>
+</html>
