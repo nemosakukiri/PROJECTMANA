@@ -340,7 +340,7 @@ function makeSprite(idx, size) {
   img.alt = c.name;
   if (size === 'sm') {
     const wrap = document.createElement('div');
-    wrap.style.cssText = 'width:64px;height:80px;display:flex;align-items:flex-end;justify-content:center;';
+    wrap.style.cssText = 'width:64px;height:80px;display:flex;align-items:center;justify-content:center;';
     img.style.cssText = 'max-width:64px;max-height:80px;width:auto;height:auto;object-fit:contain;display:block;';
     wrap.appendChild(img);
     return wrap;
