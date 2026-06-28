@@ -320,7 +320,7 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 
 
 <!-- くらしアイテム -->
-<button id="item-btn" onclick="toggleItemPanel()">持ち物 ＋</button>
+<button id="item-btn" onclick="toggleItemPanel(); this.textContent = itemPanelOpen ? '閉じる' : '持ち物 ＋'">持ち物 ＋</button>
 <div id="item-panel" hidden></div>
 <!-- 独り言ログ -->
 <div id="log-panel" style="display:none;">
@@ -671,8 +671,12 @@ function buildItemPanel() {
 function toggleItemPanel() {
   itemPanelOpen = !itemPanelOpen;
   const panel = document.getElementById('item-panel');
+  if (!panel) { alert('panel not found'); return; }
   if (itemPanelOpen) buildItemPanel();
   panel.hidden = !itemPanelOpen;
+  panel.style.cssText = itemPanelOpen 
+    ? 'position:fixed;bottom:110px;right:14px;z-index:9999;background:#1a3a1a;border:2px solid #8f8;border-radius:16px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;width:280px;'
+    : '';
 }
 
 function selectItem(idx) {
