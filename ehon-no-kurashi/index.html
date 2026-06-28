@@ -320,8 +320,8 @@ body { background: #1a1a2e; font-family: 'Hiragino Kaku Gothic Pro', 'Noto Sans 
 
 
 <!-- くらしアイテム -->
-<button id="item-btn" onclick="toggleItemPanel(); this.textContent = itemPanelOpen ? '閉じる' : '持ち物 ＋'">持ち物 ＋</button>
-<div id="item-panel" hidden></div>
+<button id="item-btn" onclick="toggleItemPanel()">持ち物 ＋</button>
+<div id="item-panel" style="display:none;position:fixed;bottom:110px;right:14px;z-index:9999;background:rgba(10,24,10,0.92);border:2px solid rgba(160,210,160,0.4);border-radius:16px;padding:12px;flex-wrap:wrap;gap:8px;width:280px;backdrop-filter:blur(12px);"></div>
 <!-- 独り言ログ -->
 <div id="log-panel" style="display:none;">
   <div id="log-header">
@@ -634,10 +634,6 @@ function startOnlineCounter() {
   }, 18000);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  buildAvatarGrid();
-  document.getElementById('msg-input').addEventListener('keydown', e => { if (e.key==='Enter') say(); });
-
 // ===== くらしアイテム =====
 let myItemIdx = null;
 let itemPanelOpen = false;
@@ -671,35 +667,35 @@ function buildItemPanel() {
 function toggleItemPanel() {
   itemPanelOpen = !itemPanelOpen;
   const panel = document.getElementById('item-panel');
-  if (!panel) { alert('panel not found'); return; }
-  if (itemPanelOpen) buildItemPanel();
-  panel.hidden = !itemPanelOpen;
-  panel.style.cssText = itemPanelOpen 
-    ? 'position:fixed;bottom:110px;right:14px;z-index:9999;background:#1a3a1a;border:2px solid #8f8;border-radius:16px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;width:280px;'
-    : '';
+  if (itemPanelOpen) {
+    buildItemPanel();
+    panel.style.display = 'flex';
+  } else {
+    panel.style.display = 'none';
+  }
+  document.getElementById('item-btn').textContent = itemPanelOpen ? '閉じる' : '持ち物 ＋';
 }
 
 function selectItem(idx) {
   myItemIdx = (myItemIdx === idx) ? null : idx;
   buildItemPanel();
   createMyAvatar();
-  document.getElementById('item-panel').hidden = true;
+  document.getElementById('item-panel').style.display = 'none';
+  document.getElementById('item-btn').textContent = '持ち物 ＋';
   itemPanelOpen = false;
 }
 
-// avatar に item overlay を追加（createMyAvatar内で呼ぶ）
 function addItemOverlay(avatarEl) {
   if (myItemIdx === null) return;
   const item = ITEMS[myItemIdx];
-  // アイテムの位置オフセット（キャラのどこに置くか）
   const offsets = [
-    {bottom:'10px', right:'-30px'},  // コーヒー: 右手
-    {bottom:'20px', right:'-35px'},  // 本: 右手
-    {top:'-10px',  right:'-20px'},   // 傘: 右上
-    {top:'-15px',  left:'50%', transform:'translateX(-50%)'},  // 帽子: 頭上
-    {bottom:'10px', left:'-30px'},   // バッグ: 左
-    {bottom:'-10px', left:'50%', transform:'translateX(-50%)'},// 車椅子: 下（乗る）
-    {bottom:'5px',  right:'-18px'},  // 白杖: 右
+    {bottom:'10px', right:'-30px'},
+    {bottom:'20px', right:'-35px'},
+    {top:'-10px',  right:'-20px'},
+    {top:'-15px',  left:'50%', transform:'translateX(-50%)'},
+    {bottom:'10px', left:'-30px'},
+    {bottom:'-10px', left:'50%', transform:'translateX(-50%)'},
+    {bottom:'5px',  right:'-18px'},
   ];
   const off = offsets[myItemIdx] || {bottom:'10px', right:'-30px'};
   const overlay = document.createElement('div');
@@ -712,6 +708,10 @@ function addItemOverlay(avatarEl) {
   avatarEl.style.position = 'relative';
   avatarEl.appendChild(overlay);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildAvatarGrid();
+  document.getElementById('msg-input').addEventListener('keydown', e => { if (e.key==='Enter') say(); });
 
 });
 </script>
