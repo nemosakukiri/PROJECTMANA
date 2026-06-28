@@ -1,5 +1,6 @@
 {
   "routes": [
+    { "src": "/hiroba-mock.html", "dest": "/hiroba-mock.html" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
