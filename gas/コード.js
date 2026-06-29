@@ -9,6 +9,12 @@ function setupApiKey() {
   Logger.log('APIキーを保存しました');
 }
 
+// Anthropic APIキー設定（一度だけ手動実行）
+function setupAnthropicKey() {
+  PropertiesService.getScriptProperties().setProperty('ANTHROPIC_API_KEY', 'ここにAnthropicAPIキーを入れて実行');
+  Logger.log('Anthropic APIキーを保存しました');
+}
+
 // ===== RSSフィードリスト =====
 const RSS_SOURCES = [
   {
@@ -115,6 +121,17 @@ const COL = {
   LAW_REFS_RAW:         'law_refs_raw',         // 記事テキストに含まれる法令名（カンマ区切り・記事直接抽出）
   INSTITUTION_REFS_RAW: 'institution_refs_raw', // 記事テキストに含まれる機関名（カンマ区切り・記事直接抽出）
   TAG_SOURCE:           'tag_source',           // タグ付与の由来：'rule'=ルールベース / 'gemini'=AI推定
+
+  // ===== v8追加：統合タグ・Claude検証・観測の窓配置 =====
+  TAGS_FIELD:        '分野タグ',       // 探索用分野タグ（生活保護・障害福祉・財政…）
+  TAGS_TARGET:       '対象者タグ',     // 探索用対象者タグ（生活保護申請者・高齢者…）
+  TAGS_ACTOR:        '行為者タグ',     // 探索用行為者タグ（福祉事務所・市区町村窓口…）
+  TAGS_EVENT_SEARCH: '出来事タグ（検索）', // 市民向け出来事タグ（申請を断られた・窓口でたらい回し…）
+  AUTHOR_TYPE:       'author_type',    // 著者種別：news / opinion / research / investigative
+  WINDOW_ID:         'window_id',      // 観測の窓配置：human_rights / democracy / welfare / finance / media / war / mental / none
+  CLAUDE_CHECK_1:    'claude_check_1', // Claude検証①結果：pass / fix / hold
+  CLAUDE_CHECK_2:    'claude_check_2', // Claude検証②結果：pass / fix / hold
+  HOLD_FLAG:         '保留',           // 保留フラグ（公開DBには出すが要確認マーク）
 };
 
 // ===== date_status の値 =====
@@ -141,148 +158,719 @@ function getColMap(sheet) {
   return map;
 }
 
-// ===== メイン関数（毎日自動実行）=====
-// ===== メイン収集（層A：Gemini非依存・必ず実行される）=====
-// RSS取得 → 原本庫相当の最低限項目を観測DBに即時保存。
-// Geminiは一切呼ばない。これにより429やAPIキー未設定でも収集は止まらない。
-// ===== メイン収集（層A：Gemini非依存・必ず実行される）=====
-// RSS取得 → 原本庫相当の最低限項目を観測DBに即時保存。
-// Geminiは一切呼ばない。これにより429やAPIキー未設定でも収集は止まらない。
+// ===== メイン収集 v8（毎日自動実行）=====
+// パイプライン：RSS収集 → Gemini統合分類 → Claude検証① → DB保存 → Claude検証②（窓配置）
+// Gemini/Claude失敗時はその記事のみスキップ（収集全体は止まらない）
 function collectNews() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const logSheet    = getOrCreateFullLogSheet(ss);
   const publicSheet = getOrCreatePublicSheet(ss);
 
-  Logger.log('===== collectNews 診断開始 =====');
+  Logger.log('===== collectNews v8 開始 =====');
   Logger.log('実行時刻: ' + new Date().toISOString());
 
-  // 1. RSSから記事を収集（Gemini不要）
-  //    RSSごとの取得件数は fetchFromRSS() 内のログで出力される
+  const geminiKey    = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+  const anthropicKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
+
+  if (!geminiKey) {
+    Logger.log('[中止] GEMINI_API_KEY が未設定。setupApiKey() を実行してください。');
+    return;
+  }
+  if (!anthropicKey) {
+    Logger.log('[中止] ANTHROPIC_API_KEY が未設定。setupAnthropicKey() を実行してください。');
+    return;
+  }
+
+  // Step1: RSS収集
   const articles = fetchFromRSS();
-  Logger.log('--- Step1: RSS取得 ---');
-  Logger.log('RSS取得合計（重複タイトル除去後）: ' + articles.length + '件');
-  if (!articles.length) {
-    Logger.log('[原因切り分け] RSS側：RSSから記事が1件も取得できていません。フィードURL・配信停止・パース失敗の可能性。');
-    return;
-  }
+  Logger.log('--- Step1: RSS取得: ' + articles.length + '件 ---');
+  if (!articles.length) { Logger.log('[中止] 記事0件'); return; }
 
-  // 取得記事のpub_dateの分布を確認（20日以前の記事しか来ていないか）
-  const pubDates = articles.map(a => a.pub_date).filter(Boolean);
-  if (pubDates.length) {
-    const sorted = pubDates.slice().sort();
-    Logger.log('取得記事の公開日範囲: ' + sorted[0] + ' 〜 ' + sorted[sorted.length - 1]);
-  } else {
-    Logger.log('取得記事に公開日（pub_date）が一件も含まれていません');
-  }
-
-  // 2. 全件ログで重複チェック（全件ログにない新着のみ処理）
-  // シート全体を1回だけ読み込んでSetにする（isDuplicate()を毎回呼ぶとAPIコールが爆発するため）
-  const logColMap   = getColMap(logSheet);
-  const logUrlIdx   = logColMap[COL.URL];
-  const logTitleIdx = logColMap[COL.TITLE];
-  const logRows     = logSheet.getDataRange().getValues();
-  const existingLogKeys = new Set();
-  logRows.slice(1).forEach(row => {
-    if (logUrlIdx   !== undefined && row[logUrlIdx])   existingLogKeys.add(row[logUrlIdx]);
-    if (logTitleIdx !== undefined && row[logTitleIdx]) existingLogKeys.add(row[logTitleIdx]);
+  // Step2: 重複チェック（全件ログ基準）
+  const logColMap = getColMap(logSheet);
+  const logRows   = logSheet.getDataRange().getValues();
+  const existingKeys = new Set();
+  logRows.slice(1).forEach(function(row) {
+    const u = logColMap[COL.URL]   !== undefined ? row[logColMap[COL.URL]]   : '';
+    const t = logColMap[COL.TITLE] !== undefined ? row[logColMap[COL.TITLE]] : '';
+    if (u) existingKeys.add(u);
+    if (t) existingKeys.add(t);
   });
 
-  let dupCount = 0;
-  let newCount = 0;
-  const newArticles = [];
-  articles.forEach(a => {
+  const newArticles = articles.filter(function(a) {
     const key = a.url || a.title;
-    if (!key || existingLogKeys.has(key)) {
-      dupCount++;
-    } else {
-      newCount++;
-      newArticles.push(a);
-    }
+    return key && !existingKeys.has(key);
   });
+  Logger.log('--- Step2: 重複除外後: ' + newArticles.length + '件 ---');
+  if (!newArticles.length) { Logger.log('[終了] 新着なし'); return; }
 
-  Logger.log('--- Step2: 重複判定（全件ログ基準） ---');
-  Logger.log('既存URL/タイトルとして判定されスキップ: ' + dupCount + '件');
-  Logger.log('新着と判定: ' + newCount + '件');
-
-  if (!newArticles.length) {
-    Logger.log('[原因切り分け] 重複判定：全件が既存扱いでスキップされました。');
-    Logger.log('  (a) RSS側が同じ記事しか返していない  (b) 列マップのズレ');
-    articles.slice(0, 3).forEach((a, i) => {
-      Logger.log('  [' + i + '] URL: ' + a.url + ' / タイトル: ' + a.title);
-    });
-    return;
-  }
-
-  // 3. 層Aのみで全件ログに一括保存（appendRowは遅いのでsetValuesで一括書き込み）
-  const logRows2Write = newArticles.map(item => buildRowLayerA(item, logSheet));
-  const logLastRow = logSheet.getLastRow();
-  const logNumCols = logSheet.getLastColumn();
-  try {
-    logSheet.getRange(logLastRow + 1, 1, logRows2Write.length, logNumCols).setValues(logRows2Write);
-  } catch(e) {
-    Logger.log('[全件ログ保存エラー] ' + e.message);
-  }
-  const savedLog = logRows2Write.length;
-  Logger.log('--- Step3: 全件ログ（原本庫相当）保存 ---');
-  Logger.log('保存成功: ' + savedLog + '件');
-
-  // 4. 公開DBにも同様に層Aのみで保存
-  // 公開DBも同様にSetで一括読み込み
-  const pubColMap   = getColMap(publicSheet);
-  const pubUrlIdx   = pubColMap[COL.URL];
-  const pubTitleIdx = pubColMap[COL.TITLE];
-  const pubRows     = publicSheet.getDataRange().getValues();
+  // 観測DB既存チェック用Set
+  const pubColMap  = getColMap(publicSheet);
+  const pubRows    = publicSheet.getDataRange().getValues();
   const existingPubKeys = new Set();
-  pubRows.slice(1).forEach(row => {
-    if (pubUrlIdx   !== undefined && row[pubUrlIdx])   existingPubKeys.add(row[pubUrlIdx]);
-    if (pubTitleIdx !== undefined && row[pubTitleIdx]) existingPubKeys.add(row[pubTitleIdx]);
+  pubRows.slice(1).forEach(function(row) {
+    const u = pubColMap[COL.URL]   !== undefined ? row[pubColMap[COL.URL]]   : '';
+    const t = pubColMap[COL.TITLE] !== undefined ? row[pubColMap[COL.TITLE]] : '';
+    if (u) existingPubKeys.add(u);
+    if (t) existingPubKeys.add(t);
   });
 
-  let savedPublic  = 0;
-  let notMatched   = 0;
-  let dupInPublic  = 0;
-  const pubRows2Write = [];
-  newArticles.forEach(item => {
-    if (!shouldAutoPublish(item)) {
-      notMatched++;
-      return;
+  const tags = loadTagMaster(ss);
+
+  // カルテシートを取得（カルテ生成のためループ前に1回だけ読み込む）
+  const karteSheet = getOrCreateKarteSheetV8(ss);
+  const karteIndex = loadKarteIndex(karteSheet); // { id, title, region, field } の軽量リスト
+
+  let savedLog = 0, savedPub = 0, heldCount = 0, skippedCount = 0, oldReprintCount = 0;
+  let newKarteCount = 0, updatedKarteCount = 0;
+  const MAX_CONSEC_ERR = 3;
+  let consecErr = 0;
+
+  // Step3: 記事ごとにパイプライン実行
+  for (let i = 0; i < newArticles.length; i++) {
+    const article = newArticles[i];
+    const titleShort = (article.title || '').slice(0, 35);
+    Logger.log('--- [' + (i+1) + '/' + newArticles.length + '] 「' + titleShort + '」 ---');
+
+    // 3a. 全件ログに先行保存（収録記録として）
+    logSheet.appendRow(buildRowLayerA(article, logSheet));
+    savedLog++;
+    existingKeys.add(article.url || article.title);
+
+    // 3b. Gemini統合分類
+    const geminiResult = classifyWithGeminiV8(article, tags, geminiKey);
+    if (!geminiResult) {
+      consecErr++;
+      Logger.log('[Gemini失敗] スキップ (' + consecErr + '/' + MAX_CONSEC_ERR + ')');
+      if (consecErr >= MAX_CONSEC_ERR) { Logger.log('[中断] API連続失敗'); break; }
+      Utilities.sleep(5000);
+      continue;
     }
-    const key = item.url || item.title;
-    if (existingPubKeys.has(key)) {
-      dupInPublic++;
-      return;
+    consecErr = 0;
+
+    if (geminiResult.is_target === false) {
+      Logger.log('[対象外] スキップ');
+      skippedCount++;
+      Utilities.sleep(500);
+      continue;
     }
-    pubRows2Write.push(buildRowLayerA(item, publicSheet));
-    existingPubKeys.add(key);
-    savedPublic++;
-  });
-  if (pubRows2Write.length > 0) {
-    const pubLastRow = publicSheet.getLastRow();
-    const pubNumCols = publicSheet.getLastColumn();
-    publicSheet.getRange(pubLastRow + 1, 1, pubRows2Write.length, pubNumCols).setValues(pubRows2Write);
+
+    // 3c. Claude統合チェック（タグ・著者・窓配置・カルテ生成を1回で）
+    Utilities.sleep(1500);
+    const claudeResult = checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey);
+    const checkedData  = applyClaudeFixes(geminiResult, claudeResult.fixes);
+    Logger.log('[Claude] check=' + claudeResult.check_result +
+      ' / window=' + claudeResult.window_id +
+      ' / karte=' + claudeResult.karte_action +
+      ' / date=' + claudeResult.date_assessment +
+      (claudeResult.reason ? ' / ' + claudeResult.reason.slice(0, 50) : '') +
+      (claudeResult.date_assessment === 'old_reprint' ? ' / 古い記事候補: ' + (claudeResult.date_reason || '').slice(0, 50) : ''));
+
+    // 3d. 観測DBに保存
+    if (!existingPubKeys.has(article.url || article.title)) {
+      publicSheet.appendRow(buildRowV8(article, checkedData, claudeResult, publicSheet));
+      existingPubKeys.add(article.url || article.title);
+      savedPub++;
+      if (claudeResult.check_result === 'hold') heldCount++;
+      if (claudeResult.date_assessment === 'old_reprint') oldReprintCount++;
+    }
+
+    // 3e. カルテ生成・更新
+    if (claudeResult.karte_action === 'new' && claudeResult.karte) {
+      const karteId = 'KARTE-' + String(_getNextKarteNumberV8(karteSheet)).padStart(4, '0');
+      karteSheet.appendRow(buildKarteRow(karteId, article, checkedData, claudeResult.karte));
+      karteIndex.push({ id: karteId, title: claudeResult.karte.title || article.title,
+                        region: checkedData.region, field: checkedData.field });
+      writeKarteIdToDb(article.url || '', karteId);
+      newKarteCount++;
+      Logger.log('[カルテ新規] ' + karteId + ': ' + (claudeResult.karte.title || '').slice(0, 35));
+
+    } else if (claudeResult.karte_action === 'merge' && claudeResult.merge_karte_id) {
+      appendUrlToKarte(karteSheet, claudeResult.merge_karte_id, article.url || '');
+      updatedKarteCount++;
+      Logger.log('[カルテ統合] → ' + claudeResult.merge_karte_id);
+    }
+
+    Utilities.sleep(2000);
   }
-
-  Logger.log('--- Step4: 観測DB（公開用）保存 ---');
-  Logger.log('観測DB追加: ' + savedPublic + '件');
-  Logger.log('キーワード不一致でスキップ（対象外相当・層Aの時点ではis_target判定はしていない）: ' + notMatched + '件');
-  Logger.log('観測DB内で既に重複と判定されスキップ: ' + dupInPublic + '件');
 
   Logger.log('');
-  Logger.log('===== collectNews サマリ =====');
-  Logger.log('RSS取得:           ' + articles.length + '件');
-  Logger.log('新着（重複除外後）: ' + newArticles.length + '件');
-  Logger.log('全件ログ保存:       ' + savedLog + '件');
-  Logger.log('観測DB追加:         ' + savedPublic + '件');
-  Logger.log('===== 層A収集完了 =====');
+  Logger.log('===== collectNews v8 サマリ =====');
+  Logger.log('全件ログ保存:     ' + savedLog + '件');
+  Logger.log('観測DB保存:       ' + savedPub + '件 (うち保留: ' + heldCount + '件 / 古い記事候補: ' + oldReprintCount + '件)');
+  Logger.log('カルテ新規:       ' + newKarteCount + '件');
+  Logger.log('カルテ統合:       ' + updatedKarteCount + '件');
+  Logger.log('対象外スキップ:   ' + skippedCount + '件');
+  Logger.log('===== 完了 =====');
+}
 
-  if (savedLog > 0 && savedPublic === 0) {
-    Logger.log('[原因切り分け] 保存処理：全件ログには保存されたが観測DBには0件。');
-    Logger.log('  → shouldAutoPublish()のキーワード判定に該当しないか、観測DB側で既に重複判定されている可能性。');
-    Logger.log('  → 表示側の問題ではなく、観測DBへの保存条件の問題です。');
+// ===== v8 パイプライン関数 =====
+
+// Gemini統合分類（1記事・全タグ一括）
+function classifyWithGeminiV8(article, tags, apiKey) {
+  const tagJson = JSON.stringify(tags);
+  const prompt =
+'あなたは日本の行政・社会構造の分析専門家です。\n' +
+'以下の記事1件を分析し、JSONで返してください。\n\n' +
+'【記事情報】\n' +
+'タイトル：' + (article.title || '') + '\n' +
+'概要：' + (article.description || '').slice(0, 300) + '\n' +
+'出典：' + (article.source_name || '') + '\n' +
+'URL：' + (article.url || '') + '\n' +
+'RSS公開日：' + (article.pub_date || '不明') + '\n\n' +
+'【判定基準】\n' +
+'is_target: MANAの観測対象（日本の行政・福祉・財政・制度運用）ならtrue。明確に無関係な記事のみfalse。\n\n' +
+'【タグリスト】\n' + tagJson + '\n\n' +
+'【観測の窓ID一覧】\n' +
+'human_rights=人権・差別・権利侵害 / democracy=民主主義・選挙・議会 / welfare=福祉・生活保護・障害・介護 / ' +
+'finance=財政・予算・行財政改革 / media=メディア・情報・報道 / war=戦争・安全保障・暴力 / ' +
+'mental=こころ・精神・自殺・孤立 / none=どの窓にも属さない\n\n' +
+'【出力形式】JSONオブジェクトのみ。コードブロック不要。\n' +
+'{"is_target":true,"date":"YYYY-MM-DD","region":"都道府県名（不明なら空）","municipality":"市区町村名（不明なら空）",' +
+'"field":"分野（生活保護/障害福祉/財政/情報公開など）","summary":"100文字以内の要約",' +
+'"tags_event":"出来事タグ（/区切り）","tags_structure":"構造タグ（/区切り・必ず1つ以上）",' +
+'"tags_evidence":"根拠タグ（/区切り）","tags_status":"状態タグ（/区切り）",' +
+'"tags_field":"分野タグ・探索用（/区切り）","tags_target":"対象者タグ・探索用（/区切り）",' +
+'"tags_actor":"行為者タグ・探索用（/区切り）","tags_event_search":"出来事タグ・市民向け検索用（/区切り）",' +
+'"severity":"高/中/低","structure_note":"構造的問題を一文で（組織・制度レベル）",' +
+'"author_type":"news/opinion/research/investigative",' +
+'"window_candidate":"human_rights/democracy/welfare/finance/media/war/mental/none"}';
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + apiKey;
+  try {
+    const res = UrlFetchApp.fetch(url, {
+      method: 'post', contentType: 'application/json',
+      payload: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1500 }
+      }),
+      muteHttpExceptions: true
+    });
+    const json = JSON.parse(res.getContentText());
+    const text = json.candidates && json.candidates[0] && json.candidates[0].content &&
+                 json.candidates[0].content.parts && json.candidates[0].content.parts[0]
+                 ? json.candidates[0].content.parts[0].text : '';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) { Logger.log('[Gemini] JSON抽出失敗: ' + text.slice(0,200)); return null; }
+    const item = JSON.parse(match[0]);
+    return {
+      is_target:         item.is_target !== false,
+      date:              item.date || formatDate(new Date()),
+      region:            item.region || '',
+      municipality:      item.municipality || '',
+      field:             item.field || '',
+      summary:           item.summary || '',
+      tags_event:        item.tags_event || '',
+      tags_structure:    item.tags_structure || '',
+      tags_evidence:     item.tags_evidence || '',
+      tags_status:       item.tags_status || '',
+      tags_field:        item.tags_field || '',
+      tags_target:       item.tags_target || '',
+      tags_actor:        item.tags_actor || '',
+      tags_event_search: item.tags_event_search || '',
+      severity:          item.severity || '中',
+      structure_note:    item.structure_note || '',
+      author_type:       item.author_type || (article.article_type || 'news'),
+      window_candidate:  item.window_candidate || 'none',
+    };
+  } catch(e) {
+    Logger.log('[Gemini例外] ' + e.message);
+    return null;
+  }
+}
+
+// Claude API共通呼び出し
+function callClaudeAPI(prompt, anthropicKey, maxTokens) {
+  maxTokens = maxTokens || 1024;
+  const url = 'https://api.anthropic.com/v1/messages';
+  try {
+    const res = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01'
+      },
+      payload: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: maxTokens,
+        messages: [{ role: 'user', content: prompt }]
+      }),
+      muteHttpExceptions: true
+    });
+    const status = res.getResponseCode();
+    if (status !== 200) {
+      Logger.log('[Claude API] HTTP ' + status + ': ' + res.getContentText().slice(0, 200));
+      return null;
+    }
+    const json = JSON.parse(res.getContentText());
+    return json.content && json.content[0] ? json.content[0].text : null;
+  } catch(e) {
+    Logger.log('[Claude API例外] ' + e.message);
+    return null;
+  }
+}
+
+// ===== Claude統合チェック（タグ・窓配置・カルテ生成を1回で）=====
+function checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey) {
+  const karteIndexJson = JSON.stringify(
+    karteIndex.slice(-200).map(function(k) {   // 直近200件に絞る（トークン節約）
+      return { id: k.id, title: k.title, region: k.region, field: k.field };
+    })
+  );
+
+  const prompt =
+'あなたはMANA（日本の行政・社会問題観測サイト）のデータキュレーターです。\n' +
+'以下の情報をもとに、JSON1つで以下をすべて同時に回答してください：\n' +
+'① Geminiの分類品質チェック＆修正\n' +
+'② 観測の窓への配置\n' +
+'③ カルテの新規生成 or 既存カルテへの統合判定\n\n' +
+'【元記事】\n' +
+'タイトル：' + (article.title || '') + '\n' +
+'出典：' + (article.source_name || '') + '\n' +
+'URL：' + (article.url || '') + '\n' +
+'概要：' + (article.description || '').slice(0, 250) + '\n\n' +
+'【Geminiの分類結果】\n' +
+'著者種別：' + (geminiResult.author_type || '') + '\n' +
+'地域：' + (geminiResult.region || '') + '　分野：' + (geminiResult.field || '') + '\n' +
+'要約：' + (geminiResult.summary || '') + '\n' +
+'構造タグ：' + (geminiResult.tags_structure || '') + '\n' +
+'出来事タグ：' + (geminiResult.tags_event || '') + '\n' +
+'根拠タグ：' + (geminiResult.tags_evidence || '') + '\n' +
+'状態タグ：' + (geminiResult.tags_status || '') + '\n' +
+'分野タグ（探索）：' + (geminiResult.tags_field || '') + '\n' +
+'対象者タグ（探索）：' + (geminiResult.tags_target || '') + '\n' +
+'行為者タグ（探索）：' + (geminiResult.tags_actor || '') + '\n' +
+'市民向け出来事タグ：' + (geminiResult.tags_event_search || '') + '\n' +
+'重要度：' + (geminiResult.severity || '') + '\n' +
+'窓候補（Gemini）：' + (geminiResult.window_candidate || '') + '\n\n' +
+'【既存カルテ一覧（直近200件）】\n' + karteIndexJson + '\n\n' +
+
+'【① チェック基準】\n' +
+'check_result: pass=問題なし / fix=修正あり / hold=内容に疑義（保留マーク）\n' +
+'著者種別：news=報道 / opinion=論説・コラム / research=研究・学術 / investigative=調査報道\n' +
+'fixesは変更が必要な項目のみ記載（省略可）\n\n' +
+
+'【② 窓の定義（最も強く関連する1つ）】\n' +
+'human_rights=人権・差別・権利侵害 / democracy=民主主義・選挙・議会 / welfare=生活保護・障害・介護・子育て\n' +
+'finance=財政・予算・行財政改革 / media=報道・情報公開・情報操作 / war=戦争・安全保障・暴力\n' +
+'mental=こころ・精神・自殺・孤立 / none=いずれの窓にも属さない\n\n' +
+
+'【③ カルテ判定基準】\n' +
+'karte_action: new=新規カルテ生成 / merge=既存カルテに統合 / skip=カルテ不要（一般ニュース・政策動向等）\n' +
+'newの場合：karte に以下を含む\n' +
+'  title（カルテ名・事案を表す名詞句）, progress（進行状況：調査中/係争中/是正済み/継続中/不明）,\n' +
+'  mana_comment（MANAとして読み解く構造的意味・1〜2文）\n' +
+'mergeの場合：merge_karte_id に既存カルテのIDを記載\n' +
+'skipの場合：karte・merge_karte_id は省略\n\n' +
+
+'【④ 古い記事の再配信チェック】\n' +
+'RSSの公開日（rss_pubDate）が新しくても、記事本文が指す出来事自体は過去のものである場合がある\n' +
+'（例：「〜年に起きた事件を振り返る」「過去の判決のまとめ記事」「数年前の制度変更の解説」等）。\n' +
+'本日の収録日時：' + new Date().toISOString().slice(0,10) + '　RSS公開日：' + (article.pub_date || '不明') + '\n' +
+'date_assessment: fresh=直近の出来事を報じている / old_reprint=過去の出来事の振り返り・まとめ・再配信 / uncertain=判断できない\n\n' +
+
+'【出力形式】JSONオブジェクトのみ。コードブロック不要。\n' +
+'{"check_result":"pass/fix/hold",' +
+'"fixes":{"summary":"省略可","tags_event":"省略可","tags_structure":"省略可","tags_evidence":"省略可",' +
+'"tags_status":"省略可","tags_field":"省略可","tags_target":"省略可","tags_actor":"省略可",' +
+'"tags_event_search":"省略可","author_type":"省略可","region":"省略可","field":"省略可"},' +
+'"reason":"修正・保留の理由（passなら空）",' +
+'"window_id":"human_rights/democracy/welfare/finance/media/war/mental/none",' +
+'"window_reason":"配置根拠（1文）",' +
+'"karte_action":"new/merge/skip",' +
+'"karte":{"title":"カルテ名","progress":"進行状況","mana_comment":"構造的意味"},' +
+'"merge_karte_id":"KARTE-xxxx（mergeの場合のみ）",' +
+'"date_assessment":"fresh/old_reprint/uncertain",' +
+'"date_reason":"判定根拠（1文・freshなら省略可）"}';
+
+  const text = callClaudeAPI(prompt, anthropicKey, 2048);
+  if (!text) {
+    return { check_result: 'hold', fixes: {}, reason: 'Claude API失敗',
+             window_id: 'none', window_reason: '', karte_action: 'skip',
+             date_assessment: 'uncertain', date_reason: 'Claude API失敗' };
   }
 
-  Logger.log('===== 層A収集完了。Gemini分類は classifyUnclassifiedBatch() で後続実行してください =====');
-  // 当事者メディア収集は collectTojishaSources()（6時30分トリガー）で別実行
+  try {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) {
+      return { check_result: 'hold', fixes: {}, reason: 'JSON抽出失敗',
+               window_id: 'none', window_reason: '', karte_action: 'skip',
+               date_assessment: 'uncertain', date_reason: 'JSON抽出失敗' };
+    }
+    const obj = JSON.parse(match[0]);
+    return {
+      check_result:    obj.check_result    || 'hold',
+      fixes:           obj.fixes           || {},
+      reason:          obj.reason          || '',
+      window_id:       obj.window_id       || 'none',
+      window_reason:   obj.window_reason   || '',
+      karte_action:    obj.karte_action    || 'skip',
+      karte:           obj.karte           || null,
+      merge_karte_id:  obj.merge_karte_id  || '',
+      date_assessment: obj.date_assessment || 'uncertain',
+      date_reason:     obj.date_reason     || '',
+    };
+  } catch(e) {
+    return { check_result: 'hold', fixes: {}, reason: 'パースエラー: ' + e.message,
+             window_id: 'none', window_reason: '', karte_action: 'skip',
+             date_assessment: 'uncertain', date_reason: 'パースエラー' };
+  }
+}
+
+// claudeResult.fixesをgeminiResultにマージ（旧applyClaudeCheck1の統合版）
+function applyClaudeFixes(geminiResult, fixes) {
+  if (!fixes || Object.keys(fixes).length === 0) return geminiResult;
+  return Object.assign({}, geminiResult, {
+    summary:           fixes.summary           || geminiResult.summary,
+    tags_event:        fixes.tags_event        || geminiResult.tags_event,
+    tags_structure:    fixes.tags_structure    || geminiResult.tags_structure,
+    tags_evidence:     fixes.tags_evidence     || geminiResult.tags_evidence,
+    tags_status:       fixes.tags_status       || geminiResult.tags_status,
+    tags_field:        fixes.tags_field        || geminiResult.tags_field,
+    tags_target:       fixes.tags_target       || geminiResult.tags_target,
+    tags_actor:        fixes.tags_actor        || geminiResult.tags_actor,
+    tags_event_search: fixes.tags_event_search || geminiResult.tags_event_search,
+    author_type:       fixes.author_type       || geminiResult.author_type,
+    region:            fixes.region            || geminiResult.region,
+    field:             fixes.field             || geminiResult.field,
+  });
+}
+
+// カルテシートの軽量インデックスを読み込む（ID・タイトル・地域・分野のみ）
+function loadKarteIndex(karteSheet) {
+  const data = karteSheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+  const headers = data[0];
+  const idIdx     = headers.indexOf('カルテID');
+  const titleIdx  = headers.indexOf('事案名');
+  const regionIdx = headers.indexOf('地域');
+  const fieldIdx  = headers.indexOf('分野');
+  return data.slice(1).map(function(row) {
+    return {
+      id:     idIdx     >= 0 ? (row[idIdx]     || '') : '',
+      title:  titleIdx  >= 0 ? (row[titleIdx]  || '') : '',
+      region: regionIdx >= 0 ? (row[regionIdx] || '') : '',
+      field:  fieldIdx  >= 0 ? (row[fieldIdx]  || '') : '',
+    };
+  }).filter(function(k) { return k.id; });
+}
+
+// カルテシートの最大番号+1を返す
+function _getNextKarteNumberV8(karteSheet) {
+  const data   = karteSheet.getDataRange().getValues();
+  const idIdx  = data[0].indexOf('カルテID');
+  let maxNum = 0;
+  data.slice(1).forEach(function(row) {
+    const m = String(row[idIdx] || '').match(/KARTE-(\d+)/);
+    if (m) { const n = parseInt(m[1], 10); if (n > maxNum) maxNum = n; }
+  });
+  return maxNum + 1;
+}
+
+// カルテ行データを組み立てる
+function buildKarteRow(karteId, article, checkedData, karteData) {
+  return [
+    karteId,
+    karteData.title   || article.title || '',
+    checkedData.region        || '',
+    checkedData.field         || '',
+    checkedData.summary       || '',
+    karteData.progress        || '不明',
+    checkedData.tags_event    || '',
+    checkedData.tags_structure|| '',
+    checkedData.tags_status   || '',
+    checkedData.tags_evidence || '',
+    article.url               || '',   // related_urls（初回は代表URLのみ）
+    karteData.mana_comment    || '',
+    new Date().toISOString(),          // created_at
+    new Date().toISOString(),          // updated_at
+    checkedData.date          || '',   // start_date
+    checkedData.tags_field    || '',   // profile_field
+    checkedData.tags_target   || '',   // profile_target
+    checkedData.tags_actor    || '',   // profile_actor
+    checkedData.tags_event_search || '',// profile_event
+    checkedData.tags_status   || '',   // profile_status
+    '',                                // profile_institution
+  ];
+}
+
+// 既存カルテのrelated_urlsにURLを追記する
+function appendUrlToKarte(karteSheet, karteId, url) {
+  if (!url) return;
+  const data   = karteSheet.getDataRange().getValues();
+  const headers = data[0];
+  const idIdx   = headers.indexOf('カルテID');
+  const urlIdx  = headers.indexOf('関連URL');
+  const updIdx  = headers.indexOf('更新日時');
+  if (idIdx < 0 || urlIdx < 0) return;
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idIdx]) === karteId) {
+      const existing = data[i][urlIdx] ? String(data[i][urlIdx]) : '';
+      const newUrls  = existing ? existing + '\n' + url : url;
+      karteSheet.getRange(i + 1, urlIdx  + 1).setValue(newUrls);
+      if (updIdx >= 0) karteSheet.getRange(i + 1, updIdx + 1).setValue(new Date().toISOString());
+      return;
+    }
+  }
+}
+
+// カルテシートを取得または作成（v8版・列名を統一）
+function getOrCreateKarteSheetV8(ss) {
+  let sheet = ss.getSheetByName('カルテ');
+  if (!sheet) {
+    sheet = ss.insertSheet('カルテ');
+    const headers = [
+      'カルテID','事案名','地域','分野','要約','進行状況',
+      '出来事タグ','構造タグ','状態タグ','根拠タグ','関連URL','MANAコメント',
+      '作成日時','更新日時','開始日',
+      '分野タグ','対象者タグ','行為者タグ','出来事タグ（検索）','状態タグ（探索）','固有機関名',
+    ];
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+    const h = sheet.getRange(1, 1, 1, headers.length);
+    h.setBackground('#0f0e0d'); h.setFontColor('#faf9f6'); h.setFontWeight('bold');
+    sheet.setColumnWidth(2, 280); sheet.setColumnWidth(5, 350);
+  }
+  return sheet;
+}
+
+// ===== （旧）Claude検証①：後方互換のため残置 =====
+// 新コードは checkWithClaudeV8() を使う
+function checkWithClaude1(article, geminiResult, anthropicKey) {
+  const prompt =
+'あなたは日本の行政・社会問題の観測データベースMANAの品質管理担当です。\n' +
+'GeminiがタグをつけたニュースデータをチェックしてJSON形式で評価してください。\n\n' +
+'【元記事情報】\n' +
+'タイトル：' + (article.title || '') + '\n' +
+'出典：' + (article.source_name || '') + '\n' +
+'URL：' + (article.url || '') + '\n' +
+'概要：' + (article.description || '').slice(0, 200) + '\n\n' +
+'【Geminiの分類結果】\n' +
+'要約：' + (geminiResult.summary || '') + '\n' +
+'地域：' + (geminiResult.region || '') + '\n' +
+'分野：' + (geminiResult.field || '') + '\n' +
+'著者種別：' + (geminiResult.author_type || '') + '\n' +
+'出来事タグ：' + (geminiResult.tags_event || '') + '\n' +
+'構造タグ：' + (geminiResult.tags_structure || '') + '\n' +
+'根拠タグ：' + (geminiResult.tags_evidence || '') + '\n' +
+'状態タグ：' + (geminiResult.tags_status || '') + '\n' +
+'分野タグ（探索）：' + (geminiResult.tags_field || '') + '\n' +
+'対象者タグ（探索）：' + (geminiResult.tags_target || '') + '\n' +
+'行為者タグ（探索）：' + (geminiResult.tags_actor || '') + '\n' +
+'市民向け出来事タグ：' + (geminiResult.tags_event_search || '') + '\n' +
+'重要度：' + (geminiResult.severity || '') + '\n\n' +
+'【チェック項目】\n' +
+'1. 著者種別（author_type）が正しいか：news=報道記事 / opinion=論説・コラム・識者の意見 / research=研究・学術 / investigative=調査報道\n' +
+'2. タグが記事の内容と合致しているか（過剰・不足・ズレを検出）\n' +
+'3. 要約が100文字以内で正確か\n' +
+'4. 地域・分野の判定が正しいか\n' +
+'5. MANAの観測対象（日本の行政・福祉・財政・制度運用の構造的問題）として適切か\n\n' +
+'【評価基準】\n' +
+'pass = 問題なし\n' +
+'fix  = 修正が必要（fixesに修正内容を入れる。変更不要な項目は省略）\n' +
+'hold = 内容に疑義あり・要確認（判断しきれない場合。DB保存はするが保留マーク）\n\n' +
+'【出力形式】JSONのみ。\n' +
+'{"result":"pass/fix/hold","fixes":{"summary":"修正後の要約（変更なければ省略）","tags_event":"修正後（省略可）","tags_structure":"修正後（省略可）","author_type":"修正後（省略可）","region":"修正後（省略可）","field":"修正後（省略可）"},"reason":"修正・保留の理由（passなら空）"}';
+
+  const text = callClaudeAPI(prompt, anthropicKey, 1024);
+  if (!text) return { result: 'hold', fixes: {}, reason: 'Claude API失敗' };
+
+  try {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return { result: 'hold', fixes: {}, reason: 'JSON抽出失敗: ' + text.slice(0,100) };
+    const obj = JSON.parse(match[0]);
+    return {
+      result:  obj.result || 'hold',
+      fixes:   obj.fixes  || {},
+      reason:  obj.reason || '',
+    };
+  } catch(e) {
+    return { result: 'hold', fixes: {}, reason: 'パースエラー: ' + e.message };
+  }
+}
+
+// Claude検証①の修正をGemini結果にマージ
+function applyClaudeCheck1(geminiResult, check1) {
+  if (check1.result !== 'fix' || !check1.fixes) return geminiResult;
+  const f = check1.fixes;
+  return Object.assign({}, geminiResult, {
+    summary:           f.summary           || geminiResult.summary,
+    tags_event:        f.tags_event        || geminiResult.tags_event,
+    tags_structure:    f.tags_structure    || geminiResult.tags_structure,
+    tags_evidence:     f.tags_evidence     || geminiResult.tags_evidence,
+    tags_status:       f.tags_status       || geminiResult.tags_status,
+    tags_field:        f.tags_field        || geminiResult.tags_field,
+    tags_target:       f.tags_target       || geminiResult.tags_target,
+    tags_actor:        f.tags_actor        || geminiResult.tags_actor,
+    tags_event_search: f.tags_event_search || geminiResult.tags_event_search,
+    author_type:       f.author_type       || geminiResult.author_type,
+    region:            f.region            || geminiResult.region,
+    field:             f.field             || geminiResult.field,
+  });
+}
+
+// Claude検証②：観測の窓への配置チェック
+function checkWithClaude2(article, checkedData, anthropicKey) {
+  const prompt =
+'あなたはMANA（日本の行政・社会観測サイト）の「観測の窓」担当です。\n' +
+'この記事をどの窓に配置すべきか判断してください。\n\n' +
+'【記事データ】\n' +
+'タイトル：' + (article.title || '') + '\n' +
+'出典：' + (article.source_name || '') + '\n' +
+'著者種別：' + (checkedData.author_type || '') + '\n' +
+'分野：' + (checkedData.field || '') + '\n' +
+'要約：' + (checkedData.summary || '') + '\n' +
+'構造タグ：' + (checkedData.tags_structure || '') + '\n' +
+'出来事タグ：' + (checkedData.tags_event || '') + '\n' +
+'Geminiが提案した窓：' + (checkedData.window_candidate || '') + '\n\n' +
+'【窓の定義（重複配置は避け、最も強く関連する1つを選ぶ）】\n' +
+'human_rights = 人権・差別・権利侵害・当事者への不当な扱い\n' +
+'democracy    = 民主主義・選挙・議会・公共討議・情報操作\n' +
+'welfare      = 生活保護・障害福祉・介護・子育て・住宅支援\n' +
+'finance      = 財政・予算・行財政改革・公共施設・指定管理\n' +
+'media        = 報道・情報公開・SNS・プロパガンダ\n' +
+'war          = 戦争・安全保障・暴力・武力・国際紛争\n' +
+'mental       = こころの問題・精神疾患・自殺・孤立・依存\n' +
+'none         = 観測DBには残すが、いずれの窓にも配置しない\n\n' +
+'【配置の注意】\n' +
+'- 著者が個人の論説（opinion）でも、内容が窓の定義に合致すれば配置する\n' +
+'- 海外の事例は原則 none\n' +
+'- 複数の窓に関係する場合は最も強く関連する1つを選ぶ\n' +
+'- 確信が持てない場合は hold を返す\n\n' +
+'【出力形式】JSONのみ。\n' +
+'{"result":"pass/fix/hold","window_id":"human_rights/democracy/welfare/finance/media/war/mental/none","reason":"配置根拠（1〜2文）"}';
+
+  const text = callClaudeAPI(prompt, anthropicKey, 512);
+  if (!text) return { result: 'hold', window_id: 'none', reason: 'Claude API失敗' };
+
+  try {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return { result: 'hold', window_id: 'none', reason: 'JSON抽出失敗' };
+    const obj = JSON.parse(match[0]);
+    return {
+      result:    obj.result    || 'hold',
+      window_id: obj.window_id || 'none',
+      reason:    obj.reason    || '',
+    };
+  } catch(e) {
+    return { result: 'hold', window_id: 'none', reason: 'パースエラー: ' + e.message };
+  }
+}
+
+// v8用行データの組み立て（全タグ・Claude統合検証結果付き）
+// claudeResult: checkWithClaudeV8() の戻り値オブジェクト
+function buildRowV8(article, checkedData, claudeResult, sheet) {
+  const colMap = getColMap(sheet);
+  const numCols = sheet.getLastColumn();
+  const row = new Array(numCols).fill('');
+
+  const collectedAt = new Date().toISOString();
+  const rssPubDate  = article.pub_date || '';
+  const hasBodyCache = !!(article.body_cache && article.body_cache.trim());
+  const checkResult     = claudeResult.check_result    || 'hold';
+  const windowId        = claudeResult.window_id       || 'none';
+  const dateAssessment  = claudeResult.date_assessment || 'uncertain';
+  // Claudeが「過去の出来事の再配信」と判定した場合は古い記事フラグを立てる。
+  // uncertainは保留せず未確認のまま残す（fresh以外を即座に隠すと誤判定の影響が大きいため）。
+  const isOldReprint = dateAssessment === 'old_reprint';
+
+  function set(colName, value) {
+    const idx = colMap[colName];
+    if (idx !== undefined) row[idx] = value;
+  }
+
+  // 基本情報
+  set(COL.TITLE,           article.title || '');
+  set(COL.URL,             article.url   || '');
+  set(COL.SOURCE,          article.source_name || '');
+  set(COL.COLLECTED_AT,    collectedAt);
+  set(COL.PUB_DATE,        rssPubDate);
+  set(COL.RSS_SUMMARY,     article.description || '');
+  set(COL.RSS_PUBDATE,     rssPubDate);
+  set(COL.GOOGLE_NEWS_URL, article.url || '');
+  set(COL.DATE_STATUS,     isOldReprint ? DATE_STATUS.NEEDS_REVIEW : DATE_STATUS.UNCONFIRMED);
+  set(COL.OLD_FLAG,        isOldReprint ? '古い記事候補' : '');
+  set(COL.BODY_CACHE_FLAG, hasBodyCache ? 'あり' : 'なし');
+  set(COL.ORIG_ID,         article.orig_id || '');
+
+  // Gemini+Claude検証済みデータ
+  set(COL.DATE,           checkedData.date           || '');
+  set(COL.REGION,         checkedData.region         || '');
+  set(COL.MUNICIPALITY,   checkedData.municipality   || '');
+  set(COL.FIELD,          checkedData.field          || '');
+  set(COL.SUMMARY,        checkedData.summary        || '');
+  set(COL.TAGS_EVENT,     checkedData.tags_event     || '');
+  set(COL.TAGS_STRUCTURE, checkedData.tags_structure || '');
+  set(COL.TAGS_EVIDENCE,  checkedData.tags_evidence  || '');
+  set(COL.TAGS_STATUS,    checkedData.tags_status    || '');
+  set(COL.SEVERITY,       checkedData.severity       || '中');
+  set(COL.STRUCT_NOTE,    checkedData.structure_note || '');
+
+  // v8新列
+  set(COL.TAGS_FIELD,        checkedData.tags_field        || '');
+  set(COL.TAGS_TARGET,       checkedData.tags_target       || '');
+  set(COL.TAGS_ACTOR,        checkedData.tags_actor        || '');
+  set(COL.TAGS_EVENT_SEARCH, checkedData.tags_event_search || '');
+  set(COL.AUTHOR_TYPE,       checkedData.author_type       || '');
+  set(COL.WINDOW_ID,         windowId);
+  set(COL.CLAUDE_CHECK_1,    checkResult);
+  set(COL.HOLD_FLAG,         checkResult === 'hold' ? '保留' : '');
+
+  // メタデータ
+  const titleNorm = normalizeTitle(article.title);
+  const domain    = extractDomain(article.url);
+  set(COL.TITLE_NORMALIZED,     titleNorm);
+  set(COL.SOURCE_DOMAIN,        domain);
+  set(COL.DEDUP_HASH,           computeDedupHash(titleNorm, rssPubDate, domain));
+  set(COL.LAW_REFS_RAW,         extractLawRefs((article.title || '') + ' ' + (article.description || '')));
+  set(COL.INSTITUTION_REFS_RAW, extractInstitutionRefs((article.title || '') + ' ' + (article.description || '')));
+  set(COL.TAG_SOURCE,           'gemini+claude');
+  set(COL.ARTICLE_TYPE,         checkedData.author_type || article.article_type || '');
+  set(COL.CLASSIFY_STATUS,      CLASSIFY_STATUS.DONE);
+  set(COL.GEMINI_DONE,          true);
+
+  return row;
+}
+
+// 観測DBの当該URLの行にカルテIDを書き込む
+function writeKarteIdToDb(url, karteId) {
+  if (!url || !karteId) return;
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(PUBLIC_SHEET);
+  if (!sheet) return;
+  const colMap = getColMap(sheet);
+  const urlIdx = colMap[COL.URL];
+  const karteColIdx = colMap['カルテID'];
+  if (urlIdx === undefined || karteColIdx === undefined) return;
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][urlIdx] === url) {
+      sheet.getRange(i + 1, karteColIdx + 1).setValue(karteId);
+      return;
+    }
+  }
+}
+
+// 観測DBの当該URLの行にwindow_idとclaudeCheck2を書き戻す
+function writeWindowIdToDb(sheet, key, windowId, check2Result) {
+  const colMap   = getColMap(sheet);
+  const urlIdx   = colMap[COL.URL];
+  const titleIdx = colMap[COL.TITLE];
+  const winIdx   = colMap[COL.WINDOW_ID];
+  const chk2Idx  = colMap[COL.CLAUDE_CHECK_2];
+  if (winIdx === undefined) return;
+
+  const data     = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    const rowUrl   = urlIdx   !== undefined ? data[i][urlIdx]   : '';
+    const rowTitle = titleIdx !== undefined ? data[i][titleIdx] : '';
+    if (rowUrl === key || rowTitle === key) {
+      sheet.getRange(i + 1, winIdx  + 1).setValue(windowId);
+      if (chk2Idx !== undefined) sheet.getRange(i + 1, chk2Idx + 1).setValue(check2Result);
+      return;
+    }
+  }
 }
 
 // ===== 層A行データの組み立て（列名マップに基づく・列順非依存）=====
@@ -1300,20 +1888,40 @@ function formatDate(date) {
     String(date.getDate()).padStart(2,'0');
 }
 
-// ===== トリガー設定 =====
-// 6:00 collectNews（一般ニュース収集）
+// ===== トリガー設定 v8 =====
+// 6:00 collectNews（RSS収集＋Gemini分類＋Claude検証①②を1パスで実行）
 // 6:30 collectTojishaSources（当事者メディア収集・別関数で時間分散）
-// 7:00 classifyUnclassifiedBatch（観測DB Gemini分類）
-// 8:00 classifyTojishaArticles（当事者の声 Gemini分類、10件/回）
-// 9:00 reviewTojishaWithClaude（当事者の声 Claude再確認、5件/回）
+// ※ classifyUnclassifiedBatch・classifyTojishaArticles・reviewTojishaWithClaude は廃止
 function setDailyTrigger() {
   ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('collectNews').timeBased().everyDays(1).atHour(6).create();
   ScriptApp.newTrigger('collectTojishaSources').timeBased().everyDays(1).atHour(6).nearMinute(30).create();
-  ScriptApp.newTrigger('classifyUnclassifiedBatch').timeBased().everyDays(1).atHour(7).create();
-  ScriptApp.newTrigger('classifyTojishaArticles').timeBased().everyDays(1).atHour(8).create();
-  ScriptApp.newTrigger('reviewTojishaWithClaude').timeBased().everyDays(1).atHour(9).create();
-  Logger.log('トリガー設定完了: collectNews（6:00）+ collectTojishaSources（6:30）+ classifyUnclassifiedBatch（7:00）+ classifyTojishaArticles（8:00）+ reviewTojishaWithClaude（9:00）');
+  Logger.log('トリガー設定完了: collectNews（6:00）+ collectTojishaSources（6:30）');
+}
+
+// ===== v8マイグレーション：既存シートにv8新列を追加（一度だけ手動実行）=====
+function addV8Columns() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetNames = ['kansokuDB', '観測DB（全件ログ）'];
+  const NEW_COLS = [
+    COL.TAGS_FIELD, COL.TAGS_TARGET, COL.TAGS_ACTOR, COL.TAGS_EVENT_SEARCH,
+    COL.AUTHOR_TYPE, COL.WINDOW_ID, COL.CLAUDE_CHECK_1, COL.CLAUDE_CHECK_2, COL.HOLD_FLAG,
+  ];
+
+  sheetNames.forEach(function(name) {
+    const sheet = ss.getSheetByName(name);
+    if (!sheet) { Logger.log(name + ': シートなし・スキップ'); return; }
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const missing = NEW_COLS.filter(function(c) { return !headers.includes(c); });
+    if (!missing.length) { Logger.log(name + ': 全列あり・スキップ'); return; }
+    let lastCol = sheet.getLastColumn();
+    missing.forEach(function(colName) {
+      lastCol++;
+      sheet.getRange(1, lastCol).setValue(colName);
+    });
+    Logger.log(name + ': ' + missing.length + '列追加 → ' + missing.join(', '));
+  });
+  Logger.log('===== addV8Columns 完了 =====');
 }
 
 // ===== 既存kansokuDBシートに「公開日」「古い記事」列を追加 =====
@@ -3601,45 +4209,4 @@ function backfillArticleType() {
     updated++;
   }
   Logger.log('backfillArticleType完了: ' + updated + '件を補完');
-}
-
-// 掲示板申請フォームに質問を追加する（一度だけ実行）
-function addQuestionsToForm() {
-  var formId = '1EUfVDXutxNFrts9GDP593wWHHQGqHTN1cNv3eVxp_aY';
-  var form = FormApp.openById(formId);
-
-  // 既存の質問をクリアして作り直す
-  var items = form.getItems();
-  for (var i = items.length - 1; i >= 0; i--) {
-    form.deleteItem(items[i]);
-  }
-
-  form.setTitle('掲示板掲載申請');
-  form.setDescription('絵本のくらし広場の掲示板への掲載を希望される企業・団体の方はこちらからお申し込みください。運営が内容を確認し、承認後に掲載いたします。');
-
-  form.addTextItem()
-    .setTitle('団体・企業名')
-    .setRequired(true);
-
-  form.addTextItem()
-    .setTitle('ご連絡先メールアドレス')
-    .setHelpText('返信先のメールアドレスをご入力ください')
-    .setRequired(true);
-
-  form.addMultipleChoiceItem()
-    .setTitle('種別')
-    .setChoiceValues(['企業', '行政・公的機関', '支援団体・NPO', '研究・学術', 'その他'])
-    .setRequired(true);
-
-  form.addParagraphTextItem()
-    .setTitle('掲載したい内容')
-    .setHelpText('掲示板に掲載したいメッセージや情報をご記入ください（300字以内）')
-    .setRequired(true);
-
-  form.addParagraphTextItem()
-    .setTitle('なぜこの場所への掲載を希望しますか')
-    .setHelpText('このサービスの利用者との関わり方や、掲載の目的をお聞かせください')
-    .setRequired(true);
-
-  Logger.log('完了：' + form.getPublishedUrl());
 }
