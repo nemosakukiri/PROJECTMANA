@@ -216,7 +216,13 @@ function collectNews() {
   });
 
   const tags = loadTagMaster(ss);
+
+  // カルテシートを取得（カルテ生成のためループ前に1回だけ読み込む）
+  const karteSheet = getOrCreateKarteSheetV8(ss);
+  const karteIndex = loadKarteIndex(karteSheet); // { id, title, region, field } の軽量リスト
+
   let savedLog = 0, savedPub = 0, heldCount = 0, skippedCount = 0;
+  let newKarteCount = 0, updatedKarteCount = 0;
   const MAX_CONSEC_ERR = 3;
   let consecErr = 0;
 
@@ -226,9 +232,8 @@ function collectNews() {
     const titleShort = (article.title || '').slice(0, 35);
     Logger.log('--- [' + (i+1) + '/' + newArticles.length + '] 「' + titleShort + '」 ---');
 
-    // 3a. 全件ログに先行保存（タグなし・収録記録として）
-    const rawRow = buildRowLayerA(article, logSheet);
-    logSheet.appendRow(rawRow);
+    // 3a. 全件ログに先行保存（収録記録として）
+    logSheet.appendRow(buildRowLayerA(article, logSheet));
     savedLog++;
     existingKeys.add(article.url || article.title);
 
@@ -243,7 +248,6 @@ function collectNews() {
     }
     consecErr = 0;
 
-    // 3c. Gemini判定：対象外ならスキップ
     if (geminiResult.is_target === false) {
       Logger.log('[対象外] スキップ');
       skippedCount++;
@@ -251,29 +255,37 @@ function collectNews() {
       continue;
     }
 
-    // 3d. Claude検証①（タグ品質・著者・DB内容チェック）
+    // 3c. Claude統合チェック（タグ・著者・窓配置・カルテ生成を1回で）
     Utilities.sleep(1500);
-    const check1 = checkWithClaude1(article, geminiResult, anthropicKey);
-    const checkedData = applyClaudeCheck1(geminiResult, check1);
-    Logger.log('[Claude①] ' + check1.result + (check1.reason ? ' / ' + check1.reason.slice(0,50) : ''));
+    const claudeResult = checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey);
+    const checkedData  = applyClaudeFixes(geminiResult, claudeResult.fixes);
+    Logger.log('[Claude] check=' + claudeResult.check_result +
+      ' / window=' + claudeResult.window_id +
+      ' / karte=' + claudeResult.karte_action +
+      (claudeResult.reason ? ' / ' + claudeResult.reason.slice(0, 50) : ''));
 
-    // 3e. 観測DBに保存（保留フラグ付きも含め全件保存）
+    // 3d. 観測DBに保存
     if (!existingPubKeys.has(article.url || article.title)) {
-      const pubRow = buildRowV8(article, checkedData, check1.result, logSheet);
-      publicSheet.appendRow(buildRowV8(article, checkedData, check1.result, publicSheet));
+      publicSheet.appendRow(buildRowV8(article, checkedData, claudeResult, publicSheet));
       existingPubKeys.add(article.url || article.title);
       savedPub++;
-      if (check1.result === 'hold') heldCount++;
+      if (claudeResult.check_result === 'hold') heldCount++;
     }
 
-    // 3f. Claude検証②（観測の窓への配置）
-    Utilities.sleep(1500);
-    const check2 = checkWithClaude2(article, checkedData, anthropicKey);
-    Logger.log('[Claude②] window_id=' + check2.window_id + ' / ' + check2.result);
+    // 3e. カルテ生成・更新
+    if (claudeResult.karte_action === 'new' && claudeResult.karte) {
+      const karteId = 'KARTE-' + String(_getNextKarteNumberV8(karteSheet)).padStart(4, '0');
+      karteSheet.appendRow(buildKarteRow(karteId, article, checkedData, claudeResult.karte));
+      karteIndex.push({ id: karteId, title: claudeResult.karte.title || article.title,
+                        region: checkedData.region, field: checkedData.field });
+      writeKarteIdToDb(article.url || '', karteId);
+      newKarteCount++;
+      Logger.log('[カルテ新規] ' + karteId + ': ' + (claudeResult.karte.title || '').slice(0, 35));
 
-    // 3g. window_id を観測DBの当該行に書き戻す
-    if (check2.window_id && check2.window_id !== 'none') {
-      writeWindowIdToDb(publicSheet, article.url || article.title, check2.window_id, check2.result);
+    } else if (claudeResult.karte_action === 'merge' && claudeResult.merge_karte_id) {
+      appendUrlToKarte(karteSheet, claudeResult.merge_karte_id, article.url || '');
+      updatedKarteCount++;
+      Logger.log('[カルテ統合] → ' + claudeResult.merge_karte_id);
     }
 
     Utilities.sleep(2000);
@@ -281,9 +293,11 @@ function collectNews() {
 
   Logger.log('');
   Logger.log('===== collectNews v8 サマリ =====');
-  Logger.log('全件ログ保存: ' + savedLog + '件');
-  Logger.log('観測DB保存:   ' + savedPub + '件 (うち保留: ' + heldCount + '件)');
-  Logger.log('対象外スキップ: ' + skippedCount + '件');
+  Logger.log('全件ログ保存:     ' + savedLog + '件');
+  Logger.log('観測DB保存:       ' + savedPub + '件 (うち保留: ' + heldCount + '件)');
+  Logger.log('カルテ新規:       ' + newKarteCount + '件');
+  Logger.log('カルテ統合:       ' + updatedKarteCount + '件');
+  Logger.log('対象外スキップ:   ' + skippedCount + '件');
   Logger.log('===== 完了 =====');
 }
 
@@ -394,7 +408,219 @@ function callClaudeAPI(prompt, anthropicKey, maxTokens) {
   }
 }
 
-// Claude検証①：Geminiの出力品質チェック（タグ・著者・DB内容）
+// ===== Claude統合チェック（タグ・窓配置・カルテ生成を1回で）=====
+function checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey) {
+  const karteIndexJson = JSON.stringify(
+    karteIndex.slice(-200).map(function(k) {   // 直近200件に絞る（トークン節約）
+      return { id: k.id, title: k.title, region: k.region, field: k.field };
+    })
+  );
+
+  const prompt =
+'あなたはMANA（日本の行政・社会問題観測サイト）のデータキュレーターです。\n' +
+'以下の情報をもとに、JSON1つで以下をすべて同時に回答してください：\n' +
+'① Geminiの分類品質チェック＆修正\n' +
+'② 観測の窓への配置\n' +
+'③ カルテの新規生成 or 既存カルテへの統合判定\n\n' +
+'【元記事】\n' +
+'タイトル：' + (article.title || '') + '\n' +
+'出典：' + (article.source_name || '') + '\n' +
+'URL：' + (article.url || '') + '\n' +
+'概要：' + (article.description || '').slice(0, 250) + '\n\n' +
+'【Geminiの分類結果】\n' +
+'著者種別：' + (geminiResult.author_type || '') + '\n' +
+'地域：' + (geminiResult.region || '') + '　分野：' + (geminiResult.field || '') + '\n' +
+'要約：' + (geminiResult.summary || '') + '\n' +
+'構造タグ：' + (geminiResult.tags_structure || '') + '\n' +
+'出来事タグ：' + (geminiResult.tags_event || '') + '\n' +
+'根拠タグ：' + (geminiResult.tags_evidence || '') + '\n' +
+'状態タグ：' + (geminiResult.tags_status || '') + '\n' +
+'分野タグ（探索）：' + (geminiResult.tags_field || '') + '\n' +
+'対象者タグ（探索）：' + (geminiResult.tags_target || '') + '\n' +
+'行為者タグ（探索）：' + (geminiResult.tags_actor || '') + '\n' +
+'市民向け出来事タグ：' + (geminiResult.tags_event_search || '') + '\n' +
+'重要度：' + (geminiResult.severity || '') + '\n' +
+'窓候補（Gemini）：' + (geminiResult.window_candidate || '') + '\n\n' +
+'【既存カルテ一覧（直近200件）】\n' + karteIndexJson + '\n\n' +
+
+'【① チェック基準】\n' +
+'check_result: pass=問題なし / fix=修正あり / hold=内容に疑義（保留マーク）\n' +
+'著者種別：news=報道 / opinion=論説・コラム / research=研究・学術 / investigative=調査報道\n' +
+'fixesは変更が必要な項目のみ記載（省略可）\n\n' +
+
+'【② 窓の定義（最も強く関連する1つ）】\n' +
+'human_rights=人権・差別・権利侵害 / democracy=民主主義・選挙・議会 / welfare=生活保護・障害・介護・子育て\n' +
+'finance=財政・予算・行財政改革 / media=報道・情報公開・情報操作 / war=戦争・安全保障・暴力\n' +
+'mental=こころ・精神・自殺・孤立 / none=いずれの窓にも属さない\n\n' +
+
+'【③ カルテ判定基準】\n' +
+'karte_action: new=新規カルテ生成 / merge=既存カルテに統合 / skip=カルテ不要（一般ニュース・政策動向等）\n' +
+'newの場合：karte に以下を含む\n' +
+'  title（カルテ名・事案を表す名詞句）, progress（進行状況：調査中/係争中/是正済み/継続中/不明）,\n' +
+'  mana_comment（MANAとして読み解く構造的意味・1〜2文）\n' +
+'mergeの場合：merge_karte_id に既存カルテのIDを記載\n' +
+'skipの場合：karte・merge_karte_id は省略\n\n' +
+
+'【出力形式】JSONオブジェクトのみ。コードブロック不要。\n' +
+'{"check_result":"pass/fix/hold",' +
+'"fixes":{"summary":"省略可","tags_event":"省略可","tags_structure":"省略可","tags_evidence":"省略可",' +
+'"tags_status":"省略可","tags_field":"省略可","tags_target":"省略可","tags_actor":"省略可",' +
+'"tags_event_search":"省略可","author_type":"省略可","region":"省略可","field":"省略可"},' +
+'"reason":"修正・保留の理由（passなら空）",' +
+'"window_id":"human_rights/democracy/welfare/finance/media/war/mental/none",' +
+'"window_reason":"配置根拠（1文）",' +
+'"karte_action":"new/merge/skip",' +
+'"karte":{"title":"カルテ名","progress":"進行状況","mana_comment":"構造的意味"},' +
+'"merge_karte_id":"KARTE-xxxx（mergeの場合のみ）"}';
+
+  const text = callClaudeAPI(prompt, anthropicKey, 2048);
+  if (!text) {
+    return { check_result: 'hold', fixes: {}, reason: 'Claude API失敗',
+             window_id: 'none', window_reason: '', karte_action: 'skip' };
+  }
+
+  try {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) {
+      return { check_result: 'hold', fixes: {}, reason: 'JSON抽出失敗',
+               window_id: 'none', window_reason: '', karte_action: 'skip' };
+    }
+    const obj = JSON.parse(match[0]);
+    return {
+      check_result:    obj.check_result    || 'hold',
+      fixes:           obj.fixes           || {},
+      reason:          obj.reason          || '',
+      window_id:       obj.window_id       || 'none',
+      window_reason:   obj.window_reason   || '',
+      karte_action:    obj.karte_action    || 'skip',
+      karte:           obj.karte           || null,
+      merge_karte_id:  obj.merge_karte_id  || '',
+    };
+  } catch(e) {
+    return { check_result: 'hold', fixes: {}, reason: 'パースエラー: ' + e.message,
+             window_id: 'none', window_reason: '', karte_action: 'skip' };
+  }
+}
+
+// claudeResult.fixesをgeminiResultにマージ（旧applyClaudeCheck1の統合版）
+function applyClaudeFixes(geminiResult, fixes) {
+  if (!fixes || Object.keys(fixes).length === 0) return geminiResult;
+  return Object.assign({}, geminiResult, {
+    summary:           fixes.summary           || geminiResult.summary,
+    tags_event:        fixes.tags_event        || geminiResult.tags_event,
+    tags_structure:    fixes.tags_structure    || geminiResult.tags_structure,
+    tags_evidence:     fixes.tags_evidence     || geminiResult.tags_evidence,
+    tags_status:       fixes.tags_status       || geminiResult.tags_status,
+    tags_field:        fixes.tags_field        || geminiResult.tags_field,
+    tags_target:       fixes.tags_target       || geminiResult.tags_target,
+    tags_actor:        fixes.tags_actor        || geminiResult.tags_actor,
+    tags_event_search: fixes.tags_event_search || geminiResult.tags_event_search,
+    author_type:       fixes.author_type       || geminiResult.author_type,
+    region:            fixes.region            || geminiResult.region,
+    field:             fixes.field             || geminiResult.field,
+  });
+}
+
+// カルテシートの軽量インデックスを読み込む（ID・タイトル・地域・分野のみ）
+function loadKarteIndex(karteSheet) {
+  const data = karteSheet.getDataRange().getValues();
+  if (data.length < 2) return [];
+  const headers = data[0];
+  const idIdx     = headers.indexOf('カルテID');
+  const titleIdx  = headers.indexOf('事案名');
+  const regionIdx = headers.indexOf('地域');
+  const fieldIdx  = headers.indexOf('分野');
+  return data.slice(1).map(function(row) {
+    return {
+      id:     idIdx     >= 0 ? (row[idIdx]     || '') : '',
+      title:  titleIdx  >= 0 ? (row[titleIdx]  || '') : '',
+      region: regionIdx >= 0 ? (row[regionIdx] || '') : '',
+      field:  fieldIdx  >= 0 ? (row[fieldIdx]  || '') : '',
+    };
+  }).filter(function(k) { return k.id; });
+}
+
+// カルテシートの最大番号+1を返す
+function _getNextKarteNumberV8(karteSheet) {
+  const data   = karteSheet.getDataRange().getValues();
+  const idIdx  = data[0].indexOf('カルテID');
+  let maxNum = 0;
+  data.slice(1).forEach(function(row) {
+    const m = String(row[idIdx] || '').match(/KARTE-(\d+)/);
+    if (m) { const n = parseInt(m[1], 10); if (n > maxNum) maxNum = n; }
+  });
+  return maxNum + 1;
+}
+
+// カルテ行データを組み立てる
+function buildKarteRow(karteId, article, checkedData, karteData) {
+  return [
+    karteId,
+    karteData.title   || article.title || '',
+    checkedData.region        || '',
+    checkedData.field         || '',
+    checkedData.summary       || '',
+    karteData.progress        || '不明',
+    checkedData.tags_event    || '',
+    checkedData.tags_structure|| '',
+    checkedData.tags_status   || '',
+    checkedData.tags_evidence || '',
+    article.url               || '',   // related_urls（初回は代表URLのみ）
+    karteData.mana_comment    || '',
+    new Date().toISOString(),          // created_at
+    new Date().toISOString(),          // updated_at
+    checkedData.date          || '',   // start_date
+    checkedData.tags_field    || '',   // profile_field
+    checkedData.tags_target   || '',   // profile_target
+    checkedData.tags_actor    || '',   // profile_actor
+    checkedData.tags_event_search || '',// profile_event
+    checkedData.tags_status   || '',   // profile_status
+    '',                                // profile_institution
+  ];
+}
+
+// 既存カルテのrelated_urlsにURLを追記する
+function appendUrlToKarte(karteSheet, karteId, url) {
+  if (!url) return;
+  const data   = karteSheet.getDataRange().getValues();
+  const headers = data[0];
+  const idIdx   = headers.indexOf('カルテID');
+  const urlIdx  = headers.indexOf('関連URL');
+  const updIdx  = headers.indexOf('更新日時');
+  if (idIdx < 0 || urlIdx < 0) return;
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idIdx]) === karteId) {
+      const existing = data[i][urlIdx] ? String(data[i][urlIdx]) : '';
+      const newUrls  = existing ? existing + '\n' + url : url;
+      karteSheet.getRange(i + 1, urlIdx  + 1).setValue(newUrls);
+      if (updIdx >= 0) karteSheet.getRange(i + 1, updIdx + 1).setValue(new Date().toISOString());
+      return;
+    }
+  }
+}
+
+// カルテシートを取得または作成（v8版・列名を統一）
+function getOrCreateKarteSheetV8(ss) {
+  let sheet = ss.getSheetByName('カルテ');
+  if (!sheet) {
+    sheet = ss.insertSheet('カルテ');
+    const headers = [
+      'カルテID','事案名','地域','分野','要約','進行状況',
+      '出来事タグ','構造タグ','状態タグ','根拠タグ','関連URL','MANAコメント',
+      '作成日時','更新日時','開始日',
+      '分野タグ','対象者タグ','行為者タグ','出来事タグ（検索）','状態タグ（探索）','固有機関名',
+    ];
+    sheet.appendRow(headers);
+    sheet.setFrozenRows(1);
+    const h = sheet.getRange(1, 1, 1, headers.length);
+    h.setBackground('#0f0e0d'); h.setFontColor('#faf9f6'); h.setFontWeight('bold');
+    sheet.setColumnWidth(2, 280); sheet.setColumnWidth(5, 350);
+  }
+  return sheet;
+}
+
+// ===== （旧）Claude検証①：後方互換のため残置 =====
+// 新コードは checkWithClaudeV8() を使う
 function checkWithClaude1(article, geminiResult, anthropicKey) {
   const prompt =
 'あなたは日本の行政・社会問題の観測データベースMANAの品質管理担当です。\n' +
@@ -516,8 +742,9 @@ function checkWithClaude2(article, checkedData, anthropicKey) {
   }
 }
 
-// v8用行データの組み立て（全タグ・Claude検証結果付き）
-function buildRowV8(article, checkedData, check1Result, sheet) {
+// v8用行データの組み立て（全タグ・Claude統合検証結果付き）
+// claudeResult: checkWithClaudeV8() の戻り値オブジェクト
+function buildRowV8(article, checkedData, claudeResult, sheet) {
   const colMap = getColMap(sheet);
   const numCols = sheet.getLastColumn();
   const row = new Array(numCols).fill('');
@@ -525,6 +752,8 @@ function buildRowV8(article, checkedData, check1Result, sheet) {
   const collectedAt = new Date().toISOString();
   const rssPubDate  = article.pub_date || '';
   const hasBodyCache = !!(article.body_cache && article.body_cache.trim());
+  const checkResult = claudeResult.check_result || 'hold';
+  const windowId    = claudeResult.window_id    || 'none';
 
   function set(colName, value) {
     const idx = colMap[colName];
@@ -563,8 +792,9 @@ function buildRowV8(article, checkedData, check1Result, sheet) {
   set(COL.TAGS_ACTOR,        checkedData.tags_actor        || '');
   set(COL.TAGS_EVENT_SEARCH, checkedData.tags_event_search || '');
   set(COL.AUTHOR_TYPE,       checkedData.author_type       || '');
-  set(COL.CLAUDE_CHECK_1,    check1Result                  || '');
-  set(COL.HOLD_FLAG,         check1Result === 'hold' ? '保留' : '');
+  set(COL.WINDOW_ID,         windowId);
+  set(COL.CLAUDE_CHECK_1,    checkResult);
+  set(COL.HOLD_FLAG,         checkResult === 'hold' ? '保留' : '');
 
   // メタデータ
   const titleNorm = normalizeTitle(article.title);
@@ -580,6 +810,25 @@ function buildRowV8(article, checkedData, check1Result, sheet) {
   set(COL.GEMINI_DONE,          true);
 
   return row;
+}
+
+// 観測DBの当該URLの行にカルテIDを書き込む
+function writeKarteIdToDb(url, karteId) {
+  if (!url || !karteId) return;
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(PUBLIC_SHEET);
+  if (!sheet) return;
+  const colMap = getColMap(sheet);
+  const urlIdx = colMap[COL.URL];
+  const karteColIdx = colMap['カルテID'];
+  if (urlIdx === undefined || karteColIdx === undefined) return;
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][urlIdx] === url) {
+      sheet.getRange(i + 1, karteColIdx + 1).setValue(karteId);
+      return;
+    }
+  }
 }
 
 // 観測DBの当該URLの行にwindow_idとclaudeCheck2を書き戻す
