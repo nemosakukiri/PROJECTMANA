@@ -3602,3 +3602,44 @@ function backfillArticleType() {
   }
   Logger.log('backfillArticleType完了: ' + updated + '件を補完');
 }
+
+// 掲示板申請フォームに質問を追加する（一度だけ実行）
+function addQuestionsToForm() {
+  var formId = '1EUfVDXutxNFrts9GDP593wWHHQGqHTN1cNv3eVxp_aY';
+  var form = FormApp.openById(formId);
+
+  // 既存の質問をクリアして作り直す
+  var items = form.getItems();
+  for (var i = items.length - 1; i >= 0; i--) {
+    form.deleteItem(items[i]);
+  }
+
+  form.setTitle('掲示板掲載申請');
+  form.setDescription('絵本のくらし広場の掲示板への掲載を希望される企業・団体の方はこちらからお申し込みください。運営が内容を確認し、承認後に掲載いたします。');
+
+  form.addTextItem()
+    .setTitle('団体・企業名')
+    .setRequired(true);
+
+  form.addTextItem()
+    .setTitle('ご連絡先メールアドレス')
+    .setHelpText('返信先のメールアドレスをご入力ください')
+    .setRequired(true);
+
+  form.addMultipleChoiceItem()
+    .setTitle('種別')
+    .setChoiceValues(['企業', '行政・公的機関', '支援団体・NPO', '研究・学術', 'その他'])
+    .setRequired(true);
+
+  form.addParagraphTextItem()
+    .setTitle('掲載したい内容')
+    .setHelpText('掲示板に掲載したいメッセージや情報をご記入ください（300字以内）')
+    .setRequired(true);
+
+  form.addParagraphTextItem()
+    .setTitle('なぜこの場所への掲載を希望しますか')
+    .setHelpText('このサービスの利用者との関わり方や、掲載の目的をお聞かせください')
+    .setRequired(true);
+
+  Logger.log('完了：' + form.getPublishedUrl());
+}
