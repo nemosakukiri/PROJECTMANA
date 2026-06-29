@@ -221,7 +221,7 @@ function collectNews() {
   const karteSheet = getOrCreateKarteSheetV8(ss);
   const karteIndex = loadKarteIndex(karteSheet); // { id, title, region, field } の軽量リスト
 
-  let savedLog = 0, savedPub = 0, heldCount = 0, skippedCount = 0;
+  let savedLog = 0, savedPub = 0, heldCount = 0, skippedCount = 0, oldReprintCount = 0;
   let newKarteCount = 0, updatedKarteCount = 0;
   const MAX_CONSEC_ERR = 3;
   let consecErr = 0;
@@ -262,7 +262,9 @@ function collectNews() {
     Logger.log('[Claude] check=' + claudeResult.check_result +
       ' / window=' + claudeResult.window_id +
       ' / karte=' + claudeResult.karte_action +
-      (claudeResult.reason ? ' / ' + claudeResult.reason.slice(0, 50) : ''));
+      ' / date=' + claudeResult.date_assessment +
+      (claudeResult.reason ? ' / ' + claudeResult.reason.slice(0, 50) : '') +
+      (claudeResult.date_assessment === 'old_reprint' ? ' / 古い記事候補: ' + (claudeResult.date_reason || '').slice(0, 50) : ''));
 
     // 3d. 観測DBに保存
     if (!existingPubKeys.has(article.url || article.title)) {
@@ -270,6 +272,7 @@ function collectNews() {
       existingPubKeys.add(article.url || article.title);
       savedPub++;
       if (claudeResult.check_result === 'hold') heldCount++;
+      if (claudeResult.date_assessment === 'old_reprint') oldReprintCount++;
     }
 
     // 3e. カルテ生成・更新
@@ -294,7 +297,7 @@ function collectNews() {
   Logger.log('');
   Logger.log('===== collectNews v8 サマリ =====');
   Logger.log('全件ログ保存:     ' + savedLog + '件');
-  Logger.log('観測DB保存:       ' + savedPub + '件 (うち保留: ' + heldCount + '件)');
+  Logger.log('観測DB保存:       ' + savedPub + '件 (うち保留: ' + heldCount + '件 / 古い記事候補: ' + oldReprintCount + '件)');
   Logger.log('カルテ新規:       ' + newKarteCount + '件');
   Logger.log('カルテ統合:       ' + updatedKarteCount + '件');
   Logger.log('対象外スキップ:   ' + skippedCount + '件');
@@ -461,6 +464,12 @@ function checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey) {
 'mergeの場合：merge_karte_id に既存カルテのIDを記載\n' +
 'skipの場合：karte・merge_karte_id は省略\n\n' +
 
+'【④ 古い記事の再配信チェック】\n' +
+'RSSの公開日（rss_pubDate）が新しくても、記事本文が指す出来事自体は過去のものである場合がある\n' +
+'（例：「〜年に起きた事件を振り返る」「過去の判決のまとめ記事」「数年前の制度変更の解説」等）。\n' +
+'本日の収録日時：' + new Date().toISOString().slice(0,10) + '　RSS公開日：' + (article.pub_date || '不明') + '\n' +
+'date_assessment: fresh=直近の出来事を報じている / old_reprint=過去の出来事の振り返り・まとめ・再配信 / uncertain=判断できない\n\n' +
+
 '【出力形式】JSONオブジェクトのみ。コードブロック不要。\n' +
 '{"check_result":"pass/fix/hold",' +
 '"fixes":{"summary":"省略可","tags_event":"省略可","tags_structure":"省略可","tags_evidence":"省略可",' +
@@ -471,19 +480,23 @@ function checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey) {
 '"window_reason":"配置根拠（1文）",' +
 '"karte_action":"new/merge/skip",' +
 '"karte":{"title":"カルテ名","progress":"進行状況","mana_comment":"構造的意味"},' +
-'"merge_karte_id":"KARTE-xxxx（mergeの場合のみ）"}';
+'"merge_karte_id":"KARTE-xxxx（mergeの場合のみ）",' +
+'"date_assessment":"fresh/old_reprint/uncertain",' +
+'"date_reason":"判定根拠（1文・freshなら省略可）"}';
 
   const text = callClaudeAPI(prompt, anthropicKey, 2048);
   if (!text) {
     return { check_result: 'hold', fixes: {}, reason: 'Claude API失敗',
-             window_id: 'none', window_reason: '', karte_action: 'skip' };
+             window_id: 'none', window_reason: '', karte_action: 'skip',
+             date_assessment: 'uncertain', date_reason: 'Claude API失敗' };
   }
 
   try {
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) {
       return { check_result: 'hold', fixes: {}, reason: 'JSON抽出失敗',
-               window_id: 'none', window_reason: '', karte_action: 'skip' };
+               window_id: 'none', window_reason: '', karte_action: 'skip',
+               date_assessment: 'uncertain', date_reason: 'JSON抽出失敗' };
     }
     const obj = JSON.parse(match[0]);
     return {
@@ -495,10 +508,13 @@ function checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey) {
       karte_action:    obj.karte_action    || 'skip',
       karte:           obj.karte           || null,
       merge_karte_id:  obj.merge_karte_id  || '',
+      date_assessment: obj.date_assessment || 'uncertain',
+      date_reason:     obj.date_reason     || '',
     };
   } catch(e) {
     return { check_result: 'hold', fixes: {}, reason: 'パースエラー: ' + e.message,
-             window_id: 'none', window_reason: '', karte_action: 'skip' };
+             window_id: 'none', window_reason: '', karte_action: 'skip',
+             date_assessment: 'uncertain', date_reason: 'パースエラー' };
   }
 }
 
@@ -752,8 +768,12 @@ function buildRowV8(article, checkedData, claudeResult, sheet) {
   const collectedAt = new Date().toISOString();
   const rssPubDate  = article.pub_date || '';
   const hasBodyCache = !!(article.body_cache && article.body_cache.trim());
-  const checkResult = claudeResult.check_result || 'hold';
-  const windowId    = claudeResult.window_id    || 'none';
+  const checkResult     = claudeResult.check_result    || 'hold';
+  const windowId        = claudeResult.window_id       || 'none';
+  const dateAssessment  = claudeResult.date_assessment || 'uncertain';
+  // Claudeが「過去の出来事の再配信」と判定した場合は古い記事フラグを立てる。
+  // uncertainは保留せず未確認のまま残す（fresh以外を即座に隠すと誤判定の影響が大きいため）。
+  const isOldReprint = dateAssessment === 'old_reprint';
 
   function set(colName, value) {
     const idx = colMap[colName];
@@ -769,7 +789,8 @@ function buildRowV8(article, checkedData, claudeResult, sheet) {
   set(COL.RSS_SUMMARY,     article.description || '');
   set(COL.RSS_PUBDATE,     rssPubDate);
   set(COL.GOOGLE_NEWS_URL, article.url || '');
-  set(COL.DATE_STATUS,     DATE_STATUS.UNCONFIRMED);
+  set(COL.DATE_STATUS,     isOldReprint ? DATE_STATUS.NEEDS_REVIEW : DATE_STATUS.UNCONFIRMED);
+  set(COL.OLD_FLAG,        isOldReprint ? '古い記事候補' : '');
   set(COL.BODY_CACHE_FLAG, hasBodyCache ? 'あり' : 'なし');
   set(COL.ORIG_ID,         article.orig_id || '');
 
