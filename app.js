@@ -1573,8 +1573,9 @@ function inferArticleType(explicitType, domain, sourceName) {
   return 'news';
 }
 
-function loadDB() {
-  console.log('DB読み込み開始（GAS API）:', GAS_API_URL);
+function loadDB(retryCount) {
+  retryCount = retryCount || 0;
+  console.log('DB読み込み開始（GAS API）:', GAS_API_URL, retryCount > 0 ? 'リトライ' + retryCount : '');
   fetch(GAS_API_URL)
     .then(r => {
       console.log('HTTPステータス:', r.status);
@@ -1646,6 +1647,17 @@ function loadDB() {
     })
     .catch(err => {
       console.error('DB読み込みエラー:', err.message);
+      if (retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 2000;
+        console.log('リトライします（' + delay/1000 + '秒後）');
+        setTimeout(() => loadDB(retryCount + 1), delay);
+      } else {
+        console.error('DB読み込みを3回試みましたが失敗しました');
+        const dbCards = document.getElementById('db-cards');
+        if (dbCards && !dbData.length) {
+          dbCards.innerHTML = '<div style="padding:2rem;color:#888;font-size:0.85rem">データの読み込みに失敗しました。しばらくしてからページを再読み込みしてください。</div>';
+        }
+      }
     });
 }
 
