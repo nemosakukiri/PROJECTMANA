@@ -4822,10 +4822,9 @@ function backfillKarteForExisting() {
       mergeCount++;
       Logger.log('[統合] → ' + result.merge_karte_id);
 
-    } else if (result.karte_action === 'skip') {
-      // カルテ不要と判定済みの印を付ける（次回バックフィルで再呼び出しを防ぐ）
-      dbSheet.getRange(i + 1, karteColIdx + 1).setValue('skip');
-      Logger.log('[カルテ不要] skip記録済み');
+    } else {
+      // skip / 判定不能 → 書き込まず空のまま残す（次回バックフィルで再判定）
+      Logger.log('[再試行対象] ' + result.karte_action + ' → カルテIDは空のまま');
     }
 
     processed++;
@@ -4833,6 +4832,25 @@ function backfillKarteForExisting() {
   }
 
   Logger.log('===== backfill 完了: 処理=' + processed + '件 / 新規カルテ=' + newCount + ' / 統合=' + mergeCount + ' =====');
+}
+
+// 誤って書き込まれた 'skip' 値を一括クリア（1回目のバックフィル誤動作の後始末）
+function clearSkipFlags() {
+  const ss      = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet   = ss.getSheetByName(PUBLIC_SHEET);
+  if (!sheet) return;
+  const colMap  = getColMap(sheet);
+  const idx     = colMap['カルテID'];
+  if (idx === undefined) { Logger.log('カルテID列が見つかりません'); return; }
+  const data    = sheet.getDataRange().getValues();
+  let count = 0;
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][idx] === 'skip') {
+      sheet.getRange(i + 1, idx + 1).setValue('');
+      count++;
+    }
+  }
+  Logger.log('skip をクリアした件数: ' + count);
 }
 
 // カルテシートからインデックスを構築
