@@ -1606,7 +1606,7 @@ function loadDB(retryCount) {
         severity:       row['重要度'] || '中',
         structure_note: row['構造メモ'] || '',
         collected_at:   row['収録日時'] || '',
-        old_flag:       row['古い記事'] || '', // 「古い記事候補」が入っていればアーカイブ扱い
+        old_flag:       row['古い記事'] === '古い記事候補' ? '古い記事候補' : '', // 明示的な文字列のみアーカイブ扱い（boolean false防止）
         date_status:    row['date_status'] || '', // 確定 / 未確認 / 要確認
         karte_id:       row['カルテID'] || '', // 正式紐付けキー（URL逆引き不使用）
         article_type:   inferArticleType(row['記事種別'], row['source_domain'] || (() => { try { return new URL(row['URL'] || '').hostname; } catch(e) { return ''; } })(), row['出典'] || ''),
