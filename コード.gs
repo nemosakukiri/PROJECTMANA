@@ -4744,18 +4744,20 @@ function addQuestionsToForm() {
 
 // ===== カルテなし記事へのバックフィル（1回10件ずつ手動実行）=====
 // カルテIDが空の記事を最大BATCH件取得してGroqでカルテ生成 → DB書き戻し
+// DBにある記事は全件カルテを作る方針。
+// Groqには「統合できる既存カルテがあるか」と「カルテの中身」だけ聞く。
+// Groqが失敗・skipを返しても必ずカルテを作る（記事データから機械生成）。
 function backfillKarteForExisting() {
-  const BATCH = 5;          // 1回あたりの処理件数（レート制限対策で削減）
-  const SLEEP_MS = 7000;    // 12,000TPM制限対応: 7秒待機（約8req/min以内に収める）
+  const BATCH    = 5;
+  const SLEEP_MS = 7000;
   const ss        = SpreadsheetApp.getActiveSpreadsheet();
   const dbSheet   = ss.getSheetByName(PUBLIC_SHEET);
   const karteSheet = ss.getSheetByName(KARTE_SHEET);
   if (!dbSheet || !karteSheet) { Logger.log('シートが見つかりません'); return; }
 
   const groqKey = PropertiesService.getScriptProperties().getProperty('GROQ_API_KEY');
-  if (!groqKey) { Logger.log('[中止] GROQ_API_KEY 未設定'); return; }
 
-  const colMap     = getColMap(dbSheet);
+  const colMap      = getColMap(dbSheet);
   const karteColIdx = colMap['カルテID'];
   const urlIdx      = colMap[COL.URL];
   const titleIdx    = colMap[COL.TITLE];
@@ -4764,74 +4766,87 @@ function backfillKarteForExisting() {
     Logger.log('[中止] カルテID列またはURL列が見つかりません'); return;
   }
 
-  // 既存カルテインデックスを構築
   const karteIndex = _buildKarteIndex(karteSheet);
-
-  const data = dbSheet.getDataRange().getValues();
+  const data    = dbSheet.getDataRange().getValues();
   const headers = data[0];
-  let processed = 0;
-  let newCount  = 0;
-  let mergeCount = 0;
+  let processed = 0, newCount = 0, mergeCount = 0;
 
   for (let i = 1; i < data.length && processed < BATCH; i++) {
     const row = data[i];
-    if (!row[titleIdx]) continue;                           // タイトルなしはスキップ
-    if (row[karteColIdx] && row[karteColIdx] !== false) continue; // カルテIDあり or skip済み
-    if (row[oldFlagIdx] === '古い記事候補') continue;       // 保留記事はスキップ
+    if (!row[titleIdx]) continue;
+    if (row[karteColIdx] && row[karteColIdx] !== false) continue; // 既にカルテIDあり
+    if (row[oldFlagIdx] === '古い記事候補') continue;
 
-    // article オブジェクトを組み立て
     const article = {};
     headers.forEach((h, idx) => { article[h] = row[idx] !== undefined ? String(row[idx]) : ''; });
     const articleObj = {
-      title: article[COL.TITLE] || '',
-      url: article[COL.URL] || '',
+      title:       article[COL.TITLE] || '',
+      url:         article[COL.URL] || '',
       description: article['要約'] || '',
       source_name: article['出典'] || '',
-      pub_date: article['公開日'] || article['日付'] || ''
+      pub_date:    article['公開日'] || article['日付'] || ''
     };
-
-    // Groqでカルテ判定
     const geminiMock = {
-      region: article['地域'] || '',
-      field: article['分野'] || '',
-      summary: article['要約'] || '',
-      tags_structure: article['構造タグ'] || '',
+      region:          article['地域'] || '',
+      field:           article['分野'] || '',
+      summary:         article['要約'] || '',
+      tags_structure:  article['構造タグ'] || '',
       window_candidate: article['window_id'] || 'none'
     };
-    const result = checkWithGroqV8(articleObj, geminiMock, karteIndex, groqKey);
-    Logger.log('[backfill 行' + (i+1) + '] ' + (articleObj.title || '').slice(0, 30) +
-      ' → karte_action=' + result.karte_action);
 
-    if (result.karte_action === 'api_error') {
-      Logger.log('[レート制限] スキップ（次回再試行対象）');
-      Utilities.sleep(SLEEP_MS);
-      continue; // processedを増やさない → 次回も対象になる
+    let karteId = null;
+
+    // Groqで「統合できる既存カルテがあるか」を判定（失敗しても後続で必ずカルテ作成）
+    if (groqKey) {
+      const result = checkWithGroqV8(articleObj, geminiMock, karteIndex, groqKey);
+      Logger.log('[backfill 行' + (i+1) + '] ' + (articleObj.title || '').slice(0, 30) +
+        ' → karte_action=' + result.karte_action);
+
+      if (result.karte_action === 'api_error') {
+        Logger.log('[レート制限] 次回再試行');
+        Utilities.sleep(SLEEP_MS);
+        continue;
+      }
+
+      if (result.karte_action === 'merge' && result.merge_karte_id) {
+        dbSheet.getRange(i + 1, karteColIdx + 1).setValue(result.merge_karte_id);
+        mergeCount++;
+        Logger.log('[統合] → ' + result.merge_karte_id);
+        processed++;
+        Utilities.sleep(SLEEP_MS);
+        continue;
+      }
+
+      // new または skip → どちらも新規カルテを作る（skipは無視）
+      if (result.karte_action === 'new' && result.karte) {
+        karteId = 'KARTE-' + String(_getNextKarteNumberV8(karteSheet)).padStart(4, '0');
+        karteSheet.appendRow(buildKarteRow(karteId, articleObj, geminiMock, result.karte));
+        karteIndex.push({ id: karteId, title: result.karte.title || articleObj.title,
+                          region: geminiMock.region, field: geminiMock.field });
+      }
     }
 
-    if (result.karte_action === 'new' && result.karte) {
-      const karteId = 'KARTE-' + String(_getNextKarteNumberV8(karteSheet)).padStart(4, '0');
-      karteSheet.appendRow(buildKarteRow(karteId, articleObj, geminiMock, result.karte));
-      karteIndex.push({ id: karteId, title: result.karte.title || articleObj.title,
+    // Groqキーなし / skip返却 / karte未生成 → 記事データから機械生成
+    if (!karteId) {
+      karteId = 'KARTE-' + String(_getNextKarteNumberV8(karteSheet)).padStart(4, '0');
+      const autoKarte = {
+        title:       articleObj.title,
+        progress:    '不明',
+        mana_comment: (geminiMock.summary || articleObj.title).slice(0, 100)
+      };
+      karteSheet.appendRow(buildKarteRow(karteId, articleObj, geminiMock, autoKarte));
+      karteIndex.push({ id: karteId, title: articleObj.title,
                         region: geminiMock.region, field: geminiMock.field });
-      dbSheet.getRange(i + 1, karteColIdx + 1).setValue(karteId);
-      newCount++;
-      Logger.log('[新規カルテ] ' + karteId);
-
-    } else if (result.karte_action === 'merge' && result.merge_karte_id) {
-      dbSheet.getRange(i + 1, karteColIdx + 1).setValue(result.merge_karte_id);
-      mergeCount++;
-      Logger.log('[統合] → ' + result.merge_karte_id);
-
-    } else {
-      // skip / 判定不能 → 書き込まず空のまま残す（次回バックフィルで再判定）
-      Logger.log('[再試行対象] ' + result.karte_action + ' → カルテIDは空のまま');
+      Logger.log('[機械生成カルテ] ' + karteId);
     }
 
+    dbSheet.getRange(i + 1, karteColIdx + 1).setValue(karteId);
+    newCount++;
     processed++;
     Utilities.sleep(SLEEP_MS);
   }
 
-  Logger.log('===== backfill 完了: 処理=' + processed + '件 / 新規カルテ=' + newCount + ' / 統合=' + mergeCount + ' =====');
+  Logger.log('===== backfill 完了: 処理=' + processed + '件 / 新規=' + newCount + ' / 統合=' + mergeCount + ' =====');
 }
 
 // 誤って書き込まれた 'skip' 値を一括クリア（1回目のバックフィル誤動作の後始末）
