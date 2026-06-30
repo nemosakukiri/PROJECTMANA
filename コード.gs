@@ -306,6 +306,91 @@ function collectNews() {
 }
 
 // ===== 古い記事 dry run：書き込みなしで保留候補を列挙 =====
+// ===== original_urlの充填状況とURLパターンを確認する =====
+function checkOriginalUrls() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('kansokuDB');
+  if (!sheet) { Logger.log('kansokuDB シートが見つかりません'); return; }
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const idxOrigUrl = headers.indexOf('original_url');
+  const idxUrl     = headers.indexOf('URL');
+  if (idxOrigUrl < 0) { Logger.log('original_url列が見つかりません'); return; }
+
+  let filled = 0, empty = 0;
+  const patterns = {};
+  for (let i = 1; i < data.length; i++) {
+    if (!String(data[i][idxUrl] || '')) continue;
+    const orig = String(data[i][idxOrigUrl] || '').trim();
+    if (!orig) { empty++; continue; }
+    filled++;
+    // URLのパスセグメントを抽出（/column/ /opinion/ /shasetsu/ 等）
+    try {
+      const m = orig.match(/https?:\/\/[^\/]+(\/.+)/);
+      if (m) {
+        const seg = m[1].split('/')[1] || '';
+        patterns[seg] = (patterns[seg] || 0) + 1;
+      }
+    } catch(e) {}
+  }
+  Logger.log('original_url 充填状況:');
+  Logger.log('  あり: ' + filled + '件');
+  Logger.log('  なし: ' + empty + '件');
+  Logger.log('パス先頭セグメント TOP20:');
+  Object.entries(patterns).sort((a,b)=>b[1]-a[1]).slice(0,20).forEach(([k,v])=>{
+    Logger.log('  /' + k + '/  ' + v + '件');
+  });
+}
+
+// ===== kansokuDBのヘッダー一覧を確認する =====
+function checkHeaders() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('kansokuDB');
+  if (!sheet) { Logger.log('kansokuDB シートが見つかりません'); return; }
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  Logger.log('ヘッダー一覧 (' + headers.length + '列):');
+  headers.forEach(function(h, i) {
+    Logger.log('  [' + (i+1) + '] ' + h);
+  });
+}
+
+// ===== 記事種別が空の件数を確認する（軽量・書き込みなし）=====
+function countMissingArticleType() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('kansokuDB');
+  if (!sheet) { Logger.log('kansokuDB シートが見つかりません'); return; }
+
+  const colMap = getColMap(sheet);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  Logger.log('COL.ARTICLE_TYPE の値: ' + COL.ARTICLE_TYPE);
+  Logger.log('colMap での検索結果: ' + colMap[COL.AUTHOR_TYPE]);
+  Logger.log('headers.indexOf 結果: ' + headers.indexOf(COL.AUTHOR_TYPE));
+
+  const idxArticleType = colMap[COL.AUTHOR_TYPE] !== undefined ? colMap[COL.AUTHOR_TYPE] : headers.indexOf(COL.AUTHOR_TYPE);
+  const idxUrl         = colMap[COL.URL]          !== undefined ? colMap[COL.URL]          : headers.indexOf('URL');
+
+  if (idxArticleType < 0) {
+    Logger.log('記事種別列が見つかりません。先に checkHeaders() でヘッダーを確認してください');
+    return;
+  }
+
+  let emptyCount = 0;
+  let totalCount = 0;
+  for (let i = 1; i < data.length; i++) {
+    const url = String(data[i][idxUrl] || '');
+    if (!url) continue;
+    totalCount++;
+    if (!String(data[i][idxArticleType] || '').trim()) emptyCount++;
+  }
+
+  Logger.log('===== 記事種別 空件数チェック =====');
+  Logger.log('総件数: ' + totalCount + '件');
+  Logger.log('記事種別あり: ' + (totalCount - emptyCount) + '件');
+  Logger.log('記事種別なし（空）: ' + emptyCount + '件');
+}
+
 function dryRunMarkOldArticles() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('kansokuDB');
@@ -327,7 +412,13 @@ function dryRunMarkOldArticles() {
   const idxOldFlag     = colMap[COL.OLD_FLAG]     !== undefined ? colMap[COL.OLD_FLAG]     : -1;
   const idxDateStatus  = colMap[COL.DATE_STATUS]  !== undefined ? colMap[COL.DATE_STATUS]  : -1;
   const idxDate        = colMap[COL.DATE]          !== undefined ? colMap[COL.DATE]         : -1;
-  const idxArticleType = colMap[COL.ARTICLE_TYPE]  !== undefined ? colMap[COL.ARTICLE_TYPE] : headers.indexOf('記事種別');
+  const idxArticleType = colMap[COL.AUTHOR_TYPE]  !== undefined ? colMap[COL.AUTHOR_TYPE] : headers.indexOf(COL.AUTHOR_TYPE);
+  const idxSource      = colMap[COL.SOURCE]         !== undefined ? colMap[COL.SOURCE]        : headers.indexOf('出典');
+
+  // 論考・研究系の出典名パターン（記事種別が空の旧データにも対応）
+  const OPINION_SOURCE_PATTERN = /wedge|slow.?news|シノドス|synodos|現代ビジネス|bigissue|president|東洋経済/i;
+  // タイトルに論考性を示すキーワードが含まれる場合も除外
+  const OPINION_TITLE_PATTERN = /社説|論説|コラム|論考|オピニオン|識者|寄稿|エッセイ|書評|評論/;
 
   const candidates = [];
 
@@ -337,11 +428,15 @@ function dryRunMarkOldArticles() {
     const url   = String(row[idxUrl]   || '');
     if (!url) continue;
 
-    // 論考・研究・調査報道は古い記事判定から除外（時代を超えた内容のため）
+    // author_typeが明示的に論考系なら除外
     if (idxArticleType >= 0) {
       const atype = String(row[idxArticleType] || '').toLowerCase();
       if (atype === 'opinion' || atype === 'research' || atype === 'investigative') continue;
     }
+    // 出典名が既知の論考媒体なら除外
+    if (idxSource >= 0 && OPINION_SOURCE_PATTERN.test(String(row[idxSource] || ''))) continue;
+    // タイトルに論考キーワードがあれば除外（社説・コラム等は古くても時代を超えた内容のため）
+    if (OPINION_TITLE_PATTERN.test(title)) continue;
 
     const reasons = [];
 
@@ -377,7 +472,7 @@ function dryRunMarkOldArticles() {
       const m = title.match(/20(\d{2})年/);
       if (m) {
         const yr = 2000 + parseInt(m[1]);
-        if (yr < currentYear) reasons.push('タイトルに過去年号:' + y);
+        if (yr < currentYear - 1) reasons.push('タイトルに過去年号:' + y);
       } else {
         reasons.push('タイトルに旧元号:' + y);
       }
@@ -421,7 +516,10 @@ function applyMarkOldArticles() {
   const idxOldFlag     = colMap[COL.OLD_FLAG]      !== undefined ? colMap[COL.OLD_FLAG]     : -1;
   const idxDateStatus  = colMap[COL.DATE_STATUS]   !== undefined ? colMap[COL.DATE_STATUS]  : -1;
   const idxDate        = colMap[COL.DATE]          !== undefined ? colMap[COL.DATE]         : -1;
-  const idxArticleType = colMap[COL.ARTICLE_TYPE]  !== undefined ? colMap[COL.ARTICLE_TYPE] : headers.indexOf('記事種別');
+  const idxArticleType = colMap[COL.AUTHOR_TYPE]  !== undefined ? colMap[COL.AUTHOR_TYPE] : headers.indexOf(COL.AUTHOR_TYPE);
+  const idxSource      = colMap[COL.SOURCE]         !== undefined ? colMap[COL.SOURCE]        : headers.indexOf('出典');
+  const OPINION_SOURCE_PATTERN = /wedge|slow.?news|シノドス|synodos|現代ビジネス|bigissue|president|東洋経済/i;
+  const OPINION_TITLE_PATTERN  = /社説|論説|コラム|論考|オピニオン|識者|寄稿|エッセイ|書評|評論/;
 
   if (idxOldFlag < 0 || idxDateStatus < 0) {
     Logger.log('old_flag または date_status 列が見つかりません。中止。');
@@ -440,6 +538,8 @@ function applyMarkOldArticles() {
       const atype = String(row[idxArticleType] || '').toLowerCase();
       if (atype === 'opinion' || atype === 'research' || atype === 'investigative') continue;
     }
+    if (idxSource >= 0 && OPINION_SOURCE_PATTERN.test(String(row[idxSource] || ''))) continue;
+    if (OPINION_TITLE_PATTERN.test(title)) continue;
 
     // すでにフラグが立っていればスキップ
     if (row[idxOldFlag] === '古い記事候補') continue;
@@ -466,7 +566,7 @@ function applyMarkOldArticles() {
     const oldYearMatch = title.match(/(?:平成|昭和|令和[元1-5]年|20([0-9]{2})年)/);
     if (oldYearMatch) {
       const m = title.match(/20(\d{2})年/);
-      if (m) { const yr = 2000 + parseInt(m[1]); if (yr < currentYear) reasons.push('タイトルに過去年号'); }
+      if (m) { const yr = 2000 + parseInt(m[1]); if (yr < currentYear - 1) reasons.push('タイトルに過去年号'); }
       else reasons.push('タイトルに旧元号');
     }
 
@@ -2283,7 +2383,9 @@ function setDailyTrigger() {
   ScriptApp.getProjectTriggers().forEach(t => ScriptApp.deleteTrigger(t));
   ScriptApp.newTrigger('collectNews').timeBased().everyDays(1).atHour(6).create();
   ScriptApp.newTrigger('collectTojishaSources').timeBased().everyDays(1).atHour(6).nearMinute(30).create();
-  Logger.log('トリガー設定完了: collectNews（6:00）+ collectTojishaSources（6:30）');
+  // 毎月1日に古い記事フラグを自動適用
+  ScriptApp.newTrigger('applyMarkOldArticles').timeBased().onMonthDay(1).atHour(7).create();
+  Logger.log('トリガー設定完了: collectNews（毎日6:00）+ collectTojishaSources（毎日6:30）+ applyMarkOldArticles（毎月1日7:00）');
 }
 
 // ===== v8マイグレーション：既存シートにv8新列を追加（一度だけ手動実行）=====
@@ -4469,7 +4571,7 @@ function exportKansokuForJournalistClassification() {
   const idxSource = headers.indexOf('出典');
   const idxDesc   = headers.indexOf('RSS要約');
   const idxDomain = headers.indexOf('source_domain');
-  const idxType   = headers.indexOf('記事種別');
+  const idxType   = headers.indexOf(COL.AUTHOR_TYPE);
   const idxExhibit = headers.indexOf('展示対象_journalist');
 
   const out = [];
@@ -4567,7 +4669,7 @@ function backfillArticleType() {
   const rows = sheet.getDataRange().getValues();
   const headers = rows[0];
   const idxSource = headers.indexOf('出典');
-  let idxType = headers.indexOf('記事種別');
+  let idxType = headers.indexOf(COL.AUTHOR_TYPE);
   if (idxType < 0) {
     const newCol = sheet.getLastColumn() + 1;
     sheet.getRange(1, newCol).setValue('記事種別');
