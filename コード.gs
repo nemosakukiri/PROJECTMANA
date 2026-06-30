@@ -4740,3 +4740,101 @@ function addQuestionsToForm() {
 
   Logger.log('完了：' + form.getPublishedUrl());
 }
+
+// ===== カルテなし記事へのバックフィル（1回10件ずつ手動実行）=====
+// カルテIDが空の記事を最大BATCH件取得してGroqでカルテ生成 → DB書き戻し
+function backfillKarteForExisting() {
+  const BATCH = 8;
+  const ss        = SpreadsheetApp.getActiveSpreadsheet();
+  const dbSheet   = ss.getSheetByName(PUBLIC_SHEET);
+  const karteSheet = ss.getSheetByName(KARTE_SHEET);
+  if (!dbSheet || !karteSheet) { Logger.log('シートが見つかりません'); return; }
+
+  const groqKey = PropertiesService.getScriptProperties().getProperty('GROQ_API_KEY');
+  if (!groqKey) { Logger.log('[中止] GROQ_API_KEY 未設定'); return; }
+
+  const colMap     = getColMap(dbSheet);
+  const karteColIdx = colMap['カルテID'];
+  const urlIdx      = colMap[COL.URL];
+  const titleIdx    = colMap[COL.TITLE];
+  const oldFlagIdx  = colMap[COL.OLD_FLAG];
+  if (karteColIdx === undefined || urlIdx === undefined) {
+    Logger.log('[中止] カルテID列またはURL列が見つかりません'); return;
+  }
+
+  // 既存カルテインデックスを構築
+  const karteIndex = _buildKarteIndex(karteSheet);
+
+  const data = dbSheet.getDataRange().getValues();
+  const headers = data[0];
+  let processed = 0;
+  let newCount  = 0;
+  let mergeCount = 0;
+
+  for (let i = 1; i < data.length && processed < BATCH; i++) {
+    const row = data[i];
+    if (!row[titleIdx]) continue;                           // タイトルなしはスキップ
+    if (row[karteColIdx]) continue;                        // 既にカルテIDあり
+    if (row[oldFlagIdx] === '古い記事候補') continue;       // 保留記事はスキップ
+
+    // article オブジェクトを組み立て
+    const article = {};
+    headers.forEach((h, idx) => { article[h] = row[idx] !== undefined ? String(row[idx]) : ''; });
+    const articleObj = {
+      title: article[COL.TITLE] || '',
+      url: article[COL.URL] || '',
+      description: article['要約'] || '',
+      source_name: article['出典'] || '',
+      pub_date: article['公開日'] || article['日付'] || ''
+    };
+
+    // Groqでカルテ判定
+    const geminiMock = {
+      region: article['地域'] || '',
+      field: article['分野'] || '',
+      summary: article['要約'] || '',
+      tags_structure: article['構造タグ'] || '',
+      window_candidate: article['window_id'] || 'none'
+    };
+    const result = checkWithGroqV8(articleObj, geminiMock, karteIndex, groqKey);
+    Logger.log('[backfill 行' + (i+1) + '] ' + (articleObj.title || '').slice(0, 30) +
+      ' → karte_action=' + result.karte_action);
+
+    if (result.karte_action === 'new' && result.karte) {
+      const karteId = 'KARTE-' + String(_getNextKarteNumberV8(karteSheet)).padStart(4, '0');
+      karteSheet.appendRow(buildKarteRow(karteId, articleObj, geminiMock, result.karte));
+      karteIndex.push({ id: karteId, title: result.karte.title || articleObj.title,
+                        region: geminiMock.region, field: geminiMock.field });
+      dbSheet.getRange(i + 1, karteColIdx + 1).setValue(karteId);
+      newCount++;
+      Logger.log('[新規カルテ] ' + karteId);
+
+    } else if (result.karte_action === 'merge' && result.merge_karte_id) {
+      dbSheet.getRange(i + 1, karteColIdx + 1).setValue(result.merge_karte_id);
+      mergeCount++;
+      Logger.log('[統合] → ' + result.merge_karte_id);
+    }
+
+    processed++;
+    Utilities.sleep(2000);
+  }
+
+  Logger.log('===== backfill 完了: 処理=' + processed + '件 / 新規カルテ=' + newCount + ' / 統合=' + mergeCount + ' =====');
+}
+
+// カルテシートからインデックスを構築
+function _buildKarteIndex(karteSheet) {
+  const rows = karteSheet.getDataRange().getValues();
+  if (rows.length < 2) return [];
+  const h = rows[0];
+  const idIdx    = h.indexOf('カルテID');
+  const titleIdx = h.indexOf('事案名');
+  const regIdx   = h.indexOf('地域');
+  const fieldIdx = h.indexOf('分野');
+  return rows.slice(1).filter(r => r[idIdx]).map(r => ({
+    id: String(r[idIdx]),
+    title: String(r[titleIdx] || ''),
+    region: String(r[regIdx] || ''),
+    field: String(r[fieldIdx] || '')
+  }));
+}
