@@ -2553,11 +2553,11 @@ function renderWindowsPage() {
   const windows = [
     { label: '観測DB',      sub: '稼働中',  active: true,  action: () => showPage('db',    document.querySelector('nav a:nth-child(2)')), x: bx - 265, y: 440, w: 84, h: 56 },
     { label: '事案の窓',    sub: '稼働中',  active: true,  action: () => showPage('karte', document.querySelector('nav a:nth-child(5)')), x: bx + 190, y: 360, w: 84, h: 56 },
-    { label: '人権の窓',    sub: '仮実装',  active: true, action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
-    { label: '民主主義の窓', sub: '仮実装', active: true, action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 76, h: 50 },
-    { label: '心の窓',      sub: '仮実装',  active: true, action: () => renderWindowDetailPage('mental'),        x: bx - 60,  y: 160, w: 74, h: 48 },
-    { label: '戦争の窓',    sub: '仮実装',  active: true, action: () => renderWindowDetailPage('war'),           x: bx + 140, y: 180, w: 74, h: 48 },
-    { label: 'メディアの窓', sub: '仮実装', active: true, action: () => renderWindowDetailPage('media'),         x: bx - 30,  y: 36,  w: 72, h: 46 },
+    { label: '人権の村',    sub: '仮実装',  active: true, action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
+    { label: '民主主義の村', sub: '仮実装', active: true, action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 76, h: 50 },
+    { label: '心の村',      sub: '仮実装',  active: true, action: () => renderWindowDetailPage('mental'),        x: bx - 60,  y: 160, w: 74, h: 48 },
+    { label: '戦争の村',    sub: '仮実装',  active: true, action: () => renderWindowDetailPage('war'),           x: bx + 140, y: 180, w: 74, h: 48 },
+    { label: 'メディアの村', sub: '仮実装', active: true, action: () => renderWindowDetailPage('media'),         x: bx - 30,  y: 36,  w: 72, h: 46 },
   ];
 
   function drawBox(win) {
@@ -3073,11 +3073,11 @@ function showHomeVillageMsg() {
   el.style.display = 'block';
   el.innerHTML = `
     <button class="home-village-msg-close" onclick="document.getElementById('home-village-msg').style.display='none'">✕</button>
-    <div class="home-village-msg-title">民主主義の窓</div>
-    <div class="home-village-msg-body">民主主義とは、選挙だけなのだろうか。
+    <div class="home-village-msg-title">MANAの広場</div>
+    <div class="home-village-msg-body">ここは、社会の出来事を通じて考える場所です。
 
 MANAは答えを示しません。
-ここでは、社会の出来事から考える材料を展示しています。</div>`;
+各村の窓から、社会を観察してみてください。</div>`;
 }
 
 function renderVillageCanvas(win, windowId) {
