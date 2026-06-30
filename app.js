@@ -3526,12 +3526,13 @@ function renderVillageCanvas(win, windowId) {
 function showVillagePlazaMsg(win) {
   const el = document.getElementById('village-plaza-msg');
   if (!el) return;
-  const title = win && win.window_name ? win.window_name : '民主主義の窓';
+  const title    = win && win.window_name ? win.window_name : '';
+  const question = win && win.question   ? win.question    : '';
   el.style.display = 'block';
   el.innerHTML = `
     <button class="home-village-msg-close" onclick="document.getElementById('village-plaza-msg').style.display='none'">✕</button>
     <div class="home-village-msg-title">${title}</div>
-    <div class="home-village-msg-body">民主主義とは、選挙だけなのだろうか。
+    <div class="home-village-msg-body">${question}
 
 MANAは答えを示しません。
 ここでは、社会の出来事から考える材料を展示しています。</div>`;
