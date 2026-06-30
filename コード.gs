@@ -770,9 +770,10 @@ function checkWithGroqV8(article, geminiResult, karteIndex, groqKey) {
     const status = res.getResponseCode();
     if (status !== 200) {
       Logger.log('[Groq API] HTTP ' + status + ': ' + res.getContentText().slice(0, 200));
-      return { check_result: 'hold', fixes: {}, reason: 'Groq API失敗',
+      // 429等APIエラーはapi_errorで返す（backfillでskipと区別して再試行対象にする）
+      return { check_result: 'hold', fixes: {}, reason: 'Groq API失敗 HTTP' + status,
                window_id: geminiResult.window_candidate || 'none', window_reason: '',
-               karte_action: 'skip', date_assessment: 'uncertain', date_reason: '' };
+               karte_action: 'api_error', date_assessment: 'uncertain', date_reason: '' };
     }
     const json = JSON.parse(res.getContentText());
     const text = json.choices && json.choices[0] ? json.choices[0].message.content : '';
@@ -4744,7 +4745,8 @@ function addQuestionsToForm() {
 // ===== カルテなし記事へのバックフィル（1回10件ずつ手動実行）=====
 // カルテIDが空の記事を最大BATCH件取得してGroqでカルテ生成 → DB書き戻し
 function backfillKarteForExisting() {
-  const BATCH = 8;
+  const BATCH = 5;          // 1回あたりの処理件数（レート制限対策で削減）
+  const SLEEP_MS = 7000;    // 12,000TPM制限対応: 7秒待機（約8req/min以内に収める）
   const ss        = SpreadsheetApp.getActiveSpreadsheet();
   const dbSheet   = ss.getSheetByName(PUBLIC_SHEET);
   const karteSheet = ss.getSheetByName(KARTE_SHEET);
@@ -4800,6 +4802,12 @@ function backfillKarteForExisting() {
     Logger.log('[backfill 行' + (i+1) + '] ' + (articleObj.title || '').slice(0, 30) +
       ' → karte_action=' + result.karte_action);
 
+    if (result.karte_action === 'api_error') {
+      Logger.log('[レート制限] スキップ（次回再試行対象）');
+      Utilities.sleep(SLEEP_MS);
+      continue; // processedを増やさない → 次回も対象になる
+    }
+
     if (result.karte_action === 'new' && result.karte) {
       const karteId = 'KARTE-' + String(_getNextKarteNumberV8(karteSheet)).padStart(4, '0');
       karteSheet.appendRow(buildKarteRow(karteId, articleObj, geminiMock, result.karte));
@@ -4816,7 +4824,7 @@ function backfillKarteForExisting() {
     }
 
     processed++;
-    Utilities.sleep(2000);
+    Utilities.sleep(SLEEP_MS);
   }
 
   Logger.log('===== backfill 完了: 処理=' + processed + '件 / 新規カルテ=' + newCount + ' / 統合=' + mergeCount + ' =====');
