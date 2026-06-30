@@ -1600,6 +1600,9 @@ function loadDB(retryCount) {
         tags_structure: row['構造タグ'] || '',
         tags_evidence:  row['根拠タグ'] || '',
         tags_status:    row['状態タグ'] || '',
+        tags_field:     row['分野タグ'] || '',
+        tags_target:    row['対象者タグ'] || '',
+        tags_actor:     row['行為者タグ'] || '',
         severity:       row['重要度'] || '中',
         structure_note: row['構造メモ'] || '',
         collected_at:   row['収録日時'] || '',
@@ -1804,9 +1807,13 @@ function renderDB(data) {
     const structTags = splitTags(r.tags_structure);
     const evidTags   = splitTags(r.tags_evidence);
     const statusTags = splitTags(r.tags_status);
+    const fieldTags  = splitTags(r.tags_field);
+    const targetTags = splitTags(r.tags_target);
+    const actorTags  = splitTags(r.tags_actor);
     const sev = r.severity === '高' ? `<span class="db-card-sev-high">高</span>` :
                 r.severity === '中' ? `<span class="db-card-sev-mid">中</span>` : '';
-    const hasAnyTag = eventTags.length || structTags.length || evidTags.length || statusTags.length;
+    const hasAnyTag = eventTags.length || structTags.length || evidTags.length || statusTags.length ||
+                       fieldTags.length || targetTags.length || actorTags.length;
     // カルテ紐付け：karte_id列を正式キーとして使用
     const relatedKarte = r.karte_id
       ? karteData.find(k => k.id === r.karte_id) || null
@@ -1844,6 +1851,9 @@ function renderDB(data) {
         ${structTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-s" onclick="event.stopPropagation()">${t}</a>`).join('')}
         ${evidTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-v" onclick="event.stopPropagation()">${t}</a>`).join('')}
         ${statusTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-t" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${fieldTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-field" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${targetTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-target" onclick="event.stopPropagation()">${t}</a>`).join('')}
+        ${actorTags.map(t=>`<a href="#/tag/${encodeURIComponent(t)}" class="db-tag-actor" onclick="event.stopPropagation()">${t}</a>`).join('')}
       </div>
       ${hasAnyTag ? `<button class="db-similar-btn" id="similar-btn-${cardId}" onclick="event.stopPropagation();toggleSimilar('${cardId}')">共通する構造を探す</button>` : ''}
       <div class="db-card-similar" id="similar-${cardId}"></div>

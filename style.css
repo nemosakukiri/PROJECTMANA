@@ -129,6 +129,9 @@ nav a:hover,nav a.active{border-color:var(--accent);color:var(--accent)}
 .db-tag-s{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#e6f1fb;border:1px solid #85b7eb;color:#0c447c;cursor:pointer}
 .db-tag-v{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#eaf3de;border:1px solid #97c459;color:#27500a;cursor:pointer}
 .db-tag-t{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#faeeda;border:1px solid #ef9f27;color:#633806;cursor:pointer}
+.db-tag-field{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#f3e8fb;border:1px solid #b88fe0;color:#5a1f8b;cursor:pointer}
+.db-tag-target{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#e8f7f5;border:1px solid #5fc2b0;color:#0a5a4d;cursor:pointer}
+.db-tag-actor{font-family:'DM Mono',monospace;font-size:0.57rem;padding:0.08rem 0.32rem;background:#f5f0e0;border:1px solid #c9a857;color:#5c4a10;cursor:pointer}
 .db-card-karte-btn{display:inline-flex;align-items:center;gap:0.3rem;font-family:'DM Mono',monospace;font-size:0.6rem;padding:0.18rem 0.5rem;border:1px solid var(--accent);color:var(--accent);background:transparent;cursor:pointer;transition:all 0.12s;margin-top:0.4rem}
 .db-card-karte-btn:hover{background:var(--accent);color:#fff}
 .db-card-karte-badge{font-family:'DM Mono',monospace;font-size:0.55rem;padding:0.1rem 0.35rem;background:var(--accent);color:#fff;letter-spacing:0.04em}
@@ -415,7 +418,7 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   .btn-primary,.btn-outline{width:100%;justify-content:center;text-align:center;font-size:0.7rem}
   .guide-section-title{font-size:1.1rem}
   .db-card-tags{gap:0.18rem}
-  .db-tag-e,.db-tag-s,.db-tag-v,.db-tag-t{font-size:0.55rem;padding:0.06rem 0.28rem}
+  .db-tag-e,.db-tag-s,.db-tag-v,.db-tag-t,.db-tag-field,.db-tag-target,.db-tag-actor{font-size:0.55rem;padding:0.06rem 0.28rem}
 }
 /* =====================================================
    PROJECT MANA — Phase 1 スマホ対応追記
@@ -476,7 +479,10 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   .db-tag-e,
   .db-tag-s,
   .db-tag-v,
-  .db-tag-t {
+  .db-tag-t,
+  .db-tag-field,
+  .db-tag-target,
+  .db-tag-actor {
     font-size: 0.68rem;
     padding: 0.18rem 0.4rem;
     min-height: 28px;
@@ -516,7 +522,10 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   .karte-modal-section .db-tag-e,
   .karte-modal-section .db-tag-s,
   .karte-modal-section .db-tag-v,
-  .karte-modal-section .db-tag-t {
+  .karte-modal-section .db-tag-t,
+  .karte-modal-section .db-tag-field,
+  .karte-modal-section .db-tag-target,
+  .karte-modal-section .db-tag-actor {
     font-size: 0.68rem;
     padding: 0.18rem 0.4rem;
   }
@@ -557,7 +566,10 @@ footer{border-top:3px solid var(--ink);padding:1.2rem 2rem;display:flex;justify-
   .db-tag-e,
   .db-tag-s,
   .db-tag-v,
-  .db-tag-t {
+  .db-tag-t,
+  .db-tag-field,
+  .db-tag-target,
+  .db-tag-actor {
     font-size: 0.7rem;
     padding: 0.2rem 0.45rem;
     min-height: 30px;
