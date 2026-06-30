@@ -170,14 +170,14 @@ function collectNews() {
   Logger.log('実行時刻: ' + new Date().toISOString());
 
   const geminiKey    = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
-  const anthropicKey = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
+  const groqKey      = PropertiesService.getScriptProperties().getProperty('GROQ_API_KEY');
 
   if (!geminiKey) {
     Logger.log('[中止] GEMINI_API_KEY が未設定。setupApiKey() を実行してください。');
     return;
   }
-  if (!anthropicKey) {
-    Logger.log('[中止] ANTHROPIC_API_KEY が未設定。setupAnthropicKey() を実行してください。');
+  if (!groqKey) {
+    Logger.log('[中止] GROQ_API_KEY が未設定。setupGroqKey() を実行してください。');
     return;
   }
 
@@ -237,8 +237,9 @@ function collectNews() {
     savedLog++;
     existingKeys.add(article.url || article.title);
 
-    // 3b. Gemini統合分類
-    const geminiResult = classifyWithGeminiV8(article, tags, geminiKey);
+    // 3b. descriptionが短い場合は本文を補完してからGemini分類
+    const enrichedArticle = enrichArticleBody(article);
+    const geminiResult = classifyWithGeminiV8(enrichedArticle, tags, geminiKey);
     if (!geminiResult) {
       consecErr++;
       Logger.log('[Gemini失敗] スキップ (' + consecErr + '/' + MAX_CONSEC_ERR + ')');
@@ -255,11 +256,11 @@ function collectNews() {
       continue;
     }
 
-    // 3c. Claude統合チェック（タグ・著者・窓配置・カルテ生成を1回で）
+    // 3c. Groq（Llama）によるダブルチェック（窓配置・カルテ生成・古い記事判定）
     Utilities.sleep(1500);
-    const claudeResult = checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey);
+    const claudeResult = checkWithGroqV8(article, geminiResult, karteIndex, groqKey);
     const checkedData  = applyClaudeFixes(geminiResult, claudeResult.fixes);
-    Logger.log('[Claude] check=' + claudeResult.check_result +
+    Logger.log('[Groq] check=' + claudeResult.check_result +
       ' / window=' + claudeResult.window_id +
       ' / karte=' + claudeResult.karte_action +
       ' / date=' + claudeResult.date_assessment +
@@ -304,9 +305,213 @@ function collectNews() {
   Logger.log('===== 完了 =====');
 }
 
+// ===== 古い記事 dry run：書き込みなしで保留候補を列挙 =====
+function dryRunMarkOldArticles() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('kansokuDB');
+  if (!sheet) { Logger.log('kansokuDB シートが見つかりません'); return; }
+
+  const colMap = getColMap(sheet);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const today = new Date();
+  const THRESHOLD_DAYS = 30; // 公開日が30日以上前なら候補
+  const currentYear = today.getFullYear();
+
+  // 列インデックス
+  const idxTitle      = colMap[COL.TITLE]      !== undefined ? colMap[COL.TITLE]      : headers.indexOf('タイトル');
+  const idxUrl        = colMap[COL.URL]         !== undefined ? colMap[COL.URL]        : headers.indexOf('URL');
+  const idxPubDate    = colMap[COL.PUB_DATE]    !== undefined ? colMap[COL.PUB_DATE]   : -1;
+  const idxRssPub     = colMap[COL.RSS_PUBDATE] !== undefined ? colMap[COL.RSS_PUBDATE]: -1;
+  const idxOldFlag     = colMap[COL.OLD_FLAG]     !== undefined ? colMap[COL.OLD_FLAG]     : -1;
+  const idxDateStatus  = colMap[COL.DATE_STATUS]  !== undefined ? colMap[COL.DATE_STATUS]  : -1;
+  const idxDate        = colMap[COL.DATE]          !== undefined ? colMap[COL.DATE]         : -1;
+  const idxArticleType = colMap[COL.ARTICLE_TYPE]  !== undefined ? colMap[COL.ARTICLE_TYPE] : headers.indexOf('記事種別');
+
+  const candidates = [];
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const title = String(row[idxTitle] || '');
+    const url   = String(row[idxUrl]   || '');
+    if (!url) continue;
+
+    // 論考・研究・調査報道は古い記事判定から除外（時代を超えた内容のため）
+    if (idxArticleType >= 0) {
+      const atype = String(row[idxArticleType] || '').toLowerCase();
+      if (atype === 'opinion' || atype === 'research' || atype === 'investigative') continue;
+    }
+
+    const reasons = [];
+
+    // 1. すでにold_flag立っている
+    if (idxOldFlag >= 0 && row[idxOldFlag]) reasons.push('old_flag既存:' + row[idxOldFlag]);
+
+    // 2. date_status が 要確認
+    if (idxDateStatus >= 0 && String(row[idxDateStatus]) === '要確認') reasons.push('date_status=要確認');
+
+    // 3. 公開日・RSS公開日が30日以上前
+    const pubSources = [
+      idxPubDate >= 0 ? row[idxPubDate] : null,
+      idxRssPub  >= 0 ? row[idxRssPub]  : null,
+      idxDate    >= 0 ? row[idxDate]     : null,
+    ].filter(Boolean);
+
+    for (const val of pubSources) {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) {
+        const diffDays = (today - d) / (1000 * 60 * 60 * 24);
+        if (diffDays > THRESHOLD_DAYS) {
+          reasons.push('公開日が' + Math.round(diffDays) + '日前:' + String(val).slice(0, 10));
+          break;
+        }
+      }
+    }
+
+    // 4. タイトルに過去年号が含まれる（令和元〜5年、平成、20XX年で今年以外）
+    const oldYearMatch = title.match(/(?:平成|昭和|令和[元1-5]年|20([0-9]{2})年)/);
+    if (oldYearMatch) {
+      const y = oldYearMatch[0];
+      // 西暦の場合は今年でなければ候補
+      const m = title.match(/20(\d{2})年/);
+      if (m) {
+        const yr = 2000 + parseInt(m[1]);
+        if (yr < currentYear) reasons.push('タイトルに過去年号:' + y);
+      } else {
+        reasons.push('タイトルに旧元号:' + y);
+      }
+    }
+
+    if (reasons.length > 0) {
+      candidates.push({ row: i + 1, title: title.slice(0, 40), url: url.slice(0, 60), reasons: reasons.join(' / ') });
+    }
+  }
+
+  Logger.log('===== dry run 結果 =====');
+  Logger.log('総件数: ' + (data.length - 1) + '件');
+  Logger.log('保留候補: ' + candidates.length + '件');
+  Logger.log('');
+  candidates.forEach(function(c) {
+    Logger.log('[行' + c.row + '] ' + c.title);
+    Logger.log('  理由: ' + c.reasons);
+    Logger.log('  URL: ' + c.url);
+  });
+  Logger.log('===== 以上 dry run のみ・書き込みなし =====');
+}
+
+// ===== 古い記事フラグを実際に書き込む（dry run確認後に実行）=====
+function applyMarkOldArticles() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('kansokuDB');
+  if (!sheet) { Logger.log('kansokuDB シートが見つかりません'); return; }
+
+  const colMap = getColMap(sheet);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const today = new Date();
+  const THRESHOLD_DAYS = 30;
+  const currentYear = today.getFullYear();
+
+  const idxTitle       = colMap[COL.TITLE]        !== undefined ? colMap[COL.TITLE]        : headers.indexOf('タイトル');
+  const idxUrl         = colMap[COL.URL]           !== undefined ? colMap[COL.URL]          : headers.indexOf('URL');
+  const idxPubDate     = colMap[COL.PUB_DATE]      !== undefined ? colMap[COL.PUB_DATE]     : -1;
+  const idxRssPub      = colMap[COL.RSS_PUBDATE]   !== undefined ? colMap[COL.RSS_PUBDATE]  : -1;
+  const idxOldFlag     = colMap[COL.OLD_FLAG]      !== undefined ? colMap[COL.OLD_FLAG]     : -1;
+  const idxDateStatus  = colMap[COL.DATE_STATUS]   !== undefined ? colMap[COL.DATE_STATUS]  : -1;
+  const idxDate        = colMap[COL.DATE]          !== undefined ? colMap[COL.DATE]         : -1;
+  const idxArticleType = colMap[COL.ARTICLE_TYPE]  !== undefined ? colMap[COL.ARTICLE_TYPE] : headers.indexOf('記事種別');
+
+  if (idxOldFlag < 0 || idxDateStatus < 0) {
+    Logger.log('old_flag または date_status 列が見つかりません。中止。');
+    return;
+  }
+
+  let count = 0;
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const title = String(row[idxTitle] || '');
+    const url   = String(row[idxUrl]   || '');
+    if (!url) continue;
+
+    // 論考・研究・調査報道は除外
+    if (idxArticleType >= 0) {
+      const atype = String(row[idxArticleType] || '').toLowerCase();
+      if (atype === 'opinion' || atype === 'research' || atype === 'investigative') continue;
+    }
+
+    // すでにフラグが立っていればスキップ
+    if (row[idxOldFlag] === '古い記事候補') continue;
+
+    const reasons = [];
+
+    if (idxOldFlag >= 0 && row[idxOldFlag] && row[idxOldFlag] !== '古い記事候補') reasons.push('old_flag既存');
+    if (idxDateStatus >= 0 && String(row[idxDateStatus]) === '要確認') reasons.push('date_status=要確認');
+
+    const pubSources = [
+      idxPubDate >= 0 ? row[idxPubDate] : null,
+      idxRssPub  >= 0 ? row[idxRssPub]  : null,
+      idxDate    >= 0 ? row[idxDate]     : null,
+    ].filter(Boolean);
+
+    for (const val of pubSources) {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) {
+        const diffDays = (today - d) / (1000 * 60 * 60 * 24);
+        if (diffDays > THRESHOLD_DAYS) { reasons.push('公開日が' + Math.round(diffDays) + '日前'); break; }
+      }
+    }
+
+    const oldYearMatch = title.match(/(?:平成|昭和|令和[元1-5]年|20([0-9]{2})年)/);
+    if (oldYearMatch) {
+      const m = title.match(/20(\d{2})年/);
+      if (m) { const yr = 2000 + parseInt(m[1]); if (yr < currentYear) reasons.push('タイトルに過去年号'); }
+      else reasons.push('タイトルに旧元号');
+    }
+
+    if (reasons.length > 0) {
+      sheet.getRange(i + 1, idxOldFlag + 1).setValue('古い記事候補');
+      sheet.getRange(i + 1, idxDateStatus + 1).setValue('要確認');
+      count++;
+      Logger.log('[行' + (i + 1) + '] フラグ書き込み: ' + title.slice(0, 40) + ' / ' + reasons.join(', '));
+    }
+  }
+  Logger.log('===== applyMarkOldArticles 完了: ' + count + '件に書き込み =====');
+}
+
+// ===== 本文補完：descriptionが短い記事はURLから本文を取得 =====
+function enrichArticleBody(article) {
+  const desc = (article.description || '').trim();
+  if (desc.length >= 80 || !article.url) return article;
+  try {
+    const res = UrlFetchApp.fetch(article.url, {
+      muteHttpExceptions: true,
+      followRedirects: true,
+      headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
+    if (res.getResponseCode() !== 200) return article;
+    const html = res.getContentText();
+    // タグを除去してテキスト抽出（最初の600文字）
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 600);
+    if (text.length > desc.length) {
+      return Object.assign({}, article, { description: text });
+    }
+  } catch(e) {
+    // 取得失敗は無視して元のまま返す
+  }
+  return article;
+}
+
 // ===== v8 パイプライン関数 =====
 
-// Gemini統合分類（1記事・全タグ一括）
+// Gemini統合分類（1記事・全タグ一括・分類のみ）
 function classifyWithGeminiV8(article, tags, apiKey) {
   const tagJson = JSON.stringify(tags);
   const prompt =
@@ -412,6 +617,188 @@ function callClaudeAPI(prompt, anthropicKey, maxTokens) {
 }
 
 // ===== Claude統合チェック（タグ・窓配置・カルテ生成を1回で）=====
+// ===== Groq（Llama）によるダブルチェック =====
+// Gemini分類結果をもとに、Groq/Llamaで品質チェック・窓配置・カルテ生成・古い記事判定を行う
+function checkWithGroqV8(article, geminiResult, karteIndex, groqKey) {
+  const karteIndexJson = JSON.stringify(
+    karteIndex.slice(-200).map(function(k) {
+      return { id: k.id, title: k.title, region: k.region, field: k.field };
+    })
+  );
+
+  const prompt =
+'You are a curator for MANA, a Japanese administrative/social issues observatory site.\n' +
+'Based on the article and Gemini\'s classification below, respond with a single JSON.\n\n' +
+'[Article]\n' +
+'Title: ' + (article.title || '') + '\n' +
+'Source: ' + (article.source_name || '') + '\n' +
+'Summary: ' + (article.description || '').slice(0, 250) + '\n\n' +
+'[Gemini Classification]\n' +
+'Region: ' + (geminiResult.region || '') + ' / Field: ' + (geminiResult.field || '') + '\n' +
+'Summary: ' + (geminiResult.summary || '') + '\n' +
+'Tags: ' + (geminiResult.tags_structure || '') + '\n\n' +
+'[Existing Kartes (last 200)]\n' + karteIndexJson + '\n\n' +
+'[Rules]\n' +
+'check_result: pass=ok / fix=needs correction / hold=questionable content\n' +
+'window_id: human_rights / democracy / welfare / finance / media / war / mental / none\n' +
+'karte_action: new=create new karte / merge=add to existing / skip=no karte needed\n' +
+'  if new: include title, progress(調査中/係争中/是正済み/継続中/不明), mana_comment(1-2 sentences in Japanese)\n' +
+'  if merge: include merge_karte_id\n' +
+'date_assessment: fresh=recent event / old_reprint=retrospective/reprint/roundup / uncertain\n' +
+'Today: ' + new Date().toISOString().slice(0,10) + ' / RSS date: ' + (article.pub_date || 'unknown') + '\n\n' +
+'[Output] JSON only, no code block.\n' +
+'{"check_result":"pass/fix/hold","fixes":{},"reason":"",' +
+'"window_id":"...","window_reason":"",' +
+'"karte_action":"new/merge/skip",' +
+'"karte":{"title":"","progress":"","mana_comment":""},' +
+'"merge_karte_id":"",' +
+'"date_assessment":"fresh/old_reprint/uncertain","date_reason":""}';
+
+  const url = 'https://api.groq.com/openai/v1/chat/completions';
+  try {
+    const res = UrlFetchApp.fetch(url, {
+      method: 'post', contentType: 'application/json',
+      headers: { 'Authorization': 'Bearer ' + groqKey },
+      payload: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1024,
+        temperature: 0.1
+      }),
+      muteHttpExceptions: true
+    });
+    const status = res.getResponseCode();
+    if (status !== 200) {
+      Logger.log('[Groq API] HTTP ' + status + ': ' + res.getContentText().slice(0, 200));
+      return { check_result: 'hold', fixes: {}, reason: 'Groq API失敗',
+               window_id: geminiResult.window_candidate || 'none', window_reason: '',
+               karte_action: 'skip', date_assessment: 'uncertain', date_reason: '' };
+    }
+    const json = JSON.parse(res.getContentText());
+    const text = json.choices && json.choices[0] ? json.choices[0].message.content : '';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) {
+      return { check_result: 'hold', fixes: {}, reason: 'JSON抽出失敗',
+               window_id: geminiResult.window_candidate || 'none', window_reason: '',
+               karte_action: 'skip', date_assessment: 'uncertain', date_reason: '' };
+    }
+    const obj = JSON.parse(match[0]);
+    return {
+      check_result:    obj.check_result    || 'pass',
+      fixes:           obj.fixes           || {},
+      reason:          obj.reason          || '',
+      window_id:       obj.window_id       || geminiResult.window_candidate || 'none',
+      window_reason:   obj.window_reason   || '',
+      karte_action:    obj.karte_action    || 'skip',
+      karte:           obj.karte           || null,
+      merge_karte_id:  obj.merge_karte_id  || '',
+      date_assessment: obj.date_assessment || 'uncertain',
+      date_reason:     obj.date_reason     || '',
+    };
+  } catch(e) {
+    return { check_result: 'hold', fixes: {}, reason: 'エラー: ' + e.message,
+             window_id: geminiResult.window_candidate || 'none', window_reason: '',
+             karte_action: 'skip', date_assessment: 'uncertain', date_reason: '' };
+  }
+}
+
+// Groq APIキーをスクリプトプロパティに保存
+function setupGroqKey() {
+  const ui = SpreadsheetApp.getUi();
+  const result = ui.prompt('Groq APIキーを入力してください（gsk_で始まる文字列）');
+  if (result.getSelectedButton() === ui.Button.OK) {
+    const key = result.getResponseText().trim();
+    PropertiesService.getScriptProperties().setProperty('GROQ_API_KEY', key);
+    Logger.log('GROQ_API_KEY を保存しました');
+  }
+}
+
+// ===== Gemini統合チェック（旧版・使用停止）=====
+function checkWithGeminiV8(article, geminiResult, karteIndex, geminiKey) {
+  const karteIndexJson = JSON.stringify(
+    karteIndex.slice(-200).map(function(k) {
+      return { id: k.id, title: k.title, region: k.region, field: k.field };
+    })
+  );
+
+  const prompt =
+'あなたはMANA（日本の行政・社会問題観測サイト）のデータキュレーターです。\n' +
+'以下の情報をもとに、JSON1つで以下をすべて同時に回答してください：\n' +
+'① 分類品質チェック＆修正\n' +
+'② 観測の窓への配置\n' +
+'③ カルテの新規生成 or 既存カルテへの統合判定\n' +
+'④ 古い記事の再配信チェック\n\n' +
+'【元記事】\n' +
+'タイトル：' + (article.title || '') + '\n' +
+'出典：' + (article.source_name || '') + '\n' +
+'概要：' + (article.description || '').slice(0, 250) + '\n\n' +
+'【Geminiの分類結果】\n' +
+'地域：' + (geminiResult.region || '') + '　分野：' + (geminiResult.field || '') + '\n' +
+'要約：' + (geminiResult.summary || '') + '\n' +
+'構造タグ：' + (geminiResult.tags_structure || '') + '\n' +
+'出来事タグ：' + (geminiResult.tags_event || '') + '\n\n' +
+'【既存カルテ一覧（直近200件）】\n' + karteIndexJson + '\n\n' +
+'【① チェック基準】\n' +
+'check_result: pass=問題なし / fix=修正あり / hold=内容に疑義\n' +
+'fixesは変更が必要な項目のみ記載（省略可）\n\n' +
+'【② 窓の定義（最も強く関連する1つ）】\n' +
+'human_rights=人権・差別・権利侵害 / democracy=民主主義・選挙・議会 / welfare=福祉・生活保護・障害・介護\n' +
+'finance=財政・予算・行財政改革 / media=報道・情報公開 / war=戦争・安全保障 / mental=こころ・精神・孤立 / none=その他\n\n' +
+'【③ カルテ判定基準】\n' +
+'karte_action: new=新規カルテ生成 / merge=既存カルテに統合 / skip=カルテ不要（一般ニュース・政策動向等）\n' +
+'newの場合：karte に title（事案名）, progress（調査中/係争中/是正済み/継続中/不明）, mana_comment（構造的意味・1〜2文）\n' +
+'mergeの場合：merge_karte_id に既存カルテのIDを記載\n\n' +
+'【④ 古い記事チェック】\n' +
+'本日：' + new Date().toISOString().slice(0,10) + '　RSS公開日：' + (article.pub_date || '不明') + '\n' +
+'date_assessment: fresh=直近の出来事 / old_reprint=過去の振り返り・まとめ・再配信 / uncertain=判断できない\n\n' +
+'【出力形式】JSONオブジェクトのみ。\n' +
+'{"check_result":"pass/fix/hold","fixes":{},"reason":"",' +
+'"window_id":"human_rights/democracy/welfare/finance/media/war/mental/none","window_reason":"",' +
+'"karte_action":"new/merge/skip",' +
+'"karte":{"title":"","progress":"","mana_comment":""},' +
+'"merge_karte_id":"",' +
+'"date_assessment":"fresh/old_reprint/uncertain","date_reason":""}';
+
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + geminiKey;
+  try {
+    const res = UrlFetchApp.fetch(url, {
+      method: 'post', contentType: 'application/json',
+      payload: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+      }),
+      muteHttpExceptions: true
+    });
+    const json = JSON.parse(res.getContentText());
+    const text = json.candidates && json.candidates[0] && json.candidates[0].content &&
+                 json.candidates[0].content.parts && json.candidates[0].content.parts[0]
+                 ? json.candidates[0].content.parts[0].text : '';
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) {
+      return { check_result: 'hold', fixes: {}, reason: 'JSON抽出失敗',
+               window_id: geminiResult.window_candidate || 'none', window_reason: '',
+               karte_action: 'skip', date_assessment: 'uncertain', date_reason: '' };
+    }
+    const obj = JSON.parse(match[0]);
+    return {
+      check_result:    obj.check_result    || 'pass',
+      fixes:           obj.fixes           || {},
+      reason:          obj.reason          || '',
+      window_id:       obj.window_id       || geminiResult.window_candidate || 'none',
+      window_reason:   obj.window_reason   || '',
+      karte_action:    obj.karte_action    || 'skip',
+      karte:           obj.karte           || null,
+      merge_karte_id:  obj.merge_karte_id  || '',
+      date_assessment: obj.date_assessment || 'uncertain',
+      date_reason:     obj.date_reason     || '',
+    };
+  } catch(e) {
+    return { check_result: 'hold', fixes: {}, reason: 'エラー: ' + e.message,
+             window_id: geminiResult.window_candidate || 'none', window_reason: '',
+             karte_action: 'skip', date_assessment: 'uncertain', date_reason: '' };
+  }
+}
+
 function checkWithClaudeV8(article, geminiResult, karteIndex, anthropicKey) {
   const karteIndexJson = JSON.stringify(
     karteIndex.slice(-200).map(function(k) {   // 直近200件に絞る（トークン節約）
