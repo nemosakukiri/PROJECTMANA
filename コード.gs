@@ -4776,7 +4776,7 @@ function backfillKarteForExisting() {
   for (let i = 1; i < data.length && processed < BATCH; i++) {
     const row = data[i];
     if (!row[titleIdx]) continue;                           // タイトルなしはスキップ
-    if (row[karteColIdx]) continue;                        // 既にカルテIDあり
+    if (row[karteColIdx] && row[karteColIdx] !== false) continue; // カルテIDあり or skip済み
     if (row[oldFlagIdx] === '古い記事候補') continue;       // 保留記事はスキップ
 
     // article オブジェクトを組み立て
@@ -4821,6 +4821,11 @@ function backfillKarteForExisting() {
       dbSheet.getRange(i + 1, karteColIdx + 1).setValue(result.merge_karte_id);
       mergeCount++;
       Logger.log('[統合] → ' + result.merge_karte_id);
+
+    } else if (result.karte_action === 'skip') {
+      // カルテ不要と判定済みの印を付ける（次回バックフィルで再呼び出しを防ぐ）
+      dbSheet.getRange(i + 1, karteColIdx + 1).setValue('skip');
+      Logger.log('[カルテ不要] skip記録済み');
     }
 
     processed++;
