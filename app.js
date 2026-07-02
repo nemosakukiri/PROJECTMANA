@@ -3456,13 +3456,14 @@ function renderVillageCanvas(win, windowId) {
     ctx.fillText(text,0,0);
     ctx.restore();
   }
-  mapLabel(44,  174, '法律・制度',    -0.07);
-  mapLabel(105, 476, '当事者の声',     0.05);
-  mapLabel(398, 118, '研究者・論考',  -0.04);
-  mapLabel(584,  90, '観測事案',       0.05);
-  mapLabel(618, 294, 'ジャーナリスト', 0.03);
-  mapLabel(556, 470, 'カルテ',        -0.06);
-  mapLabel(248, 462, '喫茶店',         0.04);
+  const HL = villageHouseLabels(windowId);
+  mapLabel(44,  174, HL.law,        -0.07);
+  mapLabel(105, 476, HL.voice,       0.05);
+  mapLabel(398, 118, HL.researcher, -0.04);
+  mapLabel(584,  90, HL.observation, 0.05);
+  mapLabel(618, 294, HL.journalist,  0.03);
+  mapLabel(556, 470, HL.karte,      -0.06);
+  mapLabel(248, 462, HL.cafe,        0.04);
 
   // 左上：戻る矢印（絵の中に手書き風で）
   ctx.save();
@@ -3538,18 +3539,30 @@ MANAは答えを示しません。
 ここでは、社会の出来事から考える材料を展示しています。</div>`;
 }
 
-function showVillageContent(house, win, windowId) {
-  const el = document.getElementById('village-content');
-  if (!el) return;
-
-  const labels = {
+// 村ごとの家ラベル。既定は全村共通（＝従来通り）。
+// windowId 別に上書きすることで、その村だけ家の名前を変えられる。
+function villageHouseLabels(windowId) {
+  const base = {
     law:         '法律・制度',
     researcher:  '研究者・論考',
     voice:       '当事者の声',
     journalist:  'ジャーナリスト',
     karte:       'カルテ',
     observation: '観測事案',
+    cafe:        '喫茶店',
   };
+  if (windowId === 'war') {
+    // 戦争の村：民主主義の型からの差し替え
+    return { ...base, law: '国際人道法', voice: '記憶・証言', karte: '戦争を必要とする人たち' };
+  }
+  return base;
+}
+
+function showVillageContent(house, win, windowId) {
+  const el = document.getElementById('village-content');
+  if (!el) return;
+
+  const labels = villageHouseLabels(windowId);
 
   let items = [];
 
@@ -3633,10 +3646,15 @@ function showVillageContent(house, win, windowId) {
       .catch(() => renderVillageRoomItems(el2, house, labels, []));
     return;
   } else if (house.id === 'karte') {
-    items = karteData.filter(k => {
-      const text = [k.tags_event,k.tags_structure,k.field,k.summary].join(' ');
-      return (win.keywords||[]).some(kw=>text.includes(kw)) || (win.tags||[]).some(t=>text.includes(t));
-    }).map(k => ({ title: k.title, sub: k.region, url: '#/karte/'+encodeURIComponent(k.id), tags: k.tags_event }));
+    if (windowId === 'war') {
+      // 戦争の村では「戦争を必要とする人たち」に転用。軍需産業・推進側の資料を順次追加（今は準備中）
+      items = [];
+    } else {
+      items = karteData.filter(k => {
+        const text = [k.tags_event,k.tags_structure,k.field,k.summary].join(' ');
+        return (win.keywords||[]).some(kw=>text.includes(kw)) || (win.tags||[]).some(t=>text.includes(t));
+      }).map(k => ({ title: k.title, sub: k.region, url: '#/karte/'+encodeURIComponent(k.id), tags: k.tags_event }));
+    }
   } else if (house.id === 'law') {
     items = (win.law_refs||[]).map(l => ({ title: l, sub: '関連法令', url: '', tags: '' }));
   }
