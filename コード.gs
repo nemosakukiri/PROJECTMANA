@@ -94,6 +94,28 @@ const RSS_SOURCES = [
     name: '東京新聞 社説',
     article_type: 'opinion'
   },
+
+  // ===== 社説 主要紙まるごと（shasetsu.jp参照・2026-07-05）=====
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Aasahi.com+%E7%A4%BE%E8%AA%AC&hl=ja&gl=JP&ceid=JP:ja',
+    name: '朝日新聞 社説',
+    article_type: 'opinion'
+  },
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Amainichi.jp+%E7%A4%BE%E8%AA%AC&hl=ja&gl=JP&ceid=JP:ja',
+    name: '毎日新聞 社説',
+    article_type: 'opinion'
+  },
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Ayomiuri.co.jp+%E7%A4%BE%E8%AA%AC&hl=ja&gl=JP&ceid=JP:ja',
+    name: '読売新聞 社説',
+    article_type: 'opinion'
+  },
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Asankei.com+%E4%B8%BB%E5%BC%B5&hl=ja&gl=JP&ceid=JP:ja',
+    name: '産経新聞 主張（社説）',
+    article_type: 'opinion'
+  },
 ];
 
 // 公開DBに自動反映するキーワード（これを含む記事はタグ未分類でも即公開）
