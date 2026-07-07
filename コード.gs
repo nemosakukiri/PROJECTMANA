@@ -62,6 +62,38 @@ const RSS_SOURCES = [
     name: '現代ビジネス（行政・福祉・民主主義）',
     article_type: 'opinion'
   },
+
+  // ===== 論考メディア追加＋社説強化（2026-07-05）=====
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Atkfd.or.jp+%E8%A1%8C%E6%94%BF+OR+%E7%A4%BE%E4%BC%9A%E4%BF%9D%E9%9A%9C+OR+%E7%A6%8F%E7%A5%89+OR+%E8%B2%A1%E6%94%BF+OR+%E6%B0%91%E4%B8%BB%E4%B8%BB%E7%BE%A9+OR+%E4%BA%BA%E6%A8%A9&hl=ja&gl=JP&ceid=JP:ja',
+    name: '東京財団政策研究所（政策・社会保障の論考）',
+    article_type: 'research'
+  },
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Aisvd.or.jp&hl=ja&gl=JP&ceid=JP:ja',
+    name: '社会構想デザイン機構ISVD（社会構造の論考）',
+    article_type: 'research'
+  },
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Aasahi.com+Re%3ARon+OR+%E8%AB%96%E5%BA%A7&hl=ja&gl=JP&ceid=JP:ja',
+    name: '朝日新聞 Re:Ron（論考）',
+    article_type: 'research'
+  },
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Anikkei.com+%E3%82%B0%E3%83%AD%E3%83%BC%E3%83%90%E3%83%AB%E3%82%AA%E3%83%94%E3%83%8B%E3%82%AA%E3%83%B3+OR+%E7%B5%8C%E6%B8%88%E6%95%99%E5%AE%A4+OR+%E6%A0%B8%E5%BF%83&hl=ja&gl=JP&ceid=JP:ja',
+    name: '日経 グローバルオピニオン',
+    article_type: 'opinion'
+  },
+  {
+    url: 'https://news.google.com/rss/search?q=%E7%A4%BE%E8%AA%AC+OR+%E8%AB%96%E8%AA%AC+%E7%94%9F%E6%B4%BB%E4%BF%9D%E8%AD%B7+OR+%E7%A6%8F%E7%A5%89+OR+%E7%A4%BE%E4%BC%9A%E4%BF%9D%E9%9A%9C+OR+%E8%A1%8C%E6%94%BF+OR+%E8%B2%A1%E6%94%BF+OR+%E6%B0%91%E4%B8%BB%E4%B8%BB%E7%BE%A9+OR+%E4%BA%BA%E6%A8%A9+OR+%E9%9A%9C%E5%AE%B3&hl=ja&gl=JP&ceid=JP:ja',
+    name: '社説・論説（横断／社会保障・行政・人権）',
+    article_type: 'opinion'
+  },
+  {
+    url: 'https://news.google.com/rss/search?q=site%3Atokyo-np.co.jp+%E7%A4%BE%E8%AA%AC&hl=ja&gl=JP&ceid=JP:ja',
+    name: '東京新聞 社説',
+    article_type: 'opinion'
+  },
 ];
 
 // 公開DBに自動反映するキーワード（これを含む記事はタグ未分類でも即公開）
