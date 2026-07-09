@@ -2274,6 +2274,7 @@ function renderHomeCanvas() {
     { label: '戦争の言葉',      winKey: '戦争の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('war'),           x: bx + 140, y: 180, w: 74, h: 48 },
     { label: '人権の言葉',      winKey: '人権の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
     { label: '民主主義の言葉',  winKey: '民主主義の窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 84, h: 50 },
+    { label: 'MANAの暮らし',   winKey: '',              sub: 'よみもの', active: true,  draw: true,  action: () => renderKurashiPage(),                     x: bx + 20,  y: 352, w: 104, h: 52 },
     { label: 'PROJECT MANAとは', sub: 'ポップアップ', active: true, draw: false,
       action: () => { document.getElementById('mana-about-overlay').classList.add('open'); },
       x: bx - 155, y: 350, w: 100, h: 56 },
@@ -2756,6 +2757,43 @@ function renderWindowDetailPage(windowId) {
     </div>`;
 
   renderVillageCanvas(win, windowId);
+}
+
+// ===== MANAの暮らし（運営の随筆） =====
+function renderKurashiPage() {
+  const el = document.getElementById('page-kurashi');
+  if (!el) return;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  window.scrollTo(0, 0);
+  el.innerHTML = '<div class="page-inner"><p style="padding:2rem 0;color:var(--ink-light)">読み込み中...</p></div>';
+  fetch('/mana_kurashi.json')
+    .then(r => r.json())
+    .then(essays => {
+      const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      let html = '<div class="kurashi-page">'
+        + '<button class="window-back-btn" onclick="showPage(\'home\',document.querySelector(\'nav a:nth-child(1)\'))">← ホームへ戻る</button>'
+        + '<div class="kurashi-intro"><h1 class="kurashi-pagetitle">MANAの暮らし</h1>'
+        + '<p class="kurashi-lead">生活のなかで感じたこと、記録しておきたいことを、運営（多藝麻奈）が時々置いていく場所です。</p></div>';
+      (Array.isArray(essays) ? essays : []).forEach(a => {
+        html += '<article class="kurashi-essay">';
+        html += '<header class="kurashi-essay-head">';
+        html += '<h2 class="kurashi-title">' + esc(a.title) + '</h2>';
+        if (a.subtitle) html += '<p class="kurashi-subtitle">' + esc(a.subtitle) + '</p>';
+        html += '<p class="kurashi-meta">' + esc(a.author) + (a.date ? '　' + esc(a.date) : '') + '</p>';
+        html += '</header>';
+        (a.sections || []).forEach(sec => {
+          if (sec.heading) html += '<h3 class="kurashi-heading">' + esc(sec.heading) + '</h3>';
+          (sec.paragraphs || []).forEach(p => { html += '<p class="kurashi-p">' + esc(p) + '</p>'; });
+        });
+        html += '</article>';
+      });
+      html += '</div>';
+      el.innerHTML = html;
+      window.scrollTo(0, 0);
+    })
+    .catch(() => { el.innerHTML = '<div class="page-inner"><p style="padding:2rem 0">読み込みに失敗しました。</p></div>'; });
 }
 
 function renderHomeVillage() {
