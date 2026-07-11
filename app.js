@@ -2275,6 +2275,8 @@ function renderHomeCanvas() {
     { label: '人権の言葉',      winKey: '人権の窓',      sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('human_rights'),  x: bx - 220, y: 240, w: 76, h: 50 },
     { label: '民主主義の言葉',  winKey: '民主主義の窓',  sub: '村へ',    active: true,  draw: true,  action: () => renderWindowDetailPage('democracy'),     x: bx + 200, y: 280, w: 84, h: 50 },
     { label: 'MANAの暮らし',   winKey: '',              sub: 'よみもの', active: true,  draw: true,  action: () => renderKurashiPage(),                     x: bx + 20,  y: 352, w: 104, h: 52 },
+    // 空白DB 思想の地図：木の横に建つ家（巣箱ではなく地上の家として描画）
+    { label: '空白DB',         winKey: '',              sub: '思想の地図', active: true, draw: true, type: 'house', action: () => { window.location.href = '/kuhaku.html'; }, x: bx + 73, y: 723, w: 76, h: 62 },
     { label: 'PROJECT MANAとは', sub: 'ポップアップ', active: true, draw: false,
       action: () => { document.getElementById('mana-about-overlay').classList.add('open'); },
       x: bx - 155, y: 350, w: 100, h: 56 },
@@ -2308,7 +2310,27 @@ function renderHomeCanvas() {
     ctx.fillText(sub, x, y + h * .83);
   }
 
-  windows.filter(w => w.draw).forEach(drawBox);
+  // 地上の家（空白DB用）。巣箱drawBoxとは別に、屋根＋本体＋入口で描く
+  function drawHouse(win) {
+    const { x, y, w, h, label, sub } = win;
+    ctx.fillStyle = '#14140c';
+    ctx.beginPath();
+    ctx.moveTo(x - w / 2 - 3, y); ctx.lineTo(x, y - 16); ctx.lineTo(x + w / 2 + 3, y);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.roundRect(x - w / 2, y, w, h, 3); ctx.fill();
+    ctx.textAlign = 'center'; ctx.fillStyle = '#cdd6e0';
+    ctx.font = '600 11px sans-serif';
+    ctx.fillText(label, x, y + h * 0.34);
+    const dw = w * 0.30, dh = h * 0.44;
+    ctx.fillStyle = '#cdd6e0';
+    ctx.beginPath(); ctx.roundRect(x - dw / 2, y + h - dh, dw, dh, 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + dw * 0.26, y + h - dh * 0.5, 1.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#14140c'; ctx.fill();
+    ctx.fillStyle = 'rgba(160,185,210,.9)';
+    ctx.font = '600 8px sans-serif';
+    ctx.fillText(sub, x, y + h + 11);
+  }
+  windows.filter(w => w.draw).forEach(win => win.type === 'house' ? drawHouse(win) : drawBox(win));
 
   // 共通キャンバスポップアップ
   function showCanvasPopup({ label, body, btnLabel, onOpen }) {

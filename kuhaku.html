@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>空白DB — 思想の地図</title>
+<meta name="description" content="空白DBの思想の地図と憲章。暮らし・社会・空白DBの循環を一枚にまとめた、プロジェクトの土台。">
+<meta name="theme-color" content="#f5f5f0">
+<link rel="icon" type="image/svg+xml" href="/logo-favicon.svg">
+<style>
+  :root{
+    --paper:#f5f5f0;--paper-2:#eceee6;--ink:#1b1e19;--muted:#5c6157;--moss:#3f5c43;
+    --moss-soft:#6f8a6c;--ochre:#a6772d;--rule:#d8dacf;--line:#c9ccbf;--shadow:rgba(30,40,25,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#15170f;--paper-2:#1e2118;--ink:#eae9df;--muted:#9ea393;--moss:#93b58c;
+      --moss-soft:#7a9873;--ochre:#d8ac5f;--rule:#333a2c;--line:#3c4433;--shadow:rgba(0,0,0,.4);
+    }
+    meta[name="theme-color"]{}
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP","Songti SC",serif;
+    line-height:1.95;font-size:17px;letter-spacing:.02em;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  .gothic{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;}
+  .wrap{max-width:660px;margin:0 auto;padding:clamp(2rem,6vw,4rem) clamp(1.4rem,5vw,2.2rem) 6rem;}
+
+  .backlink{
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;
+    font-size:.76rem;letter-spacing:.14em;color:var(--muted);text-decoration:none;
+    display:inline-block;margin-bottom:2.6rem;
+  }
+  .backlink:hover{color:var(--moss);}
+
+  .eyebrow{
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;
+    font-size:.72rem;letter-spacing:.42em;color:var(--moss);font-weight:600;
+    display:flex;align-items:center;gap:.9em;margin-bottom:2.2rem;
+  }
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--rule);}
+  h1.lede{font-size:clamp(1.7rem,5vw,2.4rem);font-weight:600;line-height:1.5;margin:0 0 2.6rem;text-wrap:balance;letter-spacing:.04em;}
+
+  .creed{position:relative;margin:3.5rem 0 3rem;padding:clamp(2.4rem,7vw,4rem) 0;text-align:center;isolation:isolate;}
+  .creed .void{position:absolute;inset:0;z-index:-1;display:flex;align-items:center;justify-content:center;
+    font-size:clamp(7rem,26vw,15rem);font-weight:600;color:var(--ink);opacity:.045;letter-spacing:.1em;
+    user-select:none;pointer-events:none;line-height:1;}
+  .creed p{margin:0;font-size:clamp(1.35rem,4.6vw,2.05rem);line-height:1.85;font-weight:600;letter-spacing:.03em;color:var(--ink);text-wrap:balance;}
+  .creed .accentline{color:var(--ochre);}
+  .creed .attrib{margin-top:1.6rem;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;font-size:.74rem;letter-spacing:.3em;color:var(--muted);}
+
+  p.body{margin:0 0 1.5rem;color:var(--ink);}
+  .muted{color:var(--muted);}
+  section{margin-top:clamp(3.5rem,9vw,6rem);}
+  .sec-label{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;font-size:.7rem;letter-spacing:.34em;color:var(--moss);font-weight:600;margin-bottom:1.5rem;}
+  h2{font-size:clamp(1.25rem,3.6vw,1.55rem);font-weight:600;margin:0 0 1.3rem;letter-spacing:.05em;line-height:1.6;text-wrap:balance;}
+
+  .obs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:3px;overflow:hidden;}
+  .obs > div{background:var(--paper);padding:1.7rem 1.5rem;}
+  .obs h3{margin:0 0 .2rem;font-size:1.05rem;font-weight:600;letter-spacing:.03em;}
+  .obs .proj{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;font-size:.7rem;letter-spacing:.2em;color:var(--moss);margin-bottom:1rem;}
+  .obs ul{margin:0 0 1rem;padding-left:1.1em;}
+  .obs li{margin:.15rem 0;font-size:.95rem;line-height:1.7;}
+  .obs .note{font-size:.86rem;color:var(--muted);line-height:1.8;margin:0;}
+  @media(max-width:560px){.obs{grid-template-columns:1fr;}}
+
+  .map{display:flex;flex-direction:column;align-items:center;gap:0;margin-top:1rem;}
+  .node{width:100%;max-width:440px;text-align:center;border:1px solid var(--line);border-radius:4px;background:var(--paper);padding:1.2rem 1.4rem;}
+  .node .k{font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;font-size:.68rem;letter-spacing:.26em;color:var(--moss);margin-bottom:.5rem;}
+  .node .t{font-size:1.02rem;line-height:1.7;font-weight:600;}
+  .node .d{font-size:.85rem;color:var(--muted);margin-top:.45rem;line-height:1.75;}
+  .node.center-node{border-color:var(--moss);border-width:1.5px;background:var(--paper-2);box-shadow:0 6px 26px var(--shadow);}
+  .node.center-node .big{font-size:clamp(1.3rem,5vw,1.7rem);letter-spacing:.16em;font-weight:600;color:var(--moss);}
+  .arrow{width:1px;height:34px;background:var(--line);position:relative;}
+  .arrow::after{content:"";position:absolute;bottom:0;left:50%;width:6px;height:6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);transform:translateX(-50%) rotate(45deg);}
+
+  .loop{margin-top:2.6rem;text-align:center;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;font-size:.9rem;letter-spacing:.12em;color:var(--muted);line-height:2.2;}
+  .loop b{color:var(--ink);font-weight:600;}
+  .loop .sep{color:var(--moss);padding:0 .5em;}
+
+  .pull{margin:2.8rem 0 0;padding:1.6rem 1.8rem;border-left:3px solid var(--moss);background:var(--paper-2);border-radius:0 4px 4px 0;font-size:1.05rem;line-height:1.9;}
+  .pull b{color:var(--moss);}
+
+  .charter{margin-top:1.5rem;border-top:1px solid var(--rule);}
+  .article{display:grid;grid-template-columns:auto 1fr;gap:1.3rem;align-items:baseline;padding:1.25rem .2rem;border-bottom:1px solid var(--rule);}
+  .article .num{font-family:"Hiragino Mincho ProN","Yu Mincho",serif;font-size:1.25rem;color:var(--moss);font-weight:600;min-width:1.4em;text-align:center;line-height:1;}
+  .article .txt{font-size:1.08rem;line-height:1.7;font-weight:600;letter-spacing:.03em;}
+
+  .closing{margin-top:clamp(3.5rem,9vw,5.5rem);padding-top:2.4rem;border-top:1px solid var(--rule);}
+  .closing p{color:var(--muted);font-size:1rem;line-height:2;margin:0 0 1.2rem;}
+  .sign{margin-top:2rem;font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",YuGothic,"Noto Sans JP",sans-serif;font-size:.78rem;letter-spacing:.24em;color:var(--ink);}
+  .sign span{color:var(--muted);}
+
+  .fade{opacity:0;transform:translateY(14px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards;}
+  .creed.fade{animation-delay:.15s;}
+  @keyframes rise{to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){.fade{animation:none;opacity:1;transform:none;}}
+  a:focus-visible{outline:2px solid var(--moss);outline-offset:3px;}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <a class="backlink gothic" href="/">← PROJECT MANA へ</a>
+
+  <div class="eyebrow gothic fade">空白DB ／ 思想の地図</div>
+  <h1 class="lede fade">暮らしを、社会の知識へ。</h1>
+
+  <p class="body muted fade">
+    これは企画書ではありません。<strong style="color:var(--ink);font-weight:600;">思想の地図</strong>です。
+    空白DBが何のためにあるのか——その一番奥にある約束を、はじめに書いておきます。
+    将来、企業や大学、行政が参加するようになっても、ここに立ち返れば「何のためのプラットフォームなのか」がぶれない。そういう土台として。
+  </p>
+
+  <div class="creed fade">
+    <div class="void" aria-hidden="true">空白</div>
+    <p>「困っていると言ったら困っている。<br><span class="accentline">そこから始めよう。</span>」</p>
+    <div class="attrib">空白DB の哲学</div>
+  </div>
+
+  <section>
+    <div class="sec-label gothic">二つの観測</div>
+    <h2>暮らしと、社会。両方を見る。</h2>
+    <div class="obs">
+      <div>
+        <h3>暮らしの観測</h3>
+        <div class="proj gothic">絵本のくらし</div>
+        <ul>
+          <li>安心して暮らせる場所</li>
+          <li>何気ないつぶやき</li>
+          <li>小さな困りごと</li>
+          <li>生活の工夫</li>
+          <li>日常の喜び</li>
+        </ul>
+        <p class="note">ここはアンケートではない。「生活そのもの」が集まる場所。集まるのは、一次データ。</p>
+      </div>
+      <div>
+        <h3>社会の観測</h3>
+        <div class="proj gothic">PROJECT MANA</div>
+        <ul>
+          <li>ニュース</li>
+          <li>行政</li>
+          <li>裁判</li>
+          <li>制度</li>
+          <li>福祉</li>
+        </ul>
+        <p class="note">社会全体を見る百葉箱。記録し続けることで、社会構造そのものを観測する。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label gothic">中心にあるもの</div>
+    <h2>まだ誰も見ていない「空白」を見つける。</h2>
+    <div class="map">
+      <div class="node">
+        <div class="k gothic">暮らし ＋ 社会</div>
+        <div class="t">二つの観測が、一つに重なる</div>
+      </div>
+      <div class="arrow" aria-hidden="true"></div>
+      <div class="node center-node">
+        <div class="k gothic">空 白 D B</div>
+        <div class="big">まだ誰も見ていない空白</div>
+        <div class="d">生活と社会の両方から「空白」を見つけ、知識として蓄積する。</div>
+      </div>
+      <div class="arrow" aria-hidden="true"></div>
+      <div class="node">
+        <div class="k gothic">社会へ循環</div>
+        <div class="t">企業・研究者・大学・行政・支援者</div>
+        <div class="d">新しい製品／新しいサービス／制度改善／研究へ。</div>
+      </div>
+      <div class="arrow" aria-hidden="true"></div>
+      <div class="node">
+        <div class="k gothic">また暮らしへ</div>
+        <div class="t">改善された暮らし → 新しい経験</div>
+        <div class="d">そして、また空白DBへ。</div>
+      </div>
+    </div>
+
+    <div class="loop gothic">
+      <b>暮らし</b><span class="sep">→</span><b>知識</b><span class="sep">→</span><b>社会</b><span class="sep">→</span><b>暮らし</b>
+    </div>
+
+    <div class="pull">
+      この地図で一番大事なこと。<br>
+      中心は企業じゃない。行政でもない。AIでもない。<br>
+      中心は、<b>「暮らし」</b>です。
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label gothic">空白DB 憲章 ／ Principles</div>
+    <h2>システムより先に、思想がある。</h2>
+    <p class="body muted">行政は制度を見る。企業は技術を見る。研究者は分析する。でも空白DBだけは、まず暮らしを見る。その姿勢を、七つの言葉にしておきます。</p>
+    <div class="charter">
+      <div class="article"><div class="num">一</div><div class="txt">暮らしから始める。</div></div>
+      <div class="article"><div class="num">二</div><div class="txt">困りごとを否定しない。</div></div>
+      <div class="article"><div class="num">三</div><div class="txt">経験は社会の知識である。</div></div>
+      <div class="article"><div class="num">四</div><div class="txt">小さな声を大切にする。</div></div>
+      <div class="article"><div class="num">五</div><div class="txt">解決は社会全体で考える。</div></div>
+      <div class="article"><div class="num">六</div><div class="txt">当事者は生活の専門家である。</div></div>
+      <div class="article"><div class="num">七</div><div class="txt">人はあらかじめ多様である。</div></div>
+    </div>
+  </section>
+
+  <div class="closing">
+    <p>このプロジェクトは、システムよりも思想が先にありました。だから最初に、これを書いておきます。ここから、PROJECT MANAも、絵本のくらしも、空白DBも、すべて自然につながっていくはずです。</p>
+    <div class="sign gothic">あちこちむちうち ／ MANA　<span>—　多藝麻奈</span></div>
+  </div>
+
+</main>
+</body>
+</html>
