@@ -19,6 +19,47 @@ function checkXKeysConfigured() {
   }
 }
 
+// ===== 診断用：鍵の値の長さと前後の空白を確認（中身は表示しない）=====
+function diagnoseXKeyFormat() {
+  const props = PropertiesService.getScriptProperties();
+  const names = ['X_API_KEY', 'X_API_SECRET', 'X_ACCESS_TOKEN', 'X_ACCESS_TOKEN_SECRET'];
+  names.forEach(name => {
+    const v = props.getProperty(name);
+    if (!v) {
+      Logger.log(name + ' : 未設定');
+      return;
+    }
+    const trimmed = v.trim();
+    const hasLeadingSpace = v !== trimmed && v.length > trimmed.length && v[0] !== trimmed[0];
+    const hasTrailingSpace = v.length !== trimmed.length;
+    Logger.log(
+      name + ' : 長さ=' + v.length +
+      ' / trim後の長さ=' + trimmed.length +
+      ' / 前後に空白あり=' + (v.length !== trimmed.length) +
+      ' / ハイフン含む=' + v.includes('-')
+    );
+  });
+}
+
+// ===== 診断用：投稿せずに認証だけテストする（読み取りAPI）=====
+// GET /2/users/me は自分のアカウント情報を取るだけの読み取り専用API。
+// ここが401なら「鍵の組み合わせ自体」が問題。
+// ここが200で投稿だけ401なら「書き込み権限」側の問題と切り分けられる。
+function verifyXCredentials() {
+  const url = 'https://api.twitter.com/2/users/me';
+  const authHeader = buildOAuth1Header('GET', url, {});
+
+  const response = UrlFetchApp.fetch(url, {
+    method: 'get',
+    headers: { Authorization: authHeader },
+    muteHttpExceptions: true
+  });
+
+  const code = response.getResponseCode();
+  const body = response.getContentText();
+  Logger.log('認証テスト結果 (' + code + '): ' + body);
+}
+
 // ===== 投稿履歴シート =====
 const X_POST_LOG_SHEET = 'X投稿履歴';
 
@@ -116,10 +157,10 @@ function percentEncode(str) {
 
 function buildOAuth1Header(method, url, extraParams) {
   const props = PropertiesService.getScriptProperties();
-  const apiKey = props.getProperty('X_API_KEY');
-  const apiSecret = props.getProperty('X_API_SECRET');
-  const accessToken = props.getProperty('X_ACCESS_TOKEN');
-  const accessSecret = props.getProperty('X_ACCESS_TOKEN_SECRET');
+  const apiKey = (props.getProperty('X_API_KEY') || '').trim();
+  const apiSecret = (props.getProperty('X_API_SECRET') || '').trim();
+  const accessToken = (props.getProperty('X_ACCESS_TOKEN') || '').trim();
+  const accessSecret = (props.getProperty('X_ACCESS_TOKEN_SECRET') || '').trim();
 
   const oauthParams = {
     oauth_consumer_key: apiKey,
