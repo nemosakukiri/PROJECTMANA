@@ -30,8 +30,6 @@ function diagnoseXKeyFormat() {
       return;
     }
     const trimmed = v.trim();
-    const hasLeadingSpace = v !== trimmed && v.length > trimmed.length && v[0] !== trimmed[0];
-    const hasTrailingSpace = v.length !== trimmed.length;
     Logger.log(
       name + ' : 長さ=' + v.length +
       ' / trim後の長さ=' + trimmed.length +
@@ -42,9 +40,6 @@ function diagnoseXKeyFormat() {
 }
 
 // ===== 診断用：投稿せずに認証だけテストする（読み取りAPI）=====
-// GET /2/users/me は自分のアカウント情報を取るだけの読み取り専用API。
-// ここが401なら「鍵の組み合わせ自体」が問題。
-// ここが200で投稿だけ401なら「書き込み権限」側の問題と切り分けられる。
 function verifyXCredentials() {
   const url = 'https://api.twitter.com/2/users/me';
   const authHeader = buildOAuth1Header('GET', url, {});
@@ -58,6 +53,54 @@ function verifyXCredentials() {
   const code = response.getResponseCode();
   const body = response.getContentText();
   Logger.log('認証テスト結果 (' + code + '): ' + body);
+}
+
+// ===== 診断用：署名アルゴリズム自体のセルフテスト（実際の鍵は使わない）=====
+// Twitter公式ドキュメントに載っている既知のサンプル値を使い、
+// 自前実装したOAuth1.0a署名計算が正しいかどうかだけを検証する。
+// ここが一致すれば「計算ロジックは正しい」→ 問題は鍵側にあると判断できる。
+// ここが不一致なら「計算ロジックにバグがある」と確定できる。
+function testOAuthSignatureAlgorithm() {
+  const method = 'POST';
+  const url = 'https://api.twitter.com/1/statuses/update.json';
+
+  // Twitter公式サンプルの固定値（本番の鍵とは無関係）
+  const consumerSecret = 'kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw';
+  const tokenSecret = 'LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE';
+
+  const params = {
+    oauth_consumer_key: 'xvz1evFS4wEEPTGEFPHBog',
+    oauth_nonce: 'kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg',
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp: '1318622958',
+    oauth_token: '370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb',
+    oauth_version: '1.0',
+    status: 'Hello Ladies + Gentlemen, a signed OAuth request!',
+    include_entities: 'true'
+  };
+
+  const sortedKeys = Object.keys(params).sort();
+  const paramString = sortedKeys
+    .map(k => percentEncode(k) + '=' + percentEncode(params[k]))
+    .join('&');
+
+  const baseString = [
+    method.toUpperCase(),
+    percentEncode(url),
+    percentEncode(paramString)
+  ].join('&');
+
+  const signingKey = percentEncode(consumerSecret) + '&' + percentEncode(tokenSecret);
+  const signatureBytes = Utilities.computeHmacSignature(
+    Utilities.MacAlgorithm.HMAC_SHA_1, baseString, signingKey
+  );
+  const signature = Utilities.base64Encode(signatureBytes);
+
+  const expected = 'tnnArxj06cWHq44gCs1OSKk/jLY=';
+
+  Logger.log('計算結果: ' + signature);
+  Logger.log('期待値  : ' + expected);
+  Logger.log(signature === expected ? '一致：署名アルゴリズムは正しい' : '不一致：署名アルゴリズムにバグがある');
 }
 
 // ===== 投稿履歴シート =====
@@ -82,10 +125,8 @@ function getAlreadyPostedUrls(ss) {
 }
 
 // ===== 投稿対象を1件選ぶ =====
-// kansokuDB（公開用の観測DB）から、URL・タイトル・要約が揃っていて
-// まだX投稿履歴に無い行を、新しい順に探して1件返す。
 function pickUnpostedObservation(ss) {
-  const sheet = ss.getSheetByName(PUBLIC_SHEET); // 'kansokuDB'（コード.gsで定義済み）
+  const sheet = ss.getSheetByName(PUBLIC_SHEET);
   if (!sheet) {
     Logger.log('kansokuDBシートが見つかりません');
     return null;
@@ -97,7 +138,6 @@ function pickUnpostedObservation(ss) {
   const data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
   const posted = getAlreadyPostedUrls(ss);
 
-  // 新しい行（下側）から順にチェック
   for (let i = data.length - 1; i >= 0; i--) {
     const row = data[i];
     const url = row[map['URL']];
@@ -123,10 +163,9 @@ function pickUnpostedObservation(ss) {
 }
 
 // ===== 投稿文の組み立て =====
-// X の上限280文字。URL分（t.co短縮後23文字換算）を差し引いて本文を組む。
 function buildTweetText(item) {
-  const URL_RESERVED = 24; // t.co短縮後の見積り＋改行
-  const maxBodyLen = 280 - URL_RESERVED - 12; // ラベル分の余裕を確保
+  const URL_RESERVED = 24;
+  const maxBodyLen = 280 - URL_RESERVED - 12;
 
   let dateLabel = '';
   if (item.date) {
@@ -255,9 +294,7 @@ function postDailyObservationToX() {
 }
 
 // ===== トリガー設定（一度だけ手動実行）=====
-// ★ 既存の setDailyTrigger() は変更しない。独立したトリガーとして追加する。
 function setXPostTrigger() {
-  // このスクリプトが以前に作ったトリガーだけを消す（他の関数のトリガーは残す）
   ScriptApp.getProjectTriggers().forEach(t => {
     if (t.getHandlerFunction() === 'postDailyObservationToX') {
       ScriptApp.deleteTrigger(t);
