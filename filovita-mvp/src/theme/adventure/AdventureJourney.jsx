@@ -59,7 +59,7 @@ function buildAdventureScene(stage) {
 /* コンポーネントテーマ専用部品：旅の地図。中身の情報構造・操作順序には一切手を加えない。 */
 export default function AdventureJourney({ stage, children }) {
   return (
-    <div style={{ position: "relative", overflow: "hidden" }}>
+    <div style={{ position: "relative", overflow: "hidden", minHeight: "100vh" }}>
       {children}
       <div
         style={{

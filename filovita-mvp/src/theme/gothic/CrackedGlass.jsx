@@ -51,7 +51,7 @@ function buildRoomSilhouette(stage) {
 export default function CrackedGlass({ stage = 2, children }) {
   const fireLit = stage >= 1;
   return (
-    <div style={{ position: "relative", overflow: "hidden" }}>
+    <div style={{ position: "relative", overflow: "hidden", minHeight: "100vh" }}>
       <style>{`
         @keyframes gothicAmbient {
           0%, 100% { opacity: 0.85; }
