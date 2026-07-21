@@ -5,6 +5,8 @@ import { generateDraftFake } from "./lib/fakeGenerateDraft.js";
 import { loadState, saveState } from "./lib/persistence.js";
 import CRTScreen from "./theme/industrial/CRTScreen.jsx";
 import CrackedGlass from "./theme/gothic/CrackedGlass.jsx";
+import ForestGrowth from "./theme/forest/ForestGrowth.jsx";
+import { getDayOfMonth, getMonthStage } from "./theme/growthStage.js";
 
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
 import InputModeScreen from "./screens/InputModeScreen.jsx";
@@ -65,6 +67,8 @@ export default function App() {
 
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
+  const isForest = theme.componentTheme === "forest";
+  const monthStage = getMonthStage(getDayOfMonth(TODAY_DATE));
 
   const screenContent = (
     <>
@@ -165,7 +169,9 @@ export default function App() {
         {isIndustrial ? (
           <CRTScreen>{screenContent}</CRTScreen>
         ) : isGothic ? (
-          <CrackedGlass>{screenContent}</CrackedGlass>
+          <CrackedGlass stage={monthStage}>{screenContent}</CrackedGlass>
+        ) : isForest ? (
+          <ForestGrowth stage={monthStage}>{screenContent}</ForestGrowth>
         ) : (
           screenContent
         )}

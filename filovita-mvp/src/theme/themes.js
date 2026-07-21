@@ -83,6 +83,8 @@ export const themes = {
     name: "森",
     emoji: "🌲",
     blurb: "自然の中にいるような、静かな安心感がほしい人へ",
+    // コンポーネントテーマ：背景そのものが、月の日付とともに育つ小さな物語（theme/forest/）。
+    componentTheme: "forest",
     tokens: {
       paper: "#EEF2E6", card: "#FFFFFF", ink: "#1F2E1A", inkSoft: "#33452B",
       inkFaint: "#5C6E52", line: "#B9C9A8", accent: "#2F6B3A", accentBg: "#DCEBDD",
