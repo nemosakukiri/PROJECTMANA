@@ -5,6 +5,13 @@ function svgUrl(svg) {
 const SCENE_HEIGHT = 260;
 const GROUND_Y = 260;
 
+const GROUND_FADE =
+  "<defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'>" +
+  "<stop offset='0' stop-color='#DCE6D0' stop-opacity='0'/>" +
+  "<stop offset='1' stop-color='#AFC29B' stop-opacity='0.65'/>" +
+  "</linearGradient></defs>" +
+  `<rect x='0' y='${GROUND_Y - 150}' width='420' height='150' fill='url(#g)'/>`;
+
 function trees(list) {
   return list
     .map(
@@ -19,7 +26,7 @@ function trees(list) {
    1〜2日：芽 / 3〜9日：木が2本 / 10〜19日：小道 / 20〜29日：花 / 30〜31日：小さな森の完成
    下の余白を森そのものが占めるよう、シーンの背丈を大きく取る。 */
 function buildForestScene(stage) {
-  let content = "";
+  let content = GROUND_FADE;
 
   if (stage === 0) {
     content +=
