@@ -2,17 +2,17 @@ function svgUrl(svg) {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-// 本棚と暖炉のシルエット。画面下端にごく薄く沈める、部屋の中にいる気配だけの装飾。
+// 本棚と暖炉のシルエット。画面下端に沈める、部屋の中にいる気配の装飾。
 const ROOM_SILHOUETTE = svgUrl(
   "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 150' preserveAspectRatio='xMidYMax slice'>" +
-    "<rect x='0' y='96' width='420' height='5' fill='#EDE6F0' fill-opacity='0.06'/>" +
-    "<rect x='18' y='58' width='14' height='38' fill='#EDE6F0' fill-opacity='0.05'/>" +
-    "<rect x='36' y='46' width='10' height='50' fill='#EDE6F0' fill-opacity='0.05'/>" +
-    "<rect x='50' y='64' width='16' height='32' fill='#EDE6F0' fill-opacity='0.05'/>" +
-    "<rect x='70' y='40' width='11' height='56' fill='#EDE6F0' fill-opacity='0.05'/>" +
-    "<rect x='85' y='60' width='13' height='36' fill='#EDE6F0' fill-opacity='0.05'/>" +
-    "<rect x='102' y='50' width='9' height='46' fill='#EDE6F0' fill-opacity='0.05'/>" +
-    "<path d='M300 150 L300 78 Q300 34 340 34 Q380 34 380 78 L380 150 Z M312 150 L312 82 Q312 46 340 46 Q368 46 368 82 L368 150 Z' fill='#EDE6F0' fill-opacity='0.05' fill-rule='evenodd'/>" +
+    "<rect x='0' y='96' width='420' height='5' fill='#EDE6F0' fill-opacity='0.14'/>" +
+    "<rect x='18' y='58' width='14' height='38' fill='#EDE6F0' fill-opacity='0.12'/>" +
+    "<rect x='36' y='46' width='10' height='50' fill='#EDE6F0' fill-opacity='0.12'/>" +
+    "<rect x='50' y='64' width='16' height='32' fill='#EDE6F0' fill-opacity='0.12'/>" +
+    "<rect x='70' y='40' width='11' height='56' fill='#EDE6F0' fill-opacity='0.12'/>" +
+    "<rect x='85' y='60' width='13' height='36' fill='#EDE6F0' fill-opacity='0.12'/>" +
+    "<rect x='102' y='50' width='9' height='46' fill='#EDE6F0' fill-opacity='0.12'/>" +
+    "<path d='M300 150 L300 78 Q300 34 340 34 Q380 34 380 78 L380 150 Z M312 150 L312 82 Q312 46 340 46 Q368 46 368 82 L368 150 Z' fill='#EDE6F0' fill-opacity='0.12' fill-rule='evenodd'/>" +
     "</svg>"
 );
 
