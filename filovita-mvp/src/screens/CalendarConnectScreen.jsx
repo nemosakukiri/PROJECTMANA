@@ -1,6 +1,5 @@
-import { tokens } from "../theme/tokens.js";
-
-export default function CalendarConnectScreen({ onConnect, onSkip }) {
+export default function CalendarConnectScreen({ theme, onConnect, onSkip }) {
+  const { tokens } = theme;
   return (
     <div style={{ padding: "60px 26px 0", textAlign: "center" }}>
       <div style={{ fontSize: 30, marginBottom: 16 }}>📅</div>

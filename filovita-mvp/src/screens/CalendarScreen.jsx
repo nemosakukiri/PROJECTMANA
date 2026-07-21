@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Plus, ChevronLeft, ChevronRight, Settings } from "lucide-react";
-import { tokens } from "../theme/tokens.js";
 import { eventsOnDate, daysInMonth, firstWeekday } from "../data/fakeEvents.js";
 
 /* ①カレンダー（中心画面） */
-export default function CalendarScreen({ events, onOpenDate, onNew, onOpenSettings }) {
+export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpenSettings }) {
+  const { tokens, labels } = theme;
   const [showContinuation, setShowContinuation] = useState(false);
   const cells = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const totalOpenTodos = events.reduce((s, e) => s + e.todos.filter((t) => !t.done).length, 0);
@@ -16,7 +16,7 @@ export default function CalendarScreen({ events, onOpenDate, onNew, onOpenSettin
         <div>
           <div style={{ fontSize: 11, letterSpacing: "0.14em", color: tokens.inkFaint }}>Filovita</div>
           <h1 style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 22, fontWeight: 700, margin: "4px 0 0", color: tokens.ink }}>
-            今月の暮らし
+            {labels.calendarHeading}
           </h1>
         </div>
         <button
@@ -37,7 +37,7 @@ export default function CalendarScreen({ events, onOpenDate, onNew, onOpenSettin
               padding: "6px 2px", marginBottom: 16, fontSize: 12.5, color: tokens.inkFaint, cursor: "pointer",
             }}
           >
-            今日の続きを見る ›
+            {labels.continuationCta} ›
           </button>
         ) : (
           <div style={{
@@ -45,11 +45,11 @@ export default function CalendarScreen({ events, onOpenDate, onNew, onOpenSettin
             border: `1px solid ${tokens.line}`, borderRadius: 12, marginBottom: 16,
           }}>
             {totalOpenTodos > 0 ? (
-              <span>残っているToDo <strong style={{ color: tokens.moss }}>{totalOpenTodos}件</strong></span>
+              <span>{labels.todoRemainingLabel} <strong style={{ color: tokens.accent }}>{totalOpenTodos}件</strong></span>
             ) : (
-              <span>今のところ、残っていることはありません</span>
+              <span>{labels.todoNoneLabel}</span>
             )}
-            {nextEvt && <><span style={{ color: tokens.line }}> ・ </span><span>次は <strong>{nextEvt}</strong></span></>}
+            {nextEvt && <><span style={{ color: tokens.line }}> ・ </span><span>{labels.nextLabel} <strong>{nextEvt}</strong></span></>}
           </div>
         )}
 

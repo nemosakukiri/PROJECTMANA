@@ -1,12 +1,11 @@
-import { tokens } from "../theme/tokens.js";
-
 const OPTIONS = [
   { id: "speak", emoji: "🎤", label: "話して記録する" },
   { id: "write", emoji: "✍️", label: "書いて記録する" },
   { id: "both", emoji: "🔄", label: "両方使う" },
 ];
 
-export default function InputModeScreen({ onSelect }) {
+export default function InputModeScreen({ theme, onSelect }) {
+  const { tokens } = theme;
   return (
     <div style={{ padding: "60px 26px 0", textAlign: "center" }}>
       <div style={{ fontSize: 30, marginBottom: 16 }}>💬</div>

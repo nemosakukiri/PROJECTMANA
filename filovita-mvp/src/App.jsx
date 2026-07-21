@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { tokens } from "./theme/tokens.js";
+import { themes, themeList, defaultThemeId } from "./theme/themes.js";
 import { initialEvents } from "./data/fakeEvents.js";
 import { generateDraftFake } from "./lib/fakeGenerateDraft.js";
 import { loadState, saveState } from "./lib/persistence.js";
 
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
 import InputModeScreen from "./screens/InputModeScreen.jsx";
+import ThemeSelectScreen from "./screens/ThemeSelectScreen.jsx";
 import CalendarConnectScreen from "./screens/CalendarConnectScreen.jsx";
 import SettingsScreen from "./screens/SettingsScreen.jsx";
 import CalendarScreen from "./screens/CalendarScreen.jsx";
@@ -23,14 +24,17 @@ const persisted = loadState();
 export default function App() {
   const [screen, setScreen] = useState(persisted?.screen ?? "welcome");
   const [inputMode, setInputMode] = useState(persisted?.inputMode ?? "both");
+  const [themeId, setThemeId] = useState(persisted?.themeId ?? defaultThemeId);
   const [selectedDate, setSelectedDate] = useState(persisted?.selectedDate ?? null);
   const [selectedEventId, setSelectedEventId] = useState(persisted?.selectedEventId ?? null);
   const [events, setEvents] = useState(persisted?.events ?? initialEvents);
   const [draft, setDraft] = useState(persisted?.draft ?? null);
 
+  const theme = themes[themeId] ?? themes[defaultThemeId];
+
   useEffect(() => {
-    saveState({ screen, inputMode, selectedDate, selectedEventId, events, draft });
-  }, [screen, inputMode, selectedDate, selectedEventId, events, draft]);
+    saveState({ screen, inputMode, themeId, selectedDate, selectedEventId, events, draft });
+  }, [screen, inputMode, themeId, selectedDate, selectedEventId, events, draft]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
 
@@ -58,26 +62,31 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: tokens.paper, display: "flex", justifyContent: "center", fontFamily: "'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: theme.tokens.paper, display: "flex", justifyContent: "center", fontFamily: "'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
         * { box-sizing: border-box; }
       `}</style>
       <div style={{ width: "100%", maxWidth: 440, minHeight: "100vh", paddingBottom: 100, position: "relative" }}>
         {screen === "welcome" && (
-          <WelcomeScreen onNext={() => setScreen("inputMode")} />
+          <WelcomeScreen theme={theme} onNext={() => setScreen("inputMode")} />
         )}
         {screen === "inputMode" && (
-          <InputModeScreen onSelect={(mode) => { setInputMode(mode); setScreen("calendarConnect"); }} />
+          <InputModeScreen theme={theme} onSelect={(mode) => { setInputMode(mode); setScreen("themeSelect"); }} />
+        )}
+        {screen === "themeSelect" && (
+          <ThemeSelectScreen themeList={themeList} onSelect={(id) => { setThemeId(id); setScreen("calendarConnect"); }} />
         )}
         {screen === "calendarConnect" && (
           <CalendarConnectScreen
+            theme={theme}
             onConnect={() => setScreen("calendar")}
             onSkip={() => setScreen("calendar")}
           />
         )}
         {screen === "calendar" && (
           <CalendarScreen
+            theme={theme}
             events={events}
             onOpenDate={(d) => { setSelectedDate(d); setScreen("dayList"); }}
             onNew={() => setScreen("input")}
@@ -86,6 +95,10 @@ export default function App() {
         )}
         {screen === "settings" && (
           <SettingsScreen
+            theme={theme}
+            themeList={themeList}
+            themeId={themeId}
+            onChangeTheme={setThemeId}
             currentMode={inputMode}
             onChangeMode={setInputMode}
             onBack={() => setScreen("calendar")}
@@ -93,6 +106,7 @@ export default function App() {
         )}
         {screen === "dayList" && (
           <DayEventListScreen
+            theme={theme}
             events={events}
             date={selectedDate}
             onOpenEvent={(id) => { setSelectedEventId(id); setScreen("detail"); }}
@@ -102,6 +116,7 @@ export default function App() {
         )}
         {screen === "detail" && selectedEvent && (
           <EventDetailScreen
+            theme={theme}
             event={selectedEvent}
             onBack={() => setScreen("dayList")}
             onUpdateNote={(v) => setEvents(events.map((e) => {
@@ -120,13 +135,14 @@ export default function App() {
         )}
         {screen === "input" && (
           <InputScreen
+            theme={theme}
             mode={inputMode}
             onBack={() => setScreen("calendar")}
             onSubmit={handleSubmitInput}
           />
         )}
         {screen === "confirm" && draft && (
-          <ConfirmScreen draft={draft} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
+          <ConfirmScreen theme={theme} draft={draft} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
         )}
       </div>
     </div>

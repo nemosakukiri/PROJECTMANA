@@ -1,31 +1,31 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
-import { tokens } from "../theme/tokens.js";
 import ContextHeader from "../components/ContextHeader.jsx";
 
 /* ③Eventカルテ */
-export default function EventDetailScreen({ event, onBack, onUpdateNote, onToggleTodo, onAddTodo }) {
+export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo }) {
+  const { tokens, labels } = theme;
   const [addingTodo, setAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
 
   return (
     <div>
-      <ContextHeader breadcrumb={`${event.dateLabel} の記録`} title={event.kind} onBack={onBack} />
+      <ContextHeader tokens={tokens} breadcrumb={`${event.dateLabel} の記録`} title={event.kind} onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
-        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 6 }}>今回の結論</div>
+        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 6 }}>{labels.conclusionLabel}</div>
         <p style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 17, fontWeight: 700, lineHeight: 1.7, marginTop: 0, color: tokens.ink }}>
           {event.conclusion}
         </p>
 
         {/* ToDo：常に「＋思い出したことを追加」を出す。reminderが欲しいときの、唯一の正しい入口 */}
-        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 8px" }}>ToDo</div>
+        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 8px" }}>{labels.todoSectionLabel}</div>
         {event.todos.map((t, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <button
               onClick={() => onToggleTodo(i)}
               style={{
-                width: 20, height: 20, borderRadius: 6, border: `1.5px solid ${t.done ? tokens.moss : tokens.inkFaint}`,
-                background: t.done ? tokens.moss : "transparent", display: "flex", alignItems: "center",
+                width: 20, height: 20, borderRadius: 6, border: `1.5px solid ${t.done ? tokens.accent : tokens.inkFaint}`,
+                background: t.done ? tokens.accent : "transparent", display: "flex", alignItems: "center",
                 justifyContent: "center", cursor: "pointer", flexShrink: 0,
               }}
             >
@@ -68,7 +68,7 @@ export default function EventDetailScreen({ event, onBack, onUpdateNote, onToggl
               padding: "4px 0", marginBottom: 6, fontSize: 13, color: tokens.inkSoft, cursor: "pointer",
             }}
           >
-            ＋ 思い出したことを追加
+            {labels.addTodoCta}
           </button>
         )}
 
@@ -82,7 +82,7 @@ export default function EventDetailScreen({ event, onBack, onUpdateNote, onToggl
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 6px" }}>タグ</div>
         <div style={{ display: "flex", gap: 6 }}>
           {event.tags.map((t) => (
-            <span key={t} style={{ fontSize: 12, background: tokens.mossBg, color: tokens.moss, padding: "3px 10px", borderRadius: 999, fontWeight: 600 }}>#{t}</span>
+            <span key={t} style={{ fontSize: 12, background: tokens.accentBg, color: tokens.accent, padding: "3px 10px", borderRadius: 999, fontWeight: 600 }}>#{t}</span>
           ))}
         </div>
 
@@ -99,12 +99,12 @@ export default function EventDetailScreen({ event, onBack, onUpdateNote, onToggl
 
         {/* 所感：AIは読むが、決定事項・ToDoには昇格させない。「AIに見せない」のではなく「事実にしない」 */}
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 6px" }}>
-          所感
+          {labels.myNoteLabel}
         </div>
         <textarea
           value={event.myNote}
           onChange={(e) => onUpdateNote(e.target.value)}
-          placeholder="そのときの気持ちや、まだ確信のない考えを、ここに"
+          placeholder={labels.myNotePlaceholder}
           rows={3}
           style={{
             width: "100%", border: `1px solid ${tokens.line}`, borderRadius: 12, padding: 12, fontSize: 13.5,
@@ -112,7 +112,7 @@ export default function EventDetailScreen({ event, onBack, onUpdateNote, onToggl
           }}
         />
         <p style={{ fontSize: 11, color: tokens.inkFaint, marginTop: 6, marginBottom: 30, lineHeight: 1.7 }}>
-          ここに書いたことは、決定事項やToDoにはしません。あとで「#所感」を開けば、まとめて辿れます。
+          {labels.myNoteHint}
         </p>
       </div>
     </div>

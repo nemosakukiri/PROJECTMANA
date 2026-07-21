@@ -1,8 +1,7 @@
 import { ArrowLeft } from "lucide-react";
-import { tokens } from "../theme/tokens.js";
 
 /* 共通：文脈ヘッダー（今どこにいるかを、常に同じ場所に示す） */
-export default function ContextHeader({ breadcrumb, title, onBack }) {
+export default function ContextHeader({ tokens, breadcrumb, title, onBack }) {
   return (
     <div style={{ padding: "18px 20px 6px" }}>
       {onBack && (

@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { tokens } from "../theme/tokens.js";
 import ContextHeader from "../components/ContextHeader.jsx";
 
 /* 入力→確認画面（＋ボタンから。共通ナビゲーションの先） */
-export default function InputScreen({ mode = "both", onBack, onSubmit }) {
+export default function InputScreen({ theme, mode = "both", onBack, onSubmit }) {
+  const { tokens } = theme;
   const [text, setText] = useState("");
   const [activeMode, setActiveMode] = useState(mode === "speak" ? "speak" : "write");
 
   return (
     <div>
-      <ContextHeader breadcrumb="新しい記録" title="何がありましたか" onBack={onBack} />
+      <ContextHeader tokens={tokens} breadcrumb="新しい記録" title="何がありましたか" onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         {/* その場での切り替え。初回に決めた既定値はあくまで初期値で、毎回選び直せる */}
         <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>

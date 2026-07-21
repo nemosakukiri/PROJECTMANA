@@ -1,16 +1,16 @@
 import { Plus } from "lucide-react";
-import { tokens } from "../theme/tokens.js";
 import { eventsOnDate } from "../data/fakeEvents.js";
 import ContextHeader from "../components/ContextHeader.jsx";
 
 /* ②その日のEvent一覧（見出しのみ） */
-export default function DayEventListScreen({ events, date, onOpenEvent, onBack, onNew }) {
+export default function DayEventListScreen({ theme, events, date, onOpenEvent, onBack, onNew }) {
+  const { tokens } = theme;
   const dayEvents = eventsOnDate(events, date);
   const label = dayEvents[0]?.dateLabel ?? "";
 
   return (
     <div>
-      <ContextHeader breadcrumb="カレンダー" title={label} onBack={onBack} />
+      <ContextHeader tokens={tokens} breadcrumb="カレンダー" title={label} onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         <div style={{ fontSize: 12, color: tokens.inkFaint, marginBottom: 14 }}>{dayEvents.length}件の記録</div>
         {dayEvents.map((ev) => (
