@@ -153,7 +153,15 @@ export default function App() {
         @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Noto+Sans+JP:wght@500;700&display=swap');
         * { box-sizing: border-box; }
       `}</style>
-      <div style={{ width: "100%", maxWidth: 440, minHeight: "100vh", paddingBottom: 100, position: "relative" }}>
+      <div
+        style={{
+          width: "100%", maxWidth: 440, minHeight: "100vh", paddingBottom: 100, position: "relative",
+          backgroundColor: theme.tokens.paper,
+          backgroundImage: theme.tokens.backgroundImage,
+          backgroundSize: theme.tokens.backgroundSize,
+          backgroundRepeat: "repeat",
+        }}
+      >
         {isIndustrial ? (
           <CRTScreen>{screenContent}</CRTScreen>
         ) : isGothic ? (

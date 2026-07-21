@@ -2,6 +2,8 @@
    翻訳してよいのはラベル・色・語彙・呼びかけだけ。
    結論・ToDo・決定事項など、AIが抽出した記録そのものの中身はどのテーマでも変えない。 */
 
+import { backgroundPatterns } from "./backgroundPatterns.js";
+
 export const themes = {
   techo: {
     id: "techo",
@@ -13,6 +15,7 @@ export const themes = {
       inkFaint: "#5E5C4F", line: "#C9C0A8", accent: "#3F5C42", accentBg: "#E7EEE4",
       // ビジネス用途を想定し、文学的な明朝体ではなく、端正なゴシック体を見出しに使う
       headingFont: "'Noto Sans JP', 'Zen Kaku Gothic New', sans-serif",
+      ...backgroundPatterns.techo,
     },
     labels: {
       welcomeTitle: "Filovitaへようこそ",
@@ -48,6 +51,7 @@ export const themes = {
       paper: "#FBEEE0", card: "#FFFFFF", ink: "#4A2E2A", inkSoft: "#6B4A3E",
       inkFaint: "#9C7A6B", line: "#E8C9A8", accent: "#E8837A", accentBg: "#FBE3DE",
       headingFont: "'Shippori Mincho', serif",
+      ...backgroundPatterns.ehon,
     },
     labels: {
       welcomeTitle: "Filovitaへ、ようこそ",
@@ -83,6 +87,7 @@ export const themes = {
       paper: "#EEF2E6", card: "#FFFFFF", ink: "#1F2E1A", inkSoft: "#33452B",
       inkFaint: "#5C6E52", line: "#B9C9A8", accent: "#2F6B3A", accentBg: "#DCEBDD",
       headingFont: "'Shippori Mincho', serif",
+      ...backgroundPatterns.mori,
     },
     labels: {
       welcomeTitle: "Filovitaの森へ",
@@ -121,6 +126,7 @@ export const themes = {
       paper: "#1B1520", card: "#241C2C", ink: "#EDE6F0", inkSoft: "#C9BBD1",
       inkFaint: "#8F7F99", line: "#4A3A55", accent: "#B5324A", accentBg: "#3A2230",
       headingFont: "'Shippori Mincho', serif",
+      ...backgroundPatterns.horror,
     },
     labels: {
       welcomeTitle: "ようこそ、Filovita館へ",
@@ -156,6 +162,7 @@ export const themes = {
       paper: "#0D1B24", card: "#132A38", ink: "#DCEFF5", inkSoft: "#A9C7D4",
       inkFaint: "#6E8A96", line: "#274456", accent: "#2FB6C4", accentBg: "#123540",
       headingFont: "'Shippori Mincho', serif",
+      ...backgroundPatterns.sf,
     },
     labels: {
       welcomeTitle: "Filovita起動",
@@ -191,6 +198,7 @@ export const themes = {
       paper: "#F2E3C6", card: "#FFF8E8", ink: "#3B2A14", inkSoft: "#5B4425",
       inkFaint: "#8A6E44", line: "#D8B978", accent: "#C97A2B", accentBg: "#F5DCB2",
       headingFont: "'Shippori Mincho', serif",
+      ...backgroundPatterns.bouken,
     },
     labels: {
       welcomeTitle: "冒険の書、開始",
@@ -229,6 +237,7 @@ export const themes = {
       paper: "#0A0D0A", card: "#12160F", ink: "#C9FFC9", inkSoft: "#7FE07F",
       inkFaint: "#3E5A3E", line: "#2A3A26", accent: "#39FF6A", accentBg: "#123018",
       headingFont: "'Shippori Mincho', serif",
+      ...backgroundPatterns.cyberpunk,
     },
     labels: {
       welcomeTitle: "端末：Filovita 起動シーケンス",
