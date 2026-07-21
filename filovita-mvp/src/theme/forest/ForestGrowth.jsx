@@ -62,7 +62,35 @@ function buildForestScene(stage) {
 export default function ForestGrowth({ stage, children }) {
   return (
     <div style={{ position: "relative", overflow: "hidden" }}>
+      <style>{`
+        @keyframes canopySway {
+          0%, 100% { opacity: 0.85; transform: translateY(0); }
+          50% { opacity: 1; transform: translateY(4px); }
+        }
+      `}</style>
       {children}
+      {/* 木漏れ日：画面全体にかかる、揺れるやわらかな光。カレンダーそのものを森の中で見上げているように */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background:
+            "radial-gradient(ellipse 190px 130px at 15% 18%, rgba(255,250,210,0.18), transparent 60%)," +
+            "radial-gradient(ellipse 150px 100px at 78% 12%, rgba(255,250,210,0.14), transparent 60%)," +
+            "radial-gradient(ellipse 210px 150px at 50% 55%, rgba(255,250,210,0.10), transparent 65%)," +
+            "radial-gradient(ellipse 170px 120px at 88% 70%, rgba(255,250,210,0.15), transparent 60%)",
+          animation: "canopySway 6s ease-in-out infinite",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          boxShadow: "inset 0 0 100px rgba(47,107,58,0.16)",
+        }}
+      />
       <div
         style={{
           position: "absolute",

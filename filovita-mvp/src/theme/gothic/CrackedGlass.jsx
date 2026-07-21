@@ -101,6 +101,19 @@ export default function CrackedGlass({ stage = 2, children }) {
           animation: "gothicAmbient 4.5s ease-in-out infinite",
         }}
       />
+      {/* 埃っぽい古い窓ガラス越し：画面全体にかかる、むらのある曇り。カレンダーそのものを窓越しに見ているように */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background:
+            "radial-gradient(ellipse 230px 170px at 18% 22%, rgba(205,195,210,0.12), transparent 65%)," +
+            "radial-gradient(ellipse 190px 150px at 82% 68%, rgba(205,195,210,0.10), transparent 65%)," +
+            "radial-gradient(ellipse 270px 190px at 58% 12%, rgba(205,195,210,0.08), transparent 70%)",
+          animation: "gothicAmbient 5.5s ease-in-out infinite",
+        }}
+      />
       <div
         style={{
           position: "absolute",
