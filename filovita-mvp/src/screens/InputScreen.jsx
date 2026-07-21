@@ -9,7 +9,7 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit }) 
 
   return (
     <div>
-      <ContextHeader tokens={tokens} breadcrumb="新しい記録" title="何がありましたか" onBack={onBack} />
+      <ContextHeader theme={theme} breadcrumb="新しい記録" title="何がありましたか" onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         {/* その場での切り替え。初回に決めた既定値はあくまで初期値で、毎回選び直せる */}
         <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>

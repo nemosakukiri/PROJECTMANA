@@ -1,31 +1,45 @@
 import { Plus } from "lucide-react";
 import { eventsOnDate } from "../data/fakeEvents.js";
 import ContextHeader from "../components/ContextHeader.jsx";
+import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 
 /* ②その日のEvent一覧（見出しのみ） */
 export default function DayEventListScreen({ theme, events, date, onOpenEvent, onBack, onNew }) {
   const { tokens } = theme;
+  const isIndustrial = theme.componentTheme === "industrial";
   const dayEvents = eventsOnDate(events, date);
   const label = dayEvents[0]?.dateLabel ?? "";
 
   return (
     <div>
-      <ContextHeader tokens={tokens} breadcrumb="カレンダー" title={label} onBack={onBack} />
+      <ContextHeader theme={theme} breadcrumb="カレンダー" title={label} onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         <div style={{ fontSize: 12, color: tokens.inkFaint, marginBottom: 14 }}>{dayEvents.length}件の記録</div>
-        {dayEvents.map((ev) => (
-          <button
-            key={ev.id}
-            onClick={() => onOpenEvent(ev.id)}
-            style={{
-              display: "block", width: "100%", textAlign: "left", background: tokens.card,
-              border: `1px solid ${tokens.line}`, borderRadius: 12, padding: "13px 15px", marginBottom: 8, cursor: "pointer",
-            }}
-          >
-            <div style={{ fontSize: 11, color: tokens.inkFaint }}>{ev.kind}</div>
-            <div style={{ fontSize: 14.5, color: tokens.ink, marginTop: 3 }}>{ev.conclusion}</div>
-          </button>
-        ))}
+        {dayEvents.map((ev) =>
+          isIndustrial ? (
+            <SteelPanel
+              key={ev.id}
+              as="button"
+              onClick={() => onOpenEvent(ev.id)}
+              style={{ marginBottom: 10, cursor: "pointer" }}
+            >
+              <div style={{ fontSize: 11, color: tokens.inkFaint }}>{ev.kind}</div>
+              <div style={{ fontSize: 14.5, color: tokens.ink, marginTop: 3 }}>{ev.conclusion}</div>
+            </SteelPanel>
+          ) : (
+            <button
+              key={ev.id}
+              onClick={() => onOpenEvent(ev.id)}
+              style={{
+                display: "block", width: "100%", textAlign: "left", background: tokens.card,
+                border: `1px solid ${tokens.line}`, borderRadius: 12, padding: "13px 15px", marginBottom: 8, cursor: "pointer",
+              }}
+            >
+              <div style={{ fontSize: 11, color: tokens.inkFaint }}>{ev.kind}</div>
+              <div style={{ fontSize: 14.5, color: tokens.ink, marginTop: 3 }}>{ev.conclusion}</div>
+            </button>
+          )
+        )}
       </div>
 
       <button

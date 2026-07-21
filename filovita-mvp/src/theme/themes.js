@@ -207,6 +207,43 @@ export const themes = {
       backToCalendarCta: "旅の地図へ戻る",
     },
   },
+  cyberpunk: {
+    id: "cyberpunk",
+    name: "サイバーパンク",
+    emoji: "🔩",
+    blurb: "無機質な端末の向こうから、暮らしを見張りたい人へ",
+    // コンポーネントテーマ：色・ラベルだけでなく、専用UI部品（theme/industrial/）を使う。
+    // ただし結論→ToDo→確定という順序や確認操作の構造は、他のテーマと変えない。
+    componentTheme: "industrial",
+    tokens: {
+      paper: "#0A0D0A", card: "#12160F", ink: "#C9FFC9", inkSoft: "#7FE07F",
+      inkFaint: "#3E5A3E", line: "#2A3A26", accent: "#39FF6A", accentBg: "#123018",
+    },
+    labels: {
+      welcomeTitle: "端末：Filovita 起動シーケンス",
+      welcomeBody: [
+        "Filovitaは、生活データを処理する産業端末である。",
+        "出来事を記録し、警告が必要な時のみ点灯する。",
+        "最終承認権は、常にオペレーター、あなたにある。",
+      ],
+      welcomeCta: "起動",
+      calendarHeading: "月次ログ",
+      continuationCta: "本日ログを展開",
+      todoRemainingLabel: "未処理案件",
+      todoNoneLabel: "現在、未処理案件なし",
+      nextLabel: "次回起動",
+      conclusionLabel: "解析結果",
+      todoSectionLabel: "未処理案件",
+      addTodoCta: "＋ 案件を追加",
+      myNoteLabel: "オペレーターログ",
+      myNotePlaceholder: "感覚データ、未確定推測をここに記録",
+      myNoteHint: "この記録は決定事項・案件には昇格しない。「#オペレーターログ」から後で参照可能。",
+      confirmIntro: "端末が解析結果を生成した。差異があれば修正せよ。",
+      confirmCta: "この内容で承認",
+      confirmedMessage: "承認完了。ログに記録した",
+      backToCalendarCta: "ログ一覧へ戻る",
+    },
+  },
 };
 
 export const themeList = Object.values(themes);

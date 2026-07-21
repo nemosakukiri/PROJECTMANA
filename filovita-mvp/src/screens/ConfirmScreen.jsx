@@ -10,7 +10,7 @@ export default function ConfirmScreen({ theme, draft, onBack, onConfirm }) {
 
   return (
     <div>
-      <ContextHeader tokens={tokens} breadcrumb="新しい記録" title="一緒に確認しましょう" onBack={onBack} />
+      <ContextHeader theme={theme} breadcrumb="新しい記録" title="一緒に確認しましょう" onBack={onBack} />
       <div style={{ padding: "6px 20px 0" }}>
         <p style={{ fontSize: 12.5, color: tokens.inkSoft, marginTop: 0 }}>
           {labels.confirmIntro}

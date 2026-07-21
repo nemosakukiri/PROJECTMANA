@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
+import BrassPlate from "../theme/industrial/BrassPlate.jsx";
 
 /* ③Eventカルテ */
 export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo }) {
   const { tokens, labels } = theme;
+  const isIndustrial = theme.componentTheme === "industrial";
   const [addingTodo, setAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
 
   return (
     <div>
-      <ContextHeader tokens={tokens} breadcrumb={`${event.dateLabel} の記録`} title={event.kind} onBack={onBack} />
+      <ContextHeader theme={theme} breadcrumb={`${event.dateLabel} の記録`} title={event.kind} onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 6 }}>{labels.conclusionLabel}</div>
         <p style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 17, fontWeight: 700, lineHeight: 1.7, marginTop: 0, color: tokens.ink }}>
@@ -80,10 +82,14 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
         )}
 
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 6px" }}>タグ</div>
-        <div style={{ display: "flex", gap: 6 }}>
-          {event.tags.map((t) => (
-            <span key={t} style={{ fontSize: 12, background: tokens.accentBg, color: tokens.accent, padding: "3px 10px", borderRadius: 999, fontWeight: 600 }}>#{t}</span>
-          ))}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {event.tags.map((t) =>
+            isIndustrial ? (
+              <BrassPlate key={t} style={{ fontSize: 11, padding: "2px 10px" }}>#{t}</BrassPlate>
+            ) : (
+              <span key={t} style={{ fontSize: 12, background: tokens.accentBg, color: tokens.accent, padding: "3px 10px", borderRadius: 999, fontWeight: 600 }}>#{t}</span>
+            )
+          )}
         </div>
 
         {event.related.length > 0 && (

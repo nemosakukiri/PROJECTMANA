@@ -1,14 +1,31 @@
 import { useState } from "react";
 import { Plus, ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import { eventsOnDate, daysInMonth, firstWeekday } from "../data/fakeEvents.js";
+import SteelPanel from "../theme/industrial/SteelPanel.jsx";
+import WarnLamp from "../theme/industrial/WarnLamp.jsx";
 
 /* ①カレンダー（中心画面） */
 export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpenSettings }) {
   const { tokens, labels } = theme;
+  const isIndustrial = theme.componentTheme === "industrial";
   const [showContinuation, setShowContinuation] = useState(false);
   const cells = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const totalOpenTodos = events.reduce((s, e) => s + e.todos.filter((t) => !t.done).length, 0);
   const nextEvt = events.find((e) => e.nextEvent)?.nextEvent;
+
+  const continuationContent = (
+    <>
+      {totalOpenTodos > 0 ? (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+          {isIndustrial && <WarnLamp active />}
+          {labels.todoRemainingLabel} <strong style={{ color: tokens.accent }}>{totalOpenTodos}件</strong>
+        </span>
+      ) : (
+        <span>{labels.todoNoneLabel}</span>
+      )}
+      {nextEvt && <><span style={{ color: tokens.line }}> ・ </span><span>{labels.nextLabel} <strong>{nextEvt}</strong></span></>}
+    </>
+  );
 
   return (
     <div>
@@ -39,17 +56,16 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
           >
             {labels.continuationCta} ›
           </button>
+        ) : isIndustrial ? (
+          <SteelPanel style={{ fontSize: 13, color: tokens.inkSoft, marginBottom: 16 }}>
+            {continuationContent}
+          </SteelPanel>
         ) : (
           <div style={{
             fontSize: 13, color: tokens.inkSoft, padding: "11px 14px", background: tokens.card,
             border: `1px solid ${tokens.line}`, borderRadius: 12, marginBottom: 16,
           }}>
-            {totalOpenTodos > 0 ? (
-              <span>{labels.todoRemainingLabel} <strong style={{ color: tokens.accent }}>{totalOpenTodos}件</strong></span>
-            ) : (
-              <span>{labels.todoNoneLabel}</span>
-            )}
-            {nextEvt && <><span style={{ color: tokens.line }}> ・ </span><span>{labels.nextLabel} <strong>{nextEvt}</strong></span></>}
+            {continuationContent}
           </div>
         )}
 

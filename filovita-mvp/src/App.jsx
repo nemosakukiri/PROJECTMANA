@@ -3,6 +3,7 @@ import { themes, themeList, defaultThemeId } from "./theme/themes.js";
 import { initialEvents } from "./data/fakeEvents.js";
 import { generateDraftFake } from "./lib/fakeGenerateDraft.js";
 import { loadState, saveState } from "./lib/persistence.js";
+import CRTScreen from "./theme/industrial/CRTScreen.jsx";
 
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
 import InputModeScreen from "./screens/InputModeScreen.jsx";
@@ -61,13 +62,10 @@ export default function App() {
     setScreen("calendar");
   }
 
-  return (
-    <div style={{ minHeight: "100vh", background: theme.tokens.paper, display: "flex", justifyContent: "center", fontFamily: "'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
-        * { box-sizing: border-box; }
-      `}</style>
-      <div style={{ width: "100%", maxWidth: 440, minHeight: "100vh", paddingBottom: 100, position: "relative" }}>
+  const isIndustrial = theme.componentTheme === "industrial";
+
+  const screenContent = (
+    <>
         {screen === "welcome" && (
           <WelcomeScreen theme={theme} onNext={() => setScreen("inputMode")} />
         )}
@@ -144,6 +142,17 @@ export default function App() {
         {screen === "confirm" && draft && (
           <ConfirmScreen theme={theme} draft={draft} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
         )}
+    </>
+  );
+
+  return (
+    <div style={{ minHeight: "100vh", background: theme.tokens.paper, display: "flex", justifyContent: "center", fontFamily: "'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+        * { box-sizing: border-box; }
+      `}</style>
+      <div style={{ width: "100%", maxWidth: 440, minHeight: "100vh", paddingBottom: 100, position: "relative" }}>
+        {isIndustrial ? <CRTScreen>{screenContent}</CRTScreen> : screenContent}
       </div>
     </div>
   );

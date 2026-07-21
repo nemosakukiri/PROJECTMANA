@@ -11,7 +11,7 @@ export default function SettingsScreen({ theme, themeList, currentMode, onChange
   const { tokens } = theme;
   return (
     <div>
-      <ContextHeader tokens={tokens} title="設定" onBack={onBack} />
+      <ContextHeader theme={theme} title="設定" onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
           暮らしを見るレンズ（テーマ）
