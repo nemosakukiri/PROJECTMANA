@@ -177,7 +177,7 @@ export default function App() {
         ) : isGothic ? (
           <CrackedGlass stage={monthStage}>{screenContent}</CrackedGlass>
         ) : isForest ? (
-          <ForestGrowth stage={monthStage}>{screenContent}</ForestGrowth>
+          <ForestGrowth stage={monthStage} screen={screen}>{screenContent}</ForestGrowth>
         ) : isAdventure ? (
           <AdventureJourney stage={monthStage}>{screenContent}</AdventureJourney>
         ) : (

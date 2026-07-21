@@ -61,8 +61,15 @@ function buildForestScene(stage) {
   return svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 ${SCENE_HEIGHT}' preserveAspectRatio='xMidYMax slice'>${content}</svg>`);
 }
 
-/* コンポーネントテーマ専用部品：森の生育。中身の情報構造・操作順序には一切手を加えない。 */
-export default function ForestGrowth({ stage, children }) {
+const FALLING_LEAVES = [
+  { left: "16%", delay: "0s", size: 12, duration: "1.5s", rotate: "120deg" },
+  { left: "48%", delay: "0.12s", size: 9, duration: "1.3s", rotate: "-100deg" },
+  { left: "74%", delay: "0.26s", size: 11, duration: "1.7s", rotate: "150deg" },
+];
+
+/* コンポーネントテーマ専用部品：森の生育。中身の情報構造・操作順序には一切手を加えない。
+   画面が切り替わる瞬間、葉が舞い落ちる——「森を移動している」という手応えのための演出。 */
+export default function ForestGrowth({ stage, screen, children }) {
   return (
     <div style={{ position: "relative", overflow: "hidden", minHeight: "100vh" }}>
       <style>{`
@@ -70,8 +77,39 @@ export default function ForestGrowth({ stage, children }) {
           0%, 100% { opacity: 0.85; transform: translateY(0); }
           50% { opacity: 1; transform: translateY(4px); }
         }
+        @keyframes leafEnter {
+          0% { opacity: 0; transform: translateY(10px); filter: brightness(1.1); }
+          55% { opacity: 1; }
+          100% { opacity: 1; transform: translateY(0); filter: brightness(1); }
+        }
+        @keyframes leafFall {
+          0% { opacity: 0; transform: translateY(-16px) rotate(0deg); }
+          12% { opacity: 0.7; }
+          100% { opacity: 0; transform: translateY(180px) rotate(var(--leaf-rotate)); }
+        }
       `}</style>
-      {children}
+      <div key={screen} style={{ animation: "leafEnter 0.45s ease-out" }}>
+        {children}
+      </div>
+      {screen &&
+        FALLING_LEAVES.map((leaf, i) => (
+          <span
+            key={`${screen}-${i}`}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: leaf.left,
+              width: leaf.size,
+              height: leaf.size * 1.3,
+              background: "#2F6B3A",
+              opacity: 0.5,
+              borderRadius: "0% 100% 0% 100%",
+              pointerEvents: "none",
+              "--leaf-rotate": leaf.rotate,
+              animation: `leafFall ${leaf.duration} ease-in ${leaf.delay} 1`,
+            }}
+          />
+        ))}
       {/* 木漏れ日：画面全体にかかる、揺れるやわらかな光。カレンダーそのものを森の中で見上げているように */}
       <div
         style={{
