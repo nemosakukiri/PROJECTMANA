@@ -33,6 +33,8 @@ export default function App() {
   const [selectedEventId, setSelectedEventId] = useState(persisted?.selectedEventId ?? null);
   const [events, setEvents] = useState(persisted?.events ?? initialEvents);
   const [draft, setDraft] = useState(persisted?.draft ?? null);
+  // 確認用のプレビュー。実際の日付を書き換えず、見た目だけ試せる（保存はしない）
+  const [stagePreview, setStagePreview] = useState(null);
 
   const theme = themes[themeId] ?? themes[defaultThemeId];
 
@@ -68,7 +70,7 @@ export default function App() {
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
-  const monthStage = getMonthStage(getDayOfMonth(TODAY_DATE));
+  const monthStage = stagePreview ?? getMonthStage(getDayOfMonth(TODAY_DATE));
 
   const screenContent = (
     <>
@@ -105,6 +107,8 @@ export default function App() {
             onChangeTheme={setThemeId}
             currentMode={inputMode}
             onChangeMode={setInputMode}
+            stagePreview={stagePreview}
+            onChangeStagePreview={setStagePreview}
             onBack={() => setScreen("calendar")}
           />
         )}

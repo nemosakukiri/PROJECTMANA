@@ -7,8 +7,20 @@ const INPUT_OPTIONS = [
   { id: "both", emoji: "🔄", label: "両方使う" },
 ];
 
-export default function SettingsScreen({ theme, themeList, currentMode, onChangeMode, themeId, onChangeTheme, onBack }) {
+const STAGE_OPTIONS = [
+  { stage: 0, label: "1〜2日目" },
+  { stage: 1, label: "3〜9日目" },
+  { stage: 2, label: "10〜19日目" },
+  { stage: 3, label: "20〜29日目" },
+  { stage: 4, label: "30〜31日目" },
+];
+
+export default function SettingsScreen({
+  theme, themeList, currentMode, onChangeMode, themeId, onChangeTheme,
+  stagePreview, onChangeStagePreview, onBack,
+}) {
   const { tokens } = theme;
+  const hasGrowth = theme.componentTheme === "forest" || theme.componentTheme === "gothic";
   return (
     <div>
       <ContextHeader theme={theme} title="設定" onBack={onBack} />
@@ -37,6 +49,44 @@ export default function SettingsScreen({ theme, themeList, currentMode, onChange
             </button>
           ))}
         </div>
+
+        {hasGrowth && (
+          <>
+            <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
+              背景の育ちぐあいを試す
+            </div>
+            <p style={{ fontSize: 11.5, color: tokens.inkFaint, marginTop: 0, marginBottom: 10, lineHeight: 1.6 }}>
+              実際の日付は変わりません。見た目だけを、その日の姿で確認できます。
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 26 }}>
+              {STAGE_OPTIONS.map((o) => (
+                <button
+                  key={o.stage}
+                  onClick={() => onChangeStagePreview(o.stage)}
+                  style={{
+                    padding: "7px 12px", fontSize: 12.5, borderRadius: 999, cursor: "pointer",
+                    border: `1px solid ${stagePreview === o.stage ? tokens.ink : tokens.line}`,
+                    background: stagePreview === o.stage ? tokens.card : "transparent",
+                    color: tokens.ink,
+                  }}
+                >
+                  {o.label}
+                </button>
+              ))}
+              <button
+                onClick={() => onChangeStagePreview(null)}
+                style={{
+                  padding: "7px 12px", fontSize: 12.5, borderRadius: 999, cursor: "pointer",
+                  border: `1px solid ${stagePreview === null ? tokens.ink : tokens.line}`,
+                  background: stagePreview === null ? tokens.card : "transparent",
+                  color: tokens.inkSoft,
+                }}
+              >
+                今日に戻す
+              </button>
+            </div>
+          </>
+        )}
 
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
           ふだんの入力方法
