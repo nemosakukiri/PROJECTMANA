@@ -7,7 +7,7 @@ import CRTScreen from "./theme/industrial/CRTScreen.jsx";
 import CrackedGlass from "./theme/gothic/CrackedGlass.jsx";
 import ForestGrowth from "./theme/forest/ForestGrowth.jsx";
 import AdventureJourney from "./theme/adventure/AdventureJourney.jsx";
-import { getDayOfMonth, getMonthStage } from "./theme/growthStage.js";
+import { getDayOfMonth, getMonthStage, getMonthNumber, hasRareDiscovery } from "./theme/growthStage.js";
 
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
 import InputModeScreen from "./screens/InputModeScreen.jsx";
@@ -73,6 +73,11 @@ export default function App() {
   const isForest = theme.componentTheme === "forest";
   const isAdventure = theme.componentTheme === "adventure";
   const monthStage = stagePreview ?? getMonthStage(getDayOfMonth(TODAY_DATE));
+  const monthNumber = getMonthNumber(TODAY_DATE);
+  const recordedDays = [...new Set(
+    events.filter((e) => e.date?.startsWith(TODAY_DATE.slice(0, 7))).map((e) => getDayOfMonth(e.date))
+  )];
+  const rareDiscovery = hasRareDiscovery(TODAY_DATE);
 
   const screenContent = (
     <>
@@ -178,7 +183,7 @@ export default function App() {
         ) : isGothic ? (
           <CrackedGlass stage={monthStage}>{screenContent}</CrackedGlass>
         ) : isForest ? (
-          <ForestGrowth stage={monthStage} screen={screen}>{screenContent}</ForestGrowth>
+          <ForestGrowth stage={monthStage} screen={screen} month={monthNumber} recordedDays={recordedDays} rareDiscovery={rareDiscovery}>{screenContent}</ForestGrowth>
         ) : isAdventure ? (
           <AdventureJourney stage={monthStage}>{screenContent}</AdventureJourney>
         ) : (

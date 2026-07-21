@@ -13,3 +13,20 @@ export function getMonthStage(day) {
   if (day <= 29) return 3;
   return 4;
 }
+
+export function getMonthNumber(dateStr) {
+  return Number(dateStr.slice(5, 7));
+}
+
+/* 「変化は希少である」の希少さを担保するためのハッシュ。
+   同じ日付なら常に同じ結果を返す（リロードのたびに変わってはいけない）。
+   おおよそ5日に1日だけ、何か普段と違うものに出会う。 */
+function dayHash(dateStr) {
+  let h = 0;
+  for (let i = 0; i < dateStr.length; i++) h = (h * 31 + dateStr.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+export function hasRareDiscovery(dateStr) {
+  return dayHash(dateStr) % 5 === 0;
+}

@@ -22,11 +22,21 @@ function trees(list) {
     .join("");
 }
 
+const JULY_HAZE_OPACITY = [0.22, 0.16, 0.08, 0.03, 0];
+
 /* 森テーマの背景は、月の日付とともに育つ小さな物語。
    1〜2日：芽 / 3〜9日：木が2本 / 10〜19日：小道 / 20〜29日：花 / 30〜31日：小さな森の完成
-   下の余白を森そのものが占めるよう、シーンの背丈を大きく取る。 */
-function buildForestScene(stage) {
+   下の余白を森そのものが占めるよう、シーンの背丈を大きく取る。
+   month/rareDiscoveryは「毎月同じ森」「毎日何かが起きる森」にしないための軸。
+   7月固有の物語（梅雨が引いていく湿り気、水辺の気配）と、
+   希少に起きる出来事（倒木）を、育ち方の軸とは別に重ねる。 */
+function buildForestScene(stage, { month, rareDiscovery } = {}) {
   let content = GROUND_FADE;
+
+  if (month === 7 && stage <= 3) {
+    const hazeY = 0;
+    content += `<rect x='0' y='${hazeY}' width='420' height='150' fill='#8FA6AC' fill-opacity='${JULY_HAZE_OPACITY[stage] ?? 0}'/>`;
+  }
 
   if (stage === 0) {
     content +=
@@ -65,6 +75,23 @@ function buildForestScene(stage) {
     content += "<circle cx='55' cy='52' r='70' fill='#F2E7B8' fill-opacity='0.15'/>";
   }
 
+  if (month === 7 && stage >= 3) {
+    content +=
+      `<path d='M380 ${GROUND_Y} L378 ${GROUND_Y - 26}' stroke='#5C8A5A' stroke-opacity='0.35' stroke-width='2.5' stroke-linecap='round'/>` +
+      `<path d='M390 ${GROUND_Y} L389 ${GROUND_Y - 22}' stroke='#5C8A5A' stroke-opacity='0.32' stroke-width='2.5' stroke-linecap='round'/>` +
+      `<path d='M400 ${GROUND_Y} L403 ${GROUND_Y - 30}' stroke='#5C8A5A' stroke-opacity='0.35' stroke-width='2.5' stroke-linecap='round'/>` +
+      `<ellipse cx='366' cy='${GROUND_Y - 34}' rx='6' ry='2.5' fill='#3E6E7A' fill-opacity='0.4' transform='rotate(-18 366 ${GROUND_Y - 34})'/>` +
+      `<ellipse cx='372' cy='${GROUND_Y - 34}' rx='6' ry='2.5' fill='#3E6E7A' fill-opacity='0.4' transform='rotate(18 372 ${GROUND_Y - 34})'/>`;
+  }
+
+  /* 希少に起きる出来事：倒木。毎回あるわけではない——あった日は少し立ち止まる程度でいい。 */
+  if (rareDiscovery && stage >= 2) {
+    content +=
+      `<rect x='190' y='${GROUND_Y - 26}' width='58' height='9' rx='4.5' fill='#6B4B32' fill-opacity='0.4' transform='rotate(-6 219 ${GROUND_Y - 22})'/>` +
+      `<ellipse cx='236' cy='${GROUND_Y - 6}' rx='3.5' ry='4.5' fill='#B65D4A' fill-opacity='0.32'/>` +
+      `<ellipse cx='242' cy='${GROUND_Y - 4}' rx='2.8' ry='3.6' fill='#B65D4A' fill-opacity='0.3'/>`;
+  }
+
   return svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 ${SCENE_HEIGHT}' preserveAspectRatio='xMidYMax slice'>${content}</svg>`);
 }
 
@@ -74,9 +101,34 @@ const FALLING_LEAVES = [
   { left: "74%", delay: "0.26s", size: 11, duration: "1.7s", rotate: "150deg" },
 ];
 
+const JULY_FIREFLY_COUNT = [0, 0, 2, 4, 6];
+
+/* 7月固有：蛍。梅雨が明けていくにつれ、少しずつ数が増える。
+   利用者が何かをしたから増えるのではなく、月の後半になるほど夜の森が賑わうという、時間だけの変化。 */
+function fireflyPositions(count) {
+  return Array.from({ length: count }, (_, i) => ({
+    left: `${8 + ((i * 37) % 84)}%`,
+    bottom: `${18 + ((i * 53) % 90)}px`,
+    delay: `${(i * 0.7) % 3}s`,
+    duration: `${2.6 + (i % 3) * 0.5}s`,
+  }));
+}
+
+/* 暮らしの跡：記録を書いた日だけ、その日にあたる場所に小さな跡が残る。
+   森を育てているのは利用者ではなく時間。ここにあるのは「その日そこにいた」痕跡だけ。 */
+function tracePositions(recordedDays) {
+  return recordedDays.map((day) => ({
+    day,
+    left: `${6 + (Math.min(day, 31) / 31) * 88}%`,
+    bottom: `${10 + ((day * 53) % 14)}px`,
+  }));
+}
+
 /* コンポーネントテーマ専用部品：森の生育。中身の情報構造・操作順序には一切手を加えない。
    画面が切り替わる瞬間、葉が舞い落ちる——「森を移動している」という手応えのための演出。 */
-export default function ForestGrowth({ stage, screen, children }) {
+export default function ForestGrowth({ stage, screen, month, recordedDays = [], rareDiscovery = false, children }) {
+  const fireflies = month === 7 ? fireflyPositions(JULY_FIREFLY_COUNT[stage] ?? 0) : [];
+  const traces = tracePositions(recordedDays);
   return (
     <div style={{ position: "relative", overflow: "hidden", minHeight: "100vh" }}>
       <style>{`
@@ -93,6 +145,14 @@ export default function ForestGrowth({ stage, screen, children }) {
           0% { opacity: 0; transform: translateY(-16px) rotate(0deg); }
           12% { opacity: 0.7; }
           100% { opacity: 0; transform: translateY(180px) rotate(var(--leaf-rotate)); }
+        }
+        @keyframes fireflyGlow {
+          0%, 100% { opacity: 0.25; transform: translateY(0); }
+          50% { opacity: 0.9; transform: translateY(-6px); }
+        }
+        @keyframes traceGlow {
+          0%, 100% { opacity: 0.45; }
+          50% { opacity: 0.7; }
         }
       `}</style>
       <div key={screen} style={{ animation: "leafEnter 0.45s ease-out" }}>
@@ -147,12 +207,48 @@ export default function ForestGrowth({ stage, screen, children }) {
           bottom: 0,
           height: SCENE_HEIGHT,
           pointerEvents: "none",
-          backgroundImage: buildForestScene(stage),
+          backgroundImage: buildForestScene(stage, { month, rareDiscovery }),
           backgroundRepeat: "no-repeat",
           backgroundPosition: "bottom center",
           backgroundSize: "100% 100%",
         }}
       />
+      {/* 蛍：7月固有。夜の森が賑わっていく、時間だけの変化 */}
+      {fireflies.map((f, i) => (
+        <span
+          key={`firefly-${i}`}
+          style={{
+            position: "absolute",
+            left: f.left,
+            bottom: f.bottom,
+            width: 4,
+            height: 4,
+            borderRadius: "50%",
+            background: "#E9EDA0",
+            boxShadow: "0 0 5px 2px rgba(233,237,160,0.55)",
+            pointerEvents: "none",
+            animation: `fireflyGlow ${f.duration} ease-in-out ${f.delay} infinite`,
+          }}
+        />
+      ))}
+      {/* 暮らしの跡：記録を書いた日にだけ残る、目立たない印 */}
+      {traces.map((t) => (
+        <span
+          key={`trace-${t.day}`}
+          style={{
+            position: "absolute",
+            left: t.left,
+            bottom: t.bottom,
+            width: 5,
+            height: 5,
+            borderRadius: "50%",
+            background: "#C98A4B",
+            opacity: 0.5,
+            pointerEvents: "none",
+            animation: "traceGlow 4s ease-in-out infinite",
+          }}
+        />
+      ))}
     </div>
   );
 }
