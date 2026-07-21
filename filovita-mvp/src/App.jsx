@@ -96,6 +96,7 @@ export default function App() {
           <CalendarScreen
             theme={theme}
             events={events}
+            monthStage={monthStage}
             onOpenDate={(d) => { setSelectedDate(d); setScreen("dayList"); }}
             onNew={() => setScreen("input")}
             onOpenSettings={() => setScreen("settings")}

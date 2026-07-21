@@ -6,9 +6,14 @@ import WarnLamp from "../theme/industrial/WarnLamp.jsx";
 import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import CandleFlicker from "../theme/gothic/CandleFlicker.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
+import { seasonLabels } from "../theme/forest/seasonLabels.js";
+import { getMonthStage } from "../theme/growthStage.js";
+
+const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
+const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];
 
 /* ①カレンダー（中心画面） */
-export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpenSettings }) {
+export default function CalendarScreen({ theme, events, monthStage, onOpenDate, onNew, onOpenSettings }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -41,6 +46,11 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
           <h1 style={{ fontFamily: tokens.headingFont, fontSize: 22, fontWeight: 700, margin: "4px 0 0", color: tokens.ink }}>
             {labels.calendarHeading}
           </h1>
+          {isForest && (
+            <p style={{ fontSize: 11.5, color: tokens.inkFaint, margin: "3px 0 0" }}>
+              {seasonLabels[monthStage]}
+            </p>
+          )}
         </div>
         <button
           onClick={onOpenSettings}
@@ -98,17 +108,32 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
             const dateStr = `2026-07-${String(d).padStart(2, "0")}`;
             const dayEvents = eventsOnDate(events, dateStr);
             const isToday = d === 18;
+            const dayStage = isForest ? getMonthStage(d) : null;
             return (
               <button
                 key={i}
                 onClick={() => dayEvents.length > 0 && onOpenDate(dateStr)}
                 style={{
+                  position: "relative",
                   aspectRatio: "1", border: isToday ? `1.5px solid ${tokens.ink}` : "1px solid transparent",
-                  borderRadius: 10, background: dayEvents.length > 0 ? tokens.card : "transparent",
+                  borderRadius: 10,
+                  background: dayEvents.length > 0
+                    ? tokens.card
+                    : isForest
+                      ? `rgba(47,107,58,${FOREST_DAY_TINT[dayStage]})`
+                      : "transparent",
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                   cursor: dayEvents.length > 0 ? "pointer" : "default", fontSize: 12.5, color: tokens.ink, padding: 0,
                 }}
               >
+                {isForest && (
+                  <span
+                    style={{
+                      position: "absolute", top: 3, right: 4, width: 5, height: 5, borderRadius: "50%",
+                      background: "#2F6B3A", opacity: FOREST_DOT_OPACITY[dayStage],
+                    }}
+                  />
+                )}
                 <span>{d}</span>
                 {dayEvents.length > 0 && (
                   <span style={{ fontSize: 8.5, color: tokens.inkFaint, marginTop: 1 }}>
