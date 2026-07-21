@@ -1,0 +1,134 @@
+import { useEffect, useState } from "react";
+import { tokens } from "./theme/tokens.js";
+import { initialEvents } from "./data/fakeEvents.js";
+import { generateDraftFake } from "./lib/fakeGenerateDraft.js";
+import { loadState, saveState } from "./lib/persistence.js";
+
+import WelcomeScreen from "./screens/WelcomeScreen.jsx";
+import InputModeScreen from "./screens/InputModeScreen.jsx";
+import CalendarConnectScreen from "./screens/CalendarConnectScreen.jsx";
+import SettingsScreen from "./screens/SettingsScreen.jsx";
+import CalendarScreen from "./screens/CalendarScreen.jsx";
+import DayEventListScreen from "./screens/DayEventListScreen.jsx";
+import EventDetailScreen from "./screens/EventDetailScreen.jsx";
+import InputScreen from "./screens/InputScreen.jsx";
+import ConfirmScreen from "./screens/ConfirmScreen.jsx";
+
+const TODAY_DATE = "2026-07-18";
+const TODAY_LABEL = "7月18日（土）";
+
+// リロード後も続きから触れるよう、初期値は一度だけlocalStorageから読む
+const persisted = loadState();
+
+export default function App() {
+  const [screen, setScreen] = useState(persisted?.screen ?? "welcome");
+  const [inputMode, setInputMode] = useState(persisted?.inputMode ?? "both");
+  const [selectedDate, setSelectedDate] = useState(persisted?.selectedDate ?? null);
+  const [selectedEventId, setSelectedEventId] = useState(persisted?.selectedEventId ?? null);
+  const [events, setEvents] = useState(persisted?.events ?? initialEvents);
+  const [draft, setDraft] = useState(persisted?.draft ?? null);
+
+  useEffect(() => {
+    saveState({ screen, inputMode, selectedDate, selectedEventId, events, draft });
+  }, [screen, inputMode, selectedDate, selectedEventId, events, draft]);
+
+  const selectedEvent = events.find((e) => e.id === selectedEventId);
+
+  function handleSubmitInput(text) {
+    setDraft(generateDraftFake(text));
+    setScreen("confirm");
+  }
+
+  function handleConfirm(conclusionText) {
+    const newEvent = {
+      id: `evt_${Date.now()}`,
+      date: TODAY_DATE,
+      dateLabel: TODAY_LABEL,
+      kind: "記録",
+      tags: [],
+      conclusion: conclusionText,
+      todos: (draft?.todos ?? []).map((t) => ({ text: t.text, done: false })),
+      nextEvent: null,
+      related: [],
+      myNote: "",
+    };
+    setEvents((prev) => [...prev, newEvent]);
+    setDraft(null);
+    setScreen("calendar");
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: tokens.paper, display: "flex", justifyContent: "center", fontFamily: "'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+        * { box-sizing: border-box; }
+      `}</style>
+      <div style={{ width: "100%", maxWidth: 440, minHeight: "100vh", paddingBottom: 100, position: "relative" }}>
+        {screen === "welcome" && (
+          <WelcomeScreen onNext={() => setScreen("inputMode")} />
+        )}
+        {screen === "inputMode" && (
+          <InputModeScreen onSelect={(mode) => { setInputMode(mode); setScreen("calendarConnect"); }} />
+        )}
+        {screen === "calendarConnect" && (
+          <CalendarConnectScreen
+            onConnect={() => setScreen("calendar")}
+            onSkip={() => setScreen("calendar")}
+          />
+        )}
+        {screen === "calendar" && (
+          <CalendarScreen
+            events={events}
+            onOpenDate={(d) => { setSelectedDate(d); setScreen("dayList"); }}
+            onNew={() => setScreen("input")}
+            onOpenSettings={() => setScreen("settings")}
+          />
+        )}
+        {screen === "settings" && (
+          <SettingsScreen
+            currentMode={inputMode}
+            onChangeMode={setInputMode}
+            onBack={() => setScreen("calendar")}
+          />
+        )}
+        {screen === "dayList" && (
+          <DayEventListScreen
+            events={events}
+            date={selectedDate}
+            onOpenEvent={(id) => { setSelectedEventId(id); setScreen("detail"); }}
+            onBack={() => setScreen("calendar")}
+            onNew={() => setScreen("input")}
+          />
+        )}
+        {screen === "detail" && selectedEvent && (
+          <EventDetailScreen
+            event={selectedEvent}
+            onBack={() => setScreen("dayList")}
+            onUpdateNote={(v) => setEvents(events.map((e) => {
+              if (e.id !== selectedEventId) return e;
+              const hasImpression = v.trim().length > 0;
+              const tagsWithoutImpression = e.tags.filter((t) => t !== "所感");
+              return {
+                ...e,
+                myNote: v,
+                tags: hasImpression ? [...tagsWithoutImpression, "所感"] : tagsWithoutImpression,
+              };
+            }))}
+            onToggleTodo={(i) => setEvents(events.map((e) => e.id === selectedEventId ? { ...e, todos: e.todos.map((t, ti) => ti === i ? { ...t, done: !t.done } : t) } : e))}
+            onAddTodo={(text) => setEvents(events.map((e) => e.id === selectedEventId ? { ...e, todos: [...e.todos, { text, done: false }] } : e))}
+          />
+        )}
+        {screen === "input" && (
+          <InputScreen
+            mode={inputMode}
+            onBack={() => setScreen("calendar")}
+            onSubmit={handleSubmitInput}
+          />
+        )}
+        {screen === "confirm" && draft && (
+          <ConfirmScreen draft={draft} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
+        )}
+      </div>
+    </div>
+  );
+}
