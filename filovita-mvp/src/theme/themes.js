@@ -196,6 +196,8 @@ export const themes = {
     name: "冒険",
     emoji: "🗺️",
     blurb: "今日も一つ、クエストをクリアした気分になりたい人へ",
+    // コンポーネントテーマ：背景そのものが、月の日付とともに進む旅の地図（theme/adventure/）。
+    componentTheme: "adventure",
     tokens: {
       paper: "#F2E3C6", card: "#FFF8E8", ink: "#3B2A14", inkSoft: "#5B4425",
       inkFaint: "#8A6E44", line: "#D8B978", accent: "#C97A2B", accentBg: "#F5DCB2",

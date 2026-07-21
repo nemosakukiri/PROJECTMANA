@@ -20,7 +20,8 @@ export default function SettingsScreen({
   stagePreview, onChangeStagePreview, onBack,
 }) {
   const { tokens } = theme;
-  const hasGrowth = theme.componentTheme === "forest" || theme.componentTheme === "gothic";
+  const GROWTH_THEMES = ["forest", "gothic", "adventure"];
+  const hasGrowth = GROWTH_THEMES.includes(theme.componentTheme);
   return (
     <div>
       <ContextHeader theme={theme} title="設定" onBack={onBack} />
