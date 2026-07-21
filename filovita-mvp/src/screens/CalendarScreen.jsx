@@ -3,11 +3,14 @@ import { Plus, ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import { eventsOnDate, daysInMonth, firstWeekday } from "../data/fakeEvents.js";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import WarnLamp from "../theme/industrial/WarnLamp.jsx";
+import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
+import CandleFlicker from "../theme/gothic/CandleFlicker.jsx";
 
 /* ①カレンダー（中心画面） */
 export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpenSettings }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
+  const isGothic = theme.componentTheme === "gothic";
   const [showContinuation, setShowContinuation] = useState(false);
   const cells = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const totalOpenTodos = events.reduce((s, e) => s + e.todos.filter((t) => !t.done).length, 0);
@@ -18,6 +21,7 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
       {totalOpenTodos > 0 ? (
         <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
           {isIndustrial && <WarnLamp active />}
+          {isGothic && <CandleFlicker active />}
           {labels.todoRemainingLabel} <strong style={{ color: tokens.accent }}>{totalOpenTodos}件</strong>
         </span>
       ) : (
@@ -32,7 +36,7 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
       <div style={{ padding: "24px 20px 6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <div style={{ fontSize: 11, letterSpacing: "0.14em", color: tokens.inkFaint }}>Filovita</div>
-          <h1 style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 22, fontWeight: 700, margin: "4px 0 0", color: tokens.ink }}>
+          <h1 style={{ fontFamily: tokens.headingFont, fontSize: 22, fontWeight: 700, margin: "4px 0 0", color: tokens.ink }}>
             {labels.calendarHeading}
           </h1>
         </div>
@@ -60,6 +64,10 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
           <SteelPanel style={{ fontSize: 13, color: tokens.inkSoft, marginBottom: 16 }}>
             {continuationContent}
           </SteelPanel>
+        ) : isGothic ? (
+          <OrnateFrame style={{ fontSize: 13, color: tokens.inkSoft, marginBottom: 16 }}>
+            {continuationContent}
+          </OrnateFrame>
         ) : (
           <div style={{
             fontSize: 13, color: tokens.inkSoft, padding: "11px 14px", background: tokens.card,
@@ -71,7 +79,7 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <button style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer" }}><ChevronLeft size={17} /></button>
-          <span style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 15, fontWeight: 700, color: tokens.ink }}>2026年7月</span>
+          <span style={{ fontFamily: tokens.headingFont, fontSize: 15, fontWeight: 700, color: tokens.ink }}>2026年7月</span>
           <button style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer" }}><ChevronRight size={17} /></button>
         </div>
 

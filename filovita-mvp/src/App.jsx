@@ -4,6 +4,7 @@ import { initialEvents } from "./data/fakeEvents.js";
 import { generateDraftFake } from "./lib/fakeGenerateDraft.js";
 import { loadState, saveState } from "./lib/persistence.js";
 import CRTScreen from "./theme/industrial/CRTScreen.jsx";
+import CrackedGlass from "./theme/gothic/CrackedGlass.jsx";
 
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
 import InputModeScreen from "./screens/InputModeScreen.jsx";
@@ -63,6 +64,7 @@ export default function App() {
   }
 
   const isIndustrial = theme.componentTheme === "industrial";
+  const isGothic = theme.componentTheme === "gothic";
 
   const screenContent = (
     <>
@@ -148,11 +150,17 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: theme.tokens.paper, display: "flex", justifyContent: "center", fontFamily: "'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif" }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Noto+Sans+JP:wght@500;700&display=swap');
         * { box-sizing: border-box; }
       `}</style>
       <div style={{ width: "100%", maxWidth: 440, minHeight: "100vh", paddingBottom: 100, position: "relative" }}>
-        {isIndustrial ? <CRTScreen>{screenContent}</CRTScreen> : screenContent}
+        {isIndustrial ? (
+          <CRTScreen>{screenContent}</CRTScreen>
+        ) : isGothic ? (
+          <CrackedGlass>{screenContent}</CrackedGlass>
+        ) : (
+          screenContent
+        )}
       </div>
     </div>
   );

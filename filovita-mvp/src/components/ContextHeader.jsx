@@ -1,10 +1,12 @@
 import { ArrowLeft } from "lucide-react";
 import BrassPlate from "../theme/industrial/BrassPlate.jsx";
+import WaxSeal from "../theme/gothic/WaxSeal.jsx";
 
 /* 共通：文脈ヘッダー（今どこにいるかを、常に同じ場所に示す） */
 export default function ContextHeader({ theme, breadcrumb, title, onBack }) {
   const { tokens } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
+  const isGothic = theme.componentTheme === "gothic";
   return (
     <div style={{ padding: "18px 20px 6px" }}>
       {onBack && (
@@ -25,8 +27,12 @@ export default function ContextHeader({ theme, breadcrumb, title, onBack }) {
         <div style={{ marginTop: 6 }}>
           <BrassPlate>{title}</BrassPlate>
         </div>
+      ) : isGothic ? (
+        <div style={{ marginTop: 6 }}>
+          <WaxSeal>{title}</WaxSeal>
+        </div>
       ) : (
-        <h1 style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 19, fontWeight: 700, margin: "4px 0 0", color: tokens.ink }}>
+        <h1 style={{ fontFamily: tokens.headingFont, fontSize: 19, fontWeight: 700, margin: "4px 0 0", color: tokens.ink }}>
           {title}
         </h1>
       )}

@@ -7,10 +7,12 @@ export const themes = {
     id: "techo",
     name: "手帳",
     emoji: "📔",
-    blurb: "大変な日も、静かに書き留めたい人へ",
+    blurb: "ビジネスの記録も、静かに整えたい人へ",
     tokens: {
       paper: "#F5F1E8", card: "#FFFFFF", ink: "#201F1B", inkSoft: "#3A392F",
       inkFaint: "#5E5C4F", line: "#C9C0A8", accent: "#3F5C42", accentBg: "#E7EEE4",
+      // ビジネス用途を想定し、文学的な明朝体ではなく、端正なゴシック体を見出しに使う
+      headingFont: "'Noto Sans JP', 'Zen Kaku Gothic New', sans-serif",
     },
     labels: {
       welcomeTitle: "Filovitaへようこそ",
@@ -45,6 +47,7 @@ export const themes = {
     tokens: {
       paper: "#FBEEE0", card: "#FFFFFF", ink: "#4A2E2A", inkSoft: "#6B4A3E",
       inkFaint: "#9C7A6B", line: "#E8C9A8", accent: "#E8837A", accentBg: "#FBE3DE",
+      headingFont: "'Shippori Mincho', serif",
     },
     labels: {
       welcomeTitle: "Filovitaへ、ようこそ",
@@ -79,6 +82,7 @@ export const themes = {
     tokens: {
       paper: "#EEF2E6", card: "#FFFFFF", ink: "#1F2E1A", inkSoft: "#33452B",
       inkFaint: "#5C6E52", line: "#B9C9A8", accent: "#2F6B3A", accentBg: "#DCEBDD",
+      headingFont: "'Shippori Mincho', serif",
     },
     labels: {
       welcomeTitle: "Filovitaの森へ",
@@ -110,9 +114,13 @@ export const themes = {
     name: "ホラー",
     emoji: "🦇",
     blurb: "大変な出来事も、ちょっとしたスリルに変えて楽しみたい人へ",
+    // コンポーネントテーマ：色・ラベルだけでなく、専用UI部品（theme/gothic/）を使う。
+    // ただし結論→ToDo→確定という順序や確認操作の構造は、他のテーマと変えない。
+    componentTheme: "gothic",
     tokens: {
       paper: "#1B1520", card: "#241C2C", ink: "#EDE6F0", inkSoft: "#C9BBD1",
       inkFaint: "#8F7F99", line: "#4A3A55", accent: "#B5324A", accentBg: "#3A2230",
+      headingFont: "'Shippori Mincho', serif",
     },
     labels: {
       welcomeTitle: "ようこそ、Filovita館へ",
@@ -147,6 +155,7 @@ export const themes = {
     tokens: {
       paper: "#0D1B24", card: "#132A38", ink: "#DCEFF5", inkSoft: "#A9C7D4",
       inkFaint: "#6E8A96", line: "#274456", accent: "#2FB6C4", accentBg: "#123540",
+      headingFont: "'Shippori Mincho', serif",
     },
     labels: {
       welcomeTitle: "Filovita起動",
@@ -181,6 +190,7 @@ export const themes = {
     tokens: {
       paper: "#F2E3C6", card: "#FFF8E8", ink: "#3B2A14", inkSoft: "#5B4425",
       inkFaint: "#8A6E44", line: "#D8B978", accent: "#C97A2B", accentBg: "#F5DCB2",
+      headingFont: "'Shippori Mincho', serif",
     },
     labels: {
       welcomeTitle: "冒険の書、開始",
@@ -218,6 +228,7 @@ export const themes = {
     tokens: {
       paper: "#0A0D0A", card: "#12160F", ink: "#C9FFC9", inkSoft: "#7FE07F",
       inkFaint: "#3E5A3E", line: "#2A3A26", accent: "#39FF6A", accentBg: "#123018",
+      headingFont: "'Shippori Mincho', serif",
     },
     labels: {
       welcomeTitle: "端末：Filovita 起動シーケンス",

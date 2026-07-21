@@ -7,7 +7,7 @@ export default function ThemeSelectScreen({ themeList, onSelect }) {
   return (
     <div style={{ padding: "48px 22px 40px", background: neutral.paper, minHeight: "100vh" }}>
       <div style={{ fontSize: 28, marginBottom: 12, textAlign: "center" }}>🎨</div>
-      <h1 style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 20, fontWeight: 700, color: neutral.ink, margin: "0 0 10px", textAlign: "center" }}>
+      <h1 style={{ fontFamily: neutral.headingFont, fontSize: 20, fontWeight: 700, color: neutral.ink, margin: "0 0 10px", textAlign: "center" }}>
         暮らしを見るレンズを選びましょう
       </h1>
       <p style={{ fontSize: 13, color: neutral.inkSoft, lineHeight: 1.8, margin: "0 0 26px", textAlign: "center" }}>

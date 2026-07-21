@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 import BrassPlate from "../theme/industrial/BrassPlate.jsx";
+import WaxSeal from "../theme/gothic/WaxSeal.jsx";
 
 /* ③Eventカルテ */
 export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
+  const isGothic = theme.componentTheme === "gothic";
   const [addingTodo, setAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
 
@@ -15,7 +17,7 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
       <ContextHeader theme={theme} breadcrumb={`${event.dateLabel} の記録`} title={event.kind} onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 6 }}>{labels.conclusionLabel}</div>
-        <p style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 17, fontWeight: 700, lineHeight: 1.7, marginTop: 0, color: tokens.ink }}>
+        <p style={{ fontFamily: tokens.headingFont, fontSize: 17, fontWeight: 700, lineHeight: 1.7, marginTop: 0, color: tokens.ink }}>
           {event.conclusion}
         </p>
 
@@ -77,7 +79,7 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
         {event.nextEvent && (
           <>
             <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 6px" }}>次回予定</div>
-            <div style={{ fontSize: 15, fontFamily: "'Shippori Mincho',serif", fontWeight: 700, color: tokens.ink }}>{event.nextEvent}</div>
+            <div style={{ fontSize: 15, fontFamily: tokens.headingFont, fontWeight: 700, color: tokens.ink }}>{event.nextEvent}</div>
           </>
         )}
 
@@ -86,6 +88,8 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
           {event.tags.map((t) =>
             isIndustrial ? (
               <BrassPlate key={t} style={{ fontSize: 11, padding: "2px 10px" }}>#{t}</BrassPlate>
+            ) : isGothic ? (
+              <WaxSeal key={t} style={{ fontSize: 11, padding: "2px 10px" }}>#{t}</WaxSeal>
             ) : (
               <span key={t} style={{ fontSize: 12, background: tokens.accentBg, color: tokens.accent, padding: "3px 10px", borderRadius: 999, fontWeight: 600 }}>#{t}</span>
             )

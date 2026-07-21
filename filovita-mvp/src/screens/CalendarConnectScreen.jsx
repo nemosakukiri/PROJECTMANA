@@ -3,7 +3,7 @@ export default function CalendarConnectScreen({ theme, onConnect, onSkip }) {
   return (
     <div style={{ padding: "60px 26px 0", textAlign: "center" }}>
       <div style={{ fontSize: 30, marginBottom: 16 }}>📅</div>
-      <h1 style={{ fontFamily: "'Shippori Mincho',serif", fontSize: 20, fontWeight: 700, color: tokens.ink, margin: "0 0 18px" }}>
+      <h1 style={{ fontFamily: tokens.headingFont, fontSize: 20, fontWeight: 700, color: tokens.ink, margin: "0 0 18px" }}>
         カレンダーと連携しますか？
       </h1>
       <p style={{ fontSize: 13.5, color: tokens.inkSoft, lineHeight: 1.9, margin: "0 0 36px" }}>

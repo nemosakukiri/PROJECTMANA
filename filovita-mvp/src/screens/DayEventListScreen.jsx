@@ -2,11 +2,13 @@ import { Plus } from "lucide-react";
 import { eventsOnDate } from "../data/fakeEvents.js";
 import ContextHeader from "../components/ContextHeader.jsx";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
+import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 
 /* ②その日のEvent一覧（見出しのみ） */
 export default function DayEventListScreen({ theme, events, date, onOpenEvent, onBack, onNew }) {
   const { tokens } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
+  const isGothic = theme.componentTheme === "gothic";
   const dayEvents = eventsOnDate(events, date);
   const label = dayEvents[0]?.dateLabel ?? "";
 
@@ -26,6 +28,16 @@ export default function DayEventListScreen({ theme, events, date, onOpenEvent, o
               <div style={{ fontSize: 11, color: tokens.inkFaint }}>{ev.kind}</div>
               <div style={{ fontSize: 14.5, color: tokens.ink, marginTop: 3 }}>{ev.conclusion}</div>
             </SteelPanel>
+          ) : isGothic ? (
+            <OrnateFrame
+              key={ev.id}
+              as="button"
+              onClick={() => onOpenEvent(ev.id)}
+              style={{ marginBottom: 12, cursor: "pointer" }}
+            >
+              <div style={{ fontSize: 11, color: tokens.inkFaint }}>{ev.kind}</div>
+              <div style={{ fontSize: 14.5, color: tokens.ink, marginTop: 3 }}>{ev.conclusion}</div>
+            </OrnateFrame>
           ) : (
             <button
               key={ev.id}
