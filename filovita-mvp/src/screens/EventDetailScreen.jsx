@@ -3,12 +3,14 @@ import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 import BrassPlate from "../theme/industrial/BrassPlate.jsx";
 import WaxSeal from "../theme/gothic/WaxSeal.jsx";
+import LeafTag from "../theme/forest/LeafTag.jsx";
 
 /* ③Eventカルテ */
 export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
+  const isForest = theme.componentTheme === "forest";
   const [addingTodo, setAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
 
@@ -90,6 +92,8 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
               <BrassPlate key={t} style={{ fontSize: 11, padding: "2px 10px" }}>#{t}</BrassPlate>
             ) : isGothic ? (
               <WaxSeal key={t} style={{ fontSize: 11, padding: "2px 10px" }}>#{t}</WaxSeal>
+            ) : isForest ? (
+              <LeafTag key={t} style={{ fontSize: 11, padding: "3px 10px 3px 13px" }}>#{t}</LeafTag>
             ) : (
               <span key={t} style={{ fontSize: 12, background: tokens.accentBg, color: tokens.accent, padding: "3px 10px", borderRadius: 999, fontWeight: 600 }}>#{t}</span>
             )

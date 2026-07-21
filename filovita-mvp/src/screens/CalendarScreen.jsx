@@ -5,12 +5,14 @@ import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import WarnLamp from "../theme/industrial/WarnLamp.jsx";
 import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import CandleFlicker from "../theme/gothic/CandleFlicker.jsx";
+import BarkPanel from "../theme/forest/BarkPanel.jsx";
 
 /* ①カレンダー（中心画面） */
 export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpenSettings }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
+  const isForest = theme.componentTheme === "forest";
   const [showContinuation, setShowContinuation] = useState(false);
   const cells = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const totalOpenTodos = events.reduce((s, e) => s + e.todos.filter((t) => !t.done).length, 0);
@@ -68,6 +70,10 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
           <OrnateFrame style={{ fontSize: 13, color: tokens.inkSoft, marginBottom: 16 }}>
             {continuationContent}
           </OrnateFrame>
+        ) : isForest ? (
+          <BarkPanel style={{ fontSize: 13, color: tokens.inkSoft, marginBottom: 16 }}>
+            {continuationContent}
+          </BarkPanel>
         ) : (
           <div style={{
             fontSize: 13, color: tokens.inkSoft, padding: "11px 14px", background: tokens.card,
@@ -119,7 +125,11 @@ export default function CalendarScreen({ theme, events, onOpenDate, onNew, onOpe
         onClick={onNew}
         style={{
           position: "fixed", left: "50%", transform: "translateX(-50%)", bottom: 26, width: 58, height: 58,
-          borderRadius: "50%", background: tokens.ink, color: tokens.paper, border: "none",
+          borderRadius: "50%",
+          background: isForest
+            ? "radial-gradient(circle at 40% 35%, #7C5C3B 0%, #5C4530 45%, #3A2D1E 100%)"
+            : tokens.ink,
+          color: tokens.paper, border: "none",
           display: "flex", alignItems: "center", justifyContent: "center",
           boxShadow: "0 6px 18px rgba(0,0,0,0.2)", cursor: "pointer",
         }}
