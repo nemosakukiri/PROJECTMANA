@@ -1,4 +1,5 @@
 import { getMonthNumber, livingSignals, livingRatio, rareMoment, traceLayout } from "../worldEngine.js";
+import forestTreeImg from "../../assets/forest-tree.png";
 
 function svgUrl(svg) {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
@@ -14,24 +15,21 @@ const GROUND_FADE =
   "</linearGradient></defs>" +
   `<rect x='0' y='${GROUND_Y - 150}' width='420' height='150' fill='url(#g)'/>`;
 
-/* 一本ごとの木：まっすぐな幹に丸い葉、ではなく、
-   幹は先細りの茶色、樹冠は濃淡3色のクラスターを重ねて、illustration らしい塊感を出す。 */
-function tree(t) {
-  const r = t.canopyR;
-  const trunkTopY = GROUND_Y - t.trunkH;
-  const cy = trunkTopY - r * 0.55;
-  const o = t.opacity;
-  return (
-    `<path d='M${t.x - 4} ${GROUND_Y} L${t.x - 2.2} ${trunkTopY + 4} Q${t.x} ${trunkTopY} ${t.x + 2.2} ${trunkTopY + 4} L${t.x + 4} ${GROUND_Y} Z' fill='#7C5C3B' fill-opacity='${o}'/>` +
-    `<circle cx='${t.x - r * 0.5}' cy='${cy + r * 0.3}' r='${r * 0.7}' fill='#2F6B3A' fill-opacity='${o}'/>` +
-    `<circle cx='${t.x + r * 0.52}' cy='${cy + r * 0.18}' r='${r * 0.66}' fill='#2F6B3A' fill-opacity='${o}'/>` +
-    `<circle cx='${t.x}' cy='${cy - r * 0.3}' r='${r * 0.82}' fill='#3F7C48' fill-opacity='${o}'/>` +
-    `<circle cx='${t.x - r * 0.22}' cy='${cy - r * 0.6}' r='${r * 0.38}' fill='#68A768' fill-opacity='${o * 0.85}'/>`
-  );
-}
+/* 木は手描きのSVG図形ではなく、PROJECT MANA(絵本のくらし)の実イラストを再利用する。
+   位置・大きさ・不透明度だけをここで段階ごとに決め、実際の画像はJSX側で<img>として重ねる。 */
+const BASE_TREES = [
+  { x: 110, widthPx: 150, bottomPx: 0, opacity: 0.7 },
+  { x: 300, widthPx: 118, bottomPx: 0, opacity: 0.62 },
+];
+const EXTRA_TREES = [
+  { x: 50, widthPx: 96, bottomPx: 0, opacity: 0.5 },
+  { x: 360, widthPx: 104, bottomPx: 0, opacity: 0.55 },
+  { x: 210, widthPx: 168, bottomPx: 4, opacity: 0.6 },
+];
 
-function trees(list) {
-  return list.map(tree).join("");
+export function treeInstances(stage) {
+  if (stage === 0) return [];
+  return stage >= 4 ? [...BASE_TREES, ...EXTRA_TREES] : BASE_TREES;
 }
 
 const JULY_HAZE_OPACITY = [0.22, 0.16, 0.08, 0.03, 0];
@@ -51,20 +49,6 @@ function buildForestScene(stage, { month, fallenLog }) {
       `<path d='M210 ${GROUND_Y - 48} Q234 ${GROUND_Y - 66} 242 ${GROUND_Y - 50} Q224 ${GROUND_Y - 36} 210 ${GROUND_Y - 48} Z' fill='#3F7C48' fill-opacity='0.3'/>`;
     return svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 ${SCENE_HEIGHT}' preserveAspectRatio='xMidYMax slice'>${content}</svg>`);
   }
-
-  const baseTrees = [
-    { x: 110, trunkH: 80, canopyR: 45, opacity: 0.22 },
-    { x: 300, trunkH: 66, canopyR: 35, opacity: 0.2 },
-  ];
-  const extraTrees =
-    stage >= 4
-      ? [
-          { x: 50, trunkH: 52, canopyR: 28, opacity: 0.16 },
-          { x: 360, trunkH: 59, canopyR: 31, opacity: 0.18 },
-          { x: 210, trunkH: 88, canopyR: 48, opacity: 0.2 },
-        ]
-      : [];
-  content += trees([...baseTrees, ...extraTrees]);
 
   if (stage >= 2) {
     content += `<path d='M0 ${GROUND_Y - 12} Q100 ${GROUND_Y - 32} 210 ${GROUND_Y - 18} Q320 ${GROUND_Y - 2} 420 ${GROUND_Y - 22}' stroke='#C9AE7D' stroke-opacity='0.28' stroke-width='15' fill='none' stroke-linecap='round'/>`;
@@ -140,6 +124,7 @@ export default function ForestGrowth({ stage, screen, date, recordedDays = [], c
 
   const fireflies = month === 7 ? fireflyPositions(JULY_FIREFLY_COUNT[stage] ?? 0) : [];
   const traces = traceLayout(recordedDays);
+  const trees = treeInstances(stage);
 
   return (
     <div style={{ position: "relative", overflow: "hidden", minHeight: "100vh" }}>
@@ -237,6 +222,23 @@ export default function ForestGrowth({ stage, screen, date, recordedDays = [], c
           backgroundSize: "100% 100%",
         }}
       />
+      {/* 木：PROJECT MANA(絵本のくらし)の実イラストを再利用。手描きSVGより実物の質感に近い */}
+      {trees.map((t, i) => (
+        <img
+          key={`tree-${i}`}
+          src={forestTreeImg}
+          alt=""
+          style={{
+            position: "absolute",
+            left: `${(t.x / 420) * 100}%`,
+            bottom: t.bottomPx,
+            width: t.widthPx,
+            transform: "translateX(-50%)",
+            opacity: t.opacity,
+            pointerEvents: "none",
+          }}
+        />
+      ))}
       {/* Monthly Story：蛍（7月固有） */}
       {fireflies.map((f, i) => (
         <span

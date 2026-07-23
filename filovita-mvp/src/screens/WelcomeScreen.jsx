@@ -8,7 +8,7 @@ export default function WelcomeScreen({ theme, onNext }) {
       {isGothic && (
         <div
           style={{
-            height: 190, margin: "-60px -26px 24px", borderRadius: "0 0 20px 20px",
+            height: 260, margin: "-60px -26px 24px", borderRadius: "0 0 20px 20px",
             backgroundImage: buildMansionExterior(), backgroundSize: "cover", backgroundPosition: "center",
           }}
         />
