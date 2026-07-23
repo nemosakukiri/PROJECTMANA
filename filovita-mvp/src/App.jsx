@@ -177,9 +177,13 @@ export default function App() {
         style={{
           width: "100%", maxWidth: 440, minHeight: "100vh", paddingBottom: 100, position: "relative",
           backgroundColor: theme.tokens.paper,
-          backgroundImage: theme.tokens.backgroundImage,
-          backgroundSize: theme.tokens.backgroundSize,
-          backgroundRepeat: "repeat",
+          // 森・ホラーは実写/実イラストの背景そのものが世界を表すので、
+          // タイル状の壁紙模様は重ねない（二重に見える原因になるため）
+          ...(isForest || isGothic ? {} : {
+            backgroundImage: theme.tokens.backgroundImage,
+            backgroundSize: theme.tokens.backgroundSize,
+            backgroundRepeat: "repeat",
+          }),
         }}
       >
         {isIndustrial ? (
