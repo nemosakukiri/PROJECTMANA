@@ -20,6 +20,8 @@ import DayEventListScreen from "./screens/DayEventListScreen.jsx";
 import EventDetailScreen from "./screens/EventDetailScreen.jsx";
 import InputScreen from "./screens/InputScreen.jsx";
 import ConfirmScreen from "./screens/ConfirmScreen.jsx";
+import TagToolboxScreen from "./screens/TagToolboxScreen.jsx";
+import { makeId } from "./theme/techo/tagToolbox.js";
 
 const TODAY_DATE = "2026-07-18";
 const TODAY_LABEL = "7月18日（土）";
@@ -35,14 +37,19 @@ export default function App() {
   const [selectedEventId, setSelectedEventId] = useState(persisted?.selectedEventId ?? null);
   const [events, setEvents] = useState(persisted?.events ?? initialEvents);
   const [draft, setDraft] = useState(persisted?.draft ?? null);
+  // 手帳だけの情報層：タグの道具箱。タグ名ではなくtagIdで紐付ける
+  // （表示名を変えても道具箱との紐付けが切れないように）
+  const [tagRegistry, setTagRegistry] = useState(persisted?.tagRegistry ?? {});
+  const [tagToolboxes, setTagToolboxes] = useState(persisted?.tagToolboxes ?? {});
+  const [activeTagName, setActiveTagName] = useState(persisted?.activeTagName ?? null);
   // 確認用のプレビュー。実際の日付を書き換えず、見た目だけ試せる（保存はしない）
   const [stagePreview, setStagePreview] = useState(null);
 
   const theme = themes[themeId] ?? themes[defaultThemeId];
 
   useEffect(() => {
-    saveState({ screen, inputMode, themeId, selectedDate, selectedEventId, events, draft });
-  }, [screen, inputMode, themeId, selectedDate, selectedEventId, events, draft]);
+    saveState({ screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName });
+  }, [screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
 
@@ -60,6 +67,40 @@ export default function App() {
     setEvents(events.map((e) => e.id !== selectedEventId ? e : {
       ...e,
       tags: e.tags.includes(tag) ? e.tags.filter((t) => t !== tag) : [...e.tags, tag],
+    }));
+  }
+
+  function handleOpenTagToolbox(tagName) {
+    if (!tagRegistry[tagName]) {
+      const tagId = makeId("tag");
+      setTagRegistry((prev) => ({ ...prev, [tagName]: tagId }));
+      setTagToolboxes((prev) => ({ ...prev, [tagId]: { tagId, tagName, references: [] } }));
+    }
+    setActiveTagName(tagName);
+    setScreen("tagToolbox");
+  }
+
+  function handleAddReference(ref) {
+    const tagId = tagRegistry[activeTagName];
+    setTagToolboxes((prev) => ({
+      ...prev,
+      [tagId]: { ...prev[tagId], references: [...prev[tagId].references, { id: makeId("ref"), ...ref }] },
+    }));
+  }
+
+  function handleUpdateReference(refId, patch) {
+    const tagId = tagRegistry[activeTagName];
+    setTagToolboxes((prev) => ({
+      ...prev,
+      [tagId]: { ...prev[tagId], references: prev[tagId].references.map((r) => r.id === refId ? { ...r, ...patch } : r) },
+    }));
+  }
+
+  function handleDeleteReference(refId) {
+    const tagId = tagRegistry[activeTagName];
+    setTagToolboxes((prev) => ({
+      ...prev,
+      [tagId]: { ...prev[tagId], references: prev[tagId].references.filter((r) => r.id !== refId) },
     }));
   }
 
@@ -167,6 +208,18 @@ export default function App() {
             onAddTodo={(text) => setEvents(events.map((e) => e.id === selectedEventId ? { ...e, todos: [...e.todos, { text, done: false }] } : e))}
             onToggleTag={handleToggleTag}
             onOpenDate={handleOpenDate}
+            onOpenTagToolbox={handleOpenTagToolbox}
+          />
+        )}
+        {screen === "tagToolbox" && activeTagName && (
+          <TagToolboxScreen
+            theme={theme}
+            tagName={activeTagName}
+            references={tagToolboxes[tagRegistry[activeTagName]]?.references ?? []}
+            onBack={() => setScreen("detail")}
+            onAddReference={handleAddReference}
+            onUpdateReference={handleUpdateReference}
+            onDeleteReference={handleDeleteReference}
           />
         )}
         {screen === "input" && (

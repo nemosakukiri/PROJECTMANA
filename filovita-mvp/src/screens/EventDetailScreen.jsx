@@ -11,7 +11,7 @@ import { STAMP_LABELS } from "../theme/techo/stamps.js";
 import { parseJpDateToStr } from "../theme/techo/pageLink.js";
 
 /* ③Eventカルテ */
-export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo, onToggleTag, onOpenDate }) {
+export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo, onToggleTag, onOpenDate, onOpenTagToolbox }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -119,7 +119,7 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
             ) : isTecho ? (
               STAMP_LABELS.includes(t)
                 ? <StampBadge key={t} label={t} onClick={() => onToggleTag(t)} />
-                : <IndexTab key={t}>{t}</IndexTab>
+                : <IndexTab key={t} onClick={() => onOpenTagToolbox(t)}>{t}</IndexTab>
             ) : (
               <span key={t} style={{ fontSize: 12, background: tokens.accentBg, color: tokens.accent, padding: "3px 10px", borderRadius: 999, fontWeight: 600 }}>#{t}</span>
             )
