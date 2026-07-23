@@ -14,14 +14,24 @@ const GROUND_FADE =
   "</linearGradient></defs>" +
   `<rect x='0' y='${GROUND_Y - 150}' width='420' height='150' fill='url(#g)'/>`;
 
+/* 一本ごとの木：まっすぐな幹に丸い葉、ではなく、
+   幹は先細りの茶色、樹冠は濃淡3色のクラスターを重ねて、illustration らしい塊感を出す。 */
+function tree(t) {
+  const r = t.canopyR;
+  const trunkTopY = GROUND_Y - t.trunkH;
+  const cy = trunkTopY - r * 0.55;
+  const o = t.opacity;
+  return (
+    `<path d='M${t.x - 4} ${GROUND_Y} L${t.x - 2.2} ${trunkTopY + 4} Q${t.x} ${trunkTopY} ${t.x + 2.2} ${trunkTopY + 4} L${t.x + 4} ${GROUND_Y} Z' fill='#7C5C3B' fill-opacity='${o}'/>` +
+    `<circle cx='${t.x - r * 0.5}' cy='${cy + r * 0.3}' r='${r * 0.7}' fill='#2F6B3A' fill-opacity='${o}'/>` +
+    `<circle cx='${t.x + r * 0.52}' cy='${cy + r * 0.18}' r='${r * 0.66}' fill='#2F6B3A' fill-opacity='${o}'/>` +
+    `<circle cx='${t.x}' cy='${cy - r * 0.3}' r='${r * 0.82}' fill='#3F7C48' fill-opacity='${o}'/>` +
+    `<circle cx='${t.x - r * 0.22}' cy='${cy - r * 0.6}' r='${r * 0.38}' fill='#68A768' fill-opacity='${o * 0.85}'/>`
+  );
+}
+
 function trees(list) {
-  return list
-    .map(
-      (t) =>
-        `<rect x='${t.x - 5}' y='${GROUND_Y - t.trunkH}' width='10' height='${t.trunkH}' fill='#2F6B3A' fill-opacity='${t.opacity}'/>` +
-        `<circle cx='${t.x}' cy='${GROUND_Y - t.trunkH - t.canopyR * 0.7}' r='${t.canopyR}' fill='#2F6B3A' fill-opacity='${t.opacity}'/>`
-    )
-    .join("");
+  return list.map(tree).join("");
 }
 
 const JULY_HAZE_OPACITY = [0.22, 0.16, 0.08, 0.03, 0];
@@ -36,9 +46,9 @@ function buildForestScene(stage, { month, fallenLog }) {
 
   if (stage === 0) {
     content +=
-      `<line x1='210' y1='${GROUND_Y}' x2='210' y2='${GROUND_Y - 48}' stroke='#2F6B3A' stroke-opacity='0.3' stroke-width='5'/>` +
-      `<path d='M210 ${GROUND_Y - 48} Q186 ${GROUND_Y - 66} 178 ${GROUND_Y - 50} Q196 ${GROUND_Y - 36} 210 ${GROUND_Y - 48} Z' fill='#2F6B3A' fill-opacity='0.28'/>` +
-      `<path d='M210 ${GROUND_Y - 48} Q234 ${GROUND_Y - 66} 242 ${GROUND_Y - 50} Q224 ${GROUND_Y - 36} 210 ${GROUND_Y - 48} Z' fill='#2F6B3A' fill-opacity='0.28'/>`;
+      `<path d='M210 ${GROUND_Y} Q207 ${GROUND_Y - 30} 210 ${GROUND_Y - 48}' stroke='#5C9A5E' stroke-opacity='0.35' stroke-width='3' fill='none' stroke-linecap='round'/>` +
+      `<path d='M210 ${GROUND_Y - 48} Q186 ${GROUND_Y - 66} 178 ${GROUND_Y - 50} Q196 ${GROUND_Y - 36} 210 ${GROUND_Y - 48} Z' fill='#3F7C48' fill-opacity='0.3'/>` +
+      `<path d='M210 ${GROUND_Y - 48} Q234 ${GROUND_Y - 66} 242 ${GROUND_Y - 50} Q224 ${GROUND_Y - 36} 210 ${GROUND_Y - 48} Z' fill='#3F7C48' fill-opacity='0.3'/>`;
     return svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 ${SCENE_HEIGHT}' preserveAspectRatio='xMidYMax slice'>${content}</svg>`);
   }
 
