@@ -76,6 +76,12 @@ export default function App() {
   const recordedDays = [...new Set(
     events.filter((e) => e.date?.startsWith(TODAY_DATE.slice(0, 7))).map((e) => getDayOfMonth(e.date))
   )];
+  // 暫定的な確認用の挙動：日別の画面(記録一覧・記録詳細)を見ている間、
+  // その日の時点の世界を表示する——1日と31日を見比べられるように。
+  // 本番では「世界は常に今日を表す」に戻す想定（本番前に要検討）。
+  const viewingDay = (screen === "dayList" || screen === "detail") && selectedDate;
+  const effectiveDate = viewingDay ? selectedDate : TODAY_DATE;
+  const effectiveStage = viewingDay ? getMonthStage(getDayOfMonth(selectedDate)) : monthStage;
 
   const screenContent = (
     <>
@@ -179,11 +185,11 @@ export default function App() {
         {isIndustrial ? (
           <CRTScreen>{screenContent}</CRTScreen>
         ) : isGothic ? (
-          <CrackedGlass stage={monthStage} date={TODAY_DATE} recordedDays={recordedDays}>{screenContent}</CrackedGlass>
+          <CrackedGlass stage={effectiveStage} date={effectiveDate} recordedDays={recordedDays}>{screenContent}</CrackedGlass>
         ) : isForest ? (
-          <ForestGrowth stage={monthStage} screen={screen} date={TODAY_DATE} recordedDays={recordedDays}>{screenContent}</ForestGrowth>
+          <ForestGrowth stage={effectiveStage} screen={screen} date={effectiveDate} recordedDays={recordedDays}>{screenContent}</ForestGrowth>
         ) : isAdventure ? (
-          <AdventureJourney stage={monthStage}>{screenContent}</AdventureJourney>
+          <AdventureJourney stage={effectiveStage}>{screenContent}</AdventureJourney>
         ) : (
           screenContent
         )}
