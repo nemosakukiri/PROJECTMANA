@@ -10,6 +10,7 @@ import { seasonLabels } from "../theme/forest/seasonLabels.js";
 import { moodLabels } from "../theme/gothic/moodLabels.js";
 import { buildStoryScene, getHiddenSpot, storyTraces, SCENE_HEIGHT as STORY_SCENE_HEIGHT } from "../theme/storybook/storyScene.js";
 import { storyLabels } from "../theme/storybook/storyLabels.js";
+import { systemLabels } from "../theme/industrial/systemLabels.js";
 import { getMonthStage } from "../theme/worldEngine.js";
 
 const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
@@ -96,6 +97,11 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
           {isStorybook && (
             <p style={{ fontSize: 11.5, color: tokens.inkFaint, margin: "3px 0 0", fontStyle: "italic" }}>
               {storyLabels[monthStage]}
+            </p>
+          )}
+          {isIndustrial && (
+            <p style={{ fontSize: 11, color: tokens.accent, margin: "3px 0 0", fontFamily: "monospace" }}>
+              {systemLabels[monthStage]}
             </p>
           )}
         </div>

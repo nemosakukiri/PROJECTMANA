@@ -1,7 +1,18 @@
+import { buildMansionExterior } from "../theme/gothic/mansionExterior.js";
+
 export default function WelcomeScreen({ theme, onNext }) {
   const { tokens, labels } = theme;
+  const isGothic = theme.componentTheme === "gothic";
   return (
     <div style={{ padding: "60px 26px 0", textAlign: "center" }}>
+      {isGothic && (
+        <div
+          style={{
+            height: 190, margin: "-60px -26px 24px", borderRadius: "0 0 20px 20px",
+            backgroundImage: buildMansionExterior(), backgroundSize: "cover", backgroundPosition: "center",
+          }}
+        />
+      )}
       <div style={{ fontSize: 30, marginBottom: 16 }}>{theme.emoji}</div>
       <h1 style={{ fontFamily: tokens.headingFont, fontSize: 22, fontWeight: 700, color: tokens.ink, margin: "0 0 18px" }}>
         {labels.welcomeTitle}

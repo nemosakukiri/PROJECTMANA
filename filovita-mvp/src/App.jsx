@@ -183,7 +183,7 @@ export default function App() {
         }}
       >
         {isIndustrial ? (
-          <CRTScreen>{screenContent}</CRTScreen>
+          <CRTScreen date={effectiveDate} recordedDays={recordedDays}>{screenContent}</CRTScreen>
         ) : isGothic ? (
           <CrackedGlass stage={effectiveStage} date={effectiveDate} recordedDays={recordedDays}>{screenContent}</CrackedGlass>
         ) : isForest ? (
