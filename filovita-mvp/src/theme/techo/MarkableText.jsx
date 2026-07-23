@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { MARK_TYPES, markTypeInfo } from "./marks.js";
+import { MARK_TYPES, markInlineStyle } from "./marks.js";
 
 /* 文章を選択すると、その場に強調の選択肢(🟨✏️⭐❗📌)が浮かぶ。
    選ぶとその一文だけに印がつく。印をタップすると解除できる。 */
@@ -58,7 +58,7 @@ export default function MarkableText({ text, marks = [], onAddMark, onRemoveMark
             <span
               key={i}
               onClick={() => onRemoveMark(seg.mark.id)}
-              style={{ cursor: "pointer", borderRadius: 3, ...markTypeInfo(seg.mark.type).style }}
+              style={{ cursor: "pointer", borderRadius: 3, ...markInlineStyle(seg.mark.type) }}
               title="タップで強調を解除"
             >
               {seg.text}
