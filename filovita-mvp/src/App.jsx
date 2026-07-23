@@ -179,7 +179,7 @@ export default function App() {
         {isIndustrial ? (
           <CRTScreen>{screenContent}</CRTScreen>
         ) : isGothic ? (
-          <CrackedGlass stage={monthStage}>{screenContent}</CrackedGlass>
+          <CrackedGlass stage={monthStage} date={TODAY_DATE} recordedDays={recordedDays}>{screenContent}</CrackedGlass>
         ) : isForest ? (
           <ForestGrowth stage={monthStage} screen={screen} date={TODAY_DATE} recordedDays={recordedDays}>{screenContent}</ForestGrowth>
         ) : isAdventure ? (

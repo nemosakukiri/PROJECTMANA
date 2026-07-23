@@ -7,6 +7,7 @@ import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import CandleFlicker from "../theme/gothic/CandleFlicker.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
 import { seasonLabels } from "../theme/forest/seasonLabels.js";
+import { moodLabels } from "../theme/gothic/moodLabels.js";
 import { getMonthStage } from "../theme/worldEngine.js";
 
 const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
@@ -49,6 +50,11 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
           {isForest && (
             <p style={{ fontSize: 11.5, color: tokens.inkFaint, margin: "3px 0 0" }}>
               {seasonLabels[monthStage]}
+            </p>
+          )}
+          {isGothic && (
+            <p style={{ fontSize: 11.5, color: tokens.inkFaint, margin: "3px 0 0" }}>
+              {moodLabels[monthStage]}
             </p>
           )}
         </div>
