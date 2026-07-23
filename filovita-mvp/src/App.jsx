@@ -51,6 +51,18 @@ export default function App() {
     setScreen("confirm");
   }
 
+  function handleOpenDate(d) {
+    setSelectedDate(d);
+    setScreen("dayList");
+  }
+
+  function handleToggleTag(tag) {
+    setEvents(events.map((e) => e.id !== selectedEventId ? e : {
+      ...e,
+      tags: e.tags.includes(tag) ? e.tags.filter((t) => t !== tag) : [...e.tags, tag],
+    }));
+  }
+
   function handleConfirm(conclusionText) {
     const newEvent = {
       id: `evt_${Date.now()}`,
@@ -108,7 +120,7 @@ export default function App() {
             theme={theme}
             events={events}
             monthStage={monthStage}
-            onOpenDate={(d) => { setSelectedDate(d); setScreen("dayList"); }}
+            onOpenDate={handleOpenDate}
             onNew={() => setScreen("input")}
             onOpenSettings={() => setScreen("settings")}
           />
@@ -153,6 +165,8 @@ export default function App() {
             }))}
             onToggleTodo={(i) => setEvents(events.map((e) => e.id === selectedEventId ? { ...e, todos: e.todos.map((t, ti) => ti === i ? { ...t, done: !t.done } : t) } : e))}
             onAddTodo={(text) => setEvents(events.map((e) => e.id === selectedEventId ? { ...e, todos: [...e.todos, { text, done: false }] } : e))}
+            onToggleTag={handleToggleTag}
+            onOpenDate={handleOpenDate}
           />
         )}
         {screen === "input" && (

@@ -4,13 +4,19 @@ import ContextHeader from "../components/ContextHeader.jsx";
 import BrassPlate from "../theme/industrial/BrassPlate.jsx";
 import WaxSeal from "../theme/gothic/WaxSeal.jsx";
 import LeafTag from "../theme/forest/LeafTag.jsx";
+import PlannerCheck from "../theme/techo/PlannerCheck.jsx";
+import IndexTab from "../theme/techo/IndexTab.jsx";
+import StampBadge from "../theme/techo/StampBadge.jsx";
+import { STAMP_LABELS } from "../theme/techo/stamps.js";
+import { parseJpDateToStr } from "../theme/techo/pageLink.js";
 
 /* ③Eventカルテ */
-export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo }) {
+export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo, onToggleTag, onOpenDate }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
+  const isTecho = theme.id === "techo";
   const [addingTodo, setAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
 
@@ -27,16 +33,20 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 8px" }}>{labels.todoSectionLabel}</div>
         {event.todos.map((t, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <button
-              onClick={() => onToggleTodo(i)}
-              style={{
-                width: 20, height: 20, borderRadius: 6, border: `1.5px solid ${t.done ? tokens.accent : tokens.inkFaint}`,
-                background: t.done ? tokens.accent : "transparent", display: "flex", alignItems: "center",
-                justifyContent: "center", cursor: "pointer", flexShrink: 0,
-              }}
-            >
-              {t.done && <Check size={13} color="#fff" />}
-            </button>
+            {isTecho ? (
+              <PlannerCheck done={t.done} onClick={() => onToggleTodo(i)} />
+            ) : (
+              <button
+                onClick={() => onToggleTodo(i)}
+                style={{
+                  width: 20, height: 20, borderRadius: 6, border: `1.5px solid ${t.done ? tokens.accent : tokens.inkFaint}`,
+                  background: t.done ? tokens.accent : "transparent", display: "flex", alignItems: "center",
+                  justifyContent: "center", cursor: "pointer", flexShrink: 0,
+                }}
+              >
+                {t.done && <Check size={13} color="#fff" />}
+              </button>
+            )}
             <span style={{ fontSize: 14, color: tokens.ink, textDecoration: t.done ? "line-through" : "none", opacity: t.done ? 0.5 : 1 }}>
               {t.text}
             </span>
@@ -81,7 +91,19 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
         {event.nextEvent && (
           <>
             <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 6px" }}>次回予定</div>
-            <div style={{ fontSize: 15, fontFamily: tokens.headingFont, fontWeight: 700, color: tokens.ink }}>{event.nextEvent}</div>
+            {isTecho ? (
+              <button
+                onClick={() => { const d = parseJpDateToStr(event.nextEvent); if (d) onOpenDate(d); }}
+                style={{
+                  display: "block", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer",
+                  fontSize: 15, fontFamily: tokens.headingFont, fontWeight: 700, color: tokens.accent,
+                }}
+              >
+                → {event.nextEvent} を見る
+              </button>
+            ) : (
+              <div style={{ fontSize: 15, fontFamily: tokens.headingFont, fontWeight: 700, color: tokens.ink }}>{event.nextEvent}</div>
+            )}
           </>
         )}
 
@@ -94,20 +116,53 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
               <WaxSeal key={t} style={{ fontSize: 11, padding: "2px 10px" }}>#{t}</WaxSeal>
             ) : isForest ? (
               <LeafTag key={t} style={{ fontSize: 11, padding: "3px 10px 3px 13px" }}>#{t}</LeafTag>
+            ) : isTecho ? (
+              STAMP_LABELS.includes(t)
+                ? <StampBadge key={t} label={t} onClick={() => onToggleTag(t)} />
+                : <IndexTab key={t}>{t}</IndexTab>
             ) : (
               <span key={t} style={{ fontSize: 12, background: tokens.accentBg, color: tokens.accent, padding: "3px 10px", borderRadius: 999, fontWeight: 600 }}>#{t}</span>
             )
           )}
         </div>
 
+        {/* 手帳だけの道具：スタンプ。押すたびにtagsへ足したり外したりする(データは増やさない) */}
+        {isTecho && (
+          <>
+            <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "12px 0 6px" }}>スタンプ</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 4 }}>
+              {STAMP_LABELS.map((label) => (
+                <StampBadge
+                  key={label} label={label} active={event.tags.includes(label)}
+                  onClick={() => onToggleTag(label)}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
         {event.related.length > 0 && (
           <>
             <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 6px" }}>関連Event</div>
-            {event.related.map((r, i) => (
-              <div key={i} style={{ fontSize: 13, color: tokens.inkSoft, marginBottom: 4 }}>
-                {r.date}・{r.label}
-              </div>
-            ))}
+            {event.related.map((r, i) => {
+              const d = parseJpDateToStr(r.date);
+              return isTecho ? (
+                <button
+                  key={i}
+                  onClick={() => d && onOpenDate(d)}
+                  style={{
+                    display: "block", background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer",
+                    fontSize: 13, color: tokens.accent, fontWeight: 600, marginBottom: 4,
+                  }}
+                >
+                  → {r.date}・{r.label} を見る
+                </button>
+              ) : (
+                <div key={i} style={{ fontSize: 13, color: tokens.inkSoft, marginBottom: 4 }}>
+                  {r.date}・{r.label}
+                </div>
+              );
+            })}
           </>
         )}
 
