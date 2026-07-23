@@ -20,7 +20,7 @@ export default function SettingsScreen({
   stagePreview, onChangeStagePreview, onBack,
 }) {
   const { tokens } = theme;
-  const GROWTH_THEMES = ["forest", "gothic", "adventure"];
+  const GROWTH_THEMES = ["forest", "gothic", "journal", "orbit"];
   const hasGrowth = GROWTH_THEMES.includes(theme.componentTheme);
   return (
     <div>

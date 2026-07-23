@@ -164,7 +164,7 @@ export default function ForestGrowth({ stage, screen, date, recordedDays = [], c
           100% { transform: scale(1.6); opacity: 0; }
         }
       `}</style>
-      <div key={screen} style={{ animation: "leafEnter 0.45s ease-out" }}>
+      <div key={screen} style={{ position: "relative", zIndex: 1, animation: "leafEnter 0.45s ease-out" }}>
         {children}
       </div>
       {screen &&

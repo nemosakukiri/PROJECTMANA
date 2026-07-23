@@ -6,7 +6,6 @@ import { loadState, saveState } from "./lib/persistence.js";
 import CRTScreen from "./theme/industrial/CRTScreen.jsx";
 import CrackedGlass from "./theme/gothic/CrackedGlass.jsx";
 import ForestGrowth from "./theme/forest/ForestGrowth.jsx";
-import AdventureJourney from "./theme/adventure/AdventureJourney.jsx";
 import StarWindow from "./theme/sf/StarWindow.jsx";
 import { getDayOfMonth, getMonthStage } from "./theme/worldEngine.js";
 
@@ -72,7 +71,6 @@ export default function App() {
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
-  const isAdventure = theme.componentTheme === "adventure";
   const isOrbit = theme.componentTheme === "orbit";
   const monthStage = stagePreview ?? getMonthStage(getDayOfMonth(TODAY_DATE));
   const recordedDays = [...new Set(
@@ -198,8 +196,6 @@ export default function App() {
           <CrackedGlass stage={effectiveStage} date={effectiveDate} recordedDays={recordedDays}>{screenContent}</CrackedGlass>
         ) : isForest ? (
           <ForestGrowth stage={effectiveStage} screen={screen} date={effectiveDate} recordedDays={recordedDays}>{screenContent}</ForestGrowth>
-        ) : isAdventure ? (
-          <AdventureJourney stage={effectiveStage}>{screenContent}</AdventureJourney>
         ) : isOrbit ? (
           <StarWindow stage={effectiveStage} date={effectiveDate} recordedDays={recordedDays}>{screenContent}</StarWindow>
         ) : (
