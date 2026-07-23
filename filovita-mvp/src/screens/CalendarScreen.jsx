@@ -7,7 +7,7 @@ import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import CandleFlicker from "../theme/gothic/CandleFlicker.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
 import { seasonLabels } from "../theme/forest/seasonLabels.js";
-import { getMonthStage } from "../theme/growthStage.js";
+import { getMonthStage } from "../theme/worldEngine.js";
 
 const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
 const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];

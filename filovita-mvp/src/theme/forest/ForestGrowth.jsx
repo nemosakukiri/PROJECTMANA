@@ -1,3 +1,5 @@
+import { getMonthNumber, livingSignals, livingRatio, rareMoment, traceLayout } from "../worldEngine.js";
+
 function svgUrl(svg) {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
@@ -24,18 +26,12 @@ function trees(list) {
 
 const JULY_HAZE_OPACITY = [0.22, 0.16, 0.08, 0.03, 0];
 
-/* 森テーマの背景は、月の日付とともに育つ小さな物語。
-   1〜2日：芽 / 3〜9日：木が2本 / 10〜19日：小道 / 20〜29日：花 / 30〜31日：小さな森の完成
-   下の余白を森そのものが占めるよう、シーンの背丈を大きく取る。
-   month/rareDiscoveryは「毎月同じ森」「毎日何かが起きる森」にしないための軸。
-   7月固有の物語（梅雨が引いていく湿り気、水辺の気配）と、
-   希少に起きる出来事（倒木）を、育ち方の軸とは別に重ねる。 */
-function buildForestScene(stage, { month, rareDiscovery } = {}) {
+/* Monthly Story（7月固有）：梅雨が明けていく。育ち方の軸（stage）とは別に重ねる。 */
+function buildForestScene(stage, { month, fallenLog }) {
   let content = GROUND_FADE;
 
   if (month === 7 && stage <= 3) {
-    const hazeY = 0;
-    content += `<rect x='0' y='${hazeY}' width='420' height='150' fill='#8FA6AC' fill-opacity='${JULY_HAZE_OPACITY[stage] ?? 0}'/>`;
+    content += `<rect x='0' y='0' width='420' height='150' fill='#8FA6AC' fill-opacity='${JULY_HAZE_OPACITY[stage] ?? 0}'/>`;
   }
 
   if (stage === 0) {
@@ -84,8 +80,8 @@ function buildForestScene(stage, { month, rareDiscovery } = {}) {
       `<ellipse cx='372' cy='${GROUND_Y - 34}' rx='6' ry='2.5' fill='#3E6E7A' fill-opacity='0.4' transform='rotate(18 372 ${GROUND_Y - 34})'/>`;
   }
 
-  /* 希少に起きる出来事：倒木。毎回あるわけではない——あった日は少し立ち止まる程度でいい。 */
-  if (rareDiscovery && stage >= 2) {
+  /* Rare Moments：倒木。Living Changesより希少で、演出として目立ってよい */
+  if (fallenLog && stage >= 2) {
     content +=
       `<rect x='190' y='${GROUND_Y - 26}' width='58' height='9' rx='4.5' fill='#6B4B32' fill-opacity='0.4' transform='rotate(-6 219 ${GROUND_Y - 22})'/>` +
       `<ellipse cx='236' cy='${GROUND_Y - 6}' rx='3.5' ry='4.5' fill='#B65D4A' fill-opacity='0.32'/>` +
@@ -103,8 +99,7 @@ const FALLING_LEAVES = [
 
 const JULY_FIREFLY_COUNT = [0, 0, 2, 4, 6];
 
-/* 7月固有：蛍。梅雨が明けていくにつれ、少しずつ数が増える。
-   利用者が何かをしたから増えるのではなく、月の後半になるほど夜の森が賑わうという、時間だけの変化。 */
+/* Monthly Story（7月固有）：蛍。梅雨が明けていくにつれ、月の後半になるほど夜の森が賑わう。時間だけの変化。 */
 function fireflyPositions(count) {
   return Array.from({ length: count }, (_, i) => ({
     left: `${8 + ((i * 37) % 84)}%`,
@@ -114,21 +109,28 @@ function fireflyPositions(count) {
   }));
 }
 
-/* 暮らしの跡：記録を書いた日だけ、その日にあたる場所に小さな跡が残る。
-   森を育てているのは利用者ではなく時間。ここにあるのは「その日そこにいた」痕跡だけ。 */
-function tracePositions(recordedDays) {
-  return recordedDays.map((day) => ({
-    day,
-    left: `${6 + (Math.min(day, 31) / 31) * 88}%`,
-    bottom: `${10 + ((day * 53) % 14)}px`,
-  }));
-}
+/* Living Changes：森が自分で持っている信号。この中のどれかが起きた日もあれば、
+   何も起きない日もある——「発見イベント」を一つ置くのではなく、小さな独立変数の重なりが
+   「なぜかは分からないけど今日は違う」を作る。 */
+const FOREST_SIGNALS = {
+  butterfly: 0.3,
+  dew: 0.35,
+  birdsong: 0.25,
+  ripple: 0.35,
+};
 
 /* コンポーネントテーマ専用部品：森の生育。中身の情報構造・操作順序には一切手を加えない。
    画面が切り替わる瞬間、葉が舞い落ちる——「森を移動している」という手応えのための演出。 */
-export default function ForestGrowth({ stage, screen, month, recordedDays = [], rareDiscovery = false, children }) {
+export default function ForestGrowth({ stage, screen, date, recordedDays = [], children }) {
+  const month = date ? getMonthNumber(date) : undefined;
+  const signals = date ? livingSignals(date, FOREST_SIGNALS) : {};
+  const fallenLog = date ? rareMoment(date, "fallenLog", 0.18) : false;
+  const hasWater = month === 7 && stage >= 3;
+  const lightOffset = date ? Math.round((livingRatio(date, "light") - 0.5) * 16) : 0;
+
   const fireflies = month === 7 ? fireflyPositions(JULY_FIREFLY_COUNT[stage] ?? 0) : [];
-  const traces = tracePositions(recordedDays);
+  const traces = traceLayout(recordedDays);
+
   return (
     <div style={{ position: "relative", overflow: "hidden", minHeight: "100vh" }}>
       <style>{`
@@ -154,6 +156,18 @@ export default function ForestGrowth({ stage, screen, month, recordedDays = [], 
           0%, 100% { opacity: 0.45; }
           50% { opacity: 0.7; }
         }
+        @keyframes butterflyDrift {
+          0%, 100% { transform: translate(0, 0) rotate(0deg); }
+          50% { transform: translate(10px, -8px) rotate(8deg); }
+        }
+        @keyframes dewShimmer {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 0.85; }
+        }
+        @keyframes rippleExpand {
+          0% { transform: scale(0.4); opacity: 0.5; }
+          100% { transform: scale(1.6); opacity: 0; }
+        }
       `}</style>
       <div key={screen} style={{ animation: "leafEnter 0.45s ease-out" }}>
         {children}
@@ -177,17 +191,17 @@ export default function ForestGrowth({ stage, screen, month, recordedDays = [], 
             }}
           />
         ))}
-      {/* 木漏れ日：画面全体にかかる、揺れるやわらかな光。カレンダーそのものを森の中で見上げているように */}
+      {/* 木漏れ日：画面全体にかかる、揺れるやわらかな光。位置は日によってわずかに違う（Living Changes: lightShift） */}
       <div
         style={{
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
           background:
-            "radial-gradient(ellipse 190px 130px at 15% 18%, rgba(255,250,210,0.18), transparent 60%)," +
-            "radial-gradient(ellipse 150px 100px at 78% 12%, rgba(255,250,210,0.14), transparent 60%)," +
-            "radial-gradient(ellipse 210px 150px at 50% 55%, rgba(255,250,210,0.10), transparent 65%)," +
-            "radial-gradient(ellipse 170px 120px at 88% 70%, rgba(255,250,210,0.15), transparent 60%)",
+            `radial-gradient(ellipse 190px 130px at ${15 + lightOffset}% 18%, rgba(255,250,210,0.18), transparent 60%),` +
+            `radial-gradient(ellipse 150px 100px at ${78 - lightOffset}% 12%, rgba(255,250,210,0.14), transparent 60%),` +
+            `radial-gradient(ellipse 210px 150px at ${50 + lightOffset}% 55%, rgba(255,250,210,0.10), transparent 65%),` +
+            `radial-gradient(ellipse 170px 120px at ${88 - lightOffset}% 70%, rgba(255,250,210,0.15), transparent 60%)`,
           animation: "canopySway 6s ease-in-out infinite",
         }}
       />
@@ -207,13 +221,13 @@ export default function ForestGrowth({ stage, screen, month, recordedDays = [], 
           bottom: 0,
           height: SCENE_HEIGHT,
           pointerEvents: "none",
-          backgroundImage: buildForestScene(stage, { month, rareDiscovery }),
+          backgroundImage: buildForestScene(stage, { month, fallenLog }),
           backgroundRepeat: "no-repeat",
           backgroundPosition: "bottom center",
           backgroundSize: "100% 100%",
         }}
       />
-      {/* 蛍：7月固有。夜の森が賑わっていく、時間だけの変化 */}
+      {/* Monthly Story：蛍（7月固有） */}
       {fireflies.map((f, i) => (
         <span
           key={`firefly-${i}`}
@@ -231,7 +245,73 @@ export default function ForestGrowth({ stage, screen, month, recordedDays = [], 
           }}
         />
       ))}
-      {/* 暮らしの跡：記録を書いた日にだけ残る、目立たない印 */}
+      {/* Living Changes：昨日いなかった蝶 */}
+      {signals.butterfly && (
+        <span
+          style={{
+            position: "absolute",
+            left: "62%",
+            bottom: "70px",
+            width: 8,
+            height: 6,
+            pointerEvents: "none",
+            background: "radial-gradient(circle at 30% 50%, #E8837A 0 40%, transparent 41%), radial-gradient(circle at 70% 50%, #E8837A 0 40%, transparent 41%)",
+            animation: "butterflyDrift 2.6s ease-in-out infinite",
+          }}
+        />
+      )}
+      {/* Living Changes：朝露が残っている */}
+      {signals.dew &&
+        [22, 47, 66].map((left, i) => (
+          <span
+            key={`dew-${i}`}
+            style={{
+              position: "absolute",
+              left: `${left}%`,
+              bottom: `${14 + (i % 2) * 6}px`,
+              width: 3,
+              height: 3,
+              borderRadius: "50%",
+              background: "#F2F7EA",
+              boxShadow: "0 0 3px 1px rgba(242,247,234,0.5)",
+              pointerEvents: "none",
+              animation: `dewShimmer ${2.4 + i * 0.3}s ease-in-out infinite`,
+            }}
+          />
+        ))}
+      {/* Living Changes：鳥の気配（枝にとまっている） */}
+      {signals.birdsong && stage >= 1 && (
+        <span
+          style={{
+            position: "absolute",
+            left: "24%",
+            bottom: "150px",
+            width: 7,
+            height: 5,
+            borderRadius: "50% 50% 50% 10%",
+            background: "#5A4A3A",
+            opacity: 0.55,
+            pointerEvents: "none",
+          }}
+        />
+      )}
+      {/* Living Changes：水面の波紋（水辺があるときだけ意味を持つ） */}
+      {hasWater && signals.ripple && (
+        <span
+          style={{
+            position: "absolute",
+            left: "85%",
+            bottom: "30px",
+            width: 14,
+            height: 14,
+            borderRadius: "50%",
+            border: "1px solid rgba(62,110,122,0.4)",
+            pointerEvents: "none",
+            animation: "rippleExpand 2.8s ease-out infinite",
+          }}
+        />
+      )}
+      {/* User Traces：記録を書いた日にだけ残る、目立たない印 */}
       {traces.map((t) => (
         <span
           key={`trace-${t.day}`}
