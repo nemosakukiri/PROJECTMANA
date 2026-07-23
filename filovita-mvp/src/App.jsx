@@ -70,6 +70,20 @@ export default function App() {
     }));
   }
 
+  function handleAddMark(type, text) {
+    setEvents(events.map((e) => e.id !== selectedEventId ? e : {
+      ...e,
+      marks: [...(e.marks || []), { id: makeId("mark"), type, text }],
+    }));
+  }
+
+  function handleRemoveMark(markId) {
+    setEvents(events.map((e) => e.id !== selectedEventId ? e : {
+      ...e,
+      marks: (e.marks || []).filter((m) => m.id !== markId),
+    }));
+  }
+
   function handleOpenTagToolbox(tagName) {
     if (!tagRegistry[tagName]) {
       const tagId = makeId("tag");
@@ -209,12 +223,15 @@ export default function App() {
             onToggleTag={handleToggleTag}
             onOpenDate={handleOpenDate}
             onOpenTagToolbox={handleOpenTagToolbox}
+            onAddMark={handleAddMark}
+            onRemoveMark={handleRemoveMark}
           />
         )}
         {screen === "tagToolbox" && activeTagName && (
           <TagToolboxScreen
             theme={theme}
             tagName={activeTagName}
+            events={events}
             references={tagToolboxes[tagRegistry[activeTagName]]?.references ?? []}
             onBack={() => setScreen("detail")}
             onAddReference={handleAddReference}

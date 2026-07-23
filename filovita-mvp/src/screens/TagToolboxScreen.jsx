@@ -2,16 +2,23 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 import { REFERENCE_TYPES, referenceTypeInfo } from "../theme/techo/tagToolbox.js";
+import { markTypeInfo } from "../theme/techo/marks.js";
 
 const EMPTY_FORM = { type: "web", label: "", value: "" };
 
 /* 手帳だけの画面：タグの道具箱。開けば、そのタグでいつも使う参照(サイト・地図・
-   電話・ファイル・Event)が並ぶ。使うほど参照が増え、自分専用に育っていく。 */
-export default function TagToolboxScreen({ theme, tagName, references, onBack, onAddReference, onUpdateReference, onDeleteReference }) {
+   電話・ファイル・Event)が並ぶ。使うほど参照が増え、自分専用に育っていく。
+   さらに、このタグがついた記録の中でマーカーされた一文だけを一覧表示する
+   ——「#病院を開くと、重要な一文だけがそこにある」という体験のため。 */
+export default function TagToolboxScreen({ theme, tagName, references, events = [], onBack, onAddReference, onUpdateReference, onDeleteReference }) {
   const { tokens } = theme;
   const [editingId, setEditingId] = useState(null);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+
+  const markedLines = events
+    .filter((e) => e.tags?.includes(tagName))
+    .flatMap((e) => (e.marks || []).filter((m) => m.type === "marker").map((m) => ({ ...m, dateLabel: e.dateLabel })));
 
   function startEdit(ref) {
     setEditingId(ref.id);
@@ -51,6 +58,29 @@ export default function TagToolboxScreen({ theme, tagName, references, onBack, o
           このタグを使うたびに、いつもの参照がここに増えていきます。
         </p>
 
+        {markedLines.length > 0 && (
+          <>
+            <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 8 }}>
+              マーカーされた記録
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              {markedLines.map((m) => (
+                <div
+                  key={m.id}
+                  style={{
+                    padding: "9px 12px", marginBottom: 6, borderRadius: 8, fontSize: 13.5, color: tokens.ink,
+                    ...markTypeInfo(m.type).style,
+                  }}
+                >
+                  {m.text}
+                  <span style={{ fontSize: 10.5, color: tokens.inkFaint, marginLeft: 8, fontWeight: 400 }}>{m.dateLabel}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>参照</div>
         {references.length === 0 && !formOpen && (
           <p style={{ fontSize: 13, color: tokens.inkFaint, marginBottom: 18 }}>まだ参照はありません。</p>
         )}

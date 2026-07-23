@@ -7,11 +7,14 @@ import LeafTag from "../theme/forest/LeafTag.jsx";
 import PlannerCheck from "../theme/techo/PlannerCheck.jsx";
 import IndexTab from "../theme/techo/IndexTab.jsx";
 import StampBadge from "../theme/techo/StampBadge.jsx";
+import MarkableText from "../theme/techo/MarkableText.jsx";
 import { STAMP_LABELS } from "../theme/techo/stamps.js";
 import { parseJpDateToStr } from "../theme/techo/pageLink.js";
 
 /* ③Eventカルテ */
-export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo, onToggleTag, onOpenDate, onOpenTagToolbox }) {
+export default function EventDetailScreen({
+  theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo, onToggleTag, onOpenDate, onOpenTagToolbox, onAddMark, onRemoveMark,
+}) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -25,9 +28,25 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
       <ContextHeader theme={theme} breadcrumb={`${event.dateLabel} の記録`} title={event.kind} onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 6 }}>{labels.conclusionLabel}</div>
-        <p style={{ fontFamily: tokens.headingFont, fontSize: 17, fontWeight: 700, lineHeight: 1.7, marginTop: 0, color: tokens.ink }}>
-          {event.conclusion}
-        </p>
+        {isTecho ? (
+          <MarkableText
+            text={event.conclusion}
+            marks={event.marks || []}
+            onAddMark={(type, text) => onAddMark(type, text)}
+            onRemoveMark={onRemoveMark}
+            style={{ fontFamily: tokens.headingFont, fontSize: 17, fontWeight: 700, lineHeight: 1.9, marginTop: 0, color: tokens.ink }}
+          />
+        ) : null}
+        {isTecho && (
+          <p style={{ fontSize: 11, color: tokens.inkFaint, marginTop: 2, marginBottom: 14 }}>
+            文章を選ぶと、強調（マーカー・アンダーラインなど）をつけられます。ついた印はタップで解除できます。
+          </p>
+        )}
+        {!isTecho && (
+          <p style={{ fontFamily: tokens.headingFont, fontSize: 17, fontWeight: 700, lineHeight: 1.7, marginTop: 0, color: tokens.ink }}>
+            {event.conclusion}
+          </p>
+        )}
 
         {/* ToDo：常に「＋思い出したことを追加」を出す。reminderが欲しいときの、唯一の正しい入口 */}
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 8px" }}>{labels.todoSectionLabel}</div>
