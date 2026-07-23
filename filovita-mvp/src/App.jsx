@@ -7,6 +7,7 @@ import CRTScreen from "./theme/industrial/CRTScreen.jsx";
 import CrackedGlass from "./theme/gothic/CrackedGlass.jsx";
 import ForestGrowth from "./theme/forest/ForestGrowth.jsx";
 import StarWindow from "./theme/sf/StarWindow.jsx";
+import JournalMap from "./theme/travel/JournalMap.jsx";
 import { getDayOfMonth, getMonthStage } from "./theme/worldEngine.js";
 
 import WelcomeScreen from "./screens/WelcomeScreen.jsx";
@@ -72,6 +73,7 @@ export default function App() {
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
   const isOrbit = theme.componentTheme === "orbit";
+  const isJournal = theme.componentTheme === "journal";
   const monthStage = stagePreview ?? getMonthStage(getDayOfMonth(TODAY_DATE));
   const recordedDays = [...new Set(
     events.filter((e) => e.date?.startsWith(TODAY_DATE.slice(0, 7))).map((e) => getDayOfMonth(e.date))
@@ -180,10 +182,10 @@ export default function App() {
           // 森・ホラー・SFは実写/実イラストの背景が画面全体を覆うので、
           // ボタン用の余白は不要（背景に重ねればよい）。他のテーマはFABの下に
           // コンテンツが隠れないよう、引き続き余白を確保する。
-          ...(isForest || isGothic || isOrbit ? {} : { paddingBottom: 100 }),
-          // 森・ホラー・SFは実写/実イラストの背景そのものが世界を表すので、
+          ...(isForest || isGothic || isOrbit || isJournal ? {} : { paddingBottom: 100 }),
+          // 森・ホラー・SF・旅は実写/実イラストの背景そのものが世界を表すので、
           // タイル状の壁紙模様は重ねない（二重に見える原因になるため）
-          ...(isForest || isGothic || isOrbit ? {} : {
+          ...(isForest || isGothic || isOrbit || isJournal ? {} : {
             backgroundImage: theme.tokens.backgroundImage,
             backgroundSize: theme.tokens.backgroundSize,
             backgroundRepeat: "repeat",
@@ -198,6 +200,8 @@ export default function App() {
           <ForestGrowth stage={effectiveStage} screen={screen} date={effectiveDate} recordedDays={recordedDays}>{screenContent}</ForestGrowth>
         ) : isOrbit ? (
           <StarWindow stage={effectiveStage} date={effectiveDate} recordedDays={recordedDays}>{screenContent}</StarWindow>
+        ) : isJournal ? (
+          <JournalMap date={effectiveDate} recordedDays={recordedDays}>{screenContent}</JournalMap>
         ) : (
           screenContent
         )}

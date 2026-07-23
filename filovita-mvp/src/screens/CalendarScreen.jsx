@@ -13,20 +13,8 @@ import { storyLabels } from "../theme/storybook/storyLabels.js";
 import storyCharacterImg from "../assets/story-character.png";
 import { systemLabels } from "../theme/industrial/systemLabels.js";
 import { stageLog } from "../theme/sf/systemLog.js";
-import { stageLabels as journalStageLabels, journalTraces, hasRareDiscovery as hasTravelFind } from "../theme/travel/journalLog.js";
-import travelMap0 from "../assets/travel-map-0.png";
-import travelMap1 from "../assets/travel-map-1.png";
-import travelMap2 from "../assets/travel-map-2.png";
-import travelMap3 from "../assets/travel-map-3.png";
-import travelMap4 from "../assets/travel-map-4.png";
-import travelFlowerImg from "../assets/travel-trace-flower.png";
-import travelTicketImg from "../assets/travel-trace-ticket.png";
-import travelStampImg from "../assets/travel-trace-stamp.png";
-import travelStarImg from "../assets/travel-rare-star.png";
+import { journalCaption } from "../theme/travel/journalLog.js";
 import { getMonthStage } from "../theme/worldEngine.js";
-
-const TRAVEL_MAPS = [travelMap0, travelMap1, travelMap2, travelMap3, travelMap4];
-const TRAVEL_TRACE_IMAGES = [travelFlowerImg, travelTicketImg, travelStampImg];
 
 const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
 const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];
@@ -51,8 +39,6 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
   const hiddenSpot = isStorybook ? getHiddenSpot("2026-07-18") : null;
   const pageTraces = isStorybook ? storyTraces(julyRecordedDays) : [];
   const travelerPos = isStorybook ? getTravelerPosition(monthStage) : { leftPercent: 50 };
-  const travelTraces = isJournal ? journalTraces(julyRecordedDays) : [];
-  const travelFind = isJournal ? hasTravelFind("2026-07-18") : false;
 
   const continuationContent = (
     <>
@@ -101,38 +87,8 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
           />
         </div>
       )}
-      {/* 旅ノートの見開き：段階ごとに描き足される地図が上、記録は下の紙面にそのままの大きさで置く */}
-      {isJournal && (
-        <div
-          style={{
-            position: "relative", height: 170, margin: "0 14px",
-            borderRadius: "16px 16px 0 0", overflow: "hidden",
-            backgroundImage: `url(${TRAVEL_MAPS[monthStage]})`,
-            backgroundSize: "cover", backgroundPosition: "center",
-          }}
-        >
-          {travelTraces.map((t, i) => (
-            <img
-              key={`travel-trace-${t.day}`}
-              src={TRAVEL_TRACE_IMAGES[t.day % TRAVEL_TRACE_IMAGES.length]}
-              alt=""
-              style={{
-                position: "absolute", left: t.left, bottom: t.bottom, width: 26,
-                opacity: 0.9, pointerEvents: "none", animationDelay: `${i * 0.3}s`,
-              }}
-            />
-          ))}
-          {travelFind && (
-            <img
-              src={travelStarImg}
-              alt=""
-              style={{ position: "absolute", top: 10, right: 12, width: 30, opacity: 0.85, pointerEvents: "none" }}
-            />
-          )}
-        </div>
-      )}
       <div
-        style={isStorybook || isJournal ? {
+        style={isStorybook ? {
           margin: "0 14px 14px", background: tokens.card, border: `1px solid ${tokens.line}`,
           borderTop: "none", borderRadius: "0 0 16px 16px", boxShadow: "0 3px 10px rgba(74,46,42,0.1)",
         } : undefined}
@@ -160,7 +116,7 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
           )}
           {isJournal && (
             <p style={{ fontSize: 11.5, color: tokens.inkFaint, margin: "3px 0 0" }}>
-              {journalStageLabels[monthStage]}
+              {journalCaption(julyRecordedDays.length)}
             </p>
           )}
           {isIndustrial && (

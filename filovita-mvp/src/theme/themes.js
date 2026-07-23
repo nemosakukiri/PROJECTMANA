@@ -200,7 +200,7 @@ export const themes = {
     name: "旅",
     emoji: "🗺️",
     blurb: "攻略ではなく、その月だけの旅を記録に残したい人へ",
-    // コンポーネントテーマ：地図が少しずつ描き足されていく旅ノート（theme/travel/）。
+    // コンポーネントテーマ：帳面も地図も変わらない旅ノート。記録した分だけしるしが増える（theme/travel/）。
     componentTheme: "journal",
     tokens: {
       paper: "#F2E3C6", card: "#FFF8E8", ink: "#3B2A14", inkSoft: "#5B4425",
