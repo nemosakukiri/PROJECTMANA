@@ -8,6 +8,8 @@ import CandleFlicker from "../theme/gothic/CandleFlicker.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
 import { seasonLabels } from "../theme/forest/seasonLabels.js";
 import { moodLabels } from "../theme/gothic/moodLabels.js";
+import { buildStoryScene, getHiddenSpot, storyTraces, SCENE_HEIGHT as STORY_SCENE_HEIGHT } from "../theme/storybook/storyScene.js";
+import { storyLabels } from "../theme/storybook/storyLabels.js";
 import { getMonthStage } from "../theme/worldEngine.js";
 
 const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
@@ -19,10 +21,17 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
+  const isStorybook = theme.componentTheme === "storybook";
   const [showContinuation, setShowContinuation] = useState(false);
   const cells = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const totalOpenTodos = events.reduce((s, e) => s + e.todos.filter((t) => !t.done).length, 0);
   const nextEvt = events.find((e) => e.nextEvent)?.nextEvent;
+
+  const julyRecordedDays = isStorybook
+    ? [...new Set(events.filter((e) => e.date?.startsWith("2026-07")).map((e) => Number(e.date.slice(-2))))]
+    : [];
+  const hiddenSpot = isStorybook ? getHiddenSpot("2026-07-18") : null;
+  const pageTraces = isStorybook ? storyTraces(julyRecordedDays) : [];
 
   const continuationContent = (
     <>
@@ -41,6 +50,33 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
 
   return (
     <div>
+      {/* 絵本の見開き：上＝絵、下＝文字。カレンダーは"文字"の側にそのままの大きさで置く */}
+      {isStorybook && (
+        <div
+          style={{
+            position: "relative", height: 176, margin: "0 14px", marginTop: 14,
+            borderRadius: "16px 16px 0 0", overflow: "hidden",
+            backgroundImage: buildStoryScene(monthStage, { hiddenSpot }),
+            backgroundSize: "100% 100%", backgroundRepeat: "no-repeat",
+          }}
+        >
+          {pageTraces.map((t) => (
+            <span
+              key={`page-trace-${t.day}`}
+              style={{
+                position: "absolute", left: t.left, bottom: t.bottom, width: 6, height: 6,
+                borderRadius: "50%", background: "#E8837A", opacity: 0.55, pointerEvents: "none",
+              }}
+            />
+          ))}
+        </div>
+      )}
+      <div
+        style={isStorybook ? {
+          margin: "0 14px 14px", background: tokens.card, border: `1px solid ${tokens.line}`,
+          borderTop: "none", borderRadius: "0 0 16px 16px", boxShadow: "0 3px 10px rgba(74,46,42,0.1)",
+        } : undefined}
+      >
       <div style={{ padding: "24px 20px 6px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <div style={{ fontSize: 11, letterSpacing: "0.14em", color: tokens.inkFaint }}>Filovita</div>
@@ -55,6 +91,11 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
           {isGothic && (
             <p style={{ fontSize: 11.5, color: tokens.inkFaint, margin: "3px 0 0" }}>
               {moodLabels[monthStage]}
+            </p>
+          )}
+          {isStorybook && (
+            <p style={{ fontSize: 11.5, color: tokens.inkFaint, margin: "3px 0 0", fontStyle: "italic" }}>
+              {storyLabels[monthStage]}
             </p>
           )}
         </div>
@@ -150,6 +191,7 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
             );
           })}
         </div>
+      </div>
       </div>
 
       <button

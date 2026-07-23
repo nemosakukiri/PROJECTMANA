@@ -47,6 +47,8 @@ export const themes = {
     name: "絵本",
     emoji: "📖",
     blurb: "やさしい言葉で、気持ちを軽くしたい人へ",
+    // コンポーネントテーマ：カレンダーを、絵本の見開き(上＝絵、下＝文字)として描く（theme/storybook/）。
+    componentTheme: "storybook",
     tokens: {
       paper: "#FBEEE0", card: "#FFFFFF", ink: "#4A2E2A", inkSoft: "#6B4A3E",
       inkFaint: "#9C7A6B", line: "#E8C9A8", accent: "#E8837A", accentBg: "#FBE3DE",
