@@ -12,6 +12,7 @@ import { buildStoryScene, getHiddenSpot, storyTraces, getTravelerPosition, SCENE
 import { storyLabels } from "../theme/storybook/storyLabels.js";
 import storyCharacterImg from "../assets/story-character.png";
 import { systemLabels } from "../theme/industrial/systemLabels.js";
+import { stageLog } from "../theme/sf/systemLog.js";
 import { getMonthStage } from "../theme/worldEngine.js";
 
 const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
@@ -24,6 +25,7 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
   const isStorybook = theme.componentTheme === "storybook";
+  const isOrbit = theme.componentTheme === "orbit";
   const [showContinuation, setShowContinuation] = useState(false);
   const cells = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const totalOpenTodos = events.reduce((s, e) => s + e.todos.filter((t) => !t.done).length, 0);
@@ -113,6 +115,11 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
           {isIndustrial && (
             <p style={{ fontSize: 11, color: tokens.accent, margin: "3px 0 0", fontFamily: "monospace" }}>
               {systemLabels[monthStage]}
+            </p>
+          )}
+          {isOrbit && (
+            <p style={{ fontSize: 11, color: tokens.accent, margin: "3px 0 0", fontFamily: "monospace" }}>
+              {stageLog[monthStage]?.label} ・ 距離{stageLog[monthStage]?.distance} ・ 進行度{stageLog[monthStage]?.progress}%
             </p>
           )}
         </div>

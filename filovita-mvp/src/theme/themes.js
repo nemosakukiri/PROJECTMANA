@@ -162,6 +162,8 @@ export const themes = {
     name: "SF",
     emoji: "🛰️",
     blurb: "淡々と、データのように整理して眺めたい人へ",
+    // コンポーネントテーマ：観測窓の向こうの惑星との距離が、月を追うごとに縮まる（theme/sf/）。
+    componentTheme: "orbit",
     tokens: {
       paper: "#0D1B24", card: "#132A38", ink: "#DCEFF5", inkSoft: "#A9C7D4",
       inkFaint: "#6E8A96", line: "#274456", accent: "#2FB6C4", accentBg: "#123540",
