@@ -118,7 +118,7 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
             return (
               <button
                 key={i}
-                onClick={() => dayEvents.length > 0 && onOpenDate(dateStr)}
+                onClick={() => onOpenDate(dateStr)}
                 style={{
                   position: "relative",
                   aspectRatio: "1", border: isToday ? `1.5px solid ${tokens.ink}` : "1px solid transparent",
@@ -129,7 +129,7 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
                       ? `rgba(47,107,58,${FOREST_DAY_TINT[dayStage]})`
                       : "transparent",
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  cursor: dayEvents.length > 0 ? "pointer" : "default", fontSize: 12.5, color: tokens.ink, padding: 0,
+                  cursor: "pointer", fontSize: 12.5, color: tokens.ink, padding: 0,
                 }}
               >
                 {isForest && (

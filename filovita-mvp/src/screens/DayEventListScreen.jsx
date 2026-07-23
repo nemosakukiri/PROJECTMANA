@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { eventsOnDate } from "../data/fakeEvents.js";
+import { eventsOnDate, formatDateLabel } from "../data/fakeEvents.js";
 import ContextHeader from "../components/ContextHeader.jsx";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
@@ -12,7 +12,7 @@ export default function DayEventListScreen({ theme, events, date, onOpenEvent, o
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
   const dayEvents = eventsOnDate(events, date);
-  const label = dayEvents[0]?.dateLabel ?? "";
+  const label = dayEvents[0]?.dateLabel ?? (date ? formatDateLabel(date) : "");
 
   return (
     <div>

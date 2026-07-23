@@ -30,3 +30,11 @@ export function eventsOnDate(events, dateStr) {
 
 export const daysInMonth = 31;
 export const firstWeekday = 3;
+
+const WEEKDAY_NAMES = ["日", "月", "火", "水", "木", "金", "土"];
+
+export function formatDateLabel(dateStr) {
+  const day = Number(dateStr.slice(-2));
+  const weekdayIndex = (firstWeekday + (day - 1)) % 7;
+  return `7月${day}日（${WEEKDAY_NAMES[weekdayIndex]}）`;
+}
