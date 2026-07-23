@@ -12,13 +12,13 @@ const GROUND_Y = 190;
    1〜2日：とびらをめくったところ / 3〜9日：麦畑の道 / 10〜19日：夏まつり(いちばん賑やかな見開き)
    20〜29日：長い影の帰り道 / 30〜31日：おうちに灯りがともる */
 
-function traveler(x, y, opacity = 0.55) {
-  return (
-    `<ellipse cx='${x}' cy='${y - 9}' rx='8' ry='10' fill='#8A5A3E' fill-opacity='${opacity}'/>` +
-    `<circle cx='${x - 6}' cy='${y - 19}' r='3.6' fill='#8A5A3E' fill-opacity='${opacity}'/>` +
-    `<circle cx='${x + 6}' cy='${y - 19}' r='3.6' fill='#8A5A3E' fill-opacity='${opacity}'/>` +
-    `<circle cx='${x}' cy='${y - 15}' r='6' fill='#A9754F' fill-opacity='${opacity}'/>`
-  );
+/* 旅人の立ち位置。SVG(背景画像)の中にはもう描かない——
+   背景画像として読み込まれるSVGは、セキュリティ上の理由で外部の画像(<image>)を読み込めないため、
+   実イラストはCalendarScreen側で通常の<img>としてこの座標に重ねる。 */
+const TRAVELER_X = [185, 230, 210, 250, 230];
+
+export function getTravelerPosition(stage) {
+  return { leftPercent: (TRAVELER_X[stage] / 420) * 100 };
 }
 
 function wheatRow(y) {
@@ -47,26 +47,22 @@ export function buildStoryScene(stage, { hiddenSpot } = {}) {
   if (stage === 0) {
     content +=
       `<rect x='150' y='40' width='70' height='110' rx='4' fill='#E8C9A8' fill-opacity='0.35'/>` +
-      `<rect x='150' y='40' width='4' height='110' fill='#B08A5A' fill-opacity='0.4'/>` +
-      traveler(185, GROUND_Y - 4);
+      `<rect x='150' y='40' width='4' height='110' fill='#B08A5A' fill-opacity='0.4'/>`;
   } else if (stage === 1) {
-    content += wheatRow(GROUND_Y - 6) + traveler(230, GROUND_Y - 4);
+    content += wheatRow(GROUND_Y - 6);
   } else if (stage === 2) {
     content +=
       [70, 130, 190, 250, 310, 370].map((x) => lantern(x, 26)).join("") +
-      wheatRow(GROUND_Y - 6) +
-      traveler(210, GROUND_Y - 4);
+      wheatRow(GROUND_Y - 6);
   } else if (stage === 3) {
     content +=
       "<rect x='0' y='0' width='420' height='" + SCENE_HEIGHT + "' fill='#E8A23A' fill-opacity='0.14'/>" +
-      `<ellipse cx='260' cy='${GROUND_Y - 2}' rx='30' ry='4' fill='#4A2E2A' fill-opacity='0.14'/>` +
-      traveler(250, GROUND_Y - 4);
+      `<ellipse cx='260' cy='${GROUND_Y - 2}' rx='30' ry='4' fill='#4A2E2A' fill-opacity='0.14'/>`;
   } else {
     content +=
       `<rect x='260' y='60' width='90' height='90' fill='#B08A5A' fill-opacity='0.28'/>` +
       `<path d='M255 60 L305 24 L355 60 Z' fill='#8A5A3E' fill-opacity='0.32'/>` +
-      `<rect x='290' y='90' width='20' height='24' fill='#F2E3C6' fill-opacity='0.5'/>` +
-      traveler(230, GROUND_Y - 4);
+      `<rect x='290' y='90' width='20' height='24' fill='#F2E3C6' fill-opacity='0.5'/>`;
   }
 
   if (hiddenSpot) content += hiddenCreature(hiddenSpot.x, hiddenSpot.y);

@@ -8,8 +8,9 @@ import CandleFlicker from "../theme/gothic/CandleFlicker.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
 import { seasonLabels } from "../theme/forest/seasonLabels.js";
 import { moodLabels } from "../theme/gothic/moodLabels.js";
-import { buildStoryScene, getHiddenSpot, storyTraces, SCENE_HEIGHT as STORY_SCENE_HEIGHT } from "../theme/storybook/storyScene.js";
+import { buildStoryScene, getHiddenSpot, storyTraces, getTravelerPosition, SCENE_HEIGHT as STORY_SCENE_HEIGHT } from "../theme/storybook/storyScene.js";
 import { storyLabels } from "../theme/storybook/storyLabels.js";
+import storyCharacterImg from "../assets/story-character.png";
 import { systemLabels } from "../theme/industrial/systemLabels.js";
 import { getMonthStage } from "../theme/worldEngine.js";
 
@@ -33,6 +34,7 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
     : [];
   const hiddenSpot = isStorybook ? getHiddenSpot("2026-07-18") : null;
   const pageTraces = isStorybook ? storyTraces(julyRecordedDays) : [];
+  const travelerPos = isStorybook ? getTravelerPosition(monthStage) : { leftPercent: 50 };
 
   const continuationContent = (
     <>
@@ -70,6 +72,15 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
               }}
             />
           ))}
+          {/* 旅人：絵本のくらしの実イラストを再利用。SVGの中では読み込めないため、通常の<img>として重ねる */}
+          <img
+            src={storyCharacterImg}
+            alt=""
+            style={{
+              position: "absolute", bottom: 2, left: `${travelerPos.leftPercent}%`,
+              transform: "translateX(-50%)", height: 46, pointerEvents: "none",
+            }}
+          />
         </div>
       )}
       <div
