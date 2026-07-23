@@ -18,13 +18,13 @@ const GROUND_FADE =
 /* 木は手描きのSVG図形ではなく、PROJECT MANA(絵本のくらし)の実イラストを再利用する。
    位置・大きさ・不透明度だけをここで段階ごとに決め、実際の画像はJSX側で<img>として重ねる。 */
 const BASE_TREES = [
-  { x: 110, widthPx: 150, bottomPx: 0, opacity: 1 },
-  { x: 300, widthPx: 118, bottomPx: 0, opacity: 0.95 },
+  { x: 100, widthPx: 340, bottomPx: -20, opacity: 1 },
+  { x: 310, widthPx: 280, bottomPx: -20, opacity: 0.95 },
 ];
 const EXTRA_TREES = [
-  { x: 50, widthPx: 96, bottomPx: 0, opacity: 0.85 },
-  { x: 360, widthPx: 104, bottomPx: 0, opacity: 0.88 },
-  { x: 210, widthPx: 168, bottomPx: 4, opacity: 1 },
+  { x: 20, widthPx: 230, bottomPx: -10, opacity: 0.85 },
+  { x: 400, widthPx: 240, bottomPx: -10, opacity: 0.88 },
+  { x: 210, widthPx: 380, bottomPx: 0, opacity: 1 },
 ];
 
 export function treeInstances(stage) {
