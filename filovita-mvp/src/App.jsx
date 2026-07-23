@@ -177,6 +177,10 @@ export default function App() {
         style={{
           width: "100%", maxWidth: 440, minHeight: "100vh", position: "relative",
           backgroundColor: theme.tokens.paper,
+          // 森・ホラーは実写/実イラストの背景が画面全体を覆うので、
+          // ボタン用の余白は不要（背景に重ねればよい）。他のテーマはFABの下に
+          // コンテンツが隠れないよう、引き続き余白を確保する。
+          ...(isForest || isGothic ? {} : { paddingBottom: 100 }),
           // 森・ホラーは実写/実イラストの背景そのものが世界を表すので、
           // タイル状の壁紙模様は重ねない（二重に見える原因になるため）
           ...(isForest || isGothic ? {} : {

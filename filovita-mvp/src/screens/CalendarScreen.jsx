@@ -57,7 +57,7 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
       {isStorybook && (
         <div
           style={{
-            position: "relative", height: 176, margin: "0 14px", marginTop: 14,
+            position: "relative", height: 160, margin: "0 14px",
             borderRadius: "16px 16px 0 0", overflow: "hidden",
             backgroundImage: buildStoryScene(monthStage, { hiddenSpot }),
             backgroundSize: "100% 100%", backgroundRepeat: "no-repeat",
