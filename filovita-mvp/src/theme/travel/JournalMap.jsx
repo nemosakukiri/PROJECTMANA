@@ -1,4 +1,5 @@
-import { rareMoment, traceLayout } from "../worldEngine.js";
+import { rareMoment } from "../worldEngine.js";
+import { journalTraces } from "./journalLog.js";
 import bgImg from "../../assets/travel-journal-bg.jpg";
 import flowerIcon from "../../assets/travel-trace-flower.png";
 import ticketIcon from "../../assets/travel-trace-ticket.png";
@@ -10,10 +11,11 @@ const TRACE_ICONS = [flowerIcon, ticketIcon, stampIcon];
 /* コンポーネントテーマ専用部品：旅ノート。中身の情報構造・操作順序には一切手を加えない。
    Time Philosophy：帳面も地図も変わらない。記録した分だけ、しるしが増えていく。
    背景全体に薄いクリーム色のウォッシュを重ね、地図やインクの文字の上でも
-   実際のUIの文字(tokens.ink)が無理なく読めるようにする。 */
+   実際のUIの文字(tokens.ink)が無理なく読めるようにする。
+   しるしは紙面の余白にだけ、最後まで全部は埋めずに、重ならない固定枠へ置く（journalLog.js参照）。 */
 export default function JournalMap({ date, recordedDays = [], children }) {
   const rareFind = date ? rareMoment(date, "travelFind", 0.16) : false;
-  const traces = traceLayout(recordedDays, { bottomBase: 10, bottomJitter: 74, leftMargin: 8 });
+  const traces = journalTraces(recordedDays);
 
   return (
     <div style={{ position: "relative", overflow: "hidden", minHeight: "100vh" }}>
@@ -62,7 +64,9 @@ export default function JournalMap({ date, recordedDays = [], children }) {
           src={TRACE_ICONS[t.day % TRACE_ICONS.length]}
           alt=""
           style={{
-            position: "absolute", left: t.left, bottom: t.bottom, zIndex: 2, width: 30,
+            position: "absolute",
+            ...(t.left ? { left: t.left } : { right: t.right }),
+            top: t.top, zIndex: 2, width: 30,
             opacity: 0.92, pointerEvents: "none",
             animation: "journalTraceGlow 4.6s ease-in-out infinite", animationDelay: `${i * 0.3}s`,
           }}

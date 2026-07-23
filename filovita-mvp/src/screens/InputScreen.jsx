@@ -54,7 +54,7 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit }) 
             <textarea
               autoFocus value={text} onChange={(e) => setText(e.target.value)}
               placeholder="話した内容、決まったことをそのまま書いてください" rows={7}
-              style={{ width: "100%", padding: 12, fontSize: 14, lineHeight: 1.8, border: `1px solid ${tokens.line}`, borderRadius: 12, boxSizing: "border-box" }}
+              style={{ width: "100%", padding: 12, fontSize: 14, lineHeight: 1.8, fontFamily: tokens.bodyFont || "inherit", border: `1px solid ${tokens.line}`, borderRadius: 12, boxSizing: "border-box" }}
             />
             <button
               onClick={() => text.trim() && onSubmit(text)}

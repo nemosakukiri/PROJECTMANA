@@ -18,7 +18,7 @@ export default function ConfirmScreen({ theme, draft, onBack, onConfirm }) {
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 6 }}>{labels.conclusionLabel}</div>
         <textarea
           value={conclusion} onChange={(e) => setConclusion(e.target.value)} rows={3}
-          style={{ width: "100%", padding: 10, fontSize: 15, border: `1px solid ${tokens.line}`, borderRadius: 12, marginBottom: 20, boxSizing: "border-box" }}
+          style={{ width: "100%", padding: 10, fontSize: 15, fontFamily: tokens.bodyFont || "inherit", border: `1px solid ${tokens.line}`, borderRadius: 12, marginBottom: 20, boxSizing: "border-box" }}
         />
 
         {!confirmed ? (

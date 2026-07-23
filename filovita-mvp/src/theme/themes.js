@@ -206,6 +206,9 @@ export const themes = {
       paper: "#F2E3C6", card: "#FFF8E8", ink: "#3B2A14", inkSoft: "#5B4425",
       inkFaint: "#8A6E44", line: "#D8B978", accent: "#C97A2B", accentBg: "#F5DCB2",
       headingFont: "'Shippori Mincho', serif",
+      // 旅の記録は手書きの旅ノートという設定のため、出来事を書く場所だけ
+      // 筆致のある字体にする（他のテーマのinherit挙動には影響しない）
+      bodyFont: "'Klee One', 'Shippori Mincho', serif",
       ...backgroundPatterns.bouken,
     },
     labels: {

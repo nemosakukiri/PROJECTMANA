@@ -122,7 +122,7 @@ export default function EventDetailScreen({ theme, event, onBack, onUpdateNote, 
           rows={3}
           style={{
             width: "100%", border: `1px solid ${tokens.line}`, borderRadius: 12, padding: 12, fontSize: 13.5,
-            lineHeight: 1.8, background: tokens.card, color: tokens.ink, resize: "vertical", fontFamily: "inherit",
+            lineHeight: 1.8, background: tokens.card, color: tokens.ink, resize: "vertical", fontFamily: tokens.bodyFont || "inherit",
           }}
         />
         <p style={{ fontSize: 11, color: tokens.inkFaint, marginTop: 6, marginBottom: 30, lineHeight: 1.7 }}>
