@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, Mic } from "lucide-react";
 import { eventsOnDate, formatDateLabel } from "../data/fakeEvents.js";
 import ContextHeader from "../components/ContextHeader.jsx";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
@@ -6,7 +6,7 @@ import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
 
 /* ②その日のEvent一覧（見出しのみ） */
-export default function DayEventListScreen({ theme, events, date, onOpenEvent, onBack, onNew }) {
+export default function DayEventListScreen({ theme, events, date, inputMode, onOpenEvent, onBack, onNew }) {
   const { tokens } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -79,7 +79,7 @@ export default function DayEventListScreen({ theme, events, date, onOpenEvent, o
           boxShadow: "0 6px 18px rgba(0,0,0,0.2)", cursor: "pointer",
         }}
       >
-        <Plus size={26} />
+        {inputMode === "speak" ? <Mic size={24} /> : <Plus size={26} />}
       </button>
     </div>
   );

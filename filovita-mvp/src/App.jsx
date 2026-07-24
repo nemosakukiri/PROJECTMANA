@@ -175,6 +175,7 @@ export default function App() {
             theme={theme}
             events={events}
             monthStage={monthStage}
+            inputMode={inputMode}
             onOpenDate={handleOpenDate}
             onNew={() => setScreen("input")}
             onOpenSettings={() => setScreen("settings")}
@@ -198,6 +199,7 @@ export default function App() {
             theme={theme}
             events={events}
             date={selectedDate}
+            inputMode={inputMode}
             onOpenEvent={(id) => { setSelectedEventId(id); setScreen("detail"); }}
             onBack={() => setScreen("calendar")}
             onNew={() => setScreen("input")}

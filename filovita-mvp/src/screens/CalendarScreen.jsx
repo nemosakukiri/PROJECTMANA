@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, ChevronLeft, ChevronRight, Settings } from "lucide-react";
+import { Plus, Mic, ChevronLeft, ChevronRight, Settings } from "lucide-react";
 import { eventsOnDate, daysInMonth, firstWeekday } from "../data/fakeEvents.js";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import WarnLamp from "../theme/industrial/WarnLamp.jsx";
@@ -20,7 +20,7 @@ const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
 const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];
 
 /* ①カレンダー（中心画面） */
-export default function CalendarScreen({ theme, events, monthStage, onOpenDate, onNew, onOpenSettings }) {
+export default function CalendarScreen({ theme, events, monthStage, inputMode, onOpenDate, onNew, onOpenSettings }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -238,7 +238,7 @@ export default function CalendarScreen({ theme, events, monthStage, onOpenDate, 
           boxShadow: "0 6px 18px rgba(0,0,0,0.2)", cursor: "pointer",
         }}
       >
-        <Plus size={26} />
+        {inputMode === "speak" ? <Mic size={24} /> : <Plus size={26} />}
       </button>
     </div>
   );
