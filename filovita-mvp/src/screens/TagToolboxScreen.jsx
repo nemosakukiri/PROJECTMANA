@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
-import { REFERENCE_TYPES, referenceTypeInfo } from "../theme/techo/tagToolbox.js";
+import { REFERENCE_TYPES, referenceTypeInfo, referenceHref, referenceActionLabel } from "../theme/techo/tagToolbox.js";
 import { markTypeInfo } from "../theme/techo/marks.js";
 
 const EMPTY_FORM = { type: "web", label: "", value: "" };
@@ -87,14 +87,17 @@ export default function TagToolboxScreen({ theme, tagName, references, events = 
 
         {references.map((ref) => {
           const info = referenceTypeInfo(ref.type);
+          const href = referenceHref(ref);
+          const actionLabel = referenceActionLabel(ref.type);
           return (
             <div
               key={ref.id}
               style={{
-                display: "flex", alignItems: "center", gap: 10, padding: "11px 13px", marginBottom: 8,
+                padding: "11px 13px", marginBottom: 8,
                 background: tokens.card, border: `1px solid ${tokens.line}`, borderRadius: 12,
               }}
             >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 18 }}>{info.emoji}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, color: tokens.ink, fontWeight: 600 }}>{ref.label}</div>
@@ -116,6 +119,21 @@ export default function TagToolboxScreen({ theme, tagName, references, events = 
               >
                 <Trash2 size={15} />
               </button>
+              </div>
+              {href && actionLabel && (
+                <a
+                  href={href}
+                  target={ref.type === "phone" ? undefined : "_blank"}
+                  rel={ref.type === "phone" ? undefined : "noopener noreferrer"}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    marginTop: 9, padding: "10px 0", borderRadius: 9, textDecoration: "none",
+                    background: tokens.accent, color: "#fff", fontSize: 13.5, fontWeight: 700,
+                  }}
+                >
+                  {info.emoji} {actionLabel}
+                </a>
+              )}
             </div>
           );
         })}

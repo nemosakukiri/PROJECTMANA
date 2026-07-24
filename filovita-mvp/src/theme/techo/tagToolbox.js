@@ -20,3 +20,26 @@ export function referenceTypeInfo(type) {
 export function makeId(prefix) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 }
+
+/* 行動のアクセシビリティ：情報を見せるだけで終わらせず、電話をかける・地図を開く・
+   サイトを開くところまで実際に到達できるようにする。
+   特に音声入力の利用者にとっては、電話番号が「見える」だけでは足りない——
+   ボタン一つで発信の画面まで進めることが支援になる。 */
+export function referenceHref(ref) {
+  if (!ref?.value) return null;
+  if (ref.type === "phone") return `tel:${ref.value.replace(/[^\d+]/g, "")}`;
+  if (ref.type === "web") return /^https?:\/\//i.test(ref.value) ? ref.value : `https://${ref.value}`;
+  if (ref.type === "map") {
+    return /^https?:\/\//i.test(ref.value)
+      ? ref.value
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ref.value)}`;
+  }
+  return null;
+}
+
+export function referenceActionLabel(type) {
+  if (type === "phone") return "電話する";
+  if (type === "web") return "開く";
+  if (type === "map") return "地図を開く";
+  return null;
+}
