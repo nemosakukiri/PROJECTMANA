@@ -169,6 +169,22 @@ export default function TagToolboxScreen({ theme, tagName, references, events = 
               placeholder="URL・住所・電話番号など"
               style={{ width: "100%", padding: "9px 11px", fontSize: 14, border: `1px solid ${tokens.line}`, borderRadius: 8, marginBottom: 10, boxSizing: "border-box" }}
             />
+            {/* 保存する前でも、今調べたばかりの電話番号にすぐかけられるように。
+                「道具箱に登録して初めて使える」にはしない */}
+            {referenceHref(form) && (
+              <a
+                href={referenceHref(form)}
+                target={form.type === "phone" ? undefined : "_blank"}
+                rel={form.type === "phone" ? undefined : "noopener noreferrer"}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  marginBottom: 10, padding: "10px 0", borderRadius: 9, textDecoration: "none",
+                  background: tokens.accent, color: "#fff", fontSize: 13.5, fontWeight: 700,
+                }}
+              >
+                {referenceTypeInfo(form.type).emoji} {referenceActionLabel(form.type)}（保存前でも今すぐ）
+              </a>
+            )}
             <div style={{ display: "flex", gap: 8 }}>
               <button
                 onClick={save}
