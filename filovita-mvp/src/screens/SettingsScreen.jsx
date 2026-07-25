@@ -18,6 +18,7 @@ const STAGE_OPTIONS = [
 export default function SettingsScreen({
   theme, themeList, currentMode, onChangeMode, themeId, onChangeTheme,
   stagePreview, onChangeStagePreview, onBack, onOpenGuideTour,
+  companionName, userName, onChangeCompanionName, onChangeUserName,
 }) {
   const { tokens } = theme;
   const GROWTH_THEMES = ["forest", "gothic", "journal", "orbit"];
@@ -109,6 +110,34 @@ export default function SettingsScreen({
               {currentMode === o.id && <Check size={16} color={tokens.accent} />}
             </button>
           ))}
+        </div>
+
+        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
+          呼び名
+        </div>
+        <div style={{ marginBottom: 26 }}>
+          <label style={{ display: "block", fontSize: 12, color: tokens.inkSoft, marginBottom: 5 }}>
+            あなたは、私を何と呼びますか？
+          </label>
+          <input
+            type="text" value={companionName ?? ""} onChange={(e) => onChangeCompanionName?.(e.target.value)}
+            placeholder="例：執事、相棒、ネモ…"
+            style={{
+              width: "100%", padding: "10px 13px", fontSize: 13.5, borderRadius: 10,
+              border: `1px solid ${tokens.line}`, marginBottom: 14, boxSizing: "border-box", fontFamily: "inherit",
+            }}
+          />
+          <label style={{ display: "block", fontSize: 12, color: tokens.inkSoft, marginBottom: 5 }}>
+            あなたのことは、何とお呼びすればいいですか？
+          </label>
+          <input
+            type="text" value={userName ?? ""} onChange={(e) => onChangeUserName?.(e.target.value)}
+            placeholder="呼び方を入力（任意）"
+            style={{
+              width: "100%", padding: "10px 13px", fontSize: 13.5, borderRadius: 10,
+              border: `1px solid ${tokens.line}`, boxSizing: "border-box", fontFamily: "inherit",
+            }}
+          />
         </div>
 
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>

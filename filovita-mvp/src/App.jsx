@@ -45,14 +45,17 @@ export default function App() {
   const [activeTagName, setActiveTagName] = useState(persisted?.activeTagName ?? null);
   // 案内人：一度見た案内は自動では出さない。呼べば「はじめてガイド」からいつでも戻る
   const [seenGuides, setSeenGuides] = useState(persisted?.seenGuides ?? {});
+  // お互いの呼び名。「設定」ではなく「はじめまして」の一部として交換する
+  const [companionName, setCompanionName] = useState(persisted?.companionName ?? "");
+  const [userName, setUserName] = useState(persisted?.userName ?? "");
   // 確認用のプレビュー。実際の日付を書き換えず、見た目だけ試せる（保存はしない）
   const [stagePreview, setStagePreview] = useState(null);
 
   const theme = themes[themeId] ?? themes[defaultThemeId];
 
   useEffect(() => {
-    saveState({ screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides });
-  }, [screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides]);
+    saveState({ screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName });
+  }, [screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
 
@@ -202,10 +205,20 @@ export default function App() {
             onChangeStagePreview={setStagePreview}
             onBack={() => setScreen("calendar")}
             onOpenGuideTour={() => setScreen("guideTour")}
+            companionName={companionName}
+            userName={userName}
+            onChangeCompanionName={setCompanionName}
+            onChangeUserName={setUserName}
           />
         )}
         {screen === "guideTour" && (
-          <GuideTourScreen theme={theme} onBack={() => setScreen("settings")} />
+          <GuideTourScreen
+            theme={theme}
+            onBack={() => setScreen("settings")}
+            companionName={companionName}
+            userName={userName}
+            onSaveNames={(c, u) => { setCompanionName(c); setUserName(u); }}
+          />
         )}
         {screen === "dayList" && (
           <DayEventListScreen
@@ -269,7 +282,7 @@ export default function App() {
           />
         )}
         {screen === "confirm" && draft && (
-          <ConfirmScreen theme={theme} draft={draft} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
+          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
         )}
     </>
   );

@@ -3,17 +3,21 @@ import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 
 /* ④確認画面（心臓部） */
-export default function ConfirmScreen({ theme, draft, onBack, onConfirm }) {
+export default function ConfirmScreen({ theme, draft, companionName, onBack, onConfirm }) {
   const { tokens, labels } = theme;
   const [conclusion, setConclusion] = useState(draft.conclusion.value);
   const [confirmed, setConfirmed] = useState(false);
+  // 呼び名を決めていたら、「AI」「執事」を実際の呼び名に差し替える
+  const confirmIntro = companionName
+    ? labels.confirmIntro.replace(/^(AIが|AIは|執事が|執事は)/, `${companionName}が`)
+    : labels.confirmIntro;
 
   return (
     <div>
       <ContextHeader theme={theme} breadcrumb="新しい記録" title="一緒に確認しましょう" onBack={onBack} />
       <div style={{ padding: "6px 20px 0" }}>
         <p style={{ fontSize: 12.5, color: tokens.inkSoft, marginTop: 0 }}>
-          {labels.confirmIntro}
+          {confirmIntro}
         </p>
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 6 }}>{labels.conclusionLabel}</div>
         <textarea

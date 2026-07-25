@@ -335,12 +335,52 @@ async function main() {
       await clickButtonWithText(page, "次へ");
       await page.waitForTimeout(150);
     }
+
+    step("案内人：4つの案内のあと、「はじめまして」からお互いの呼び名を交換する");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("はじめまして"), "呼び名の交換は「はじめまして」の挨拶から始まる");
+    assert(bodyText.includes("あなたは、私を何と呼びますか"), "AI自身の呼び名を尋ねている");
+    assert(bodyText.includes("あなたのことは何とお呼びすればいいですか"), "利用者の呼び名も尋ねている（一方的な命名にしない）");
+    await page.fill('input[placeholder="例：執事、相棒、ネモ…"]', "執事");
+    await page.fill('input[placeholder="呼び方を入力（任意）"]', "ねもさん");
+    await clickButtonWithText(page, "次へ");
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(state.companionName === "執事" && state.userName === "ねもさん", "決めた呼び名がその場で保存されている");
+
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("これで準備はできました"), "最後に、いつでも戻れることを伝える一言がある");
     await clickButtonWithText(page, "Filovitaをはじめる");
     await page.waitForTimeout(200);
     state = await getState(page);
     assert(state.screen === "settings", "ガイドを終えると設定画面に戻る");
+
+    step("案内人：決めた呼び名は、AIが語りかける場面（確認画面）に反映される");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "confirm",
+        draft: { conclusion: { value: "血液検査の結果を聞いた" }, todos: [] },
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("執事が下書きを作りました"), "確認画面の文言が「AI」ではなく決めた呼び名に差し替わっている");
+
+    step("案内人：呼び名はあとから設定画面でいつでも変更できる");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "settings",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("呼び名"), "設定画面に呼び名の項目がある");
+    const companionValue = await page.evaluate(() => document.querySelector('input[placeholder="例：執事、相棒、ネモ…"]')?.value);
+    assert(companionValue === "執事", "設定画面にも決めた呼び名がそのまま表示されている");
 
     console.log(`\n=== 完了: ${stepCount}ステップ中、失敗 ${failed}件 ===`);
   } finally {
