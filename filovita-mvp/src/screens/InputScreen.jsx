@@ -1,16 +1,21 @@
 import { useRef, useState } from "react";
 import ContextHeader from "../components/ContextHeader.jsx";
+import GuideCard from "../components/GuideCard.jsx";
+import GuideHelpButton from "../components/GuideHelpButton.jsx";
+import { guideById } from "../theme/guide/guideContent.js";
 
 const SpeechRecognitionApi =
   typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
 /* 入力→確認画面（＋ボタンから。共通ナビゲーションの先） */
-export default function InputScreen({ theme, mode = "both", onBack, onSubmit }) {
+export default function InputScreen({ theme, mode = "both", onBack, onSubmit, seenGuides = {}, onDismissGuide }) {
   const { tokens } = theme;
   const [text, setText] = useState("");
   const [activeMode, setActiveMode] = useState(mode === "speak" ? "speak" : "write");
   const [listening, setListening] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(!seenGuides.input);
   const recognitionRef = useRef(null);
+  const guide = guideById("input");
 
   function startListening() {
     if (!SpeechRecognitionApi) return;
@@ -45,6 +50,17 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit }) 
       `}</style>
       <ContextHeader theme={theme} breadcrumb="新しい記録" title="何がありましたか" onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4 }}>
+          <GuideHelpButton theme={theme} onClick={() => setGuideOpen(true)} />
+        </div>
+        {guideOpen && (
+          <GuideCard
+            theme={theme}
+            emoji={guide.emoji}
+            text={guide.text}
+            onDismiss={() => { setGuideOpen(false); onDismissGuide?.("input"); }}
+          />
+        )}
         {/* その場での切り替え。初回に決めた既定値はあくまで初期値で、毎回選び直せる */}
         <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
           <button

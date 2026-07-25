@@ -17,7 +17,7 @@ const STAGE_OPTIONS = [
 
 export default function SettingsScreen({
   theme, themeList, currentMode, onChangeMode, themeId, onChangeTheme,
-  stagePreview, onChangeStagePreview, onBack,
+  stagePreview, onChangeStagePreview, onBack, onOpenGuideTour,
 }) {
   const { tokens } = theme;
   const GROWTH_THEMES = ["forest", "gothic", "journal", "orbit"];
@@ -114,9 +114,21 @@ export default function SettingsScreen({
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
           カレンダー連携
         </div>
-        <div style={{ fontSize: 13, color: tokens.inkSoft, padding: "13px 15px", border: `1px solid ${tokens.line}`, borderRadius: 12 }}>
+        <div style={{ fontSize: 13, color: tokens.inkSoft, padding: "13px 15px", border: `1px solid ${tokens.line}`, borderRadius: 12, marginBottom: 26 }}>
           未連携（後日）
         </div>
+
+        <button
+          onClick={onOpenGuideTour}
+          style={{
+            display: "flex", alignItems: "center", gap: 12, textAlign: "left", width: "100%",
+            padding: "13px 15px", borderRadius: 12, cursor: "pointer",
+            border: `1px solid ${tokens.line}`, background: "transparent",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>📖</span>
+          <span style={{ fontSize: 14, color: tokens.ink }}>はじめてガイド</span>
+        </button>
       </div>
     </div>
   );

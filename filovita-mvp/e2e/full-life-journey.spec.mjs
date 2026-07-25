@@ -113,11 +113,30 @@ async function main() {
       localStorage.setItem("filovita-mvp-state", JSON.stringify({
         screen: "calendar", inputMode: "speak", themeId: "techo",
         selectedDate: null, selectedEventId: null, events: [], draft: null,
-        tagRegistry: {}, tagToolboxes: {}, activeTagName: null,
+        tagRegistry: {}, tagToolboxes: {}, activeTagName: null, seenGuides: {},
       }));
     });
     await page.reload();
     await page.waitForTimeout(300);
+
+    step("案内人：初めてカレンダーを開くと、案内が自動で出る");
+    let bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ここがあなたの生活です"), "カレンダーの案内が自動で表示されている");
+    await clickButtonWithText(page, "わかった");
+    await page.waitForTimeout(150);
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(!bodyText.includes("ここがあなたの生活です"), "一度見た案内は、リロード後も自動では出てこない");
+    await page.evaluate(() => {
+      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("❔"));
+      btn?.click();
+    });
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ここがあなたの生活です"), "❔ボタンで、いつでも案内を呼び戻せる");
+    await clickButtonWithText(page, "わかった");
+    await page.waitForTimeout(150);
 
     step("③.5 音声入力：カレンダー画面の＋がマイクボタンになっている（inputMode=speak）");
     const fabIsMic = await page.evaluate(() => {
@@ -136,6 +155,12 @@ async function main() {
       !!document.body.textContent.includes("タップして話しはじめる") ||
       !!document.body.textContent.includes("聞いています"));
     assert(onInputSpeak, "InputScreenの「話す」タブが開いている");
+
+    step("案内人：InputScreenも初回だけ案内が出る");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ここから出来事を残せます"), "入力画面の案内が自動で表示されている");
+    await clickButtonWithText(page, "わかった");
+    await page.waitForTimeout(150);
 
     step("録音開始 → 認識結果が反映される → 停止 → 次へ");
     await page.evaluate(() => {
@@ -185,6 +210,12 @@ async function main() {
     state = await getState(page);
     assert(state.screen === "detail", "Event詳細画面が開いている");
 
+    step("案内人：タグの案内も初回だけ出る");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("タグは人や場所とのつながりです"), "タグの案内が自動で表示されている");
+    await clickButtonWithText(page, "わかった");
+    await page.waitForTimeout(150);
+
     step("⑥ AIの長期記憶：所感を書くと「所感」タグが付く");
     await page.fill("textarea[placeholder*='そのときの気持ち']", "次はお薬手帳を忘れずに持っていく。");
     await page.waitForTimeout(200);
@@ -200,6 +231,13 @@ async function main() {
     await page.waitForTimeout(300);
     state = await getState(page);
     assert(state.screen === "tagToolbox", "タグの道具箱画面が開いている");
+
+    step("案内人：道具箱の案内も初回だけ出る");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("タグには道具を入れられます"), "道具箱の案内が自動で表示されている");
+    await clickButtonWithText(page, "わかった");
+    await page.waitForTimeout(150);
+
     await clickButtonContaining(page, "参照を追加");
     await page.waitForTimeout(150);
     await clickButtonContaining(page, "電話");
@@ -262,7 +300,7 @@ async function main() {
     assert(toolboxAfterReload.references.length === 1, "リロード後も道具箱の参照が残っている");
 
     step("道具箱を開くと「マーカーされた記録」欄に、後で見つけたマーカーが一覧表示される");
-    const bodyText = await page.evaluate(() => document.body.textContent);
+    bodyText = await page.evaluate(() => document.body.textContent);
     const onDetail = bodyText.includes("血液検査");
     assert(onDetail, "リロード後もEvent詳細が正しく表示されている");
     await page.evaluate(() => {
@@ -279,6 +317,30 @@ async function main() {
       return a?.getAttribute("href");
     });
     assert(telHrefAfterReload === "tel:0751234567", "リロード後も電話するボタンが正しく機能する");
+
+    step("案内人：設定の「はじめてガイド」から、一度見た案内をいつでも見返せる");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "settings",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    await clickButtonContaining(page, "はじめてガイド");
+    await page.waitForTimeout(200);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ここがあなたの生活です"), "はじめてガイドが最初の案内から始まる");
+    for (let i = 0; i < 4; i++) {
+      await clickButtonWithText(page, "次へ");
+      await page.waitForTimeout(150);
+    }
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("これで準備はできました"), "最後に、いつでも戻れることを伝える一言がある");
+    await clickButtonWithText(page, "Filovitaをはじめる");
+    await page.waitForTimeout(200);
+    state = await getState(page);
+    assert(state.screen === "settings", "ガイドを終えると設定画面に戻る");
 
     console.log(`\n=== 完了: ${stepCount}ステップ中、失敗 ${failed}件 ===`);
   } finally {

@@ -21,6 +21,7 @@ import EventDetailScreen from "./screens/EventDetailScreen.jsx";
 import InputScreen from "./screens/InputScreen.jsx";
 import ConfirmScreen from "./screens/ConfirmScreen.jsx";
 import TagToolboxScreen from "./screens/TagToolboxScreen.jsx";
+import GuideTourScreen from "./screens/GuideTourScreen.jsx";
 import { makeId } from "./theme/techo/tagToolbox.js";
 
 const TODAY_DATE = "2026-07-18";
@@ -42,16 +43,22 @@ export default function App() {
   const [tagRegistry, setTagRegistry] = useState(persisted?.tagRegistry ?? {});
   const [tagToolboxes, setTagToolboxes] = useState(persisted?.tagToolboxes ?? {});
   const [activeTagName, setActiveTagName] = useState(persisted?.activeTagName ?? null);
+  // 案内人：一度見た案内は自動では出さない。呼べば「はじめてガイド」からいつでも戻る
+  const [seenGuides, setSeenGuides] = useState(persisted?.seenGuides ?? {});
   // 確認用のプレビュー。実際の日付を書き換えず、見た目だけ試せる（保存はしない）
   const [stagePreview, setStagePreview] = useState(null);
 
   const theme = themes[themeId] ?? themes[defaultThemeId];
 
   useEffect(() => {
-    saveState({ screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName });
-  }, [screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName]);
+    saveState({ screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides });
+  }, [screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
+
+  function handleDismissGuide(id) {
+    setSeenGuides((prev) => ({ ...prev, [id]: true }));
+  }
 
   function handleSubmitInput(text) {
     setDraft(generateDraftFake(text));
@@ -179,6 +186,8 @@ export default function App() {
             onOpenDate={handleOpenDate}
             onNew={() => setScreen("input")}
             onOpenSettings={() => setScreen("settings")}
+            seenGuides={seenGuides}
+            onDismissGuide={handleDismissGuide}
           />
         )}
         {screen === "settings" && (
@@ -192,7 +201,11 @@ export default function App() {
             stagePreview={stagePreview}
             onChangeStagePreview={setStagePreview}
             onBack={() => setScreen("calendar")}
+            onOpenGuideTour={() => setScreen("guideTour")}
           />
+        )}
+        {screen === "guideTour" && (
+          <GuideTourScreen theme={theme} onBack={() => setScreen("settings")} />
         )}
         {screen === "dayList" && (
           <DayEventListScreen
@@ -227,6 +240,8 @@ export default function App() {
             onOpenTagToolbox={handleOpenTagToolbox}
             onAddMark={handleAddMark}
             onRemoveMark={handleRemoveMark}
+            seenGuides={seenGuides}
+            onDismissGuide={handleDismissGuide}
           />
         )}
         {screen === "tagToolbox" && activeTagName && (
@@ -234,6 +249,8 @@ export default function App() {
             theme={theme}
             tagName={activeTagName}
             events={events}
+            seenGuides={seenGuides}
+            onDismissGuide={handleDismissGuide}
             references={tagToolboxes[tagRegistry[activeTagName]]?.references ?? []}
             onBack={() => setScreen("detail")}
             onAddReference={handleAddReference}
@@ -247,6 +264,8 @@ export default function App() {
             mode={inputMode}
             onBack={() => setScreen("calendar")}
             onSubmit={handleSubmitInput}
+            seenGuides={seenGuides}
+            onDismissGuide={handleDismissGuide}
           />
         )}
         {screen === "confirm" && draft && (

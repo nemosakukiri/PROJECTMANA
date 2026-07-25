@@ -15,12 +15,15 @@ import { systemLabels } from "../theme/industrial/systemLabels.js";
 import { stageLog } from "../theme/sf/systemLog.js";
 import { journalCaption } from "../theme/travel/journalLog.js";
 import { getMonthStage } from "../theme/worldEngine.js";
+import GuideCard from "../components/GuideCard.jsx";
+import GuideHelpButton from "../components/GuideHelpButton.jsx";
+import { guideById } from "../theme/guide/guideContent.js";
 
 const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
 const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];
 
 /* ①カレンダー（中心画面） */
-export default function CalendarScreen({ theme, events, monthStage, inputMode, onOpenDate, onNew, onOpenSettings }) {
+export default function CalendarScreen({ theme, events, monthStage, inputMode, onOpenDate, onNew, onOpenSettings, seenGuides = {}, onDismissGuide }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -29,6 +32,8 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
   const isOrbit = theme.componentTheme === "orbit";
   const isJournal = theme.componentTheme === "journal";
   const [showContinuation, setShowContinuation] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(!seenGuides.calendar);
+  const guide = guideById("calendar");
   const cells = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const totalOpenTodos = events.reduce((s, e) => s + e.todos.filter((t) => !t.done).length, 0);
   const nextEvt = events.find((e) => e.nextEvent)?.nextEvent;
@@ -130,15 +135,26 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
             </p>
           )}
         </div>
-        <button
-          onClick={onOpenSettings}
-          style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer", padding: 6, marginTop: 2 }}
-        >
-          <Settings size={19} />
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+          <GuideHelpButton theme={theme} label="" onClick={() => setGuideOpen(true)} />
+          <button
+            onClick={onOpenSettings}
+            style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer", padding: 6 }}
+          >
+            <Settings size={19} />
+          </button>
+        </div>
       </div>
 
       <div style={{ padding: "14px 20px 0" }}>
+        {guideOpen && (
+          <GuideCard
+            theme={theme}
+            emoji={guide.emoji}
+            text={guide.text}
+            onDismiss={() => { setGuideOpen(false); onDismissGuide?.("calendar"); }}
+          />
+        )}
         {/* 今日の続き：数字を並べたままにせず、聞かれたら答える形にする */}
         {!showContinuation ? (
           <button

@@ -10,16 +10,22 @@ import StampBadge from "../theme/techo/StampBadge.jsx";
 import MarkableText from "../theme/techo/MarkableText.jsx";
 import { STAMP_LABELS } from "../theme/techo/stamps.js";
 import { parseJpDateToStr } from "../theme/techo/pageLink.js";
+import GuideCard from "../components/GuideCard.jsx";
+import GuideHelpButton from "../components/GuideHelpButton.jsx";
+import { guideById } from "../theme/guide/guideContent.js";
 
 /* ③Eventカルテ */
 export default function EventDetailScreen({
   theme, event, onBack, onUpdateNote, onToggleTodo, onAddTodo, onToggleTag, onOpenDate, onOpenTagToolbox, onAddMark, onRemoveMark,
+  seenGuides = {}, onDismissGuide,
 }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
   const isTecho = theme.id === "techo";
+  const [tagsGuideOpen, setTagsGuideOpen] = useState(!seenGuides.tags);
+  const tagsGuide = guideById("tags");
   const [addingTodo, setAddingTodo] = useState(false);
   const [newTodoText, setNewTodoText] = useState("");
 
@@ -126,7 +132,18 @@ export default function EventDetailScreen({
           </>
         )}
 
-        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, margin: "16px 0 6px" }}>タグ</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "16px 0 6px" }}>
+          <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint }}>タグ</div>
+          <GuideHelpButton theme={theme} onClick={() => setTagsGuideOpen(true)} />
+        </div>
+        {tagsGuideOpen && (
+          <GuideCard
+            theme={theme}
+            emoji={tagsGuide.emoji}
+            text={tagsGuide.text}
+            onDismiss={() => { setTagsGuideOpen(false); onDismissGuide?.("tags"); }}
+          />
+        )}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {event.tags.map((t) =>
             isIndustrial ? (

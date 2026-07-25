@@ -3,6 +3,9 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 import { REFERENCE_TYPES, referenceTypeInfo, referenceHref, referenceActionLabel } from "../theme/techo/tagToolbox.js";
 import { markTypeInfo } from "../theme/techo/marks.js";
+import GuideCard from "../components/GuideCard.jsx";
+import GuideHelpButton from "../components/GuideHelpButton.jsx";
+import { guideById } from "../theme/guide/guideContent.js";
 
 const EMPTY_FORM = { type: "web", label: "", value: "" };
 
@@ -10,11 +13,16 @@ const EMPTY_FORM = { type: "web", label: "", value: "" };
    電話・ファイル・Event)が並ぶ。使うほど参照が増え、自分専用に育っていく。
    さらに、このタグがついた記録の中でマーカーされた一文だけを一覧表示する
    ——「#病院を開くと、重要な一文だけがそこにある」という体験のため。 */
-export default function TagToolboxScreen({ theme, tagName, references, events = [], onBack, onAddReference, onUpdateReference, onDeleteReference }) {
+export default function TagToolboxScreen({
+  theme, tagName, references, events = [], onBack, onAddReference, onUpdateReference, onDeleteReference,
+  seenGuides = {}, onDismissGuide,
+}) {
   const { tokens } = theme;
   const [editingId, setEditingId] = useState(null);
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [guideOpen, setGuideOpen] = useState(!seenGuides.toolbox);
+  const guide = guideById("toolbox");
 
   const markedLines = events
     .filter((e) => e.tags?.includes(tagName))
@@ -54,6 +62,17 @@ export default function TagToolboxScreen({ theme, tagName, references, events = 
     <div>
       <ContextHeader theme={theme} breadcrumb="手帳" title={`📑 ${tagName}の道具箱`} onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 4 }}>
+          <GuideHelpButton theme={theme} onClick={() => setGuideOpen(true)} />
+        </div>
+        {guideOpen && (
+          <GuideCard
+            theme={theme}
+            emoji={guide.emoji}
+            text={guide.text}
+            onDismiss={() => { setGuideOpen(false); onDismissGuide?.("toolbox"); }}
+          />
+        )}
         <p style={{ fontSize: 12, color: tokens.inkFaint, marginTop: 0, marginBottom: 18, lineHeight: 1.7 }}>
           このタグを使うたびに、いつもの参照がここに増えていきます。
         </p>
