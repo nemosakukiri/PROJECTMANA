@@ -11,7 +11,7 @@ export default function GuideCard({ theme, emoji, text, onDismiss, dismissLabel 
     >
       <span style={{ fontSize: 20, lineHeight: 1 }}>{emoji}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: 13, color: tokens.ink, lineHeight: 1.7 }}>{text}</p>
+        <p style={{ margin: 0, fontSize: 13, color: tokens.ink, lineHeight: 1.7, whiteSpace: "pre-line" }}>{text}</p>
         <div style={{ display: "flex", gap: 10, marginTop: 9 }}>
           <button
             onClick={onDismiss}

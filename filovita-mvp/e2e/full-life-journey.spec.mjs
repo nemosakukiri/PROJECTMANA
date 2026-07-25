@@ -121,7 +121,7 @@ async function main() {
 
     step("案内人：初めてカレンダーを開くと、案内が自動で出る");
     let bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("ここがあなたの生活です"), "カレンダーの案内が自動で表示されている");
+    assert(bodyText.includes("起きたことが、そのままここに並びます"), "カレンダーの案内が自動で表示されている");
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
     await page.reload();
@@ -134,7 +134,7 @@ async function main() {
     });
     await page.waitForTimeout(150);
     bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("ここがあなたの生活です"), "❔ボタンで、いつでも案内を呼び戻せる");
+    assert(bodyText.includes("起きたことが、そのままここに並びます"), "❔ボタンで、いつでも案内を呼び戻せる");
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
 
@@ -158,7 +158,7 @@ async function main() {
 
     step("案内人：InputScreenも初回だけ案内が出る");
     bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("ここから出来事を残せます"), "入力画面の案内が自動で表示されている");
+    assert(bodyText.includes("話しても、書いても残せます"), "入力画面の案内が自動で表示されている");
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
 
@@ -212,7 +212,7 @@ async function main() {
 
     step("案内人：タグの案内も初回だけ出る");
     bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("タグは人や場所とのつながりです"), "タグの案内が自動で表示されている");
+    assert(bodyText.includes("よく会う人や、よく行く場所につけます"), "タグの案内が自動で表示されている");
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
 
@@ -234,7 +234,7 @@ async function main() {
 
     step("案内人：道具箱の案内も初回だけ出る");
     bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("タグには道具を入れられます"), "道具箱の案内が自動で表示されている");
+    assert(bodyText.includes("電話番号や地図を、タグに登録できます"), "道具箱の案内が自動で表示されている");
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
 
@@ -330,7 +330,7 @@ async function main() {
     await clickButtonContaining(page, "はじめてガイド");
     await page.waitForTimeout(200);
     bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("ここがあなたの生活です"), "はじめてガイドが最初の案内から始まる");
+    assert(bodyText.includes("起きたことが、そのままここに並びます"), "はじめてガイドが最初の案内から始まる");
     for (let i = 0; i < 4; i++) {
       await clickButtonWithText(page, "次へ");
       await page.waitForTimeout(150);
