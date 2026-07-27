@@ -439,6 +439,20 @@ async function main() {
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("コーヒー") && bodyText.includes("大きな買い物"), "リロード後も追加したい品目が残っている");
 
+    step("買い物相談：決まった選択肢だけでなく、自由に打ち込んで相談できる（MVP_SPEC.md「相談は往復である」）");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("に自由に相談する"), "自由入力の相談欄がある");
+    await page.fill('input[placeholder="例：桃が半額だから追加したい"]', "桃が半額だったんだけど、どうしよう");
+    await clickButtonWithText(page, "送る");
+    await page.waitForTimeout(1000);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("桃が半額だったんだけど"), "打ち込んだ相談内容がその場で表示される");
+    // このE2E実行環境にはバックエンド(api/shopping-chat.js)が無いため、
+    // 断定せず「答えられなかった」とだけ伝えて落ちる(クラッシュしない)ことを確認する
+    assert(bodyText.includes("会話機能が使えないかもしれません"), "バックエンドが無い環境では、断定せず状況を伝えるだけに留める");
+    state = await getState(page);
+    assert(state.shoppingChatHistory.some((m) => m.role === "user" && m.content.includes("桃が半額")), "打ち込んだ相談内容は履歴として残る");
+
     step("買い物リスト：相談で決めた内容から、お店で見るためのリストが生成される");
     await page.evaluate(() => {
       localStorage.setItem("filovita-mvp-state", JSON.stringify({

@@ -62,6 +62,8 @@ export default function App() {
   // 買い物リスト：相談で決めた内容のスナップショット。店頭ではチェックのON/OFFと
   // その場のひらめき追加だけで完結する（考える→買う、を地続きにする）
   const [shoppingListItems, setShoppingListItems] = useState(persisted?.shoppingListItems ?? []);
+  // 買い物相談の自由な会話履歴（api/shopping-chat.js経由。MVP_SPEC.md「相談は往復である」）
+  const [shoppingChatHistory, setShoppingChatHistory] = useState(persisted?.shoppingChatHistory ?? []);
   // 確認用のプレビュー。実際の日付を書き換えず、見た目だけ試せる（保存はしない）
   const [stagePreview, setStagePreview] = useState(null);
 
@@ -70,11 +72,11 @@ export default function App() {
   useEffect(() => {
     saveState({
       screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-      shoppingBudget, shoppingBalance, nextShoppingDate, recurringItems, itemsToAdd, shoppingListItems,
+      shoppingBudget, shoppingBalance, nextShoppingDate, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
     });
   }, [
     screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-    shoppingBudget, shoppingBalance, nextShoppingDate, recurringItems, itemsToAdd, shoppingListItems,
+    shoppingBudget, shoppingBalance, nextShoppingDate, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
   ]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -187,6 +189,10 @@ export default function App() {
     setShoppingListItems((prev) => [...prev, { id: makeId("list"), section: "add", checked: true, ...item }]);
   }
 
+  function handleAppendShoppingChatMessage(role, content) {
+    setShoppingChatHistory((prev) => [...prev, { role, content }]);
+  }
+
   function handleConfirm(conclusionText) {
     const newEvent = {
       id: `evt_${Date.now()}`,
@@ -272,6 +278,8 @@ export default function App() {
             onRemoveItemToAdd={handleRemoveItemToAdd}
             onEditItemToAddPrice={handleEditItemToAddPrice}
             onGenerateList={handleGenerateShoppingList}
+            chatHistory={shoppingChatHistory}
+            onAppendChatMessage={handleAppendShoppingChatMessage}
             onBack={() => setScreen("calendar")}
           />
         )}
