@@ -22,6 +22,8 @@ import InputScreen from "./screens/InputScreen.jsx";
 import ConfirmScreen from "./screens/ConfirmScreen.jsx";
 import TagToolboxScreen from "./screens/TagToolboxScreen.jsx";
 import GuideTourScreen from "./screens/GuideTourScreen.jsx";
+import ShoppingConsultScreen from "./screens/ShoppingConsultScreen.jsx";
+import ShoppingListScreen from "./screens/ShoppingListScreen.jsx";
 import { makeId } from "./theme/techo/tagToolbox.js";
 
 const TODAY_DATE = "2026-07-18";
@@ -48,14 +50,32 @@ export default function App() {
   // お互いの呼び名。「設定」ではなく「はじめまして」の一部として交換する
   const [companionName, setCompanionName] = useState(persisted?.companionName ?? "");
   const [userName, setUserName] = useState(persisted?.userName ?? "");
+  // 買い物相談：家計簿ではなく、複数周期を見渡した判断支援（MVP_SPEC.md「複数周期の統合判断」）
+  const [shoppingBudget, setShoppingBudget] = useState(persisted?.shoppingBudget ?? 20000);
+  const [shoppingBalance, setShoppingBalance] = useState(persisted?.shoppingBalance ?? 8500);
+  const [nextShoppingDate, setNextShoppingDate] = useState(persisted?.nextShoppingDate ?? "7月25日");
+  const [recurringItems, setRecurringItems] = useState(persisted?.recurringItems ?? [
+    { id: "rec_food", name: "食料品", amount: 6000 },
+    { id: "rec_tobacco", name: "タバコ", amount: 3000 },
+  ]);
+  const [itemsToAdd, setItemsToAdd] = useState(persisted?.itemsToAdd ?? []);
+  // 買い物リスト：相談で決めた内容のスナップショット。店頭ではチェックのON/OFFと
+  // その場のひらめき追加だけで完結する（考える→買う、を地続きにする）
+  const [shoppingListItems, setShoppingListItems] = useState(persisted?.shoppingListItems ?? []);
   // 確認用のプレビュー。実際の日付を書き換えず、見た目だけ試せる（保存はしない）
   const [stagePreview, setStagePreview] = useState(null);
 
   const theme = themes[themeId] ?? themes[defaultThemeId];
 
   useEffect(() => {
-    saveState({ screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName });
-  }, [screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName]);
+    saveState({
+      screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
+      shoppingBudget, shoppingBalance, nextShoppingDate, recurringItems, itemsToAdd, shoppingListItems,
+    });
+  }, [
+    screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
+    shoppingBudget, shoppingBalance, nextShoppingDate, recurringItems, itemsToAdd, shoppingListItems,
+  ]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
 
@@ -128,6 +148,37 @@ export default function App() {
     }));
   }
 
+  function handleAddRecurringItem(item) {
+    setRecurringItems((prev) => [...prev, { id: makeId("rec"), ...item }]);
+  }
+
+  function handleRemoveRecurringItem(id) {
+    setRecurringItems((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  function handleAddItemToAdd(item) {
+    setItemsToAdd((prev) => [...prev, { id: makeId("add"), ...item }]);
+  }
+
+  function handleRemoveItemToAdd(id) {
+    setItemsToAdd((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  function handleGenerateShoppingList() {
+    const usual = recurringItems.map((i) => ({ id: makeId("list"), name: i.name, amount: i.amount, section: "usual", checked: true }));
+    const add = itemsToAdd.map((i) => ({ id: makeId("list"), name: i.name, amount: i.price, section: "add", checked: true }));
+    setShoppingListItems([...usual, ...add]);
+    setScreen("shoppingList");
+  }
+
+  function handleToggleShoppingListItem(id) {
+    setShoppingListItems((prev) => prev.map((i) => i.id === id ? { ...i, checked: !i.checked } : i));
+  }
+
+  function handleAddShoppingListItem(item) {
+    setShoppingListItems((prev) => [...prev, { id: makeId("list"), section: "add", checked: true, ...item }]);
+  }
+
   function handleConfirm(conclusionText) {
     const newEvent = {
       id: `evt_${Date.now()}`,
@@ -189,8 +240,41 @@ export default function App() {
             onOpenDate={handleOpenDate}
             onNew={() => setScreen("input")}
             onOpenSettings={() => setScreen("settings")}
+            onOpenShoppingConsult={() => setScreen("shoppingConsult")}
             seenGuides={seenGuides}
             onDismissGuide={handleDismissGuide}
+          />
+        )}
+        {screen === "shoppingConsult" && (
+          <ShoppingConsultScreen
+            theme={theme}
+            companionName={companionName}
+            budget={shoppingBudget}
+            balance={shoppingBalance}
+            nextShoppingDate={nextShoppingDate}
+            recurringItems={recurringItems}
+            itemsToAdd={itemsToAdd}
+            onChangeBudget={setShoppingBudget}
+            onChangeBalance={setShoppingBalance}
+            onChangeNextShoppingDate={setNextShoppingDate}
+            onAddRecurringItem={handleAddRecurringItem}
+            onRemoveRecurringItem={handleRemoveRecurringItem}
+            onAddItemToAdd={handleAddItemToAdd}
+            onRemoveItemToAdd={handleRemoveItemToAdd}
+            onGenerateList={handleGenerateShoppingList}
+            onBack={() => setScreen("calendar")}
+          />
+        )}
+        {screen === "shoppingList" && (
+          <ShoppingListScreen
+            theme={theme}
+            companionName={companionName}
+            budget={shoppingBudget}
+            balance={shoppingBalance}
+            items={shoppingListItems}
+            onToggleItem={handleToggleShoppingListItem}
+            onAddItem={handleAddShoppingListItem}
+            onBack={() => setScreen("shoppingConsult")}
           />
         )}
         {screen === "settings" && (

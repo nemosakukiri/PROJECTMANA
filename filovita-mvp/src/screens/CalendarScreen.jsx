@@ -23,7 +23,7 @@ const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
 const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];
 
 /* ①カレンダー（中心画面） */
-export default function CalendarScreen({ theme, events, monthStage, inputMode, onOpenDate, onNew, onOpenSettings, seenGuides = {}, onDismissGuide }) {
+export default function CalendarScreen({ theme, events, monthStage, inputMode, onOpenDate, onNew, onOpenSettings, onOpenShoppingConsult, seenGuides = {}, onDismissGuide }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -155,6 +155,18 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
             onDismiss={() => { setGuideOpen(false); onDismissGuide?.("calendar"); }}
           />
         )}
+        {/* 固定導線：家計簿を開かせるのではなく、いつでもバトラーに相談できる場所を用意する */}
+        <button
+          onClick={onOpenShoppingConsult}
+          style={{
+            display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left",
+            padding: "11px 14px", marginBottom: 14, borderRadius: 12, cursor: "pointer",
+            border: `1px solid ${tokens.line}`, background: "transparent", color: tokens.inkSoft, fontSize: 13,
+          }}
+        >
+          <span style={{ fontSize: 16 }}>🛒</span> 買い物を相談する
+        </button>
+
         {/* 今日の続き：数字を並べたままにせず、聞かれたら答える形にする */}
         {!showContinuation ? (
           <button

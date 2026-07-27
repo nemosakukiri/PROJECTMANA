@@ -382,6 +382,100 @@ async function main() {
     const companionValue = await page.evaluate(() => document.querySelector('input[placeholder="例：執事、相棒、ネモ…"]')?.value);
     assert(companionValue === "執事", "設定画面にも決めた呼び名がそのまま表示されている");
 
+    step("買い物相談：ホーム画面に常設の固定導線がある（MVP_SPEC.md「複数周期の統合判断」）");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "calendar",
+        shoppingBudget: 20000, shoppingBalance: 12000, nextShoppingDate: "7月25日",
+        recurringItems: [{ id: "rec_food", name: "食料品", amount: 6000 }, { id: "rec_tobacco", name: "タバコ", amount: 3000 }],
+        itemsToAdd: [],
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("買い物を相談する"), "カレンダー画面に「買い物を相談する」の固定導線がある");
+    await clickButtonContaining(page, "買い物を相談する");
+    await page.waitForTimeout(200);
+    state = await getState(page);
+    assert(state.screen === "shoppingConsult", "買い物相談の画面が開く");
+
+    step("買い物相談：今回追加したいものを入れると、バトラーが決まって買うものを見渡して見立てを返す");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("執事："), "決めた呼び名でバトラーが語りかけている");
+    await page.fill('input[placeholder="例：コーヒー"]', "コーヒー");
+    await page.fill('input[placeholder="金額"] >> nth=1', "500");
+    await page.click('button:has-text("追加") >> nth=1');
+    await page.waitForTimeout(200);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("安心してお買い物できそうです"), "無理のない金額なら、安心して進めてよいという見立てを返す");
+
+    step("買い物相談：判断は断定せず、求めれば1タップで根拠の数字にたどり着ける（隠すが、消さない）");
+    await clickButtonContaining(page, "根拠を見る");
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("決まって買うものの合計"), "根拠となる支出の内訳が確認できる");
+
+    step("買い物相談：決まって買うものを圧迫する金額を追加すると、見立てが慎重な言い方に変わる");
+    await page.fill('input[placeholder="例：コーヒー"]', "大きな買い物");
+    await page.fill('input[placeholder="金額"] >> nth=1', "50000");
+    await page.click('button:has-text("追加") >> nth=1');
+    await page.waitForTimeout(200);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("少し足りなくなるかもしれません"), "無理のある金額には、断定せず見直しを促す言い方で返す");
+
+    step("買い物相談：入力した内容はリロード後も残っている");
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("コーヒー") && bodyText.includes("大きな買い物"), "リロード後も追加したい品目が残っている");
+
+    step("買い物リスト：相談で決めた内容から、お店で見るためのリストが生成される");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "shoppingConsult",
+        itemsToAdd: [{ id: "add_peach", name: "桃", price: 500 }],
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    await clickButtonContaining(page, "買い物リストを作る");
+    await page.waitForTimeout(200);
+    state = await getState(page);
+    assert(state.screen === "shoppingList", "買い物リスト画面が開く");
+    assert(state.shoppingListItems.length === 3, "決まって買うもの＋今回追加したいものがそのままリストになる（食料品・タバコ・桃）");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("いつもの買い物") && bodyText.includes("今回追加"), "リストは「いつもの買い物」と「今回追加」に分かれている");
+
+    step("買い物リスト：お店で無かったものはチェックを外すだけで見送れる");
+    await page.evaluate(() => {
+      const row = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("桃"));
+      row?.click();
+    });
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(state.shoppingListItems.find((i) => i.name === "桃").checked === false, "チェックを外した桃は「見送り」として残る（削除しない）");
+
+    step("買い物リスト：お店でひらめいたものを追加すると、その場で見立てが更新される");
+    await page.fill('input[placeholder="例：ぶどう"]', "ぶどう");
+    await page.fill('input[placeholder="金額"]', "400");
+    await clickButtonWithText(page, "追加");
+    await page.waitForTimeout(200);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ぶどう"), "追加したぶどうがリストに反映される");
+    assert(bodyText.includes("安心してお買い物できそうです"), "桃を見送った分、ぶどうを追加しても見立ては安心できる範囲のまま");
+
+    step("買い物リスト：チェックの状態も、追加した品目も、リロード後に残っている");
+    await page.reload();
+    await page.waitForTimeout(300);
+    state = await getState(page);
+    const peach = state.shoppingListItems.find((i) => i.name === "桃");
+    const grape = state.shoppingListItems.find((i) => i.name === "ぶどう");
+    assert(peach && peach.checked === false, "リロード後も桃のチェックは外れたまま");
+    assert(grape && grape.checked === true, "リロード後もひらめいて追加したぶどうが残っている");
+
     console.log(`\n=== 完了: ${stepCount}ステップ中、失敗 ${failed}件 ===`);
   } finally {
     await browser.close();
