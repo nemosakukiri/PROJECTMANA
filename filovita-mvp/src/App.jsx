@@ -156,12 +156,20 @@ export default function App() {
     setRecurringItems((prev) => prev.filter((i) => i.id !== id));
   }
 
+  function handleEditRecurringItemAmount(id, amount) {
+    setRecurringItems((prev) => prev.map((i) => i.id === id ? { ...i, amount } : i));
+  }
+
   function handleAddItemToAdd(item) {
     setItemsToAdd((prev) => [...prev, { id: makeId("add"), ...item }]);
   }
 
   function handleRemoveItemToAdd(id) {
     setItemsToAdd((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  function handleEditItemToAddPrice(id, price) {
+    setItemsToAdd((prev) => prev.map((i) => i.id === id ? { ...i, price } : i));
   }
 
   function handleGenerateShoppingList() {
@@ -259,8 +267,10 @@ export default function App() {
             onChangeNextShoppingDate={setNextShoppingDate}
             onAddRecurringItem={handleAddRecurringItem}
             onRemoveRecurringItem={handleRemoveRecurringItem}
+            onEditRecurringItemAmount={handleEditRecurringItemAmount}
             onAddItemToAdd={handleAddItemToAdd}
             onRemoveItemToAdd={handleRemoveItemToAdd}
+            onEditItemToAddPrice={handleEditItemToAddPrice}
             onGenerateList={handleGenerateShoppingList}
             onBack={() => setScreen("calendar")}
           />

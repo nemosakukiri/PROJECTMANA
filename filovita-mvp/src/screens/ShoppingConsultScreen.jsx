@@ -5,7 +5,7 @@ import { computeShoppingJudgment } from "../lib/shoppingJudgment.js";
 
 const JUDGMENT_EMOJI = { empty: "🛒", ok: "🙂", tight: "🤔", over: "😟" };
 
-function ItemListEditor({ tokens, items, onAdd, onRemove, amountKey, namePlaceholder, addLabel }) {
+function ItemListEditor({ tokens, items, onAdd, onRemove, onEditAmount, amountKey, namePlaceholder, addLabel }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
 
@@ -29,8 +29,13 @@ function ItemListEditor({ tokens, items, onAdd, onRemove, amountKey, namePlaceho
               }}
             >
               <span style={{ fontSize: 13.5, color: tokens.ink }}>{item.name}</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 13, color: tokens.inkSoft }}>¥{Number(item[amountKey]).toLocaleString()}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 13, color: tokens.inkFaint }}>¥</span>
+                <input
+                  type="number" value={item[amountKey]}
+                  onChange={(e) => onEditAmount(item.id, e.target.value === "" ? 0 : Number(e.target.value))}
+                  style={{ width: 72, padding: "5px 7px", fontSize: 13, borderRadius: 7, border: `1px solid ${tokens.line}`, color: tokens.inkSoft, textAlign: "right", fontFamily: "inherit" }}
+                />
                 <button
                   onClick={() => onRemove(item.id)}
                   style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer", padding: 2 }}
@@ -71,8 +76,8 @@ export default function ShoppingConsultScreen({
   budget, balance, nextShoppingDate,
   recurringItems, itemsToAdd,
   onChangeBudget, onChangeBalance, onChangeNextShoppingDate,
-  onAddRecurringItem, onRemoveRecurringItem,
-  onAddItemToAdd, onRemoveItemToAdd,
+  onAddRecurringItem, onRemoveRecurringItem, onEditRecurringItemAmount,
+  onAddItemToAdd, onRemoveItemToAdd, onEditItemToAddPrice,
   onGenerateList,
   onBack,
 }) {
@@ -123,6 +128,7 @@ export default function ShoppingConsultScreen({
         </div>
         <ItemListEditor
           tokens={tokens} items={recurringItems} onAdd={onAddRecurringItem} onRemove={onRemoveRecurringItem}
+          onEditAmount={onEditRecurringItemAmount}
           amountKey="amount" namePlaceholder="例：食料品、タバコ" addLabel="追加"
         />
 
@@ -131,6 +137,7 @@ export default function ShoppingConsultScreen({
         </div>
         <ItemListEditor
           tokens={tokens} items={itemsToAdd} onAdd={onAddItemToAdd} onRemove={onRemoveItemToAdd}
+          onEditAmount={onEditItemToAddPrice}
           amountKey="price" namePlaceholder="例：コーヒー" addLabel="追加"
         />
 

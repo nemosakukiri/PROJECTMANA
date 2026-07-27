@@ -401,6 +401,14 @@ async function main() {
     state = await getState(page);
     assert(state.screen === "shoppingConsult", "買い物相談の画面が開く");
 
+    step("買い物相談：決まって買うものの金額も、固定値ではなく自由に書き換えられる");
+    await page.fill('input[type=number] >> nth=2', "9000");
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(state.recurringItems.find((i) => i.name === "食料品")?.amount === 9000, "食料品の金額をその場で書き換えられる（削除して作り直す必要がない）");
+    await page.fill('input[type=number] >> nth=2', "6000");
+    await page.waitForTimeout(150);
+
     step("買い物相談：今回追加したいものを入れると、バトラーが決まって買うものを見渡して見立てを返す");
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("執事："), "決めた呼び名でバトラーが語りかけている");
