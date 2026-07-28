@@ -242,16 +242,30 @@ MVPでは以下の二段構えとする。
 「今は相談に答えられませんでした」とだけ伝えて落ちる（クラッシュしない）
 ことをPlaywrightで確認済み。
 
-デプロイ状況（2026-07-28更新）：Vercelプロジェクト`filovita-mvp`をGitHub
-（`nemosakukiri/PROJECTMANA`、Root Directory `filovita-mvp`、ブランチ
-`claude/init-19boeh`）に接続し、`ANTHROPIC_API_KEY`を環境変数として設定
-（Root Directoryが`./`のままになっていて`vite: command not found`で
-初回ビルドが失敗、`filovita-mvp`に修正済み——実際に起きた不具合として
-記録しておく）
-済み（利用者側で完了）。Vercel側にDeployment Protectionがかかっており、
-このセッションのツールからは応答確認ができない（403が返る＝存在はして
-いるが中身は見えない）ため、実際にAnthropic APIを呼んで応答する経路が
-動いているかどうかの最終確認は、利用者のブラウザで行う。
+デプロイ状況（2026-07-28更新・動作確認済み）：Vercelプロジェクト
+`filovita-mvp`をGitHub（`nemosakukiri/PROJECTMANA`、Root Directory
+`filovita-mvp`、ブランチ`claude/init-19boeh`）に接続し、
+`ANTHROPIC_API_KEY`を環境変数として設定済み。実際に買い物相談の自由
+入力欄からバトラーに話しかけ、Anthropic APIを呼んだ本物の返事が返って
+くることを利用者のブラウザで確認済み——MVP_SPEC.md「相談は往復である」
+のC案（Filovitaの生活データを土台にAIが考えて返す）が、モックではなく
+実際に動いている。
+
+デプロイまでに実際に踏んだ不具合と修正（記録）：
+
+1. Vercelプロジェクトの Root Directory が `./`（リポジトリ直下）のままで、
+   `filovita-mvp`配下の`package.json`が見つからず`vite: command not found`
+   でビルド失敗 → Root Directoryを`filovita-mvp`に修正
+2. `vite.config.js`の`base`がGitHub Pages専用の絶対パス（`/PROJECTMANA/`）
+   固定になっていて、ドメイン直下で配信されるVercel上ではJSファイルが
+   404し画面が真っ白になった → 相対パス（`./`）に変更し、GitHub Pages・
+   Vercelの両方で同じビルドが動くようにした
+
+まだ残っている作業：このデプロイはブランチ専用のプレビューURL
+（`filovita-mvp-git-claude-init-19boeh-mana-projects.vercel.app`）に
+反映されている状態。短い本番URL（`filovita-mvp.vercel.app`）に反映する
+には、VercelのProject Settings → Git → Production Branchを
+`claude/init-19boeh`に設定する必要がある（未確認）。
 
 ## 「入力」より「観察」(2026-07-26 追記・将来方針)
 
