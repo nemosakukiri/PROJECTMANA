@@ -111,6 +111,17 @@ function ShoppingChat({ tokens, speaker, chatHistory, onAppendChatMessage, conte
       <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
         {speaker}に自由に相談する
       </div>
+      {/* MVP_SPEC.md「相談は往復である」：開発・テスト中は無料枠のAIを使うため、
+          実データを送る前に必ず分かるよう常時表示する。本番運用に切り替えたら外す。 */}
+      <div
+        style={{
+          fontSize: 11, color: tokens.inkFaint, background: tokens.card,
+          border: `1px dashed ${tokens.line}`, borderRadius: 8, padding: "6px 10px", marginBottom: 10,
+        }}
+        data-testid="shopping-chat-test-notice"
+      >
+        🧪 現在はテスト運用中の会話機能です
+      </div>
       {chatHistory.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
           {chatHistory.map((m, i) => (

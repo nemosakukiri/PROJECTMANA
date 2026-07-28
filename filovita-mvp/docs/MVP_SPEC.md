@@ -271,6 +271,52 @@ MVPでは以下の二段構えとする。
 には、VercelのProject Settings → Git → Production Branchを
 `claude/init-19boeh`に設定する必要がある（未確認）。
 
+## AIプロバイダの切り替え（2026-07-28追記）
+
+Anthropic APIは有料（従量課金）であり、開発・テスト段階でのAnthropicの
+クレジット切れ（`Your credit balance is too low`）を実際に経験した。
+これを受け、`api/shopping-chat.js`をプロバイダ非依存の構造に書き直した。
+Anthropic実装は削除せず、Gemini APIの無料枠を追加してどちらでも動く
+ようにしてある。
+
+### 環境変数
+
+| 変数名 | 用途 |
+|---|---|
+| `AI_PROVIDER` | `"gemini"` または `"anthropic"`。未設定時は`anthropic`扱い |
+| `ANTHROPIC_API_KEY` | Anthropic使用時に必要 |
+| `GEMINI_API_KEY` | Gemini使用時に必要 |
+| `GEMINI_MODEL` | 省略可。既定値`gemini-2.0-flash` |
+
+開発・テスト中は`AI_PROVIDER=gemini`にし、無料枠で動かす。本番運用に
+進める際は`AI_PROVIDER=anthropic`（またはGeminiの有料枠に課金設定を
+足すだけ、コード変更は不要）に切り替える。
+
+### Gemini APIキーの取得手順（利用者向け）
+
+1. ブラウザで **aistudio.google.com** を開く
+2. Googleアカウントでログイン
+3. 左メニューの「Get API key」→「Create API key」
+4. 表示された鍵（`AIza...`という文字列）をコピー
+5. Vercelの`filovita-mvp`プロジェクト → Settings → Environment Variables
+   で以下の2つを追加（どちらもProduction/Preview/Development全部に
+   チェック）：
+   - Key: `AI_PROVIDER` / Value: `gemini`
+   - Key: `GEMINI_API_KEY` / Value: 手順4でコピーした鍵
+
+Googleの無料枠はクレジットカード登録なしで使える。ただし無料枠は入力
+内容がモデル改善に利用される規約になっている点に注意（開発・テスト段階
+のダミーデータであれば問題ないが、実データを本格的に流す前には有料枠へ
+の切り替えを検討すること）。
+
+### テスト運用中である旨の画面表示
+
+実データを無料枠へ送る前に気づけるよう、`ShoppingConsultScreen`の
+自由入力チャット欄には「🧪 現在はテスト運用中の会話機能です」という
+表示を常時出すようにした（`data-testid="shopping-chat-test-notice"`）。
+本番運用に切り替える判断をしたタイミングで、この表示を外すか、
+プロバイダに応じた出し分けに変更すること。
+
 ## 「入力」より「観察」(2026-07-26 追記・将来方針)
 
 Filovitaの思想には、テキスト入力よりも写真のほうが合っている。

@@ -442,6 +442,7 @@ async function main() {
     step("買い物相談：決まった選択肢だけでなく、自由に打ち込んで相談できる（MVP_SPEC.md「相談は往復である」）");
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("に自由に相談する"), "自由入力の相談欄がある");
+    assert(bodyText.includes("テスト運用中"), "実データを送る前に、テスト運用中であることが画面に常に表示されている");
     await page.fill('input[placeholder="例：桃が半額だから追加したい"]', "桃が半額だったんだけど、どうしよう");
     await clickButtonWithText(page, "送る");
     await page.waitForTimeout(1000);

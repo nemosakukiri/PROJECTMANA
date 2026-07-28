@@ -1,7 +1,12 @@
 /* 買い物相談の本物の会話窓口。ルールベースの判定(lib/shoppingJudgment.js)とは別に、
    自由入力に対して実際に考えて答える。MVP_SPEC.md「相談は往復である：診断ではなく会話」
    に基づく——「判断する」ではなく「一緒に考える」プロンプトにすること。
-   APIキーはここ(サーバー側)だけで扱い、クライアントには一切渡さない。 */
+   APIキーはここ(サーバー側)だけで扱い、クライアントには一切渡さない。
+
+   プロバイダはAI_PROVIDER環境変数で切り替える（"gemini" | "anthropic"、
+   未設定時は"anthropic"）。開発・テスト中はGeminiの無料枠を使い、実運用に
+   進める際はAnthropicまたはGeminiの有料枠にコードを変更せず切り替えられる
+   ようにしている。Anthropic実装は削除せず両方を残す。 */
 
 const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の中で暮らしに寄り添う「バトラー」です。
 利用者から買い物についての自由な相談を受けます。以下を必ず守ってください。
@@ -47,6 +52,83 @@ function applyCors(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 }
 
+async function callAnthropic({ systemPrompt, messages }) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return { error: "サーバー側にAPIキーが設定されていません（管理者向け：ANTHROPIC_API_KEYを設定してください）", status: 503 };
+  }
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 400,
+      system: systemPrompt,
+      messages,
+    }),
+  });
+
+  if (!response.ok) {
+    const errBody = await response.text();
+    console.error("Anthropic API error:", response.status, errBody);
+    return { error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。", status: 502 };
+  }
+
+  const data = await response.json();
+  const reply = data.content?.find((block) => block.type === "text")?.text?.trim();
+  if (!reply) {
+    return { error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。", status: 502 };
+  }
+  return { reply };
+}
+
+async function callGemini({ systemPrompt, messages }) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return { error: "サーバー側にAPIキーが設定されていません（管理者向け：GEMINI_API_KEYを設定してください）", status: 503 };
+  }
+
+  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  // AnthropicのassistantロールはGeminiでは"model"
+  const contents = messages.map((m) => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: [{ text: m.content }],
+  }));
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents,
+        generationConfig: { maxOutputTokens: 400 },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errBody = await response.text();
+    console.error("Gemini API error:", response.status, errBody);
+    return { error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。", status: 502 };
+  }
+
+  const data = await response.json();
+  const reply = data.candidates?.[0]?.content?.parts?.find((p) => p.text)?.text?.trim();
+  if (!reply) {
+    return { error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。", status: 502 };
+  }
+  return { reply };
+}
+
+const PROVIDERS = { anthropic: callAnthropic, gemini: callGemini };
+
 export default async function handler(req, res) {
   applyCors(req, res);
   if (req.method === "OPTIONS") {
@@ -58,17 +140,14 @@ export default async function handler(req, res) {
     return;
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    res.status(503).json({ error: "サーバー側にAPIキーが設定されていません（管理者向け：ANTHROPIC_API_KEYを設定してください）" });
-    return;
-  }
-
   const { message, history = [], context = {} } = req.body || {};
   if (!message || typeof message !== "string") {
     res.status(400).json({ error: "message が必要です" });
     return;
   }
+
+  const provider = process.env.AI_PROVIDER === "gemini" ? "gemini" : "anthropic";
+  const call = PROVIDERS[provider];
 
   const messages = [
     ...history
@@ -79,35 +158,15 @@ export default async function handler(req, res) {
   ];
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 400,
-        system: `${SYSTEM_PROMPT}\n\n${buildContextBlock(context)}`,
-        messages,
-      }),
+    const result = await call({
+      systemPrompt: `${SYSTEM_PROMPT}\n\n${buildContextBlock(context)}`,
+      messages,
     });
-
-    if (!response.ok) {
-      const errBody = await response.text();
-      console.error("Anthropic API error:", response.status, errBody);
-      res.status(502).json({ error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。" });
+    if (result.error) {
+      res.status(result.status).json({ error: result.error });
       return;
     }
-
-    const data = await response.json();
-    const reply = data.content?.find((block) => block.type === "text")?.text?.trim();
-    if (!reply) {
-      res.status(502).json({ error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。" });
-      return;
-    }
-    res.status(200).json({ reply });
+    res.status(200).json({ reply: result.reply, provider });
   } catch (err) {
     console.error("shopping-chat handler error:", err);
     res.status(500).json({ error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。" });
