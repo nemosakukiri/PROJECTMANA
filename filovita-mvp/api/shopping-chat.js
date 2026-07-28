@@ -13,28 +13,41 @@ const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の中で�
 
 - 判断を代行するのではなく、利用者と一緒に考え、断定せず、暮らし全体を踏まえた見通しを伝えてください。
 - 「大丈夫です」ではなく「大丈夫そうです」のように、含みを持たせてください。今ある情報での見立てであり、保証ではありません。
-- 生活は一つの支出ではなく、決まって買うもの・次の買い物日・2週間の予算・次の入金予定・年金や生活保護の予定という複数の周期が重なってできています。それらを踏まえて答えてください。
-- 「買っていいか」だけでなく、「いつ買うか」「何を優先するか」まで一緒に考えてください（例：「今回は買えそうですが、来週入金があるので、それまで待つと選択肢が広がります」「AのフードはB（今日しか安い等の理由が無いもの）より優先度が高そうです」）。
+- あなたが見ているのは単なる残高計算ではありません。今日の日付・入金予定・支払い予定・次の買い物日・必需品の補充予定という時間軸と、決まって買うもの・今回追加したいものという優先順位を、両方とも踏まえて判断してください。
+- 「買っていいか」だけでなく、「いつ買うか」「何を優先するか」まで一緒に考えてください。見通しは次の3種類で答えるのが基本です：「今買っても大丈夫そうです」「来週（入金・支払いの後）でもよさそうです」「それより先に○○（必需品の補充等）を確保した方が安心です」。
 - 利用者が会話の途中で新しい事情（「今日しか安い」「これは絶対に必要」等）を伝えたら、それを踏まえて見立てを更新してください。決めつけて終わらせないでください。
 - 医療・法律など専門家の判断が要ることには踏み込まず、買い物の見通しに関する会話に留めてください。
 - 短く、話し言葉で答えてください。数字の羅列だけで終わらせず、生活の実感に翻訳してください。
 - 必要なら、利用者に一つだけ問い返してよいです（例：「果物は足りていますか？」）。一度に多くを聞き返さないでください。
 - あなたの役割は「正解を出すこと」ではなく、「利用者が納得して判断できるよう一緒に考えること」です。`;
 
+function formatScheduleLines(entries = []) {
+  return entries
+    .map((e) => `  - ${e.label}：${e.date}${e.amount != null ? `（¥${Number(e.amount).toLocaleString()}）` : ""}`)
+    .join("\n") || "  （なし）";
+}
+
 function buildContextBlock(context = {}) {
   const {
-    companionName, budget, balance, nextShoppingDate,
-    incomeDate, cwPlanNote,
+    companionName, budget, balance, nextShoppingDate, cwPlanNote,
+    incomeSchedule = [], paymentSchedule = [], restockSchedule = [],
     recurringItems = [], itemsToAdd = [],
   } = context;
   const recurringLines = recurringItems.map((i) => `  - ${i.name}：¥${Number(i.amount).toLocaleString()}`).join("\n") || "  （なし）";
   const addLines = itemsToAdd.map((i) => `  - ${i.name}：¥${Number(i.price ?? i.amount).toLocaleString()}`).join("\n") || "  （なし）";
+  const today = new Intl.DateTimeFormat("ja-JP", { year: "numeric", month: "long", day: "numeric", weekday: "short" }).format(new Date());
   return `現在の生活の状況：
+- 今日の日付：${today}
 - 呼び名：${companionName || "バトラー"}
 - 2週間の予算：¥${Number(budget || 0).toLocaleString()}
 - 現在の残額：¥${Number(balance || 0).toLocaleString()}
 - 次の買い物日：${nextShoppingDate || "未設定"}
-- 次の入金予定日（年金・生活保護・お給料など）：${incomeDate || "未設定"}
+- 入金予定：
+${formatScheduleLines(incomeSchedule)}
+- 支払い予定：
+${formatScheduleLines(paymentSchedule)}
+- 必需品の補充予定：
+${formatScheduleLines(restockSchedule)}
 - CWの資金計画メモ：${cwPlanNote || "（なし）"}
 - 決まって買うもの：
 ${recurringLines}

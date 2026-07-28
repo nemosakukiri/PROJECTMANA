@@ -72,6 +72,80 @@ function ItemListEditor({ tokens, items, onAdd, onRemove, onEditAmount, amountKe
   );
 }
 
+/* 「暮らしの予定」：入金・支払い・必需品の補充など、時間軸を持つ予定。
+   MVP_SPEC.md「Filovita内部に暮らしの予定を持つ」の実装——Google Calendar
+   連携を待たず、まずFilovita自身が時間軸を判断材料として持てるようにする。
+   showAmount=falseの場合（必需品の補充予定）は金額を持たない。 */
+function ScheduleListEditor({ tokens, items, onAdd, onRemove, namePlaceholder, showAmount = true }) {
+  const [label, setLabel] = useState("");
+  const [date, setDate] = useState("");
+  const [amount, setAmount] = useState("");
+
+  function submit() {
+    if (!label.trim() || !date.trim()) return;
+    const entry = { label: label.trim(), date: date.trim() };
+    if (showAmount && amount) entry.amount = Number(amount);
+    onAdd(entry);
+    setLabel("");
+    setDate("");
+    setAmount("");
+  }
+
+  return (
+    <div style={{ marginBottom: 22 }}>
+      {items.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+          {items.map((item) => (
+            <div
+              key={item.id}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "9px 12px", border: `1px solid ${tokens.line}`, borderRadius: 10,
+              }}
+            >
+              <span style={{ fontSize: 13.5, color: tokens.ink }}>{item.label}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 12.5, color: tokens.inkFaint }}>{item.date}</span>
+                {showAmount && item.amount != null && (
+                  <span style={{ fontSize: 13, color: tokens.inkSoft }}>¥{Number(item.amount).toLocaleString()}</span>
+                )}
+                <button
+                  onClick={() => onRemove(item.id)}
+                  style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer", padding: 2 }}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 6 }}>
+        <input
+          type="text" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={namePlaceholder}
+          style={{ flex: 1, padding: "9px 11px", fontSize: 13, borderRadius: 9, border: `1px solid ${tokens.line}`, fontFamily: "inherit" }}
+        />
+        <input
+          type="text" value={date} onChange={(e) => setDate(e.target.value)} placeholder="例：8月15日"
+          style={{ width: 90, padding: "9px 11px", fontSize: 13, borderRadius: 9, border: `1px solid ${tokens.line}`, fontFamily: "inherit" }}
+        />
+        {showAmount && (
+          <input
+            type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="金額(任意)"
+            style={{ width: 90, padding: "9px 11px", fontSize: 13, borderRadius: 9, border: `1px solid ${tokens.line}`, fontFamily: "inherit" }}
+          />
+        )}
+        <button
+          onClick={submit}
+          style={{ padding: "9px 14px", fontSize: 12.5, borderRadius: 9, border: "none", background: tokens.ink, color: tokens.paper, cursor: "pointer", whiteSpace: "nowrap" }}
+        >
+          追加
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* 自由入力の相談窓口。決まった選択肢の判定ではなく、実際にAIへ渡して
    考えて返す(api/shopping-chat.js)。MVP_SPEC.md「相談は往復である：
    診断ではなく会話」の実装——バックエンドが無い環境（GitHub Pages等）
@@ -173,8 +247,10 @@ function ShoppingChat({ tokens, speaker, chatHistory, onAppendChatMessage, conte
 export default function ShoppingConsultScreen({
   theme, companionName,
   budget, balance, nextShoppingDate,
-  incomeDate, cwPlanNote,
-  onChangeIncomeDate, onChangeCwPlanNote,
+  cwPlanNote, onChangeCwPlanNote,
+  incomeSchedule, onAddIncomeSchedule, onRemoveIncomeSchedule,
+  paymentSchedule, onAddPaymentSchedule, onRemovePaymentSchedule,
+  restockSchedule, onAddRestockSchedule, onRemoveRestockSchedule,
   recurringItems, itemsToAdd,
   onChangeBudget, onChangeBalance, onChangeNextShoppingDate,
   onAddRecurringItem, onRemoveRecurringItem, onEditRecurringItemAmount,
@@ -226,17 +302,30 @@ export default function ShoppingConsultScreen({
         </div>
 
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
-          暮らしの見通し（相談時に一緒に考える材料）
+          暮らしの予定（いつ・何が入るか。時間軸を一緒に考える材料）
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-          <label style={{ fontSize: 12, color: tokens.inkSoft }}>
-            次の入金予定日（年金・生活保護・お給料など）
-            <input
-              type="text" value={incomeDate} onChange={(e) => onChangeIncomeDate(e.target.value)}
-              placeholder="例：8月15日"
-              style={{ display: "block", width: "100%", marginTop: 5, padding: "9px 11px", fontSize: 14, borderRadius: 9, border: `1px solid ${tokens.line}`, boxSizing: "border-box", fontFamily: "inherit" }}
-            />
-          </label>
+        <p style={{ fontSize: 11, color: tokens.inkFaint, marginTop: 0, marginBottom: 10 }}>
+          入金予定
+        </p>
+        <ScheduleListEditor
+          tokens={tokens} items={incomeSchedule} onAdd={onAddIncomeSchedule} onRemove={onRemoveIncomeSchedule}
+          namePlaceholder="例：年金、お給料"
+        />
+        <p style={{ fontSize: 11, color: tokens.inkFaint, marginTop: 0, marginBottom: 10 }}>
+          支払い予定
+        </p>
+        <ScheduleListEditor
+          tokens={tokens} items={paymentSchedule} onAdd={onAddPaymentSchedule} onRemove={onRemovePaymentSchedule}
+          namePlaceholder="例：家賃、光熱費"
+        />
+        <p style={{ fontSize: 11, color: tokens.inkFaint, marginTop: 0, marginBottom: 10 }}>
+          必需品の補充予定
+        </p>
+        <ScheduleListEditor
+          tokens={tokens} items={restockSchedule} onAdd={onAddRestockSchedule} onRemove={onRemoveRestockSchedule}
+          namePlaceholder="例：犬のフード" showAmount={false}
+        />
+        <div style={{ marginBottom: 24 }}>
           <label style={{ fontSize: 12, color: tokens.inkSoft }}>
             CWの資金計画メモ（任意）
             <textarea
@@ -296,7 +385,10 @@ export default function ShoppingConsultScreen({
 
         <ShoppingChat
           tokens={tokens} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
-          context={{ companionName, budget, balance, nextShoppingDate, incomeDate, cwPlanNote, recurringItems, itemsToAdd }}
+          context={{
+            companionName, budget, balance, nextShoppingDate, cwPlanNote,
+            incomeSchedule, paymentSchedule, restockSchedule, recurringItems, itemsToAdd,
+          }}
         />
 
         {(recurringItems.length > 0 || itemsToAdd.length > 0) && (

@@ -54,8 +54,12 @@ export default function App() {
   const [shoppingBudget, setShoppingBudget] = useState(persisted?.shoppingBudget ?? 20000);
   const [shoppingBalance, setShoppingBalance] = useState(persisted?.shoppingBalance ?? 8500);
   const [nextShoppingDate, setNextShoppingDate] = useState(persisted?.nextShoppingDate ?? "7月25日");
-  // 「相談は往復である」：判定AIではなくバトラーとして、暮らし全体の見通しを踏まえる
-  const [incomeDate, setIncomeDate] = useState(persisted?.incomeDate ?? "");
+  // 「暮らしの予定」：Google Calendar連携を待たず、Filovita内部で時間軸を持つ
+  // （MVP_SPEC.md「まずFilovita内に暮らしの予定を持つ」）。判定AIではなく
+  // バトラーとして、いつ・何を優先するかまで一緒に考えるための材料。
+  const [incomeSchedule, setIncomeSchedule] = useState(persisted?.incomeSchedule ?? []);
+  const [paymentSchedule, setPaymentSchedule] = useState(persisted?.paymentSchedule ?? []);
+  const [restockSchedule, setRestockSchedule] = useState(persisted?.restockSchedule ?? []);
   const [cwPlanNote, setCwPlanNote] = useState(persisted?.cwPlanNote ?? "");
   const [recurringItems, setRecurringItems] = useState(persisted?.recurringItems ?? [
     { id: "rec_food", name: "食料品", amount: 6000 },
@@ -75,11 +79,11 @@ export default function App() {
   useEffect(() => {
     saveState({
       screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-      shoppingBudget, shoppingBalance, nextShoppingDate, incomeDate, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
+      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
     });
   }, [
     screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-    shoppingBudget, shoppingBalance, nextShoppingDate, incomeDate, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
+    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
   ]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -151,6 +155,30 @@ export default function App() {
       ...prev,
       [tagId]: { ...prev[tagId], references: prev[tagId].references.filter((r) => r.id !== refId) },
     }));
+  }
+
+  function handleAddIncomeSchedule(entry) {
+    setIncomeSchedule((prev) => [...prev, { id: makeId("income"), ...entry }]);
+  }
+
+  function handleRemoveIncomeSchedule(id) {
+    setIncomeSchedule((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  function handleAddPaymentSchedule(entry) {
+    setPaymentSchedule((prev) => [...prev, { id: makeId("payment"), ...entry }]);
+  }
+
+  function handleRemovePaymentSchedule(id) {
+    setPaymentSchedule((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  function handleAddRestockSchedule(entry) {
+    setRestockSchedule((prev) => [...prev, { id: makeId("restock"), ...entry }]);
+  }
+
+  function handleRemoveRestockSchedule(id) {
+    setRestockSchedule((prev) => prev.filter((i) => i.id !== id));
   }
 
   function handleAddRecurringItem(item) {
@@ -269,10 +297,17 @@ export default function App() {
             budget={shoppingBudget}
             balance={shoppingBalance}
             nextShoppingDate={nextShoppingDate}
-            incomeDate={incomeDate}
             cwPlanNote={cwPlanNote}
-            onChangeIncomeDate={setIncomeDate}
             onChangeCwPlanNote={setCwPlanNote}
+            incomeSchedule={incomeSchedule}
+            onAddIncomeSchedule={handleAddIncomeSchedule}
+            onRemoveIncomeSchedule={handleRemoveIncomeSchedule}
+            paymentSchedule={paymentSchedule}
+            onAddPaymentSchedule={handleAddPaymentSchedule}
+            onRemovePaymentSchedule={handleRemovePaymentSchedule}
+            restockSchedule={restockSchedule}
+            onAddRestockSchedule={handleAddRestockSchedule}
+            onRemoveRestockSchedule={handleRemoveRestockSchedule}
             recurringItems={recurringItems}
             itemsToAdd={itemsToAdd}
             onChangeBudget={setShoppingBudget}

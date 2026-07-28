@@ -401,12 +401,32 @@ async function main() {
     state = await getState(page);
     assert(state.screen === "shoppingConsult", "買い物相談の画面が開く");
 
+    step("買い物相談：Google Calendar連携を待たず、Filovita内部に「暮らしの予定」（入金・支払い・必需品補充）を持てる");
+    await page.fill('input[placeholder="例：年金、お給料"]', "生活保護費");
+    await page.fill('input[placeholder="例：8月15日"] >> nth=0', "8月5日");
+    await page.fill('input[placeholder="金額(任意)"] >> nth=0', "80000");
+    await page.click('button:has-text("追加") >> nth=0');
+    await page.waitForTimeout(150);
+    await page.fill('input[placeholder="例：家賃、光熱費"]', "家賃");
+    await page.fill('input[placeholder="例：8月15日"] >> nth=1', "8月1日");
+    await page.fill('input[placeholder="金額(任意)"] >> nth=1', "45000");
+    await page.click('button:has-text("追加") >> nth=1');
+    await page.waitForTimeout(150);
+    await page.fill('input[placeholder="例：犬のフード"]', "米");
+    await page.fill('input[placeholder="例：8月15日"] >> nth=2', "8月10日");
+    await page.click('button:has-text("追加") >> nth=2');
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(state.incomeSchedule.some((i) => i.label === "生活保護費" && i.date === "8月5日" && i.amount === 80000), "入金予定を追加できる");
+    assert(state.paymentSchedule.some((i) => i.label === "家賃" && i.date === "8月1日" && i.amount === 45000), "支払い予定を追加できる");
+    assert(state.restockSchedule.some((i) => i.label === "米" && i.date === "8月10日" && i.amount === undefined), "必需品の補充予定は金額を持たずに追加できる");
+
     step("買い物相談：決まって買うものの金額も、固定値ではなく自由に書き換えられる");
-    await page.fill('input[type=number] >> nth=2', "9000");
+    await page.fill('input[type=number] >> nth=4', "9000");
     await page.waitForTimeout(150);
     state = await getState(page);
     assert(state.recurringItems.find((i) => i.name === "食料品")?.amount === 9000, "食料品の金額をその場で書き換えられる（削除して作り直す必要がない）");
-    await page.fill('input[type=number] >> nth=2', "6000");
+    await page.fill('input[type=number] >> nth=4', "6000");
     await page.waitForTimeout(150);
 
     step("買い物相談：今回追加したいものを入れると、バトラーが決まって買うものを見渡して見立てを返す");
@@ -414,7 +434,7 @@ async function main() {
     assert(bodyText.includes("執事："), "決めた呼び名でバトラーが語りかけている");
     await page.fill('input[placeholder="例：コーヒー"]', "コーヒー");
     await page.fill('input[placeholder="金額"] >> nth=1', "500");
-    await page.click('button:has-text("追加") >> nth=1');
+    await page.click('button:has-text("追加") >> nth=4');
     await page.waitForTimeout(200);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("安心してお買い物できそうです"), "無理のない金額なら、安心して進めてよいという見立てを返す");
@@ -428,7 +448,7 @@ async function main() {
     step("買い物相談：決まって買うものを圧迫する金額を追加すると、見立てが慎重な言い方に変わる");
     await page.fill('input[placeholder="例：コーヒー"]', "大きな買い物");
     await page.fill('input[placeholder="金額"] >> nth=1', "50000");
-    await page.click('button:has-text("追加") >> nth=1');
+    await page.click('button:has-text("追加") >> nth=4');
     await page.waitForTimeout(200);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("少し足りなくなるかもしれません"), "無理のある金額には、断定せず見直しを促す言い方で返す");
@@ -438,6 +458,7 @@ async function main() {
     await page.waitForTimeout(300);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("コーヒー") && bodyText.includes("大きな買い物"), "リロード後も追加したい品目が残っている");
+    assert(bodyText.includes("生活保護費") && bodyText.includes("家賃") && bodyText.includes("米"), "リロード後も「暮らしの予定」（入金・支払い・必需品補充）が残っている");
 
     step("買い物相談：決まった選択肢だけでなく、自由に打ち込んで相談できる（MVP_SPEC.md「相談は往復である」）");
     bodyText = await page.evaluate(() => document.body.textContent);
