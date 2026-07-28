@@ -260,6 +260,10 @@ MVPでは以下の二段構えとする。
    固定になっていて、ドメイン直下で配信されるVercel上ではJSファイルが
    404し画面が真っ白になった → 相対パス（`./`）に変更し、GitHub Pages・
    Vercelの両方で同じビルドが動くようにした
+3. `ANTHROPIC_API_KEY`が実は一度も保存されていなかった（Environment
+   Variables一覧が空のままだった）ため、実際の会話は503で失敗し続けて
+   いた → 利用者が`ANTHROPIC_API_KEY`をProduction/Preview/Development
+   全環境に設定して解決
 
 まだ残っている作業：このデプロイはブランチ専用のプレビューURL
 （`filovita-mvp-git-claude-init-19boeh-mana-projects.vercel.app`）に
