@@ -245,6 +245,9 @@ MVPでは以下の二段構えとする。
 デプロイ状況（2026-07-28更新）：Vercelプロジェクト`filovita-mvp`をGitHub
 （`nemosakukiri/PROJECTMANA`、Root Directory `filovita-mvp`、ブランチ
 `claude/init-19boeh`）に接続し、`ANTHROPIC_API_KEY`を環境変数として設定
+（Root Directoryが`./`のままになっていて`vite: command not found`で
+初回ビルドが失敗、`filovita-mvp`に修正済み——実際に起きた不具合として
+記録しておく）
 済み（利用者側で完了）。Vercel側にDeployment Protectionがかかっており、
 このセッションのツールからは応答確認ができない（403が返る＝存在はして
 いるが中身は見えない）ため、実際にAnthropic APIを呼んで応答する経路が
