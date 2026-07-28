@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// GitHub Pagesはリポジトリ名配下（/PROJECTMANA/）で配信されるため、
-// ビルド時のみbaseを合わせる。開発サーバーには影響させない。
+// GitHub Pages（/PROJECTMANA/配下）とVercel（ドメイン直下）の両方で
+// 同じビルドが動くよう、相対パスにする。開発サーバーには影響させない。
 export default defineConfig(({ command }) => ({
   plugins: [react()],
-  base: command === "build" ? "/PROJECTMANA/" : "/",
+  base: command === "build" ? "./" : "/",
 }));
