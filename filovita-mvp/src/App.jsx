@@ -54,6 +54,9 @@ export default function App() {
   const [shoppingBudget, setShoppingBudget] = useState(persisted?.shoppingBudget ?? 20000);
   const [shoppingBalance, setShoppingBalance] = useState(persisted?.shoppingBalance ?? 8500);
   const [nextShoppingDate, setNextShoppingDate] = useState(persisted?.nextShoppingDate ?? "7月25日");
+  // 「相談は往復である」：判定AIではなくバトラーとして、暮らし全体の見通しを踏まえる
+  const [incomeDate, setIncomeDate] = useState(persisted?.incomeDate ?? "");
+  const [cwPlanNote, setCwPlanNote] = useState(persisted?.cwPlanNote ?? "");
   const [recurringItems, setRecurringItems] = useState(persisted?.recurringItems ?? [
     { id: "rec_food", name: "食料品", amount: 6000 },
     { id: "rec_tobacco", name: "タバコ", amount: 3000 },
@@ -72,11 +75,11 @@ export default function App() {
   useEffect(() => {
     saveState({
       screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-      shoppingBudget, shoppingBalance, nextShoppingDate, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
+      shoppingBudget, shoppingBalance, nextShoppingDate, incomeDate, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
     });
   }, [
     screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-    shoppingBudget, shoppingBalance, nextShoppingDate, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
+    shoppingBudget, shoppingBalance, nextShoppingDate, incomeDate, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
   ]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -266,6 +269,10 @@ export default function App() {
             budget={shoppingBudget}
             balance={shoppingBalance}
             nextShoppingDate={nextShoppingDate}
+            incomeDate={incomeDate}
+            cwPlanNote={cwPlanNote}
+            onChangeIncomeDate={setIncomeDate}
+            onChangeCwPlanNote={setCwPlanNote}
             recurringItems={recurringItems}
             itemsToAdd={itemsToAdd}
             onChangeBudget={setShoppingBudget}

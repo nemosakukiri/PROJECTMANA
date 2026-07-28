@@ -173,6 +173,8 @@ function ShoppingChat({ tokens, speaker, chatHistory, onAppendChatMessage, conte
 export default function ShoppingConsultScreen({
   theme, companionName,
   budget, balance, nextShoppingDate,
+  incomeDate, cwPlanNote,
+  onChangeIncomeDate, onChangeCwPlanNote,
   recurringItems, itemsToAdd,
   onChangeBudget, onChangeBalance, onChangeNextShoppingDate,
   onAddRecurringItem, onRemoveRecurringItem, onEditRecurringItemAmount,
@@ -219,6 +221,29 @@ export default function ShoppingConsultScreen({
               type="text" value={nextShoppingDate} onChange={(e) => onChangeNextShoppingDate(e.target.value)}
               placeholder="例：7月25日"
               style={{ display: "block", width: "100%", marginTop: 5, padding: "9px 11px", fontSize: 14, borderRadius: 9, border: `1px solid ${tokens.line}`, boxSizing: "border-box", fontFamily: "inherit" }}
+            />
+          </label>
+        </div>
+
+        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
+          暮らしの見通し（相談時に一緒に考える材料）
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+          <label style={{ fontSize: 12, color: tokens.inkSoft }}>
+            次の入金予定日（年金・生活保護・お給料など）
+            <input
+              type="text" value={incomeDate} onChange={(e) => onChangeIncomeDate(e.target.value)}
+              placeholder="例：8月15日"
+              style={{ display: "block", width: "100%", marginTop: 5, padding: "9px 11px", fontSize: 14, borderRadius: 9, border: `1px solid ${tokens.line}`, boxSizing: "border-box", fontFamily: "inherit" }}
+            />
+          </label>
+          <label style={{ fontSize: 12, color: tokens.inkSoft }}>
+            CWの資金計画メモ（任意）
+            <textarea
+              value={cwPlanNote} onChange={(e) => onChangeCwPlanNote(e.target.value)}
+              placeholder="例：食費は1日1000円までで計画している"
+              rows={2}
+              style={{ display: "block", width: "100%", marginTop: 5, padding: "9px 11px", fontSize: 14, borderRadius: 9, border: `1px solid ${tokens.line}`, boxSizing: "border-box", fontFamily: "inherit", resize: "vertical" }}
             />
           </label>
         </div>
@@ -271,7 +296,7 @@ export default function ShoppingConsultScreen({
 
         <ShoppingChat
           tokens={tokens} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
-          context={{ companionName, budget, balance, nextShoppingDate, recurringItems, itemsToAdd }}
+          context={{ companionName, budget, balance, nextShoppingDate, incomeDate, cwPlanNote, recurringItems, itemsToAdd }}
         />
 
         {(recurringItems.length > 0 || itemsToAdd.length > 0) && (
