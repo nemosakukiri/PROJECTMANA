@@ -34,39 +34,3 @@ export function computeShoppingJudgment({ budget, balance, recurringItems, items
 
   return { recurringTotal, addTotal, reserved, remainingAfterAdd, safetyMargin, judgment, message };
 }
-
-/* 「今日の買い物」画面の最終見立て。相談の過程で出す暫定的な見立てとは違い、
-   利用者が「結局このまま買っていいの？」に迷わず答えられる、断定的な結論を返す。
-   go：この内容で行っていい／remove：これを外せば行ける／skip：今日は見送るべき。 */
-export function computeFinalVerdict({ budget, balance, recurringItems, itemsToAdd }) {
-  const recurringTotal = sumAmounts(recurringItems);
-  const addTotal = sumAmounts(itemsToAdd);
-  const reserved = balance - recurringTotal;
-  const remainingAfterAdd = reserved - addTotal;
-  const safetyMargin = Math.max(budget * 0.1, 1000);
-
-  if (recurringItems.length === 0 && itemsToAdd.length === 0) {
-    return { tone: "empty", message: "まだ何も選ばれていません。買うものを選ぶと、最終的な見立てをお伝えします。" };
-  }
-
-  if (reserved < 0) {
-    return { tone: "skip", message: "決まって買うものだけで予算を超えてしまいそうです。今日は見送りがおすすめです。" };
-  }
-
-  if (remainingAfterAdd < 0) {
-    // 今回追加したいものの中で最も金額が大きいものを外せば収まるかを見立てる
-    const priciest = [...itemsToAdd].sort(
-      (a, b) => (Number(b.amount ?? b.price) || 0) - (Number(a.amount ?? a.price) || 0)
-    )[0];
-    return {
-      tone: "remove",
-      message: priciest ? `今回は${priciest.name}を外した方が安心です。` : "今回はいくつか見送った方が安心です。",
-    };
-  }
-
-  if (remainingAfterAdd < safetyMargin) {
-    return { tone: "go", message: "この内容で買い物へ行って大丈夫そうです。ただ、次回までは少し余裕をみておくと安心です。" };
-  }
-
-  return { tone: "go", message: "この内容で買い物へ行って大丈夫そうです。" };
-}

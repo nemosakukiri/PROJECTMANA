@@ -331,6 +331,12 @@ export default function App() {
             companionName={companionName}
             budget={shoppingBudget}
             balance={shoppingBalance}
+            nextShoppingDate={nextShoppingDate}
+            cwPlanNote={cwPlanNote}
+            incomeSchedule={incomeSchedule}
+            paymentSchedule={paymentSchedule}
+            restockSchedule={restockSchedule}
+            chatHistory={shoppingChatHistory}
             items={shoppingListItems}
             onToggleItem={handleToggleShoppingListItem}
             onAddItem={handleAddShoppingListItem}

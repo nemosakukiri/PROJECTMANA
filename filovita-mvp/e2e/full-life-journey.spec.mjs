@@ -511,7 +511,48 @@ async function main() {
     assert(bodyText.includes("ぶどう"), "追加したぶどうがリストに反映される");
     assert(bodyText.includes("安心してお買い物できそうです"), "桃を見送った分、ぶどうを追加しても見立ては安心できる範囲のまま");
     assert(bodyText.includes("最終見立て"), "「今日の買い物」画面に最終見立ての見出しがある");
-    assert(bodyText.includes("この内容で買い物へ行って大丈夫そうです"), "無理のない内容なら、最終見立ては明確に「行って大丈夫」と結論を出す");
+    assert(bodyText.includes("テスト運用中の見立て機能"), "実データを送る前に、最終見立て機能もテスト運用中であることが常に表示されている");
+
+    step("買い物リスト：最終見立ては固定ルールのgo/remove/skipではなく、暮らしの予定を含む判断コンテキストをAIへ渡して生成する");
+    let capturedVerdictRequest = null;
+    await page.route("**/api/shopping-final-verdict", async (route) => {
+      capturedVerdictRequest = JSON.parse(route.request().postData());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          items: [
+            { name: "食料品", category: "now", reason: "在庫が少なくなってきているので" },
+            { name: "タバコ", category: "now", reason: "いつも通り" },
+            { name: "ぶどう", category: "later", reason: "今すぐでなくても大丈夫そうなので" },
+          ],
+          summary: "今日は食料品とタバコだけ買って、ぶどうは来週でも良さそうです。",
+        }),
+      });
+    });
+    await clickButtonContaining(page, "最終見立てを聞く");
+    await page.waitForTimeout(300);
+    assert(!!capturedVerdictRequest, "最終見立てボタンでAPIへリクエストが送られる");
+    assert(
+      capturedVerdictRequest.context.incomeSchedule.some((i) => i.label === "生活保護費"),
+      "リクエストのコンテキストに入金予定が含まれている（固定ルールでなく判断材料として渡す）"
+    );
+    assert(
+      capturedVerdictRequest.context.paymentSchedule.some((i) => i.label === "家賃"),
+      "リクエストのコンテキストに支払い予定が含まれている"
+    );
+    assert(capturedVerdictRequest.context.nextShoppingDate, "リクエストのコンテキストに次の買い物日が含まれている");
+    assert(Array.isArray(capturedVerdictRequest.history), "リクエストにこれまでの相談の会話履歴も含まれている");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("今買う") && bodyText.includes("来週でよい"), "AIの判断が品目ごとにカテゴリ分けして表示される（固定のgo/remove/skipではない）");
+    assert(bodyText.includes("今日は食料品とタバコだけ買って"), "全体を通した結論（AIが生成したsummary）も表示される");
+    await page.unroute("**/api/shopping-final-verdict");
+
+    step("買い物リスト：バックエンドが無い環境では、最終見立ても断定せず状況を伝えるだけに留める");
+    await clickButtonContaining(page, "最終見立てを聞く");
+    await page.waitForTimeout(500);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("聞けませんでした"), "バックエンドが無い環境では、固定ルールで代用せず正直に状況を伝える");
 
     step("買い物リスト：チェックの状態も、追加した品目も、リロード後に残っている");
     await page.reload();
@@ -521,41 +562,6 @@ async function main() {
     const grape = state.shoppingListItems.find((i) => i.name === "ぶどう");
     assert(peach && peach.checked === false, "リロード後も桃のチェックは外れたまま");
     assert(grape && grape.checked === true, "リロード後もひらめいて追加したぶどうが残っている");
-
-    step("買い物リスト：今回追加したいものが予算を圧迫するときは、外すべき品目を名指しで勧める");
-    await page.evaluate(() => {
-      localStorage.setItem("filovita-mvp-state", JSON.stringify({
-        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
-        screen: "shoppingList",
-        shoppingBudget: 20000, shoppingBalance: 12000,
-        shoppingListItems: [
-          { id: "rec_food", name: "食料品", amount: 6000, section: "usual", checked: true },
-          { id: "rec_tobacco", name: "タバコ", amount: 3000, section: "usual", checked: true },
-          { id: "add_tv", name: "テレビ", amount: 40000, section: "add", checked: true },
-        ],
-      }));
-    });
-    await page.reload();
-    await page.waitForTimeout(300);
-    bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("テレビを外した方が安心です"), "予算を圧迫する追加分があれば、外す品目を名指しで最終見立てに示す");
-
-    step("買い物リスト：決まって買うものだけで予算を超えるときは、見送りを勧める");
-    await page.evaluate(() => {
-      localStorage.setItem("filovita-mvp-state", JSON.stringify({
-        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
-        screen: "shoppingList",
-        shoppingBudget: 20000, shoppingBalance: 5000,
-        shoppingListItems: [
-          { id: "rec_food", name: "食料品", amount: 6000, section: "usual", checked: true },
-          { id: "rec_tobacco", name: "タバコ", amount: 3000, section: "usual", checked: true },
-        ],
-      }));
-    });
-    await page.reload();
-    await page.waitForTimeout(300);
-    bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("今日は見送りがおすすめです"), "決まって買うものだけで残額を超えるなら、最終見立てで見送りを明確に勧める");
 
     console.log(`\n=== 完了: ${stepCount}ステップ中、失敗 ${failed}件 ===`);
   } finally {

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
-import { computeShoppingJudgment, computeFinalVerdict } from "../lib/shoppingJudgment.js";
+import { computeShoppingJudgment } from "../lib/shoppingJudgment.js";
 
 const JUDGMENT_EMOJI = { empty: "🛒", ok: "🙂", tight: "🤔", over: "😟" };
-const VERDICT_EMOJI = { empty: "🛒", go: "✅", remove: "🤔", skip: "😟" };
 const SECTION_LABEL = { usual: "いつもの買い物", add: "今回追加" };
 const SECTION_EMOJI = { usual: "🛒", add: "⭐" };
+const CATEGORY_LABEL = { now: "今買う", later: "来週でよい", priority: "先に確保すべき", skip: "見送る" };
+const CATEGORY_EMOJI = { now: "🛒", later: "📅", priority: "⚠️", skip: "🙅" };
+const FINAL_VERDICT_API_URL = "/api/shopping-final-verdict";
 
 function ListRow({ tokens, item, onToggle }) {
   return (
@@ -36,12 +38,136 @@ function ListRow({ tokens, item, onToggle }) {
   );
 }
 
+/* 最終見立て：固定ルールでgo/remove/skipを決めるのではなく、Filovitaが
+   持っている判断材料（入金予定・支払い予定・必需品の補充予定・次の買い物日・
+   決まって買うもの・今回追加したいもの・CWの資金計画メモ・相談の会話履歴）を
+   ひとつのコンテキストとしてLLMに渡し、品目ごとに「今買う／来週でよい／
+   先に確保すべき／見送る」を判断してもらう(api/shopping-final-verdict.js)。
+   OCRやGoogle Calendar連携は、将来このコンテキストに材料を増やす入力手段として
+   後から足す——先にAIが判断できる器を作る。MVP_SPEC.md参照。 */
+function FinalVerdictPanel({
+  tokens, speaker, checkedItems,
+  companionName, budget, balance, nextShoppingDate, cwPlanNote,
+  incomeSchedule, paymentSchedule, restockSchedule, chatHistory,
+}) {
+  const [verdict, setVerdict] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function fetchVerdict() {
+    if (loading || checkedItems.length === 0) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(FINAL_VERDICT_API_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          history: chatHistory,
+          context: {
+            companionName, budget, balance, nextShoppingDate, cwPlanNote,
+            incomeSchedule, paymentSchedule, restockSchedule,
+            items: checkedItems.map((i) => ({ name: i.name, amount: i.amount, section: i.section })),
+          },
+        }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.items) {
+        // サーバーからの具体的な理由があればそのまま伝える（断定せず、起きたことを伝える）
+        setError(data?.error || "今は最終見立てを聞けませんでした。この環境ではまだこの機能が使えないかもしれません。");
+        return;
+      }
+      setVerdict(data);
+    } catch {
+      // fetch自体が失敗＝バックエンドに届いていない（ローカル開発環境やGitHub Pagesなど）
+      setError("今は最終見立てを聞けませんでした。この環境ではまだこの機能が使えないかもしれません。");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
+        🏁 最終見立て
+      </div>
+      <div
+        style={{
+          fontSize: 11, color: tokens.inkFaint, background: tokens.card,
+          border: `1px dashed ${tokens.line}`, borderRadius: 8, padding: "6px 10px", marginBottom: 10,
+        }}
+        data-testid="shopping-final-verdict-test-notice"
+      >
+        🧪 現在はテスト運用中の見立て機能です
+      </div>
+
+      <button
+        onClick={fetchVerdict}
+        disabled={loading || checkedItems.length === 0}
+        style={{
+          display: "block", width: "100%", padding: "12px 0", fontSize: 13.5, fontWeight: 600,
+          borderRadius: 12, border: "none", background: tokens.ink, color: tokens.paper,
+          cursor: loading || checkedItems.length === 0 ? "default" : "pointer",
+          opacity: loading || checkedItems.length === 0 ? 0.6 : 1, marginBottom: 12,
+        }}
+        data-testid="shopping-final-verdict-button"
+      >
+        {loading ? `${speaker}が考えています…` : `🔮 ${speaker}に最終見立てを聞く`}
+      </button>
+
+      {error && (
+        <p style={{ fontSize: 12, color: "#a3432a", marginBottom: 12 }} data-testid="shopping-final-verdict-error">
+          {error}
+        </p>
+      )}
+
+      {verdict && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }} data-testid="shopping-final-verdict-items">
+          {verdict.items.map((item, i) => (
+            <div
+              key={i}
+              style={{
+                padding: "10px 12px", borderRadius: 10,
+                background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: item.reason ? 4 : 0 }}>
+                <span style={{ fontSize: 15 }}>{CATEGORY_EMOJI[item.category]}</span>
+                <span style={{ fontSize: 13.5, color: tokens.ink, fontWeight: 600 }}>{item.name}</span>
+                <span style={{ fontSize: 11.5, color: tokens.inkFaint, marginLeft: "auto" }}>
+                  {CATEGORY_LABEL[item.category]}
+                </span>
+              </div>
+              {item.reason && (
+                <p style={{ margin: 0, fontSize: 12, color: tokens.inkSoft, lineHeight: 1.6 }}>{item.reason}</p>
+              )}
+            </div>
+          ))}
+          {verdict.summary && (
+            <div
+              style={{
+                padding: "14px 14px", borderRadius: 12, marginTop: 4,
+                background: tokens.accentBg || tokens.card, border: `1.5px solid ${tokens.ink}`,
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: tokens.ink, lineHeight: 1.8 }} data-testid="shopping-final-verdict-summary">
+                {speaker}：{verdict.summary}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* 買い物リスト：スーパーに着いたら、バトラーはもう相談相手ではなく
    秘書としてリストを渡す。チェックを外すだけで「見送り」を表現し、
    店頭でのひらめきの追加にもその場で見立てを返す(考える→買う、が
    地続きにつながる)。MVP_SPEC.md「複数周期の統合判断」参照。 */
 export default function ShoppingListScreen({
-  theme, companionName, budget, balance,
+  theme, companionName, budget, balance, nextShoppingDate, cwPlanNote,
+  incomeSchedule, paymentSchedule, restockSchedule, chatHistory,
   items, onToggleItem, onAddItem, onBack,
 }) {
   const { tokens } = theme;
@@ -52,7 +178,6 @@ export default function ShoppingListScreen({
   const checkedUsual = items.filter((i) => i.section === "usual" && i.checked);
   const checkedAdd = items.filter((i) => i.section === "add" && i.checked);
   const result = computeShoppingJudgment({ budget, balance, recurringItems: checkedUsual, itemsToAdd: checkedAdd });
-  const finalVerdict = computeFinalVerdict({ budget, balance, recurringItems: checkedUsual, itemsToAdd: checkedAdd });
 
   function submit() {
     if (!name.trim() || !amount) return;
@@ -107,7 +232,7 @@ export default function ShoppingListScreen({
 
         <div
           style={{
-            padding: "16px 16px 14px", borderRadius: 14, marginBottom: 14,
+            padding: "16px 16px 14px", borderRadius: 14, marginBottom: 20,
             background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
           }}
         >
@@ -119,32 +244,13 @@ export default function ShoppingListScreen({
           </div>
         </div>
 
-        {/* 最終見立て：「結局このまま買っていいの？」という利用者の迷いに
-            直接答える結論。買い物リストを作ることではなく、安心して買い物へ
-            行ける状態を作ることがFilovitaの目的——ここが最後の一言になる。 */}
-        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
-          🏁 最終見立て
-        </div>
-        <div
-          style={{
-            padding: "18px 16px", borderRadius: 14,
-            background: tokens.accentBg || tokens.card,
-            border: `1.5px solid ${finalVerdict.tone === "go" ? tokens.ink : "#a3432a"}`,
-          }}
-        >
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <span style={{ fontSize: 22, lineHeight: 1 }}>{VERDICT_EMOJI[finalVerdict.tone]}</span>
-            <p
-              style={{
-                margin: 0, fontSize: 14.5, fontWeight: 600, lineHeight: 1.8,
-                color: finalVerdict.tone === "go" ? tokens.ink : "#a3432a",
-              }}
-              data-testid="shopping-final-verdict"
-            >
-              {speaker}：{finalVerdict.message}
-            </p>
-          </div>
-        </div>
+        <FinalVerdictPanel
+          tokens={tokens} speaker={speaker} checkedItems={[...checkedUsual, ...checkedAdd]}
+          companionName={companionName} budget={budget} balance={balance}
+          nextShoppingDate={nextShoppingDate} cwPlanNote={cwPlanNote}
+          incomeSchedule={incomeSchedule} paymentSchedule={paymentSchedule} restockSchedule={restockSchedule}
+          chatHistory={chatHistory}
+        />
       </div>
     </div>
   );
