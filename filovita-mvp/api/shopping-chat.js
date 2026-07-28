@@ -76,6 +76,9 @@ async function callAnthropic({ systemPrompt, messages }) {
   if (!response.ok) {
     const errBody = await response.text();
     console.error("Anthropic API error:", response.status, errBody);
+    if (response.status === 429) {
+      return { error: "今は少し混み合っているようです。1分ほど待ってからもう一度お試しください。", status: 429 };
+    }
     return { error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。", status: 502 };
   }
 
@@ -116,6 +119,9 @@ async function callGemini({ systemPrompt, messages }) {
   if (!response.ok) {
     const errBody = await response.text();
     console.error("Gemini API error:", response.status, errBody);
+    if (response.status === 429) {
+      return { error: "今は少し混み合っているようです（無料枠の利用上限）。1分ほど待ってからもう一度お試しください。", status: 429 };
+    }
     return { error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。", status: 502 };
   }
 

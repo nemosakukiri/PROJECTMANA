@@ -96,10 +96,15 @@ function ShoppingChat({ tokens, speaker, chatHistory, onAppendChatMessage, conte
       });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.reply) {
-        throw new Error(data?.error || "この環境ではまだ相談に答えられないようです。");
+        // サーバーから具体的な理由が返ってきていれば、それをそのまま伝える
+        // （例：レート制限なら「少し待てば直る」と分かる文言）。断定せず、
+        // 起きたことをそのまま伝えるのがFilovitaの方針。
+        setError(data?.error || "今は相談に答えられませんでした。この環境ではまだ会話機能が使えないかもしれません。");
+        return;
       }
       onAppendChatMessage("assistant", data.reply);
     } catch {
+      // fetch自体が失敗＝バックエンドに届いていない（ローカル開発環境やGitHub Pagesなど）
       setError("今は相談に答えられませんでした。この環境ではまだ会話機能が使えないかもしれません。");
     } finally {
       setSending(false);
