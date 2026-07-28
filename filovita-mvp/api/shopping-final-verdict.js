@@ -8,7 +8,7 @@
    コンテキストへ材料を追加する入力手段として位置づける（MVP_SPEC.md参照）。
    AI呼び出しの共通部分はshopping-chat.jsと_lib/ai.jsを共有する。 */
 
-import { PROVIDERS, resolveProvider } from "./_lib/ai.js";
+import { callAI } from "./_lib/ai.js";
 import { applyCors } from "./_lib/cors.js";
 import { formatScheduleLines, todayLabel } from "./_lib/scheduleContext.js";
 
@@ -110,9 +110,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  const provider = resolveProvider();
-  const call = PROVIDERS[provider];
-
   const messages = [
     ...history
       .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
@@ -122,7 +119,7 @@ export default async function handler(req, res) {
   ];
 
   try {
-    const result = await call({ systemPrompt: SYSTEM_PROMPT, messages, maxTokens: 700 });
+    const result = await callAI({ systemPrompt: SYSTEM_PROMPT, messages, maxTokens: 700 });
     if (result.error) {
       res.status(result.status).json({ error: result.error });
       return;
@@ -133,7 +130,7 @@ export default async function handler(req, res) {
       res.status(502).json({ error: "バトラーの見立てをうまく読み取れませんでした。もう一度お試しください。" });
       return;
     }
-    res.status(200).json({ ...verdict, provider });
+    res.status(200).json({ ...verdict, provider: result.provider });
   } catch (err) {
     console.error("shopping-final-verdict handler error:", err);
     res.status(500).json({ error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。" });

@@ -85,6 +85,34 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 500 }) {
 
 export const PROVIDERS = { anthropic: callAnthropic, gemini: callGemini };
 
+const API_KEY_ENV = { anthropic: "ANTHROPIC_API_KEY", gemini: "GEMINI_API_KEY" };
+
 export function resolveProvider() {
   return process.env.AI_PROVIDER === "gemini" ? "gemini" : "anthropic";
+}
+
+/* AI_PROVIDER環境変数の設定ミスや、一方のプロバイダの請求停止・レート
+   制限で「バトラーが何も答えられない」状態になるのを避けるための備え。
+   主要プロバイダが失敗した場合、もう一方のAPIキーが設定されていれば
+   自動でそちらに切り替えて再試行する。両方失敗したら主要プロバイダの
+   エラーをそのまま返す（Anthropicのクレジット切れを実際に踏んだ経験を
+   踏まえた実装）。 */
+export async function callAI({ systemPrompt, messages, maxTokens = 500 }) {
+  const primary = resolveProvider();
+  const primaryResult = await PROVIDERS[primary]({ systemPrompt, messages, maxTokens });
+  if (!primaryResult.error) {
+    return { ...primaryResult, provider: primary };
+  }
+
+  const secondary = primary === "gemini" ? "anthropic" : "gemini";
+  if (!process.env[API_KEY_ENV[secondary]]) {
+    return { ...primaryResult, provider: primary };
+  }
+
+  console.error(`callAI: ${primary}が失敗したため${secondary}へ自動切り替え:`, primaryResult.error);
+  const secondaryResult = await PROVIDERS[secondary]({ systemPrompt, messages, maxTokens });
+  if (!secondaryResult.error) {
+    return { ...secondaryResult, provider: secondary };
+  }
+  return { ...primaryResult, provider: primary };
 }

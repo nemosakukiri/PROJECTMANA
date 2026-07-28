@@ -5,7 +5,7 @@
    （shopping-final-verdict.jsと共有。両者とも同じ「暮らしの予定」を
    判断材料として使うため、コンテキストの組み立て方も揃えている）。 */
 
-import { PROVIDERS, resolveProvider } from "./_lib/ai.js";
+import { callAI } from "./_lib/ai.js";
 import { applyCors } from "./_lib/cors.js";
 import { formatScheduleLines, todayLabel } from "./_lib/scheduleContext.js";
 
@@ -66,9 +66,6 @@ export default async function handler(req, res) {
     return;
   }
 
-  const provider = resolveProvider();
-  const call = PROVIDERS[provider];
-
   const messages = [
     ...history
       .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
@@ -78,7 +75,7 @@ export default async function handler(req, res) {
   ];
 
   try {
-    const result = await call({
+    const result = await callAI({
       systemPrompt: `${SYSTEM_PROMPT}\n\n${buildContextBlock(context)}`,
       messages,
     });
@@ -86,7 +83,7 @@ export default async function handler(req, res) {
       res.status(result.status).json({ error: result.error });
       return;
     }
-    res.status(200).json({ reply: result.reply, provider });
+    res.status(200).json({ reply: result.reply, provider: result.provider });
   } catch (err) {
     console.error("shopping-chat handler error:", err);
     res.status(500).json({ error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。" });
