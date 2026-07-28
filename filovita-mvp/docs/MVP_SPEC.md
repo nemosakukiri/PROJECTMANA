@@ -240,9 +240,15 @@ MVPでは以下の二段構えとする。
 `ShoppingConsultScreen.jsx`内の自由入力チャットUIは実装済み。バックエンドが
 無い環境（ローカルのVite開発サーバーやGitHub Pages）では、断定せず
 「今は相談に答えられませんでした」とだけ伝えて落ちる（クラッシュしない）
-ことをPlaywrightで確認済み。実際にAnthropic APIを呼んで応答する経路は、
-バックエンドのデプロイとAPIキーの設定が済んでからの検証が必要——
-これは次回セッション以降の課題として残す。
+ことをPlaywrightで確認済み。
+
+デプロイ状況（2026-07-26追記）：Vercelプロジェクト`filovita-mvp`をGitHub
+（`nemosakukiri/projectmana`、Root Directory `filovita-mvp`、ブランチ
+`claude/init-19boeh`）に接続し、`ANTHROPIC_API_KEY`を環境変数として設定
+済み（利用者側で完了）。Vercel側にDeployment Protectionがかかっており、
+このセッションのツールからは応答確認ができない（403が返る＝存在はして
+いるが中身は見えない）ため、実際にAnthropic APIを呼んで応答する経路が
+動いているかどうかの最終確認は、利用者のブラウザで行う。
 
 ## 「入力」より「観察」(2026-07-26 追記・将来方針)
 
