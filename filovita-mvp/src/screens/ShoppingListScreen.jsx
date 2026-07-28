@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
-import { computeShoppingJudgment } from "../lib/shoppingJudgment.js";
+import { computeShoppingJudgment, computeFinalVerdict } from "../lib/shoppingJudgment.js";
 
 const JUDGMENT_EMOJI = { empty: "🛒", ok: "🙂", tight: "🤔", over: "😟" };
+const VERDICT_EMOJI = { empty: "🛒", go: "✅", remove: "🤔", skip: "😟" };
 const SECTION_LABEL = { usual: "いつもの買い物", add: "今回追加" };
 const SECTION_EMOJI = { usual: "🛒", add: "⭐" };
 
@@ -51,6 +52,7 @@ export default function ShoppingListScreen({
   const checkedUsual = items.filter((i) => i.section === "usual" && i.checked);
   const checkedAdd = items.filter((i) => i.section === "add" && i.checked);
   const result = computeShoppingJudgment({ budget, balance, recurringItems: checkedUsual, itemsToAdd: checkedAdd });
+  const finalVerdict = computeFinalVerdict({ budget, balance, recurringItems: checkedUsual, itemsToAdd: checkedAdd });
 
   function submit() {
     if (!name.trim() || !amount) return;
@@ -105,7 +107,7 @@ export default function ShoppingListScreen({
 
         <div
           style={{
-            padding: "16px 16px 14px", borderRadius: 14,
+            padding: "16px 16px 14px", borderRadius: 14, marginBottom: 14,
             background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
           }}
         >
@@ -113,6 +115,33 @@ export default function ShoppingListScreen({
             <span style={{ fontSize: 20, lineHeight: 1 }}>{JUDGMENT_EMOJI[result.judgment]}</span>
             <p style={{ margin: 0, fontSize: 13.5, color: tokens.ink, lineHeight: 1.7 }} data-testid="shopping-list-judgment">
               {speaker}：{result.judgment === "empty" ? "チェックが入っている今の内容なら、見立てはいつでもここで確認できます。" : result.message}
+            </p>
+          </div>
+        </div>
+
+        {/* 最終見立て：「結局このまま買っていいの？」という利用者の迷いに
+            直接答える結論。買い物リストを作ることではなく、安心して買い物へ
+            行ける状態を作ることがFilovitaの目的——ここが最後の一言になる。 */}
+        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
+          🏁 最終見立て
+        </div>
+        <div
+          style={{
+            padding: "18px 16px", borderRadius: 14,
+            background: tokens.accentBg || tokens.card,
+            border: `1.5px solid ${finalVerdict.tone === "go" ? tokens.ink : "#a3432a"}`,
+          }}
+        >
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ fontSize: 22, lineHeight: 1 }}>{VERDICT_EMOJI[finalVerdict.tone]}</span>
+            <p
+              style={{
+                margin: 0, fontSize: 14.5, fontWeight: 600, lineHeight: 1.8,
+                color: finalVerdict.tone === "go" ? tokens.ink : "#a3432a",
+              }}
+              data-testid="shopping-final-verdict"
+            >
+              {speaker}：{finalVerdict.message}
             </p>
           </div>
         </div>
