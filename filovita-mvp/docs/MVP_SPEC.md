@@ -242,8 +242,8 @@ MVPでは以下の二段構えとする。
 「今は相談に答えられませんでした」とだけ伝えて落ちる（クラッシュしない）
 ことをPlaywrightで確認済み。
 
-デプロイ状況（2026-07-26追記）：Vercelプロジェクト`filovita-mvp`をGitHub
-（`nemosakukiri/projectmana`、Root Directory `filovita-mvp`、ブランチ
+デプロイ状況（2026-07-28更新）：Vercelプロジェクト`filovita-mvp`をGitHub
+（`nemosakukiri/PROJECTMANA`、Root Directory `filovita-mvp`、ブランチ
 `claude/init-19boeh`）に接続し、`ANTHROPIC_API_KEY`を環境変数として設定
 済み（利用者側で完了）。Vercel側にDeployment Protectionがかかっており、
 このセッションのツールからは応答確認ができない（403が返る＝存在はして
