@@ -40,18 +40,27 @@ export async function callAnthropic({ systemPrompt, messages, maxTokens = 500 })
   return { reply };
 }
 
-export async function callGemini({ systemPrompt, messages, maxTokens = 500 }) {
+export async function callGemini({ systemPrompt, messages, maxTokens = 500, thinkingLevel }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return { error: "サーバー側にAPIキーが設定されていません（管理者向け：GEMINI_API_KEYを設定してください）", status: 503 };
   }
 
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  // 2026-07-29時点でのGoogle AI Studio上の実際の無料枠モデル。
+  // 旧gemini-2.0-flashは2026-06-01に提供終了済み（MVP_SPEC.md参照）
+  const model = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
   // AnthropicのassistantロールはGeminiでは"model"
   const contents = messages.map((m) => ({
     role: m.role === "assistant" ? "model" : "user",
     parts: [{ text: m.content }],
   }));
+
+  const generationConfig = { maxOutputTokens: maxTokens };
+  // Gemini 3系は内部の思考(thinking)にmaxOutputTokensの一部を使うため、
+  // 構造化JSONのような即答でよい用途ではthinkingLevelを下げて打ち切りを防ぐ
+  if (thinkingLevel) {
+    generationConfig.thinkingConfig = { thinkingLevel };
+  }
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
@@ -61,7 +70,7 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 500 }) {
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents,
-        generationConfig: { maxOutputTokens: maxTokens },
+        generationConfig,
       }),
     }
   );
@@ -97,9 +106,9 @@ export function resolveProvider() {
    自動でそちらに切り替えて再試行する。両方失敗したら主要プロバイダの
    エラーをそのまま返す（Anthropicのクレジット切れを実際に踏んだ経験を
    踏まえた実装）。 */
-export async function callAI({ systemPrompt, messages, maxTokens = 500 }) {
+export async function callAI({ systemPrompt, messages, maxTokens = 500, thinkingLevel }) {
   const primary = resolveProvider();
-  const primaryResult = await PROVIDERS[primary]({ systemPrompt, messages, maxTokens });
+  const primaryResult = await PROVIDERS[primary]({ systemPrompt, messages, maxTokens, thinkingLevel });
   if (!primaryResult.error) {
     return { ...primaryResult, provider: primary };
   }
@@ -110,7 +119,7 @@ export async function callAI({ systemPrompt, messages, maxTokens = 500 }) {
   }
 
   console.error(`callAI: ${primary}が失敗したため${secondary}へ自動切り替え:`, primaryResult.error);
-  const secondaryResult = await PROVIDERS[secondary]({ systemPrompt, messages, maxTokens });
+  const secondaryResult = await PROVIDERS[secondary]({ systemPrompt, messages, maxTokens, thinkingLevel });
   if (!secondaryResult.error) {
     return { ...secondaryResult, provider: secondary };
   }

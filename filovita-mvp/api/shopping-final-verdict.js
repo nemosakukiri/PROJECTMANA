@@ -119,9 +119,11 @@ export default async function handler(req, res) {
   ];
 
   try {
-    // 700では、モデルによっては内部の思考トークンなどでJSONの途中で
-    // 打ち切られることがあった(2026-07-29に実際に発生)ため、余裕を持たせる
-    const result = await callAI({ systemPrompt: SYSTEM_PROMPT, messages, maxTokens: 2000 });
+    // 構造化JSONを即答させるだけの用途なので、Gemini 3系のthinkingLevelを
+    // 下げて思考トークンの消費を抑える。それでも2000では内部の思考が
+    // maxOutputTokensを消費しJSONが途中で打ち切られることがあった
+    // (2026-07-29に実際に発生)ため、上限にも余裕を持たせる
+    const result = await callAI({ systemPrompt: SYSTEM_PROMPT, messages, maxTokens: 3000, thinkingLevel: "low" });
     if (result.error) {
       res.status(result.status).json({ error: result.error });
       return;
