@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 import ShoppingChat from "../components/ShoppingChat.jsx";
@@ -62,7 +62,9 @@ function ListRow({ tokens, item, onToggle }) {
       <span style={{ flex: 1, fontSize: 14, color: item.checked ? tokens.ink : tokens.inkFaint, textDecoration: item.checked ? "none" : "line-through" }}>
         {item.name}
       </span>
-      <span style={{ fontSize: 12.5, color: tokens.inkFaint }}>¥{Number(item.amount).toLocaleString()}</span>
+      <span style={{ fontSize: 12.5, color: tokens.inkFaint }}>
+        {item.amount != null ? `¥${Number(item.amount).toLocaleString()}` : "金額未定"}
+      </span>
     </button>
   );
 }
@@ -84,10 +86,16 @@ function FinalVerdictPanel({
   const [verdict, setVerdict] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // 同じ状況（品目・予算・暮らしの予定・会話履歴のいずれも未変更）で
+  // 何度も聞き直すと、AIは毎回新しく考えるため表現や判断が揺れ、
+  // 「バトラーの返事がコロコロ変わる」という不信につながる
+  // (2026-07-29、利用者からの実際の指摘)。状況が変わっていなければ、
+  // 前回と同じ見立てをそのまま返す——聞き直すたびに答えが変わらない
+  // ことも、バトラーが「慎重であり続けようとする」ことの一部。
+  const lastRequestRef = useRef(null);
 
   async function fetchVerdict() {
     if (loading || checkedItems.length === 0) return;
-    setLoading(true);
     setError(null);
     // 送ったコンテキストをそのまま記録に残す——「なぜそう言ったか」を
     // あとから説明できるようにする（隠すが、消さない。FILOVITA_PHILOSOPHY.md参照）
@@ -96,6 +104,12 @@ function FinalVerdictPanel({
       incomeSchedule, paymentSchedule, restockSchedule,
       items: checkedItems.map((i) => ({ name: i.name, amount: i.amount, section: i.section })),
     };
+    const requestKey = JSON.stringify({ context: contextSnapshot, history: chatHistory });
+    if (verdict && lastRequestRef.current === requestKey) {
+      // 状況が変わっていないので、聞き直さず前回の見立てをそのまま見せる
+      return;
+    }
+    setLoading(true);
     try {
       const response = await fetch(FINAL_VERDICT_API_URL, {
         method: "POST",
@@ -109,6 +123,7 @@ function FinalVerdictPanel({
         return;
       }
       setVerdict(data);
+      lastRequestRef.current = requestKey;
       onVerdictRecorded?.({
         at: new Date().toISOString(),
         context: contextSnapshot,
@@ -226,8 +241,12 @@ export default function ShoppingListScreen({
   const result = computeShoppingJudgment({ budget, balance, recurringItems: checkedUsual, itemsToAdd: checkedAdd });
 
   function submit() {
-    if (!name.trim() || !amount) return;
-    onAddItem({ name: name.trim(), amount: Number(amount) });
+    // 店頭でひらめいたものは、金額がまだ分からないことも多い
+    // （「金額を先に入力しないと追加できない」が、無反応に見える原因
+    // だった可能性——2026-07-29、利用者からの指摘）。名前だけでも
+    // 追加できるようにし、金額は未定のまま扱う（0円と決めつけない）。
+    if (!name.trim()) return;
+    onAddItem({ name: name.trim(), amount: amount ? Number(amount) : null });
     setName("");
     setAmount("");
   }

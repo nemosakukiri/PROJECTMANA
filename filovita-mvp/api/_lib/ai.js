@@ -15,7 +15,7 @@ function toAnthropicMessages(messages) {
   });
 }
 
-export async function callAnthropic({ systemPrompt, messages, maxTokens = 500 }) {
+export async function callAnthropic({ systemPrompt, messages, maxTokens = 500, temperature }) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return { error: "サーバー側にAPIキーが設定されていません（管理者向け：ANTHROPIC_API_KEYを設定してください）", status: 503 };
@@ -33,6 +33,7 @@ export async function callAnthropic({ systemPrompt, messages, maxTokens = 500 })
       max_tokens: maxTokens,
       system: systemPrompt,
       messages: toAnthropicMessages(messages),
+      ...(temperature != null ? { temperature } : {}),
     }),
   });
 
@@ -53,7 +54,7 @@ export async function callAnthropic({ systemPrompt, messages, maxTokens = 500 })
   return { reply };
 }
 
-export async function callGemini({ systemPrompt, messages, maxTokens = 500, thinkingLevel }) {
+export async function callGemini({ systemPrompt, messages, maxTokens = 500, thinkingLevel, temperature }) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return { error: "サーバー側にAPIキーが設定されていません（管理者向け：GEMINI_API_KEYを設定してください）", status: 503 };
@@ -75,6 +76,9 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 500, thin
   // 構造化JSONのような即答でよい用途ではthinkingLevelを下げて打ち切りを防ぐ
   if (thinkingLevel) {
     generationConfig.thinkingConfig = { thinkingLevel };
+  }
+  if (temperature != null) {
+    generationConfig.temperature = temperature;
   }
 
   const response = await fetch(
@@ -121,9 +125,9 @@ export function resolveProvider() {
    自動でそちらに切り替えて再試行する。両方失敗したら主要プロバイダの
    エラーをそのまま返す（Anthropicのクレジット切れを実際に踏んだ経験を
    踏まえた実装）。 */
-export async function callAI({ systemPrompt, messages, maxTokens = 500, thinkingLevel }) {
+export async function callAI({ systemPrompt, messages, maxTokens = 500, thinkingLevel, temperature }) {
   const primary = resolveProvider();
-  const primaryResult = await PROVIDERS[primary]({ systemPrompt, messages, maxTokens, thinkingLevel });
+  const primaryResult = await PROVIDERS[primary]({ systemPrompt, messages, maxTokens, thinkingLevel, temperature });
   if (!primaryResult.error) {
     return { ...primaryResult, provider: primary };
   }
@@ -134,7 +138,7 @@ export async function callAI({ systemPrompt, messages, maxTokens = 500, thinking
   }
 
   console.error(`callAI: ${primary}が失敗したため${secondary}へ自動切り替え:`, primaryResult.error);
-  const secondaryResult = await PROVIDERS[secondary]({ systemPrompt, messages, maxTokens, thinkingLevel });
+  const secondaryResult = await PROVIDERS[secondary]({ systemPrompt, messages, maxTokens, thinkingLevel, temperature });
   if (!secondaryResult.error) {
     return { ...secondaryResult, provider: secondary };
   }

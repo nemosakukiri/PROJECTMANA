@@ -2,15 +2,13 @@ import { useRef, useState } from "react";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
+import { SpeechRecognitionApi, describeSpeechError } from "../lib/speechRecognition.js";
 
 // GitHub Pagesは静的ホスティングのみのため、この本体アプリと同じオリジンには
 // api/shopping-chat.jsは存在しない。別途Vercelにデプロイしたバックエンドの
 // 絶対URLに差し替える運用（詳細はMVP_SPEC.md「相談は往復である」参照）。
 // 同一オリジンにAPIも同居させる場合は "/api/shopping-chat" のままでよい。
 const SHOPPING_CHAT_API_URL = "/api/shopping-chat";
-
-const SpeechRecognitionApi =
-  typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
 /* 自由入力の相談窓口。決まった選択肢の判定ではなく、実際にAIへ渡して
    考えて返す(api/shopping-chat.js)。MVP_SPEC.md「相談は往復である：
@@ -32,10 +30,12 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
   const [listening, setListening] = useState(false);
+  const [voiceError, setVoiceError] = useState(null);
   const recognitionRef = useRef(null);
 
   function startListening() {
     if (!SpeechRecognitionApi) return;
+    setVoiceError(null);
     const recognition = new SpeechRecognitionApi();
     recognition.lang = "ja-JP";
     recognition.continuous = true;
@@ -46,7 +46,13 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
       setDraft(combined);
     };
     recognition.onend = () => setListening(false);
-    recognition.onerror = () => setListening(false);
+    // これまでエラーの中身を握りつぶし、静かに元の状態へ戻すだけだった
+    // ——利用者には「タップしたのに何も起きない」としか見えなかった
+    // (2026-07-29の監査で判明。InputScreen.jsxと同じ修正を入れる)。
+    recognition.onerror = (e) => {
+      setListening(false);
+      setVoiceError(describeSpeechError(e.error));
+    };
     recognitionRef.current = recognition;
     recognition.start();
     setListening(true);
@@ -121,6 +127,7 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
       )}
       {sending && <p style={{ fontSize: 12, color: tokens.inkFaint, marginBottom: 8 }}>{speaker}が考えています…</p>}
       {error && <p style={{ fontSize: 12, color: "#a3432a", marginBottom: 8 }} data-testid="shopping-chat-error">{error}</p>}
+      {voiceError && <p style={{ fontSize: 12, color: "#a3432a", marginBottom: 8 }} data-testid="shopping-chat-voice-error">{voiceError}</p>}
       <div style={{ display: "flex", gap: 6 }}>
         <button
           type="button"

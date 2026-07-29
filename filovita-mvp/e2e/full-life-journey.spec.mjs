@@ -91,10 +91,19 @@ async function main() {
   try {
     // 実行環境にマイクが無いため、SpeechRecognitionだけをモックする。
     // ここから先(認識結果を受け取ったあとのUI・データの流れ)は本物のコード。
+    // window.__speechShouldFailで失敗パターンも切り替えられるようにする
+    // ——InputScreen.jsx/ShoppingChat.jsxはSpeechRecognitionApiをモジュール
+    // 読み込み時に一度だけ捕まえるため、クラスの参照自体は差し替えず、
+    // クラス内部の分岐で挙動を切り替える必要がある(2026-07-29に判明)。
     await page.addInitScript(() => {
       class FakeSpeechRecognition {
         start() {
           setTimeout(() => {
+            if (window.__speechShouldFail) {
+              if (this.onerror) this.onerror({ error: window.__speechErrorCode || "audio-capture" });
+              if (this.onend) this.onend();
+              return;
+            }
             if (this.onresult) {
               this.onresult({
                 results: [[{ transcript: "○○病院から電話があって、来月10日の通院で血液検査があるとのこと。" }]],
@@ -161,6 +170,20 @@ async function main() {
     assert(bodyText.includes("話しても、書いても残せます"), "入力画面の案内が自動で表示されている");
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
+
+    step("音声認識が失敗したら、静かに元へ戻さず理由を利用者に伝える(2026-07-29の監査で発覚した欠陥の修正確認)");
+    await page.evaluate(() => { window.__speechShouldFail = true; window.__speechErrorCode = "audio-capture"; });
+    await page.evaluate(() => {
+      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "🎤");
+      btn?.click();
+    });
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(
+      bodyText.includes("マイクを認識できませんでした"),
+      "recognition.onerrorが発火したら、握りつぶさず理由が利用者に見える形で表示される（ShoppingChat.jsxと同じ実装）"
+    );
+    await page.evaluate(() => { window.__speechShouldFail = false; });
 
     step("録音開始 → 認識結果が反映される → 停止 → 次へ");
     await page.evaluate(() => {
@@ -518,13 +541,44 @@ async function main() {
     assert(bodyText.includes("に自由に相談する"), "買い物リスト画面にも自由相談欄がある");
     assert(bodyText.includes("桃が半額だったんだけど"), "相談画面でのやり取りが、買い物リスト画面でも同じ履歴として続けて表示される");
 
-    step("買い物リスト：チャットは音声入力にも対応している（送信は手動、確認してから送る）");
+    step("買い物リスト：マイクで音声認識した内容を、書き換えずそのまま送信できる（InputScreen.jsxと同じSpeechRecognition実装・エラーハンドリング）");
     await page.click('[data-testid="shopping-chat-mic"]');
     await page.waitForTimeout(400);
     let micValue = await page.$eval('[data-testid="shopping-chat-mic"] + input', (el) => el.value);
-    assert(micValue.includes("血液検査"), "マイクボタンで音声認識の結果がチャット欄にそのまま反映される");
+    assert(micValue.includes("血液検査"), "マイクボタンで音声認識の結果がチャット欄にそのまま反映される（InputScreen.jsxの話すモードと同じonresultの実装）");
     await page.click('[data-testid="shopping-chat-mic"]');
     await page.waitForTimeout(150);
+    let capturedMicChatRequest = null;
+    await page.route("**/api/shopping-chat", async (route) => {
+      capturedMicChatRequest = JSON.parse(route.request().postData());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ reply: "その通院についてはカレンダーで確認しておきますね。" }),
+      });
+    });
+    await clickButtonWithText(page, "送る");
+    await page.waitForTimeout(300);
+    assert(!!capturedMicChatRequest, "マイクで入力した内容を書き換えずに「送る」を押すと、実際にAPIへリクエストが送られる");
+    assert(
+      capturedMicChatRequest.message.includes("血液検査"),
+      `送信された内容が、書き換えていない音声認識結果そのものである（実際: ${capturedMicChatRequest?.message}）`
+    );
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("血液検査"), "送信した音声入力の内容がチャット履歴に表示される");
+    assert(bodyText.includes("その通院についてはカレンダーで確認しておきますね"), "AIの返答も表示される（音声入力→送信→応答まで実機相当で通ることを確認）");
+    await page.unroute("**/api/shopping-chat");
+
+    step("買い物リスト：マイクの権限が無い等で音声認識が失敗したら、静かに元へ戻さず理由を利用者に伝える(2026-07-29の監査で発覚した欠陥の修正確認)");
+    await page.evaluate(() => { window.__speechShouldFail = true; window.__speechErrorCode = "not-allowed"; });
+    await page.click('[data-testid="shopping-chat-mic"]');
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(
+      bodyText.includes("マイクの使用が許可されていません"),
+      "権限拒否等でrecognition.onerrorが発火したら、握りつぶさず理由が利用者に見える形で表示される"
+    );
+    await page.evaluate(() => { window.__speechShouldFail = false; });
 
     step("買い物リスト：チャットへ実際に打ち込んだ相談は、この画面のコンテキスト（店頭でチェック中の品目）を添えてAPIへ渡る");
     await page.fill('[data-testid="shopping-chat-mic"] + input', "桃はやめてぶどうだけにしようと思う");
@@ -603,7 +657,19 @@ async function main() {
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("過去の見立て"), "「今日の買い物」画面に過去の見立ての履歴欄がある");
 
-    step("買い物リスト：バックエンドが無い環境では、最終見立ても断定せず状況を伝えるだけに留める");
+    step("買い物リスト：同じ状況で聞き直しても、AIに再度問い合わせず前回の見立てをそのまま見せる（コロコロ変わらない）");
+    await clickButtonContaining(page, "最終見立てを聞く");
+    await page.waitForTimeout(300);
+    state = await getState(page);
+    assert(state.verdictHistory?.length === 1, "状況が変わっていなければ聞き直しても履歴が増えない（AIへ再問い合わせしていない）");
+
+    step("買い物リスト：バックエンドが無い環境では、最終見立ても断定せず状況を伝えるだけに留める（状況が変わって初めて聞き直す）");
+    // 状況を変えて初めて「聞き直す」対象になる。ここでバックエンドが
+    // 無ければ、キャッシュされた前回の答えを使い回さず、正直に状況を伝える
+    await page.fill('input[placeholder="例：ぶどう"]', "レモン");
+    await page.fill('input[placeholder="金額"]', "200");
+    await clickButtonWithText(page, "追加");
+    await page.waitForTimeout(150);
     await clickButtonContaining(page, "最終見立てを聞く");
     await page.waitForTimeout(500);
     bodyText = await page.evaluate(() => document.body.textContent);

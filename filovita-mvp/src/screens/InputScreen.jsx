@@ -3,9 +3,7 @@ import ContextHeader from "../components/ContextHeader.jsx";
 import GuideCard from "../components/GuideCard.jsx";
 import GuideHelpButton from "../components/GuideHelpButton.jsx";
 import { guideById } from "../theme/guide/guideContent.js";
-
-const SpeechRecognitionApi =
-  typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
+import { SpeechRecognitionApi, describeSpeechError } from "../lib/speechRecognition.js";
 
 /* 入力→確認画面（＋ボタンから。共通ナビゲーションの先）
    話す/書くに加え、写真（生活資料ライブラリ、MVP_SPEC.md参照）を追加。
@@ -19,6 +17,7 @@ export default function InputScreen({
   const [text, setText] = useState("");
   const [activeMode, setActiveMode] = useState(mode === "speak" ? "speak" : "write");
   const [listening, setListening] = useState(false);
+  const [voiceError, setVoiceError] = useState(null);
   const [guideOpen, setGuideOpen] = useState(!seenGuides.input);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoBase64, setPhotoBase64] = useState(null);
@@ -28,6 +27,7 @@ export default function InputScreen({
 
   function startListening() {
     if (!SpeechRecognitionApi) return;
+    setVoiceError(null);
     const recognition = new SpeechRecognitionApi();
     recognition.lang = "ja-JP";
     recognition.continuous = true;
@@ -38,7 +38,14 @@ export default function InputScreen({
       setText(combined);
     };
     recognition.onend = () => setListening(false);
-    recognition.onerror = () => setListening(false);
+    // これまでエラーの中身を握りつぶし、静かに元の状態へ戻すだけだった
+    // ——利用者には「タップしたのに何も起きない」としか見えなかった
+    // (2026-07-29の監査で判明)。権限拒否・マイク無し・ネットワーク不通等、
+    // 実機で起こりうる失敗を、理由がわかる形で必ず伝える。
+    recognition.onerror = (e) => {
+      setListening(false);
+      setVoiceError(describeSpeechError(e.error));
+    };
     recognitionRef.current = recognition;
     recognition.start();
     setListening(true);
@@ -144,6 +151,11 @@ export default function InputScreen({
                     ? "続けて話す場合はもう一度タップしてください"
                     : "タップして話しはじめる"}
             </p>
+            {voiceError && (
+              <p style={{ fontSize: 12.5, color: "#a3432a", marginTop: 8 }} data-testid="input-voice-error">
+                {voiceError}
+              </p>
+            )}
             {text && (
               <p style={{
                 textAlign: "left", fontSize: 14, color: tokens.ink, lineHeight: 1.8,

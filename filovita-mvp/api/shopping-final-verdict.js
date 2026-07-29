@@ -58,7 +58,11 @@ items配列には、渡された品目をすべて過不足なく含めてくだ
 function formatItemLines(items = []) {
   return (
     items
-      .map((i) => `  - ${i.name}：¥${Number(i.amount ?? i.price ?? 0).toLocaleString()}（${i.section === "add" ? "今回追加" : "いつもの買い物"}）`)
+      .map((i) => {
+        const amount = i.amount ?? i.price;
+        const amountLabel = amount != null ? `¥${Number(amount).toLocaleString()}` : "金額未定";
+        return `  - ${i.name}：${amountLabel}（${i.section === "add" ? "今回追加" : "いつもの買い物"}）`;
+      })
       .join("\n") || "  （なし）"
   );
 }
@@ -140,8 +144,12 @@ export default async function handler(req, res) {
     // 構造化JSONを即答させるだけの用途なので、Gemini 3系のthinkingLevelを
     // 下げて思考トークンの消費を抑える。それでも2000では内部の思考が
     // maxOutputTokensを消費しJSONが途中で打ち切られることがあった
-    // (2026-07-29に実際に発生)ため、上限にも余裕を持たせる
-    const result = await callAI({ systemPrompt: SYSTEM_PROMPT, messages, maxTokens: 3000, thinkingLevel: "low" });
+    // (2026-07-29に実際に発生)ため、上限にも余裕を持たせる。
+    // temperatureも下げる——同じ状況で聞くたびに判断がぶれると
+    // 「バトラーの返事がコロコロ変わる」という不信につながる
+    // (2026-07-29、利用者からの実際の指摘)。会話(shopping-chat.js)と
+    // 違い、ここは断定的な分類タスクなので一貫性を優先してよい。
+    const result = await callAI({ systemPrompt: SYSTEM_PROMPT, messages, maxTokens: 3000, thinkingLevel: "low", temperature: 0.2 });
     if (result.error) {
       res.status(result.status).json({ error: result.error });
       return;
