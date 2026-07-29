@@ -3,7 +3,7 @@ import ContextHeader from "../components/ContextHeader.jsx";
 import GuideCard from "../components/GuideCard.jsx";
 import GuideHelpButton from "../components/GuideHelpButton.jsx";
 import { guideById } from "../theme/guide/guideContent.js";
-import { SpeechRecognitionApi, describeSpeechError } from "../lib/speechRecognition.js";
+import { SpeechRecognitionApi, handleSpeechError, logMicPermissionState } from "../lib/speechRecognition.js";
 
 /* 入力→確認画面（＋ボタンから。共通ナビゲーションの先）
    話す/書くに加え、写真（生活資料ライブラリ、MVP_SPEC.md参照）を追加。
@@ -28,6 +28,7 @@ export default function InputScreen({
   function startListening() {
     if (!SpeechRecognitionApi) return;
     setVoiceError(null);
+    logMicPermissionState("InputScreen:start");
     const recognition = new SpeechRecognitionApi();
     recognition.lang = "ja-JP";
     recognition.continuous = true;
@@ -41,10 +42,13 @@ export default function InputScreen({
     // これまでエラーの中身を握りつぶし、静かに元の状態へ戻すだけだった
     // ——利用者には「タップしたのに何も起きない」としか見えなかった
     // (2026-07-29の監査で判明)。権限拒否・マイク無し・ネットワーク不通等、
-    // 実機で起こりうる失敗を、理由がわかる形で必ず伝える。
+    // 実機で起こりうる失敗を、理由がわかる形で必ず伝える。生のevent.errorと
+    // navigator.permissions.query(microphone)の結果もコンソールに残す
+    // ——「Chromeでは許可になっているのにnot-allowedが出る」という指摘の
+    // 原因切り分けのため(2026-07-29)。
     recognition.onerror = (e) => {
       setListening(false);
-      setVoiceError(describeSpeechError(e.error));
+      setVoiceError(handleSpeechError("InputScreen", e));
     };
     recognitionRef.current = recognition;
     recognition.start();

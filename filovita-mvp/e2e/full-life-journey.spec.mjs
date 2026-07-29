@@ -191,6 +191,10 @@ async function main() {
         bodyText.includes(expectedMessage),
         `event.error="${code}"のとき「${expectedMessage}」が表示される（実際のbodyTextに含まれていない）`
       );
+      assert(
+        bodyText.includes(`error: ${code}`),
+        `画面上に生のevent.errorコード（error: ${code}）も表示され、DevToolsを開かずに報告できる`
+      );
     }
     await page.evaluate(() => { window.__speechShouldFail = false; });
 

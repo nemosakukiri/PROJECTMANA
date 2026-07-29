@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
-import { SpeechRecognitionApi, describeSpeechError } from "../lib/speechRecognition.js";
+import { SpeechRecognitionApi, handleSpeechError, logMicPermissionState } from "../lib/speechRecognition.js";
 
 // GitHub Pagesは静的ホスティングのみのため、この本体アプリと同じオリジンには
 // api/shopping-chat.jsは存在しない。別途Vercelにデプロイしたバックエンドの
@@ -36,6 +36,7 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
   function startListening() {
     if (!SpeechRecognitionApi) return;
     setVoiceError(null);
+    logMicPermissionState("ShoppingChat:start");
     const recognition = new SpeechRecognitionApi();
     recognition.lang = "ja-JP";
     recognition.continuous = true;
@@ -48,10 +49,12 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
     recognition.onend = () => setListening(false);
     // これまでエラーの中身を握りつぶし、静かに元の状態へ戻すだけだった
     // ——利用者には「タップしたのに何も起きない」としか見えなかった
-    // (2026-07-29の監査で判明。InputScreen.jsxと同じ修正を入れる)。
+    // (2026-07-29の監査で判明。InputScreen.jsxと同じ修正を入れる)。生の
+    // event.errorとnavigator.permissions.query(microphone)の結果も
+    // コンソールに残す(「Chromeでは許可なのにnot-allowedが出る」の切り分け用)。
     recognition.onerror = (e) => {
       setListening(false);
-      setVoiceError(describeSpeechError(e.error));
+      setVoiceError(handleSpeechError("ShoppingChat", e));
     };
     recognitionRef.current = recognition;
     recognition.start();

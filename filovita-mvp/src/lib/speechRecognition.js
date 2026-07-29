@@ -25,3 +25,33 @@ const ERROR_MESSAGES = {
 export function describeSpeechError(code) {
   return ERROR_MESSAGES[code] || "音声入力を開始できませんでした。";
 }
+
+/* 診断用（2026-07-29追記）：Chromeの「マイク: 許可」表示にも関わらず
+   error: "not-allowed"が出るという利用者からの指摘を受けて追加。
+   Web Speech APIの権限は、getUserMediaのマイク権限（chrome://settings/
+   content/microphoneに出るもの）とは別系統で管理されており、両者は
+   必ずしも一致しない——このズレを実際に確認するため、生のevent.errorと
+   navigator.permissions.query(microphone)の結果を両方コンソールに残す。
+   加えて、原因コードを画面上のメッセージにも(error: xxx)の形で出し、
+   DevToolsを開かなくても報告できるようにする。 */
+export function logMicPermissionState(label) {
+  if (!navigator.permissions?.query) {
+    console.log(`[speechRecognition:${label}] navigator.permissions.query未対応`);
+    return;
+  }
+  navigator.permissions
+    .query({ name: "microphone" })
+    .then((status) => {
+      console.log(`[speechRecognition:${label}] navigator.permissions microphone state = "${status.state}"`);
+    })
+    .catch((err) => {
+      console.log(`[speechRecognition:${label}] navigator.permissions.query失敗:`, err);
+    });
+}
+
+export function handleSpeechError(label, event) {
+  console.error(`[speechRecognition:${label}] raw error event.error =`, event?.error, "event.message =", event?.message, event);
+  logMicPermissionState(`${label}:onerror`);
+  const code = event?.error;
+  return `${describeSpeechError(code)}（error: ${code || "unknown"}）`;
+}
