@@ -2,7 +2,35 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 import ShoppingChat from "../components/ShoppingChat.jsx";
+import SteelPanel from "../theme/industrial/SteelPanel.jsx";
+import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
+import BarkPanel from "../theme/forest/BarkPanel.jsx";
 import { computeShoppingJudgment } from "../lib/shoppingJudgment.js";
+
+/* CalendarScreen.jsx/EventDetailScreen.jsxと同じ規約：componentThemeごとに
+   専用の枠（森=BarkPanel、ホラー=OrnateFrame、cyberpunk=SteelPanel）へ
+   差し替える。手帳・絵本・SF・旅は他画面と同様、専用部品を持たないため
+   汎用の枠のままにする。買い物画面の各パネルで共通に使う。 */
+function ThemedPanel({ theme, style, children }) {
+  const isIndustrial = theme.componentTheme === "industrial";
+  const isGothic = theme.componentTheme === "gothic";
+  const isForest = theme.componentTheme === "forest";
+  const { tokens } = theme;
+  if (isIndustrial) return <SteelPanel style={style}>{children}</SteelPanel>;
+  if (isGothic) return <OrnateFrame style={style}>{children}</OrnateFrame>;
+  if (isForest) return <BarkPanel style={style}>{children}</BarkPanel>;
+  return (
+    <div
+      style={{
+        padding: "16px 16px 14px", borderRadius: 14,
+        background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 const JUDGMENT_EMOJI = { empty: "🛒", ok: "🙂", tight: "🤔", over: "😟" };
 const SECTION_LABEL = { usual: "いつもの買い物", add: "今回追加" };
@@ -47,11 +75,12 @@ function ListRow({ tokens, item, onToggle }) {
    OCRやGoogle Calendar連携は、将来このコンテキストに材料を増やす入力手段として
    後から足す——先にAIが判断できる器を作る。MVP_SPEC.md参照。 */
 function FinalVerdictPanel({
-  tokens, speaker, checkedItems,
+  theme, speaker, checkedItems,
   companionName, budget, balance, nextShoppingDate, cwPlanNote,
   incomeSchedule, paymentSchedule, restockSchedule, chatHistory,
   onVerdictRecorded,
 }) {
+  const { tokens } = theme;
   const [verdict, setVerdict] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -100,77 +129,79 @@ function FinalVerdictPanel({
       <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
         🏁 最終見立て
       </div>
-      <div
-        style={{
-          fontSize: 11, color: tokens.inkFaint, background: tokens.card,
-          border: `1px dashed ${tokens.line}`, borderRadius: 8, padding: "6px 10px", marginBottom: 10,
-        }}
-        data-testid="shopping-final-verdict-test-notice"
-      >
-        🧪 現在はテスト運用中の見立て機能です
-      </div>
-
-      <button
-        onClick={fetchVerdict}
-        disabled={loading || checkedItems.length === 0}
-        style={{
-          display: "block", width: "100%", padding: "12px 0", fontSize: 13.5, fontWeight: 600,
-          borderRadius: 12, border: "none", background: tokens.ink, color: tokens.paper,
-          cursor: loading || checkedItems.length === 0 ? "default" : "pointer",
-          opacity: loading || checkedItems.length === 0 ? 0.6 : 1, marginBottom: 12,
-        }}
-        data-testid="shopping-final-verdict-button"
-      >
-        {loading ? `${speaker}が考えています…` : `🔮 ${speaker}に最終見立てを聞く`}
-      </button>
-
-      {error && (
-        <p style={{ fontSize: 12, color: "#a3432a", marginBottom: 12 }} data-testid="shopping-final-verdict-error">
-          {error}
-        </p>
-      )}
-
-      {verdict && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 12 }} data-testid="shopping-final-verdict-items">
-          {verdict.items.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                padding: "10px 12px", borderRadius: 10,
-                background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: item.reason ? 4 : 0 }}>
-                <span style={{ fontSize: 15 }}>{CATEGORY_EMOJI[item.category]}</span>
-                <span style={{ fontSize: 13.5, color: tokens.ink, fontWeight: 600 }}>{item.name}</span>
-                <span style={{ fontSize: 11.5, color: tokens.inkFaint, marginLeft: "auto" }}>
-                  {CATEGORY_LABEL[item.category]}
-                </span>
-              </div>
-              {item.reason && (
-                <p style={{ margin: 0, fontSize: 12, color: tokens.inkSoft, lineHeight: 1.6 }}>{item.reason}</p>
-              )}
-            </div>
-          ))}
-          {verdict.summary && (
-            <div
-              style={{
-                padding: "14px 14px", borderRadius: 12, marginTop: 4,
-                background: tokens.accentBg || tokens.card, border: `1.5px solid ${tokens.ink}`,
-              }}
-            >
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: tokens.ink, lineHeight: 1.8 }} data-testid="shopping-final-verdict-summary">
-                {speaker}：{verdict.summary}
-              </p>
-              {verdict.focus && (
-                <p style={{ margin: "8px 0 0", fontSize: 11.5, color: tokens.inkFaint }} data-testid="shopping-final-verdict-focus">
-                  ※ 今回重視したこと：{verdict.focus}
-                </p>
-              )}
-            </div>
-          )}
+      <ThemedPanel theme={theme}>
+        <div
+          style={{
+            fontSize: 11, color: tokens.inkFaint, background: tokens.card,
+            border: `1px dashed ${tokens.line}`, borderRadius: 8, padding: "6px 10px", marginBottom: 10,
+          }}
+          data-testid="shopping-final-verdict-test-notice"
+        >
+          🧪 現在はテスト運用中の見立て機能です
         </div>
-      )}
+
+        <button
+          onClick={fetchVerdict}
+          disabled={loading || checkedItems.length === 0}
+          style={{
+            display: "block", width: "100%", padding: "12px 0", fontSize: 13.5, fontWeight: 600,
+            borderRadius: 12, border: "none", background: tokens.ink, color: tokens.paper,
+            cursor: loading || checkedItems.length === 0 ? "default" : "pointer",
+            opacity: loading || checkedItems.length === 0 ? 0.6 : 1, marginBottom: verdict || error ? 12 : 0,
+          }}
+          data-testid="shopping-final-verdict-button"
+        >
+          {loading ? `${speaker}が考えています…` : `🔮 ${speaker}に最終見立てを聞く`}
+        </button>
+
+        {error && (
+          <p style={{ fontSize: 12, color: "#a3432a", marginBottom: 0 }} data-testid="shopping-final-verdict-error">
+            {error}
+          </p>
+        )}
+
+        {verdict && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-testid="shopping-final-verdict-items">
+            {verdict.items.map((item, i) => (
+              <div
+                key={i}
+                style={{
+                  padding: "10px 12px", borderRadius: 10,
+                  background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: item.reason ? 4 : 0 }}>
+                  <span style={{ fontSize: 15 }}>{CATEGORY_EMOJI[item.category]}</span>
+                  <span style={{ fontSize: 13.5, color: tokens.ink, fontWeight: 600 }}>{item.name}</span>
+                  <span style={{ fontSize: 11.5, color: tokens.inkFaint, marginLeft: "auto" }}>
+                    {CATEGORY_LABEL[item.category]}
+                  </span>
+                </div>
+                {item.reason && (
+                  <p style={{ margin: 0, fontSize: 12, color: tokens.inkSoft, lineHeight: 1.6 }}>{item.reason}</p>
+                )}
+              </div>
+            ))}
+            {verdict.summary && (
+              <div
+                style={{
+                  padding: "14px 14px", borderRadius: 12, marginTop: 4,
+                  background: tokens.accentBg || tokens.card, border: `1.5px solid ${tokens.ink}`,
+                }}
+              >
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: tokens.ink, lineHeight: 1.8 }} data-testid="shopping-final-verdict-summary">
+                  {speaker}：{verdict.summary}
+                </p>
+                {verdict.focus && (
+                  <p style={{ margin: "8px 0 0", fontSize: 11.5, color: tokens.inkFaint }} data-testid="shopping-final-verdict-focus">
+                    ※ 今回重視したこと：{verdict.focus}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </ThemedPanel>
     </div>
   );
 }
@@ -245,22 +276,17 @@ export default function ShoppingListScreen({
           </button>
         </div>
 
-        <div
-          style={{
-            padding: "16px 16px 14px", borderRadius: 14, marginBottom: 20,
-            background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
-          }}
-        >
+        <ThemedPanel theme={theme} style={{ marginBottom: 20 }}>
           <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
             <span style={{ fontSize: 20, lineHeight: 1 }}>{JUDGMENT_EMOJI[result.judgment]}</span>
             <p style={{ margin: 0, fontSize: 13.5, color: tokens.ink, lineHeight: 1.7 }} data-testid="shopping-list-judgment">
               {speaker}：{result.judgment === "empty" ? "チェックが入っている今の内容なら、見立てはいつでもここで確認できます。" : result.message}
             </p>
           </div>
-        </div>
+        </ThemedPanel>
 
         <ShoppingChat
-          tokens={tokens} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
+          theme={theme} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
           context={{
             companionName, budget, balance, nextShoppingDate, cwPlanNote,
             incomeSchedule, paymentSchedule, restockSchedule,
@@ -270,7 +296,7 @@ export default function ShoppingListScreen({
 
         <div style={{ marginTop: 22 }}>
           <FinalVerdictPanel
-            tokens={tokens} speaker={speaker} checkedItems={[...checkedUsual, ...checkedAdd]}
+            theme={theme} speaker={speaker} checkedItems={[...checkedUsual, ...checkedAdd]}
             companionName={companionName} budget={budget} balance={balance}
             nextShoppingDate={nextShoppingDate} cwPlanNote={cwPlanNote}
             incomeSchedule={incomeSchedule} paymentSchedule={paymentSchedule} restockSchedule={restockSchedule}
@@ -280,7 +306,7 @@ export default function ShoppingListScreen({
         </div>
 
         {verdictHistory?.length > 0 && (
-          <VerdictHistoryPanel tokens={tokens} speaker={speaker} history={verdictHistory} />
+          <VerdictHistoryPanel theme={theme} speaker={speaker} history={verdictHistory} />
         )}
       </div>
     </div>
@@ -292,33 +318,36 @@ export default function ShoppingListScreen({
    という人格の履歴でもある(FILOVITA_PHILOSOPHY.md「根拠は画面から隠すが、
    内部からは消さない」参照)。画面には直近だけを表示するが、データ自体は
    全件persistence.js経由で保持する（隠すが、消さない）。 */
-function VerdictHistoryPanel({ tokens, speaker, history }) {
+function VerdictHistoryPanel({ theme, speaker, history }) {
+  const { tokens } = theme;
   const recent = [...history].reverse().slice(0, 5);
   return (
     <div style={{ marginTop: 20 }}>
       <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
         🗂 過去の見立て
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-testid="verdict-history">
-        {recent.map((entry) => (
-          <div
-            key={entry.id}
-            style={{ padding: "10px 12px", borderRadius: 10, border: `1px solid ${tokens.line}` }}
-          >
-            <div style={{ fontSize: 11, color: tokens.inkFaint, marginBottom: 4 }}>
-              {new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(entry.at))}
-            </div>
-            <p style={{ margin: 0, fontSize: 12.5, color: tokens.ink, lineHeight: 1.6 }}>
-              {speaker}：{entry.summary}
-            </p>
-            {entry.focus && (
-              <p style={{ margin: "4px 0 0", fontSize: 11, color: tokens.inkFaint }}>
-                重視したこと：{entry.focus}
+      <ThemedPanel theme={theme}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-testid="verdict-history">
+          {recent.map((entry) => (
+            <div
+              key={entry.id}
+              style={{ padding: "10px 12px", borderRadius: 10, border: `1px solid ${tokens.line}` }}
+            >
+              <div style={{ fontSize: 11, color: tokens.inkFaint, marginBottom: 4 }}>
+                {new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(entry.at))}
+              </div>
+              <p style={{ margin: 0, fontSize: 12.5, color: tokens.ink, lineHeight: 1.6 }}>
+                {speaker}：{entry.summary}
               </p>
-            )}
-          </div>
-        ))}
-      </div>
+              {entry.focus && (
+                <p style={{ margin: "4px 0 0", fontSize: 11, color: tokens.inkFaint }}>
+                  重視したこと：{entry.focus}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      </ThemedPanel>
     </div>
   );
 }

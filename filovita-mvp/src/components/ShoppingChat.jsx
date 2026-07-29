@@ -1,4 +1,7 @@
 import { useRef, useState } from "react";
+import SteelPanel from "../theme/industrial/SteelPanel.jsx";
+import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
+import BarkPanel from "../theme/forest/BarkPanel.jsx";
 
 // GitHub Pagesは静的ホスティングのみのため、この本体アプリと同じオリジンには
 // api/shopping-chat.jsは存在しない。別途Vercelにデプロイしたバックエンドの
@@ -15,8 +18,16 @@ const SpeechRecognitionApi =
    では失敗するので、その場合は断定せず状況を伝えるだけに留める。
    相談画面（暮らしの予定を組み立てる場）と買い物リスト画面（店頭）の
    両方から使う共通部品。音声入力はテキスト欄を埋めるだけに留め、
-   送信は必ず利用者が「送る」を押してから——AIに渡す前に必ず読み返せる。 */
-export default function ShoppingChat({ tokens, speaker, chatHistory, onAppendChatMessage, context }) {
+   送信は必ず利用者が「送る」を押してから——AIに渡す前に必ず読み返せる。
+   他の画面（CalendarScreen.jsxの続き表示、EventDetailScreen.jsxのタグ等）
+   と同じ規約で、componentThemeごとに専用の枠（森=BarkPanel、ホラー=
+   OrnateFrame、cyberpunk=SteelPanel）へ差し替える。手帳・絵本・SF・旅は
+   他画面と同様、専用部品を持たないため汎用の枠のままにする。 */
+export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChatMessage, context }) {
+  const { tokens } = theme;
+  const isIndustrial = theme.componentTheme === "industrial";
+  const isGothic = theme.componentTheme === "gothic";
+  const isForest = theme.componentTheme === "forest";
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
@@ -76,11 +87,8 @@ export default function ShoppingChat({ tokens, speaker, chatHistory, onAppendCha
     }
   }
 
-  return (
-    <div style={{ marginTop: 22 }}>
-      <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
-        {speaker}に自由に相談する
-      </div>
+  const chatBody = (
+    <>
       {/* MVP_SPEC.md「相談は往復である」：開発・テスト中は無料枠のAIを使うため、
           実データを送る前に必ず分かるよう常時表示する。本番運用に切り替えたら外す。 */}
       <div
@@ -141,6 +149,23 @@ export default function ShoppingChat({ tokens, speaker, chatHistory, onAppendCha
           送る
         </button>
       </div>
+    </>
+  );
+
+  return (
+    <div style={{ marginTop: 22 }}>
+      <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
+        {speaker}に自由に相談する
+      </div>
+      {isIndustrial ? (
+        <SteelPanel>{chatBody}</SteelPanel>
+      ) : isGothic ? (
+        <OrnateFrame>{chatBody}</OrnateFrame>
+      ) : isForest ? (
+        <BarkPanel>{chatBody}</BarkPanel>
+      ) : (
+        chatBody
+      )}
     </div>
   );
 }

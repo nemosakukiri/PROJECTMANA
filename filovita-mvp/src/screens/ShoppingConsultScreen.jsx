@@ -2,6 +2,9 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 import ShoppingChat from "../components/ShoppingChat.jsx";
+import SteelPanel from "../theme/industrial/SteelPanel.jsx";
+import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
+import BarkPanel from "../theme/forest/BarkPanel.jsx";
 import { computeShoppingJudgment } from "../lib/shoppingJudgment.js";
 
 const JUDGMENT_EMOJI = { empty: "🛒", ok: "🙂", tight: "🤔", over: "😟" };
@@ -162,6 +165,9 @@ export default function ShoppingConsultScreen({
   onBack,
 }) {
   const { tokens } = theme;
+  const isIndustrial = theme.componentTheme === "industrial";
+  const isGothic = theme.componentTheme === "gothic";
+  const isForest = theme.componentTheme === "forest";
   const [showDetail, setShowDetail] = useState(false);
   const result = computeShoppingJudgment({ budget, balance, recurringItems, itemsToAdd });
   const speaker = companionName || "バトラー";
@@ -257,36 +263,48 @@ export default function ShoppingConsultScreen({
           amountKey="price" namePlaceholder="例：コーヒー" addLabel="追加"
         />
 
-        <div
-          style={{
-            marginTop: 22, padding: "16px 16px 14px", borderRadius: 14,
-            background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
-          }}
-        >
-          <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-            <span style={{ fontSize: 20, lineHeight: 1 }}>{JUDGMENT_EMOJI[result.judgment]}</span>
-            <p style={{ margin: 0, fontSize: 13.5, color: tokens.ink, lineHeight: 1.7 }} data-testid="shopping-judgment">
-              {speaker}：{result.message}
-            </p>
-          </div>
-          <button
-            onClick={() => setShowDetail((v) => !v)}
-            style={{ marginTop: 10, background: "none", border: "none", color: tokens.inkFaint, fontSize: 11.5, cursor: "pointer", padding: 0, textDecoration: "underline" }}
-          >
-            {showDetail ? "根拠を閉じる" : "根拠を見る"}
-          </button>
-          {showDetail && (
-            <div style={{ marginTop: 10, fontSize: 12, color: tokens.inkSoft, lineHeight: 1.8 }}>
-              <div>決まって買うものの合計：¥{result.recurringTotal.toLocaleString()}</div>
-              <div>決まって買うものを確保したあとの残り：¥{result.reserved.toLocaleString()}</div>
-              <div>今回追加したいものの合計：¥{result.addTotal.toLocaleString()}</div>
-              <div>追加後に残る見込み：¥{result.remainingAfterAdd.toLocaleString()}</div>
+        {(() => {
+          const judgmentBody = (
+            <>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <span style={{ fontSize: 20, lineHeight: 1 }}>{JUDGMENT_EMOJI[result.judgment]}</span>
+                <p style={{ margin: 0, fontSize: 13.5, color: tokens.ink, lineHeight: 1.7 }} data-testid="shopping-judgment">
+                  {speaker}：{result.message}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDetail((v) => !v)}
+                style={{ marginTop: 10, background: "none", border: "none", color: tokens.inkFaint, fontSize: 11.5, cursor: "pointer", padding: 0, textDecoration: "underline" }}
+              >
+                {showDetail ? "根拠を閉じる" : "根拠を見る"}
+              </button>
+              {showDetail && (
+                <div style={{ marginTop: 10, fontSize: 12, color: tokens.inkSoft, lineHeight: 1.8 }}>
+                  <div>決まって買うものの合計：¥{result.recurringTotal.toLocaleString()}</div>
+                  <div>決まって買うものを確保したあとの残り：¥{result.reserved.toLocaleString()}</div>
+                  <div>今回追加したいものの合計：¥{result.addTotal.toLocaleString()}</div>
+                  <div>追加後に残る見込み：¥{result.remainingAfterAdd.toLocaleString()}</div>
+                </div>
+              )}
+            </>
+          );
+          if (isIndustrial) return <SteelPanel style={{ marginTop: 22 }}>{judgmentBody}</SteelPanel>;
+          if (isGothic) return <OrnateFrame style={{ marginTop: 22 }}>{judgmentBody}</OrnateFrame>;
+          if (isForest) return <BarkPanel style={{ marginTop: 22 }}>{judgmentBody}</BarkPanel>;
+          return (
+            <div
+              style={{
+                marginTop: 22, padding: "16px 16px 14px", borderRadius: 14,
+                background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
+              }}
+            >
+              {judgmentBody}
             </div>
-          )}
-        </div>
+          );
+        })()}
 
         <ShoppingChat
-          tokens={tokens} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
+          theme={theme} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
           context={{
             companionName, budget, balance, nextShoppingDate, cwPlanNote,
             incomeSchedule, paymentSchedule, restockSchedule, recurringItems, itemsToAdd,
