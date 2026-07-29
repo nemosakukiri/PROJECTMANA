@@ -579,6 +579,72 @@ async function main() {
     assert(grape && grape.checked === true, "リロード後もひらめいて追加したぶどうが残っている");
     assert(state.verdictHistory?.length === 1, "リロード後も最終見立ての履歴（根拠のスナップショット）が残っている");
 
+    step("入力：話した/書いた内容は、固定の仮生成ではなく実際にAIが下書き（結論・ToDo）を作る");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "input",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    await clickButtonContaining(page, "書く"); // inputModeが依然speakのままなので、書くモードへ切り替える
+    let capturedDraftRequest = null;
+    await page.route("**/api/generate-draft", async (route) => {
+      capturedDraftRequest = JSON.parse(route.request().postData());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          conclusion: "訪問看護師さんが来て、血圧を測ってもらった。",
+          todos: ["来週までに薬を薬局で受け取る"],
+        }),
+      });
+    });
+    await page.fill(
+      'textarea[placeholder="話した内容、決まったことをそのまま書いてください"]',
+      "えーっと、今日は訪問看護師さんが来て、あの、血圧を測ってもらって、それで来週までに薬を薬局で受け取らないといけないんだった"
+    );
+    await clickButtonWithText(page, "次へ");
+    await page.waitForTimeout(300);
+    assert(!!capturedDraftRequest, "入力内容が/api/generate-draftへ実際に送られる");
+    assert(capturedDraftRequest.text.includes("訪問看護師"), "送られるテキストは入力そのまま（AIが受け取る前に加工しない）");
+    state = await getState(page);
+    assert(state.screen === "confirm", "AIの下書き生成後、確認画面に遷移する");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("血圧を測ってもらった"), "確認画面には、生の入力ではなくAIが整理した結論が表示される（言い淀みが整理されている）");
+    await clickButtonWithText(page, "この内容で確定する");
+    await page.waitForTimeout(200);
+    await clickButtonWithText(page, "カレンダーへ戻る");
+    await page.waitForTimeout(300);
+    state = await getState(page);
+    const draftedEvent = state.events.find((e) => e.conclusion.includes("血圧を測ってもらった"));
+    assert(!!draftedEvent, "AIが整理した結論でEventが作成される");
+    assert(
+      draftedEvent.todos.some((t) => t.text.includes("薬局")),
+      "入力の中で明確に述べられた今後の行動が、ToDoとして抜き出される（入力にない事実は作らない）"
+    );
+    await page.unroute("**/api/generate-draft");
+
+    step("入力：バックエンドが無い環境では、AIによる整理をせず入力をそのまま結論にする（断定的な代替を作らない）");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "input",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    await clickButtonContaining(page, "書く");
+    await page.fill(
+      'textarea[placeholder="話した内容、決まったことをそのまま書いてください"]',
+      "今日はゴミ出しをした"
+    );
+    await clickButtonWithText(page, "次へ");
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("今日はゴミ出しをした"), "AIが使えない環境では、入力をそのまま結論として使う（生成せず正直に留める）");
+
     console.log(`\n=== 完了: ${stepCount}ステップ中、失敗 ${failed}件 ===`);
   } finally {
     await browser.close();

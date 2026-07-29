@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { themes, themeList, defaultThemeId } from "./theme/themes.js";
 import { initialEvents } from "./data/fakeEvents.js";
-import { generateDraftFake } from "./lib/fakeGenerateDraft.js";
+import { generateDraft } from "./lib/generateDraft.js";
 import { loadState, saveState } from "./lib/persistence.js";
 import CRTScreen from "./theme/industrial/CRTScreen.jsx";
 import CrackedGlass from "./theme/gothic/CrackedGlass.jsx";
@@ -40,6 +40,8 @@ export default function App() {
   const [selectedEventId, setSelectedEventId] = useState(persisted?.selectedEventId ?? null);
   const [events, setEvents] = useState(persisted?.events ?? initialEvents);
   const [draft, setDraft] = useState(persisted?.draft ?? null);
+  // 下書き生成中の待機状態。リロードで復元する必要はない一時的なUI状態
+  const [isDrafting, setIsDrafting] = useState(false);
   // 手帳だけの情報層：タグの道具箱。タグ名ではなくtagIdで紐付ける
   // （表示名を変えても道具箱との紐付けが切れないように）
   const [tagRegistry, setTagRegistry] = useState(persisted?.tagRegistry ?? {});
@@ -96,8 +98,11 @@ export default function App() {
     setSeenGuides((prev) => ({ ...prev, [id]: true }));
   }
 
-  function handleSubmitInput(text) {
-    setDraft(generateDraftFake(text));
+  async function handleSubmitInput(text) {
+    setIsDrafting(true);
+    const generated = await generateDraft(text);
+    setIsDrafting(false);
+    setDraft(generated);
     setScreen("confirm");
   }
 
@@ -437,6 +442,7 @@ export default function App() {
             mode={inputMode}
             onBack={() => setScreen("calendar")}
             onSubmit={handleSubmitInput}
+            isDrafting={isDrafting}
             seenGuides={seenGuides}
             onDismissGuide={handleDismissGuide}
           />

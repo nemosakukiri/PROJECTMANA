@@ -8,7 +8,7 @@ const SpeechRecognitionApi =
   typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
 /* 入力→確認画面（＋ボタンから。共通ナビゲーションの先） */
-export default function InputScreen({ theme, mode = "both", onBack, onSubmit, seenGuides = {}, onDismissGuide }) {
+export default function InputScreen({ theme, mode = "both", onBack, onSubmit, isDrafting = false, seenGuides = {}, onDismissGuide }) {
   const { tokens } = theme;
   const [text, setText] = useState("");
   const [activeMode, setActiveMode] = useState(mode === "speak" ? "speak" : "write");
@@ -121,13 +121,15 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit, se
             )}
             {text.trim() && !listening && (
               <button
-                onClick={() => onSubmit(text)}
+                onClick={() => !isDrafting && onSubmit(text)}
+                disabled={isDrafting}
                 style={{
                   marginTop: 12, width: "100%", padding: "13px 0", fontSize: 15, borderRadius: 12,
-                  border: "none", background: tokens.ink, color: tokens.paper, cursor: "pointer",
+                  border: "none", background: tokens.ink, color: tokens.paper,
+                  cursor: isDrafting ? "default" : "pointer", opacity: isDrafting ? 0.6 : 1,
                 }}
               >
-                次へ
+                {isDrafting ? "バトラーが読み取っています…" : "次へ"}
               </button>
             )}
           </div>
@@ -139,14 +141,15 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit, se
               style={{ width: "100%", padding: 12, fontSize: 14, lineHeight: 1.8, fontFamily: tokens.bodyFont || "inherit", border: `1px solid ${tokens.line}`, borderRadius: 12, boxSizing: "border-box" }}
             />
             <button
-              onClick={() => text.trim() && onSubmit(text)}
-              disabled={!text.trim()}
+              onClick={() => text.trim() && !isDrafting && onSubmit(text)}
+              disabled={!text.trim() || isDrafting}
               style={{
                 marginTop: 12, width: "100%", padding: "13px 0", fontSize: 15, borderRadius: 12, border: "none",
-                background: text.trim() ? tokens.ink : tokens.line, color: tokens.paper, cursor: text.trim() ? "pointer" : "default",
+                background: text.trim() ? tokens.ink : tokens.line, color: tokens.paper,
+                cursor: text.trim() && !isDrafting ? "pointer" : "default", opacity: isDrafting ? 0.6 : 1,
               }}
             >
-              次へ
+              {isDrafting ? "バトラーが読み取っています…" : "次へ"}
             </button>
           </>
         )}
