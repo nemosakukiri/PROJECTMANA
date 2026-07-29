@@ -119,7 +119,9 @@ export default async function handler(req, res) {
   ];
 
   try {
-    const result = await callAI({ systemPrompt: SYSTEM_PROMPT, messages, maxTokens: 700 });
+    // 700では、モデルによっては内部の思考トークンなどでJSONの途中で
+    // 打ち切られることがあった(2026-07-29に実際に発生)ため、余裕を持たせる
+    const result = await callAI({ systemPrompt: SYSTEM_PROMPT, messages, maxTokens: 2000 });
     if (result.error) {
       res.status(result.status).json({ error: result.error });
       return;
