@@ -171,18 +171,27 @@ async function main() {
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
 
-    step("音声認識が失敗したら、静かに元へ戻さず理由を利用者に伝える(2026-07-29の監査で発覚した欠陥の修正確認)");
-    await page.evaluate(() => { window.__speechShouldFail = true; window.__speechErrorCode = "audio-capture"; });
-    await page.evaluate(() => {
-      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "🎤");
-      btn?.click();
-    });
-    await page.waitForTimeout(300);
-    bodyText = await page.evaluate(() => document.body.textContent);
-    assert(
-      bodyText.includes("マイクを認識できませんでした"),
-      "recognition.onerrorが発火したら、握りつぶさず理由が利用者に見える形で表示される（ShoppingChat.jsxと同じ実装）"
-    );
+    step("音声認識が失敗したら、event.errorのコードごとに理由が分かる文言を出し分ける(2026-07-29利用者指摘の修正確認)");
+    const speechErrorCases = [
+      ["not-allowed", "マイクの使用が許可されていません。"],
+      ["audio-capture", "マイクが利用できません。"],
+      ["network", "音声認識サービスに接続できません。"],
+      ["no-speech", "音声が聞き取れませんでした。もう一度お話しください。"],
+      ["some-unknown-code", "音声入力を開始できませんでした。"],
+    ];
+    for (const [code, expectedMessage] of speechErrorCases) {
+      await page.evaluate((c) => { window.__speechShouldFail = true; window.__speechErrorCode = c; }, code);
+      await page.evaluate(() => {
+        const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "🎤");
+        btn?.click();
+      });
+      await page.waitForTimeout(300);
+      bodyText = await page.evaluate(() => document.body.textContent);
+      assert(
+        bodyText.includes(expectedMessage),
+        `event.error="${code}"のとき「${expectedMessage}」が表示される（実際のbodyTextに含まれていない）`
+      );
+    }
     await page.evaluate(() => { window.__speechShouldFail = false; });
 
     step("録音開始 → 認識結果が反映される → 停止 → 次へ");

@@ -10,15 +10,18 @@
 export const SpeechRecognitionApi =
   typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
+// event.errorの値ごとに、原因が分かる文言を出し分ける
+// （利用者からの指摘：「マイクをクリックするなり『音声を認識できません
+// でした』と出る」——コード別に分岐していなかったため、権限拒否も
+// マイク未接続もネットワーク不通も同じ曖昧な文言になっていた）
 const ERROR_MESSAGES = {
-  "not-allowed": "マイクの使用が許可されていません。ブラウザの設定でマイクへのアクセスを許可してください。",
-  "permission-denied": "マイクの使用が許可されていません。ブラウザの設定でマイクへのアクセスを許可してください。",
-  "audio-capture": "マイクを認識できませんでした。マイクが接続・有効になっているか確認してください。",
-  network: "ネットワークの問題で音声を認識できませんでした。しばらくしてからもう一度お試しください。",
-  "no-speech": "音声が聞き取れませんでした。もう一度お試しください。",
-  aborted: "音声入力が中断されました。",
+  "not-allowed": "マイクの使用が許可されていません。",
+  "service-not-allowed": "マイクの使用が許可されていません。",
+  "audio-capture": "マイクが利用できません。",
+  network: "音声認識サービスに接続できません。",
+  "no-speech": "音声が聞き取れませんでした。もう一度お話しください。",
 };
 
 export function describeSpeechError(code) {
-  return ERROR_MESSAGES[code] || "音声を認識できませんでした。「書く」に切り替えてお試しください。";
+  return ERROR_MESSAGES[code] || "音声入力を開始できませんでした。";
 }
