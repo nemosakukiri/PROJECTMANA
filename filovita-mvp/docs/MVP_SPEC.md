@@ -512,9 +512,17 @@ Vercelに追加した。
 2つの入力ミスが見つかった：(1) `GEMINI_MODEL`が`GRMINI_MODEL`という
 スペルミスで保存されていた、(2) `AI_PROVIDER`・`GEMINI_MODEL`ともに
 Environments欄が「Production」のみで、実際にテストしているPreview環境
-（ブランチ専用URL）にチェックが入っていなかった。両方を利用者側で
-修正済み。環境変数を追加・編集する際は、名前のスペルとEnvironments
-（Production/Preview/Development）の両方を必ず確認すること。
+（ブランチ専用URL）にチェックが入っていなかった。
+
+このVercelプロジェクトは新しい「Environments」モデルを使っており、
+Production/Previewがそれぞれ独立した設定ページ
+（`/settings/environments/production`・`/settings/environments/preview`）
+になっていて、一方のページで追加した変数がもう一方には自動反映され
+ない（編集画面のEnvironments欄をクリックしても環境を追加できず、
+それぞれのページで個別に追加し直す必要があった）。利用者が
+Previewのページで`AI_PROVIDER`・`GEMINI_MODEL`を追加し直して解決した。
+このプロジェクトで環境変数を追加する際は、Production/Preview両方の
+ページで個別に確認・追加すること。
 
 **Production/Previewの混同に注意**：このプロジェクトのVercel Production
 Branchは`claude/init-19boeh`に設定されていない（未設定のまま）。その
