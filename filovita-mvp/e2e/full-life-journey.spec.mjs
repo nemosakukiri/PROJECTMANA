@@ -613,6 +613,16 @@ async function main() {
     assert(state.screen === "confirm", "AIの下書き生成後、確認画面に遷移する");
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("血圧を測ってもらった"), "確認画面には、生の入力ではなくAIが整理した結論が表示される（言い淀みが整理されている）");
+    let todoInputValues = await page.$$eval("[data-testid=confirm-todos] input[type=text]", (els) => els.map((el) => el.value));
+    assert(todoInputValues.some((v) => v.includes("薬局")), "AIが抜き出したToDoが確認画面に表示される");
+
+    step("入力：AIが抜き出したToDoも、結論と同じく確認画面で修正・追加できる（バトラーが勝手に予定を決めない）");
+    await page.fill('input[type=text] >> nth=0', "来月10日までに必ず薬を受け取る");
+    await page.fill('input[type=text] >> nth=1', "次回の訪問日をカレンダーに書く");
+    await clickButtonWithText(page, "追加");
+    await page.waitForTimeout(150);
+    todoInputValues = await page.$$eval("[data-testid=confirm-todos] input[type=text]", (els) => els.map((el) => el.value));
+    assert(todoInputValues.includes("次回の訪問日をカレンダーに書く"), "追加したToDoがその場でリストに反映される");
     await clickButtonWithText(page, "この内容で確定する");
     await page.waitForTimeout(200);
     await clickButtonWithText(page, "カレンダーへ戻る");
@@ -620,9 +630,18 @@ async function main() {
     state = await getState(page);
     const draftedEvent = state.events.find((e) => e.conclusion.includes("血圧を測ってもらった"));
     assert(!!draftedEvent, "AIが整理した結論でEventが作成される");
+    assert(draftedEvent.todos.length === 2, `確認画面で編集・追加した内容がそのままEventに反映される（実際: ${draftedEvent.todos.length}件）`);
     assert(
-      draftedEvent.todos.some((t) => t.text.includes("薬局")),
-      "入力の中で明確に述べられた今後の行動が、ToDoとして抜き出される（入力にない事実は作らない）"
+      draftedEvent.todos.some((t) => t.text === "来月10日までに必ず薬を受け取る"),
+      "確認画面で修正したToDoの文言が使われる"
+    );
+    assert(
+      draftedEvent.todos.some((t) => t.text === "次回の訪問日をカレンダーに書く"),
+      "確認画面で追加したToDoも反映される"
+    );
+    assert(
+      !draftedEvent.todos.some((t) => t.text === "来週までに薬を薬局で受け取る"),
+      "AIが最初に提案したToDoの文言そのままでは保存されない（利用者の修正が優先され、確認をすり抜けない）"
     );
     await page.unroute("**/api/generate-draft");
 

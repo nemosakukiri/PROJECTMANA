@@ -237,7 +237,7 @@ export default function App() {
     setVerdictHistory((prev) => [...prev, { id: makeId("verdict"), ...entry }]);
   }
 
-  function handleConfirm(conclusionText) {
+  function handleConfirm(conclusionText, confirmedTodos = []) {
     const newEvent = {
       id: `evt_${Date.now()}`,
       date: TODAY_DATE,
@@ -245,7 +245,8 @@ export default function App() {
       kind: "記録",
       tags: [],
       conclusion: conclusionText,
-      todos: (draft?.todos ?? []).map((t) => ({ text: t.text, done: false })),
+      // AIが抽出したToDoではなく、確認画面で利用者が確認・修正した後のものを使う
+      todos: confirmedTodos.map((t) => ({ text: t.text, done: false })),
       nextEvent: null,
       related: [],
       myNote: "",
