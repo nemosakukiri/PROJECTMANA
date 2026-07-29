@@ -7,13 +7,22 @@ import { guideById } from "../theme/guide/guideContent.js";
 const SpeechRecognitionApi =
   typeof window !== "undefined" ? window.SpeechRecognition || window.webkitSpeechRecognition : null;
 
-/* 入力→確認画面（＋ボタンから。共通ナビゲーションの先） */
-export default function InputScreen({ theme, mode = "both", onBack, onSubmit, isDrafting = false, seenGuides = {}, onDismissGuide }) {
+/* 入力→確認画面（＋ボタンから。共通ナビゲーションの先）
+   話す/書くに加え、写真（生活資料ライブラリ、MVP_SPEC.md参照）を追加。
+   写真は「入力にない事実を作れない」ため、話す/書くのようなその場の
+   フォールバックは無く、失敗時は正直にエラーを表示する。 */
+export default function InputScreen({
+  theme, mode = "both", onBack, onSubmit, onSubmitPhoto, isDrafting = false, draftError = null,
+  seenGuides = {}, onDismissGuide,
+}) {
   const { tokens } = theme;
   const [text, setText] = useState("");
   const [activeMode, setActiveMode] = useState(mode === "speak" ? "speak" : "write");
   const [listening, setListening] = useState(false);
   const [guideOpen, setGuideOpen] = useState(!seenGuides.input);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoBase64, setPhotoBase64] = useState(null);
+  const [photoMimeType, setPhotoMimeType] = useState(null);
   const recognitionRef = useRef(null);
   const guide = guideById("input");
 
@@ -38,6 +47,20 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit, is
   function stopListening() {
     recognitionRef.current?.stop();
     setListening(false);
+  }
+
+  function handlePhotoSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      const commaIndex = dataUrl.indexOf(",");
+      setPhotoPreview(dataUrl);
+      setPhotoBase64(dataUrl.slice(commaIndex + 1));
+      setPhotoMimeType(file.type || "image/jpeg");
+    };
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -85,9 +108,20 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit, is
           >
             ✍️ 書く
           </button>
+          <button
+            onClick={() => { stopListening(); setActiveMode("photo"); }}
+            style={{
+              flex: 1, padding: "8px 0", fontSize: 12.5, borderRadius: 999, cursor: "pointer",
+              border: `1px solid ${activeMode === "photo" ? tokens.ink : tokens.line}`,
+              background: activeMode === "photo" ? tokens.ink : "transparent",
+              color: activeMode === "photo" ? tokens.paper : tokens.inkSoft,
+            }}
+          >
+            📷 資料
+          </button>
         </div>
 
-        {activeMode === "speak" ? (
+        {activeMode === "speak" && (
           <div style={{ textAlign: "center", padding: "20px 0 30px" }}>
             <button
               onClick={() => (listening ? stopListening() : startListening())}
@@ -133,7 +167,9 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit, is
               </button>
             )}
           </div>
-        ) : (
+        )}
+
+        {activeMode === "write" && (
           <>
             <textarea
               autoFocus value={text} onChange={(e) => setText(e.target.value)}
@@ -152,6 +188,55 @@ export default function InputScreen({ theme, mode = "both", onBack, onSubmit, is
               {isDrafting ? "バトラーが読み取っています…" : "次へ"}
             </button>
           </>
+        )}
+
+        {activeMode === "photo" && (
+          <div style={{ textAlign: "center", padding: "10px 0 30px" }}>
+            <p style={{ fontSize: 12.5, color: tokens.inkSoft, marginTop: 0, textAlign: "left", lineHeight: 1.7 }}>
+              レシート・CWからのお知らせ・支援記録・病院の説明書・手書きのメモなど、
+              生活資料を撮影するとバトラーが読み取ります。
+            </p>
+            <input
+              type="file" accept="image/*" capture="environment"
+              onChange={handlePhotoSelected} id="input-photo-file"
+              style={{ display: "none" }}
+            />
+            <label
+              htmlFor="input-photo-file"
+              style={{
+                display: "inline-block", padding: "14px 22px", borderRadius: 12,
+                border: `1.5px dashed ${tokens.line}`, cursor: "pointer", fontSize: 13, color: tokens.inkSoft,
+              }}
+            >
+              📷 資料を撮影・選択する
+            </label>
+            {photoPreview && (
+              <div style={{ marginTop: 14 }}>
+                <img
+                  src={photoPreview} alt=""
+                  style={{ maxWidth: "100%", maxHeight: 220, borderRadius: 12, border: `1px solid ${tokens.line}` }}
+                />
+              </div>
+            )}
+            {draftError && (
+              <p style={{ fontSize: 12, color: "#a3432a", marginTop: 12 }} data-testid="photo-draft-error">
+                {draftError}
+              </p>
+            )}
+            {photoBase64 && (
+              <button
+                onClick={() => !isDrafting && onSubmitPhoto(photoBase64, photoMimeType)}
+                disabled={isDrafting}
+                style={{
+                  marginTop: 14, width: "100%", padding: "13px 0", fontSize: 15, borderRadius: 12,
+                  border: "none", background: tokens.ink, color: tokens.paper,
+                  cursor: isDrafting ? "default" : "pointer", opacity: isDrafting ? 0.6 : 1,
+                }}
+              >
+                {isDrafting ? "バトラーが読み取っています…" : "この資料を読み取る"}
+              </button>
+            )}
+          </div>
         )}
       </div>
     </div>

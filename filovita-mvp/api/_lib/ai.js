@@ -1,6 +1,19 @@
-/* Anthropic/Gemini呼び出しの共通部分。shopping-chat.js・shopping-final-verdict.js
-   から共有する。プロバイダはAI_PROVIDER環境変数で切り替える（"gemini" | "anthropic"、
-   未設定時は"anthropic"）。APIキーはここ(サーバー側)だけで扱う。 */
+/* Anthropic/Gemini呼び出しの共通部分。shopping-chat.js・shopping-final-verdict.js・
+   generate-draft.js・read-document.jsから共有する。プロバイダはAI_PROVIDER環境変数で
+   切り替える（"gemini" | "anthropic"、未設定時は"anthropic"）。APIキーはここ
+   (サーバー側)だけで扱う。
+
+   messagesの各要素は{role, content, image?}の形。imageは{mimeType, data(base64)}
+   ——生活資料ライブラリ（read-document.js）が写真を渡すために使う。 */
+
+function toAnthropicMessages(messages) {
+  return messages.map((m) => {
+    if (!m.image) return { role: m.role, content: m.content };
+    const blocks = [{ type: "image", source: { type: "base64", media_type: m.image.mimeType, data: m.image.data } }];
+    if (m.content) blocks.push({ type: "text", text: m.content });
+    return { role: m.role, content: blocks };
+  });
+}
 
 export async function callAnthropic({ systemPrompt, messages, maxTokens = 500 }) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -19,7 +32,7 @@ export async function callAnthropic({ systemPrompt, messages, maxTokens = 500 })
       model: "claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
       system: systemPrompt,
-      messages,
+      messages: toAnthropicMessages(messages),
     }),
   });
 
@@ -50,10 +63,12 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 500, thin
   // 旧gemini-2.0-flashは2026-06-01に提供終了済み（MVP_SPEC.md参照）
   const model = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
   // AnthropicのassistantロールはGeminiでは"model"
-  const contents = messages.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
-  }));
+  const contents = messages.map((m) => {
+    const parts = [];
+    if (m.image) parts.push({ inlineData: { mimeType: m.image.mimeType, data: m.image.data } });
+    if (m.content) parts.push({ text: m.content });
+    return { role: m.role === "assistant" ? "model" : "user", parts };
+  });
 
   const generationConfig = { maxOutputTokens: maxTokens };
   // Gemini 3系は内部の思考(thinking)にmaxOutputTokensの一部を使うため、

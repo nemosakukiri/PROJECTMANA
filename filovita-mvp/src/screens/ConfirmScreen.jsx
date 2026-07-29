@@ -3,7 +3,7 @@ import { Check, Trash2 } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 
 /* ④確認画面（心臓部） */
-export default function ConfirmScreen({ theme, draft, companionName, onBack, onConfirm }) {
+export default function ConfirmScreen({ theme, draft, companionName, pendingTag, onBack, onConfirm }) {
   const { tokens, labels } = theme;
   const [conclusion, setConclusion] = useState(draft.conclusion.value);
   // AIが抽出したToDoも、結論と同じく利用者が確認・修正してから保存する
@@ -37,6 +37,17 @@ export default function ConfirmScreen({ theme, draft, companionName, onBack, onC
         <p style={{ fontSize: 12.5, color: tokens.inkSoft, marginTop: 0 }}>
           {confirmIntro}
         </p>
+        {pendingTag && (
+          <div
+            style={{
+              display: "inline-block", fontSize: 11.5, color: tokens.inkSoft, background: tokens.card,
+              border: `1px solid ${tokens.line}`, borderRadius: 999, padding: "4px 12px", marginBottom: 16,
+            }}
+            data-testid="confirm-pending-tag"
+          >
+            {pendingTag} として記録します
+          </div>
+        )}
         <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 6 }}>{labels.conclusionLabel}</div>
         <textarea
           value={conclusion} onChange={(e) => setConclusion(e.target.value)} rows={3}

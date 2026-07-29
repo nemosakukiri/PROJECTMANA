@@ -664,6 +664,83 @@ async function main() {
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("今日はゴミ出しをした"), "AIが使えない環境では、入力をそのまま結論として使う（生成せず正直に留める）");
 
+    step("生活資料ライブラリ：写真を撮る/選ぶと、AIが資料の種類を判定してEventの下書きを作る");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "input",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    await clickButtonContaining(page, "資料");
+    await page.setInputFiles("#input-photo-file", {
+      name: "receipt.jpg",
+      mimeType: "image/jpeg",
+      buffer: Buffer.from("fake-receipt-photo-bytes"),
+    });
+    await page.waitForTimeout(200);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("この資料を読み取る"), "写真を選ぶと「読み取る」ボタンが現れる");
+
+    let capturedDocRequest = null;
+    await page.route("**/api/read-document", async (route) => {
+      capturedDocRequest = JSON.parse(route.request().postData());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          docType: "receipt",
+          docTypeLabel: "🧾 レシート",
+          conclusion: "スーパーで食料品と日用品を購入した（合計1,280円）",
+          todos: ["レシートを家計簿に転記する"],
+        }),
+      });
+    });
+    await clickButtonWithText(page, "この資料を読み取る");
+    await page.waitForTimeout(300);
+    assert(!!capturedDocRequest, "写真データが/api/read-documentへ実際に送られる");
+    assert(capturedDocRequest.image.length > 0, "送信されるのは実際の画像データ(base64)である");
+    state = await getState(page);
+    assert(state.screen === "confirm", "資料を読み取った後、確認画面に遷移する");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("食料品と日用品を購入した"), "AIが読み取った内容が確認画面の結論に反映される");
+    assert(bodyText.includes("🧾 レシート として記録します"), "資料の種類が確認画面に明示される（タグとして付くことが事前に分かる）");
+    let todoValues = await page.$$eval("[data-testid=confirm-todos] input[type=text]", (els) => els.map((el) => el.value));
+    assert(todoValues.some((v) => v.includes("家計簿")), "資料から読み取った今後の行動もToDoとして提示される");
+    await clickButtonWithText(page, "この内容で確定する");
+    await page.waitForTimeout(200);
+    await clickButtonWithText(page, "カレンダーへ戻る");
+    await page.waitForTimeout(300);
+    state = await getState(page);
+    const receiptEvent = state.events.find((e) => e.conclusion.includes("食料品と日用品を購入した"));
+    assert(!!receiptEvent, "資料の内容でEventが作成される");
+    assert(receiptEvent.tags.includes("🧾 レシート"), "資料の種類がタグとして自動で付く（生活資料ライブラリ：必要ならタグを付ける）");
+    await page.unroute("**/api/read-document");
+
+    step("生活資料ライブラリ：写真は「入力にない事実」を作れないため、読み取れない場合は断定的な代替を作らず正直に伝える");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "input",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    await clickButtonContaining(page, "資料");
+    await page.setInputFiles("#input-photo-file", {
+      name: "blurry.jpg",
+      mimeType: "image/jpeg",
+      buffer: Buffer.from("fake-unreadable-photo-bytes"),
+    });
+    await page.waitForTimeout(200);
+    await clickButtonWithText(page, "この資料を読み取る");
+    await page.waitForTimeout(500);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("読み取れませんでした"), "バックエンドが無い/読み取れない環境では、断定的な代替を作らず正直にエラーを伝える");
+    state = await getState(page);
+    assert(state.screen === "input", "読み取りに失敗した場合は入力画面に留まる（確認画面へは進まない）");
+
     console.log(`\n=== 完了: ${stepCount}ステップ中、失敗 ${failed}件 ===`);
   } finally {
     await browser.close();

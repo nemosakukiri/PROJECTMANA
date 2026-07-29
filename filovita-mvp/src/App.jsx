@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { themes, themeList, defaultThemeId } from "./theme/themes.js";
 import { initialEvents } from "./data/fakeEvents.js";
 import { generateDraft } from "./lib/generateDraft.js";
+import { readDocument } from "./lib/readDocument.js";
 import { loadState, saveState } from "./lib/persistence.js";
 import CRTScreen from "./theme/industrial/CRTScreen.jsx";
 import CrackedGlass from "./theme/gothic/CrackedGlass.jsx";
@@ -42,6 +43,11 @@ export default function App() {
   const [draft, setDraft] = useState(persisted?.draft ?? null);
   // 下書き生成中の待機状態。リロードで復元する必要はない一時的なUI状態
   const [isDrafting, setIsDrafting] = useState(false);
+  // 生活資料ライブラリ：写真は「入力にない事実」を作れないため、失敗時は
+  // 静かなフォールバックではなく正直にエラーを見せる（MVP_SPEC.md参照）
+  const [draftError, setDraftError] = useState(null);
+  // 写真から読み取った資料の種類。確定時にタグとしてEventへ付ける
+  const [pendingTag, setPendingTag] = useState(null);
   // 手帳だけの情報層：タグの道具箱。タグ名ではなくtagIdで紐付ける
   // （表示名を変えても道具箱との紐付けが切れないように）
   const [tagRegistry, setTagRegistry] = useState(persisted?.tagRegistry ?? {});
@@ -100,9 +106,27 @@ export default function App() {
 
   async function handleSubmitInput(text) {
     setIsDrafting(true);
+    setDraftError(null);
+    setPendingTag(null);
     const generated = await generateDraft(text);
     setIsDrafting(false);
     setDraft(generated);
+    setScreen("confirm");
+  }
+
+  async function handleSubmitPhoto(base64, mimeType) {
+    setIsDrafting(true);
+    setDraftError(null);
+    const result = await readDocument({ base64, mimeType });
+    setIsDrafting(false);
+    if (result.error) {
+      // 写真は「入力にない事実」を作れないため、静かなフォールバックはせず
+      // 入力画面に留まって正直に伝える（generateDraftとの違い）
+      setDraftError(result.error);
+      return;
+    }
+    setPendingTag(result.docTypeLabel);
+    setDraft(result.draft);
     setScreen("confirm");
   }
 
@@ -243,7 +267,9 @@ export default function App() {
       date: TODAY_DATE,
       dateLabel: TODAY_LABEL,
       kind: "記録",
-      tags: [],
+      // 写真から読み取った資料は、その種類をタグとして自動で付ける
+      // （生活資料ライブラリ：「必要ならタグを付ける」MVP_SPEC.md参照）
+      tags: pendingTag ? [pendingTag] : [],
       conclusion: conclusionText,
       // AIが抽出したToDoではなく、確認画面で利用者が確認・修正した後のものを使う
       todos: confirmedTodos.map((t) => ({ text: t.text, done: false })),
@@ -253,6 +279,7 @@ export default function App() {
     };
     setEvents((prev) => [...prev, newEvent]);
     setDraft(null);
+    setPendingTag(null);
     setScreen("calendar");
   }
 
@@ -443,13 +470,15 @@ export default function App() {
             mode={inputMode}
             onBack={() => setScreen("calendar")}
             onSubmit={handleSubmitInput}
+            onSubmitPhoto={handleSubmitPhoto}
             isDrafting={isDrafting}
+            draftError={draftError}
             seenGuides={seenGuides}
             onDismissGuide={handleDismissGuide}
           />
         )}
         {screen === "confirm" && draft && (
-          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
+          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} pendingTag={pendingTag} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
         )}
     </>
   );
