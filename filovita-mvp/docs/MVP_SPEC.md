@@ -508,6 +508,14 @@ Google AI Studioアカウントで実際に使えるモデル（`gemini-3-flash-
 を確認し、`AI_PROVIDER=gemini`・`GEMINI_MODEL=gemini-3-flash-preview`を
 Vercelに追加した。
 
+追加後もなお`gemini-2.0-flash`のエラーが出続けたため再確認したところ、
+2つの入力ミスが見つかった：(1) `GEMINI_MODEL`が`GRMINI_MODEL`という
+スペルミスで保存されていた、(2) `AI_PROVIDER`・`GEMINI_MODEL`ともに
+Environments欄が「Production」のみで、実際にテストしているPreview環境
+（ブランチ専用URL）にチェックが入っていなかった。両方を利用者側で
+修正済み。環境変数を追加・編集する際は、名前のスペルとEnvironments
+（Production/Preview/Development）の両方を必ず確認すること。
+
 **Production/Previewの混同に注意**：このプロジェクトのVercel Production
 Branchは`claude/init-19boeh`に設定されていない（未設定のまま）。その
 ため`filovita-mvp.vercel.app`（Production）は、Root Directory修正より
