@@ -500,6 +500,25 @@ Vercel側の環境変数設定の状態によるもので、コード側から�
 あくまで「設定が揺れても、両方のキーさえ生きていれば会話が完全に
 止まらない」ための保険。
 
+**実際に判明した原因（2026-07-28）**：`AI_PROVIDER`環境変数自体が
+Vercelに保存されていなかった（Environment Variables一覧に存在しな
+かった）。加えて、Geminiの旧モデル`gemini-2.0-flash`は2026年6月1日に
+提供終了しており、`limit: 0`のエラーはこれが原因だった。利用者の
+Google AI Studioアカウントで実際に使えるモデル（`gemini-3-flash-preview`）
+を確認し、`AI_PROVIDER=gemini`・`GEMINI_MODEL=gemini-3-flash-preview`を
+Vercelに追加した。
+
+**Production/Previewの混同に注意**：このプロジェクトのVercel Production
+Branchは`claude/init-19boeh`に設定されていない（未設定のまま）。その
+ため`filovita-mvp.vercel.app`（Production）は、Root Directory修正より
+前の最初期の失敗ビルドのまま止まっており、一度も正常に動いたことが
+ない。実際に動いている最新のコードは常に
+`filovita-mvp-git-claude-init-19boeh-mana-projects.vercel.app`
+（Previewのブランチ専用URL）にある。Vercelダッシュボードで見える
+「Redeploy」ボタンがどのデプロイを指しているか、環境（Production/
+Preview）を必ず確認してから押すこと。根本的にはProduct Branchの設定を
+直すのが望ましい（未着手）。
+
 ## Filovita内部の「暮らしの予定」（2026-07-28追記・実装済み）
 
 利用者からの明示的な指示：「Google Calendarとの連携を待たず、まず
