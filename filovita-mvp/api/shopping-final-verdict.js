@@ -34,10 +34,15 @@ const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の「今�
 断定しすぎず、含みのある短い理由を品目ごとに添えてください（例：「次の
 入金までまだ少しあるので」「必需品の在庫が近そうなので」）。
 
+さらに、この判断全体を通して何を最も重視したかを一言で表してください
+（例：「明日の生活費確保」「疲労軽減」「楽しみを優先」）。これは後から
+振り返ったときに「この時のバトラーは何を大事にしたか」が分かるように
+するためのものです。
+
 必ず次のJSON形式だけを出力してください。説明文・前置き・コードブロックの
 装飾（\`\`\`など）は一切付けないでください。
 
-{"items":[{"name":"品目名","category":"now"|"later"|"priority"|"skip","reason":"一言の理由"}],"summary":"全体を通した一言の結論"}
+{"items":[{"name":"品目名","category":"now"|"later"|"priority"|"skip","reason":"一言の理由"}],"summary":"全体を通した一言の結論","focus":"この判断で最も重視したことを一言で"}
 
 items配列には、渡された品目をすべて過不足なく含めてください。`;
 
@@ -86,7 +91,11 @@ function parseVerdictJson(text) {
       .filter((i) => i && typeof i.name === "string" && CATEGORIES.includes(i.category))
       .map((i) => ({ name: i.name, category: i.category, reason: typeof i.reason === "string" ? i.reason : "" }));
     if (items.length === 0) return null;
-    return { items, summary: typeof parsed.summary === "string" ? parsed.summary : "" };
+    return {
+      items,
+      summary: typeof parsed.summary === "string" ? parsed.summary : "",
+      focus: typeof parsed.focus === "string" ? parsed.focus : "",
+    };
   } catch {
     return null;
   }

@@ -71,6 +71,10 @@ export default function App() {
   const [shoppingListItems, setShoppingListItems] = useState(persisted?.shoppingListItems ?? []);
   // 買い物相談の自由な会話履歴（api/shopping-chat.js経由。MVP_SPEC.md「相談は往復である」）
   const [shoppingChatHistory, setShoppingChatHistory] = useState(persisted?.shoppingChatHistory ?? []);
+  // 最終見立ての履歴：判断の根拠（渡した事実一式）と、その時バトラーが
+  // 何を重視したか(focus)を、あとから説明できるよう残しておく。
+  // 画面からは隠すが、内部からは消さない（FILOVITA_PHILOSOPHY.md参照）
+  const [verdictHistory, setVerdictHistory] = useState(persisted?.verdictHistory ?? []);
   // 確認用のプレビュー。実際の日付を書き換えず、見た目だけ試せる（保存はしない）
   const [stagePreview, setStagePreview] = useState(null);
 
@@ -79,11 +83,11 @@ export default function App() {
   useEffect(() => {
     saveState({
       screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
+      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory,
     });
   }, [
     screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory,
+    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory,
   ]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -224,6 +228,10 @@ export default function App() {
     setShoppingChatHistory((prev) => [...prev, { role, content }]);
   }
 
+  function handleRecordVerdict(entry) {
+    setVerdictHistory((prev) => [...prev, { id: makeId("verdict"), ...entry }]);
+  }
+
   function handleConfirm(conclusionText) {
     const newEvent = {
       id: `evt_${Date.now()}`,
@@ -340,6 +348,8 @@ export default function App() {
             items={shoppingListItems}
             onToggleItem={handleToggleShoppingListItem}
             onAddItem={handleAddShoppingListItem}
+            verdictHistory={verdictHistory}
+            onVerdictRecorded={handleRecordVerdict}
             onBack={() => setScreen("shoppingConsult")}
           />
         )}

@@ -49,6 +49,7 @@ function FinalVerdictPanel({
   tokens, speaker, checkedItems,
   companionName, budget, balance, nextShoppingDate, cwPlanNote,
   incomeSchedule, paymentSchedule, restockSchedule, chatHistory,
+  onVerdictRecorded,
 }) {
   const [verdict, setVerdict] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -58,18 +59,18 @@ function FinalVerdictPanel({
     if (loading || checkedItems.length === 0) return;
     setLoading(true);
     setError(null);
+    // 送ったコンテキストをそのまま記録に残す——「なぜそう言ったか」を
+    // あとから説明できるようにする（隠すが、消さない。FILOVITA_PHILOSOPHY.md参照）
+    const contextSnapshot = {
+      companionName, budget, balance, nextShoppingDate, cwPlanNote,
+      incomeSchedule, paymentSchedule, restockSchedule,
+      items: checkedItems.map((i) => ({ name: i.name, amount: i.amount, section: i.section })),
+    };
     try {
       const response = await fetch(FINAL_VERDICT_API_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          history: chatHistory,
-          context: {
-            companionName, budget, balance, nextShoppingDate, cwPlanNote,
-            incomeSchedule, paymentSchedule, restockSchedule,
-            items: checkedItems.map((i) => ({ name: i.name, amount: i.amount, section: i.section })),
-          },
-        }),
+        body: JSON.stringify({ history: chatHistory, context: contextSnapshot }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.items) {
@@ -78,6 +79,13 @@ function FinalVerdictPanel({
         return;
       }
       setVerdict(data);
+      onVerdictRecorded?.({
+        at: new Date().toISOString(),
+        context: contextSnapshot,
+        items: data.items,
+        summary: data.summary,
+        focus: data.focus,
+      });
     } catch {
       // fetch自体が失敗＝バックエンドに届いていない（ローカル開発環境やGitHub Pagesなど）
       setError("今は最終見立てを聞けませんでした。この環境ではまだこの機能が使えないかもしれません。");
@@ -153,6 +161,11 @@ function FinalVerdictPanel({
               <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: tokens.ink, lineHeight: 1.8 }} data-testid="shopping-final-verdict-summary">
                 {speaker}：{verdict.summary}
               </p>
+              {verdict.focus && (
+                <p style={{ margin: "8px 0 0", fontSize: 11.5, color: tokens.inkFaint }} data-testid="shopping-final-verdict-focus">
+                  ※ 今回重視したこと：{verdict.focus}
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -169,6 +182,7 @@ export default function ShoppingListScreen({
   theme, companionName, budget, balance, nextShoppingDate, cwPlanNote,
   incomeSchedule, paymentSchedule, restockSchedule, chatHistory,
   items, onToggleItem, onAddItem, onBack,
+  verdictHistory, onVerdictRecorded,
 }) {
   const { tokens } = theme;
   const [name, setName] = useState("");
@@ -250,7 +264,48 @@ export default function ShoppingListScreen({
           nextShoppingDate={nextShoppingDate} cwPlanNote={cwPlanNote}
           incomeSchedule={incomeSchedule} paymentSchedule={paymentSchedule} restockSchedule={restockSchedule}
           chatHistory={chatHistory}
+          onVerdictRecorded={onVerdictRecorded}
         />
+
+        {verdictHistory?.length > 0 && (
+          <VerdictHistoryPanel tokens={tokens} speaker={speaker} history={verdictHistory} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* 過去の最終見立ての履歴。「なんでそう言ったの？」に後から答えられる
+   ようにするための記録であり、同時に「この時のバトラーは何を重視したか」
+   という人格の履歴でもある(FILOVITA_PHILOSOPHY.md「根拠は画面から隠すが、
+   内部からは消さない」参照)。画面には直近だけを表示するが、データ自体は
+   全件persistence.js経由で保持する（隠すが、消さない）。 */
+function VerdictHistoryPanel({ tokens, speaker, history }) {
+  const recent = [...history].reverse().slice(0, 5);
+  return (
+    <div style={{ marginTop: 20 }}>
+      <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
+        🗂 過去の見立て
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-testid="verdict-history">
+        {recent.map((entry) => (
+          <div
+            key={entry.id}
+            style={{ padding: "10px 12px", borderRadius: 10, border: `1px solid ${tokens.line}` }}
+          >
+            <div style={{ fontSize: 11, color: tokens.inkFaint, marginBottom: 4 }}>
+              {new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(entry.at))}
+            </div>
+            <p style={{ margin: 0, fontSize: 12.5, color: tokens.ink, lineHeight: 1.6 }}>
+              {speaker}：{entry.summary}
+            </p>
+            {entry.focus && (
+              <p style={{ margin: "4px 0 0", fontSize: 11, color: tokens.inkFaint }}>
+                重視したこと：{entry.focus}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

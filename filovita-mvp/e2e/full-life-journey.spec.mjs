@@ -527,6 +527,7 @@ async function main() {
             { name: "ぶどう", category: "later", reason: "今すぐでなくても大丈夫そうなので" },
           ],
           summary: "今日は食料品とタバコだけ買って、ぶどうは来週でも良さそうです。",
+          focus: "明日の生活費確保",
         }),
       });
     });
@@ -546,7 +547,21 @@ async function main() {
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("今買う") && bodyText.includes("来週でよい"), "AIの判断が品目ごとにカテゴリ分けして表示される（固定のgo/remove/skipではない）");
     assert(bodyText.includes("今日は食料品とタバコだけ買って"), "全体を通した結論（AIが生成したsummary）も表示される");
+    assert(bodyText.includes("重視したこと：明日の生活費確保"), "その判断で何を重視したか(focus)も表示される");
     await page.unroute("**/api/shopping-final-verdict");
+
+    step("買い物リスト：最終見立ての根拠（渡したコンテキストと判断内容）が履歴として記録される");
+    state = await getState(page);
+    assert(Array.isArray(state.verdictHistory) && state.verdictHistory.length === 1, "最終見立てを聞くたびに履歴が1件記録される");
+    const recordedVerdict = state.verdictHistory[0];
+    assert(recordedVerdict.summary === "今日は食料品とタバコだけ買って、ぶどうは来週でも良さそうです。", "履歴にAIの結論(summary)が記録される");
+    assert(recordedVerdict.focus === "明日の生活費確保", "履歴に重視したこと(focus)も記録される");
+    assert(
+      recordedVerdict.context.incomeSchedule.some((i) => i.label === "生活保護費"),
+      "履歴には、その時点で実際にAIへ渡した根拠（入金予定等）のスナップショットも残る——あとから「なぜそう言ったか」を説明できるように"
+    );
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("過去の見立て"), "「今日の買い物」画面に過去の見立ての履歴欄がある");
 
     step("買い物リスト：バックエンドが無い環境では、最終見立ても断定せず状況を伝えるだけに留める");
     await clickButtonContaining(page, "最終見立てを聞く");
@@ -562,6 +577,7 @@ async function main() {
     const grape = state.shoppingListItems.find((i) => i.name === "ぶどう");
     assert(peach && peach.checked === false, "リロード後も桃のチェックは外れたまま");
     assert(grape && grape.checked === true, "リロード後もひらめいて追加したぶどうが残っている");
+    assert(state.verdictHistory?.length === 1, "リロード後も最終見立ての履歴（根拠のスナップショット）が残っている");
 
     console.log(`\n=== 完了: ${stepCount}ステップ中、失敗 ${failed}件 ===`);
   } finally {
