@@ -524,6 +524,23 @@ Previewのページで`AI_PROVIDER`・`GEMINI_MODEL`を追加し直して解決�
 このプロジェクトで環境変数を追加する際は、Production/Preview両方の
 ページで個別に確認・追加すること。
 
+**最後にもう1つ判明した問題（2026-07-29・解決済み）**：環境変数を
+直したあとも`/api/shopping-final-verdict`だけ「見立てをうまく読み取れ
+ませんでした」で失敗し続けた。Vercelのruntime logsを見ると、AIは実際に
+正しい形のJSONを返し始めていたが、`maxTokens`の上限（700→2000と
+上げても）に達して途中で打ち切られていた。原因は`gemini-3-flash-preview`
+が既定でGoogle AI Studio上「Thinking level: High」——内部思考にも
+`maxOutputTokens`を消費するモデルだったこと。この用途（品目分類の
+即答JSON）には深い思考は不要なため、`generationConfig.thinkingConfig.
+thinkingLevel: "low"`を指定して思考の消費を抑え、`maxTokens`も3000に
+引き上げて解決した。`callAI()`・`callGemini()`は`thinkingLevel`を
+オプション引数として受け取れるようにし、対話向けの`shopping-chat.js`
+には影響しないようスコープした。
+
+最終的に、実際の画面で「タバコ：今買う」「パイナップル：見送る（保護費
+入金まであと2日）」のように、暮らしの予定を踏まえた品目ごとの判断と
+全体の結論が正しく表示されることを確認した。
+
 **Production/Previewの混同に注意**：このプロジェクトのVercel Production
 Branchは`claude/init-19boeh`に設定されていない（未設定のまま）。その
 ため`filovita-mvp.vercel.app`（Production）は、Root Directory修正より
