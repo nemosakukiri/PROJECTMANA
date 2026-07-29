@@ -463,6 +463,45 @@ PDF等）をAIが読み取り、Google Calendarの実際の予定と照らし合
 には、VercelのProject Settings → Git → Production Branchを
 `claude/init-19boeh`に設定する必要がある（未確認）。
 
+### 相談窓口を「暮らし相談画面」だけでなく「今日の買い物」画面にも（2026-07-29追記・実装済み）
+
+利用者からの要望：「最後の買い物の場面...あそこで音声入力とかなんか
+バトラーと相談するのにこっちが入力できるチャットみたいなのが欲しい」。
+
+これまで自由入力チャット（`ShoppingChat`）は`ShoppingConsultScreen.jsx`
+（家で暮らしの予定を組み立てる場面）だけにあり、`ShoppingListScreen.jsx`
+（実際にお店にいる場面）には最終見立て（一方向のボタン）しか無かった。
+店頭で「これは今日しか安くない」「やっぱりこっちはやめよう」のような
+その場の相談をする手段が欠けていた。
+
+- `ShoppingChat`を`ShoppingConsultScreen.jsx`内のローカル定義から
+  `src/components/ShoppingChat.jsx`へ共通部品として切り出した。props
+  （`tokens, speaker, chatHistory, onAppendChatMessage, context`）と
+  既存の`data-testid`はそのまま維持し、相談画面側のE2Eテストに影響が
+  出ないようにした。
+- 切り出したうえで、マイクボタン（🎤）を追加した。`InputScreen.jsx`と
+  同じ`window.SpeechRecognition || window.webkitSpeechRecognition`を
+  使い、認識結果はテキスト欄を埋めるだけに留める（自動送信はしない）。
+  送信は必ず利用者が「送る」を押してから——AIに渡す前に必ず読み返せる、
+  という「AIが生成した内容は常に編集可能」の原則を音声入力にも適用した。
+- `ShoppingListScreen.jsx`にもこの`ShoppingChat`を追加した。渡す
+  `context`は`FinalVerdictPanel`と同じ形（予算・残額・次の買い物日・
+  CWメモ・暮らしの予定）に、店頭で今チェックが入っている品目
+  （`checkedUsual + checkedAdd`）を加えたもの。
+- `chatHistory`（`shoppingChatHistory`）は元々アプリ全体で1つの状態
+  だったため、相談画面と買い物リスト画面は**同じ会話履歴を共有する**。
+  家で相談した内容が、そのままお店でも読み返せる——暮らし全体を通して
+  会話は一つに続く、という設計と自然に一致した。
+- `App.jsx`の`ShoppingListScreen`呼び出しに、これまで渡していなかった
+  `onAppendChatMessage`を追加した（`chatHistory`は元から渡していたが、
+  追記する手段が欠けていた）。
+
+生きたシナリオに4ステップ追加し検証済み：買い物リスト画面にも相談欄が
+表示されること、相談画面でのやり取りがそのまま続けて見えること、
+マイクボタンで音声認識結果がチャット欄に反映されること、実際に打ち込んだ
+相談がこの画面のコンテキスト（店頭でチェック中の品目）を添えてAPIへ渡り、
+その会話履歴が相談画面と共有されること。43ステップ中失敗0件。
+
 ## AIプロバイダの切り替え（2026-07-28追記）
 
 Anthropic APIは有料（従量課金）であり、開発・テスト段階でのAnthropicの

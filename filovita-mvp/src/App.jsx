@@ -378,6 +378,7 @@ export default function App() {
             paymentSchedule={paymentSchedule}
             restockSchedule={restockSchedule}
             chatHistory={shoppingChatHistory}
+            onAppendChatMessage={handleAppendShoppingChatMessage}
             items={shoppingListItems}
             onToggleItem={handleToggleShoppingListItem}
             onAddItem={handleAddShoppingListItem}

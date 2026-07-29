@@ -1,14 +1,10 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
+import ShoppingChat from "../components/ShoppingChat.jsx";
 import { computeShoppingJudgment } from "../lib/shoppingJudgment.js";
 
 const JUDGMENT_EMOJI = { empty: "🛒", ok: "🙂", tight: "🤔", over: "😟" };
-// GitHub Pagesは静的ホスティングのみのため、この本体アプリと同じオリジンには
-// api/shopping-chat.jsは存在しない。別途Vercelにデプロイしたバックエンドの
-// 絶対URLに差し替える運用（詳細はMVP_SPEC.md「相談は往復である」参照）。
-// 同一オリジンにAPIも同居させる場合は "/api/shopping-chat" のままでよい。
-const SHOPPING_CHAT_API_URL = "/api/shopping-chat";
 
 function ItemListEditor({ tokens, items, onAdd, onRemove, onEditAmount, amountKey, namePlaceholder, addLabel }) {
   const [name, setName] = useState("");
@@ -140,100 +136,6 @@ function ScheduleListEditor({ tokens, items, onAdd, onRemove, namePlaceholder, s
           style={{ padding: "9px 14px", fontSize: 12.5, borderRadius: 9, border: "none", background: tokens.ink, color: tokens.paper, cursor: "pointer", whiteSpace: "nowrap" }}
         >
           追加
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* 自由入力の相談窓口。決まった選択肢の判定ではなく、実際にAIへ渡して
-   考えて返す(api/shopping-chat.js)。MVP_SPEC.md「相談は往復である：
-   診断ではなく会話」の実装——バックエンドが無い環境（GitHub Pages等）
-   では失敗するので、その場合は断定せず状況を伝えるだけに留める。 */
-function ShoppingChat({ tokens, speaker, chatHistory, onAppendChatMessage, context }) {
-  const [draft, setDraft] = useState("");
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState(null);
-
-  async function send() {
-    const text = draft.trim();
-    if (!text || sending) return;
-    setDraft("");
-    setError(null);
-    onAppendChatMessage("user", text);
-    setSending(true);
-    try {
-      const response = await fetch(SHOPPING_CHAT_API_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message: text, history: chatHistory, context }),
-      });
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.reply) {
-        // サーバーから具体的な理由が返ってきていれば、それをそのまま伝える
-        // （例：レート制限なら「少し待てば直る」と分かる文言）。断定せず、
-        // 起きたことをそのまま伝えるのがFilovitaの方針。
-        setError(data?.error || "今は相談に答えられませんでした。この環境ではまだ会話機能が使えないかもしれません。");
-        return;
-      }
-      onAppendChatMessage("assistant", data.reply);
-    } catch {
-      // fetch自体が失敗＝バックエンドに届いていない（ローカル開発環境やGitHub Pagesなど）
-      setError("今は相談に答えられませんでした。この環境ではまだ会話機能が使えないかもしれません。");
-    } finally {
-      setSending(false);
-    }
-  }
-
-  return (
-    <div style={{ marginTop: 22 }}>
-      <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
-        {speaker}に自由に相談する
-      </div>
-      {/* MVP_SPEC.md「相談は往復である」：開発・テスト中は無料枠のAIを使うため、
-          実データを送る前に必ず分かるよう常時表示する。本番運用に切り替えたら外す。 */}
-      <div
-        style={{
-          fontSize: 11, color: tokens.inkFaint, background: tokens.card,
-          border: `1px dashed ${tokens.line}`, borderRadius: 8, padding: "6px 10px", marginBottom: 10,
-        }}
-        data-testid="shopping-chat-test-notice"
-      >
-        🧪 現在はテスト運用中の会話機能です
-      </div>
-      {chatHistory.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
-          {chatHistory.map((m, i) => (
-            <div
-              key={i}
-              style={{
-                alignSelf: m.role === "user" ? "flex-end" : "flex-start", maxWidth: "85%",
-                padding: "8px 12px", borderRadius: 12, fontSize: 13, lineHeight: 1.6,
-                background: m.role === "user" ? tokens.ink : (tokens.accentBg || tokens.card),
-                color: m.role === "user" ? tokens.paper : tokens.ink,
-                border: m.role === "user" ? "none" : `1px solid ${tokens.line}`,
-              }}
-              data-testid={`shopping-chat-${m.role}`}
-            >
-              {m.role === "assistant" ? `${speaker}：${m.content}` : m.content}
-            </div>
-          ))}
-        </div>
-      )}
-      {sending && <p style={{ fontSize: 12, color: tokens.inkFaint, marginBottom: 8 }}>{speaker}が考えています…</p>}
-      {error && <p style={{ fontSize: 12, color: "#a3432a", marginBottom: 8 }} data-testid="shopping-chat-error">{error}</p>}
-      <div style={{ display: "flex", gap: 6 }}>
-        <input
-          type="text" value={draft} onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") send(); }}
-          placeholder="例：桃が半額だから追加したい"
-          style={{ flex: 1, padding: "9px 11px", fontSize: 13, borderRadius: 9, border: `1px solid ${tokens.line}`, fontFamily: "inherit" }}
-        />
-        <button
-          onClick={send} disabled={sending}
-          style={{ padding: "9px 16px", fontSize: 12.5, borderRadius: 9, border: "none", background: tokens.ink, color: tokens.paper, cursor: "pointer", opacity: sending ? 0.6 : 1 }}
-        >
-          送る
         </button>
       </div>
     </div>

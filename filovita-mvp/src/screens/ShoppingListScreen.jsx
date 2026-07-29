@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
+import ShoppingChat from "../components/ShoppingChat.jsx";
 import { computeShoppingJudgment } from "../lib/shoppingJudgment.js";
 
 const JUDGMENT_EMOJI = { empty: "🛒", ok: "🙂", tight: "🤔", over: "😟" };
@@ -180,7 +181,7 @@ function FinalVerdictPanel({
    地続きにつながる)。MVP_SPEC.md「複数周期の統合判断」参照。 */
 export default function ShoppingListScreen({
   theme, companionName, budget, balance, nextShoppingDate, cwPlanNote,
-  incomeSchedule, paymentSchedule, restockSchedule, chatHistory,
+  incomeSchedule, paymentSchedule, restockSchedule, chatHistory, onAppendChatMessage,
   items, onToggleItem, onAddItem, onBack,
   verdictHistory, onVerdictRecorded,
 }) {
@@ -258,14 +259,25 @@ export default function ShoppingListScreen({
           </div>
         </div>
 
-        <FinalVerdictPanel
-          tokens={tokens} speaker={speaker} checkedItems={[...checkedUsual, ...checkedAdd]}
-          companionName={companionName} budget={budget} balance={balance}
-          nextShoppingDate={nextShoppingDate} cwPlanNote={cwPlanNote}
-          incomeSchedule={incomeSchedule} paymentSchedule={paymentSchedule} restockSchedule={restockSchedule}
-          chatHistory={chatHistory}
-          onVerdictRecorded={onVerdictRecorded}
+        <ShoppingChat
+          tokens={tokens} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
+          context={{
+            companionName, budget, balance, nextShoppingDate, cwPlanNote,
+            incomeSchedule, paymentSchedule, restockSchedule,
+            items: [...checkedUsual, ...checkedAdd].map((i) => ({ name: i.name, amount: i.amount, section: i.section })),
+          }}
         />
+
+        <div style={{ marginTop: 22 }}>
+          <FinalVerdictPanel
+            tokens={tokens} speaker={speaker} checkedItems={[...checkedUsual, ...checkedAdd]}
+            companionName={companionName} budget={budget} balance={balance}
+            nextShoppingDate={nextShoppingDate} cwPlanNote={cwPlanNote}
+            incomeSchedule={incomeSchedule} paymentSchedule={paymentSchedule} restockSchedule={restockSchedule}
+            chatHistory={chatHistory}
+            onVerdictRecorded={onVerdictRecorded}
+          />
+        </div>
 
         {verdictHistory?.length > 0 && (
           <VerdictHistoryPanel tokens={tokens} speaker={speaker} history={verdictHistory} />

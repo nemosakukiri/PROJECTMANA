@@ -513,6 +513,46 @@ async function main() {
     assert(bodyText.includes("最終見立て"), "「今日の買い物」画面に最終見立ての見出しがある");
     assert(bodyText.includes("テスト運用中の見立て機能"), "実データを送る前に、最終見立て機能もテスト運用中であることが常に表示されている");
 
+    step("買い物リスト：お店でも、相談画面と同じチャットでバトラーに自由に相談できる（暮らし全体で会話は一つに続く）");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("に自由に相談する"), "買い物リスト画面にも自由相談欄がある");
+    assert(bodyText.includes("桃が半額だったんだけど"), "相談画面でのやり取りが、買い物リスト画面でも同じ履歴として続けて表示される");
+
+    step("買い物リスト：チャットは音声入力にも対応している（送信は手動、確認してから送る）");
+    await page.click('[data-testid="shopping-chat-mic"]');
+    await page.waitForTimeout(400);
+    let micValue = await page.$eval('[data-testid="shopping-chat-mic"] + input', (el) => el.value);
+    assert(micValue.includes("血液検査"), "マイクボタンで音声認識の結果がチャット欄にそのまま反映される");
+    await page.click('[data-testid="shopping-chat-mic"]');
+    await page.waitForTimeout(150);
+
+    step("買い物リスト：チャットへ実際に打ち込んだ相談は、この画面のコンテキスト（店頭でチェック中の品目）を添えてAPIへ渡る");
+    await page.fill('[data-testid="shopping-chat-mic"] + input', "桃はやめてぶどうだけにしようと思う");
+    let capturedListChatRequest = null;
+    await page.route("**/api/shopping-chat", async (route) => {
+      capturedListChatRequest = JSON.parse(route.request().postData());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ reply: "ぶどうだけでも十分バランス良さそうです。" }),
+      });
+    });
+    await clickButtonWithText(page, "送る");
+    await page.waitForTimeout(300);
+    assert(!!capturedListChatRequest, "送信でAPIへリクエストが送られる");
+    assert(
+      capturedListChatRequest.context.items.some((i) => i.name === "ぶどう"),
+      "この画面から相談すると、コンテキストに店頭でチェック中の品目（ぶどう）が含まれる"
+    );
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ぶどうだけでも十分バランス良さそうです"), "AIの返答がチャットに表示される");
+    await page.unroute("**/api/shopping-chat");
+    state = await getState(page);
+    assert(
+      state.shoppingChatHistory.some((m) => m.content.includes("桃はやめてぶどうだけに")),
+      "買い物リスト画面での相談も、相談画面と同じ会話履歴に保存される（暮らし全体でひとつの会話）"
+    );
+
     step("買い物リスト：最終見立ては固定ルールのgo/remove/skipではなく、暮らしの予定を含む判断コンテキストをAIへ渡して生成する");
     let capturedVerdictRequest = null;
     await page.route("**/api/shopping-final-verdict", async (route) => {
