@@ -2,8 +2,14 @@ import { useState } from "react";
 import { Check, Trash2 } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 
+// お金の使い方に関わる資料（CWの資金計画・アドバイス／手書きのメモ）を
+// 読み取ったときだけ、「今後の買い物相談でも参考にするか」を提案する
+// （2026-07-30、利用者からの実際の要望に基づく実装）。それ以外の資料
+// （レシート・病院の説明書等）では、意味のない提案を出さない。
+const CW_PLAN_OFFER_DOC_TYPES = ["cw_advisory", "handwritten_note"];
+
 /* ④確認画面（心臓部） */
-export default function ConfirmScreen({ theme, draft, companionName, pendingTag, onBack, onConfirm }) {
+export default function ConfirmScreen({ theme, draft, companionName, pendingTag, docType, onBack, onConfirm }) {
   const { tokens, labels } = theme;
   const [conclusion, setConclusion] = useState(draft.conclusion.value);
   // AIが抽出したToDoも、結論と同じく利用者が確認・修正してから保存する
@@ -11,6 +17,11 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
   const [todos, setTodos] = useState(() => (draft.todos ?? []).map((t) => ({ text: t.text })));
   const [newTodoText, setNewTodoText] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  // AIが提案するだけで、初期値はオフ——本人が明示的に選んで初めて、
+  // 買い物相談の判断材料(cwPlanNote)へ反映される
+  // (FILOVITA_PHILOSOPHY.md「長期記憶は勝手に保存しない」参照)。
+  const [reflectToCwPlan, setReflectToCwPlan] = useState(false);
+  const offerCwPlanReflection = CW_PLAN_OFFER_DOC_TYPES.includes(docType);
   // 呼び名を決めていたら、「AI」「執事」を実際の呼び名に差し替える
   const confirmIntro = companionName
     ? labels.confirmIntro.replace(/^(AIが|AIは|執事が|執事は)/, `${companionName}が`)
@@ -86,6 +97,26 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
           </div>
         </div>
 
+        {offerCwPlanReflection && (
+          <label
+            style={{
+              display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer",
+              padding: "12px 14px", borderRadius: 12, marginBottom: 20,
+              background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
+            }}
+            data-testid="confirm-cw-plan-offer"
+          >
+            <input
+              type="checkbox" checked={reflectToCwPlan}
+              onChange={(e) => setReflectToCwPlan(e.target.checked)}
+              style={{ marginTop: 2, flexShrink: 0 }}
+            />
+            <span style={{ fontSize: 12.5, color: tokens.inkSoft, lineHeight: 1.7 }}>
+              🏦 この内容を、今後の買い物相談でもバトラーが参考にできるようにする
+            </span>
+          </label>
+        )}
+
         {!confirmed ? (
           <button
             onClick={() => setConfirmed(true)}
@@ -99,7 +130,7 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
           </div>
         )}
         {confirmed && (
-          <button onClick={() => onConfirm(conclusion, todos)} style={{ width: "100%", background: "none", border: `1px solid ${tokens.line}`, color: tokens.inkSoft, borderRadius: 14, padding: "12px 0", fontSize: 13.5, cursor: "pointer", marginBottom: 30 }}>
+          <button onClick={() => onConfirm(conclusion, todos, reflectToCwPlan)} style={{ width: "100%", background: "none", border: `1px solid ${tokens.line}`, color: tokens.inkSoft, borderRadius: 14, padding: "12px 0", fontSize: 13.5, cursor: "pointer", marginBottom: 30 }}>
             {labels.backToCalendarCta}
           </button>
         )}

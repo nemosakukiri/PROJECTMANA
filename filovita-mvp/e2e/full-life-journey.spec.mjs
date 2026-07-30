@@ -847,6 +847,8 @@ async function main() {
     assert(bodyText.includes("🧾 レシート として記録します"), "資料の種類が確認画面に明示される（タグとして付くことが事前に分かる）");
     let todoValues = await page.$$eval("[data-testid=confirm-todos] input[type=text]", (els) => els.map((el) => el.value));
     assert(todoValues.some((v) => v.includes("家計簿")), "資料から読み取った今後の行動もToDoとして提示される");
+    const offerShownForReceipt = await page.$('[data-testid="confirm-cw-plan-offer"]');
+    assert(!offerShownForReceipt, "レシートのような金銭アドバイスと無関係な資料では、買い物判断への反映提案は出さない");
     await clickButtonWithText(page, "この内容で確定する");
     await page.waitForTimeout(200);
     await clickButtonWithText(page, "カレンダーへ戻る");
@@ -856,6 +858,97 @@ async function main() {
     assert(!!receiptEvent, "資料の内容でEventが作成される");
     assert(receiptEvent.tags.includes("🧾 レシート"), "資料の種類がタグとして自動で付く（生活資料ライブラリ：必要ならタグを付ける）");
     await page.unroute("**/api/read-document");
+
+    step("生活資料ライブラリ：お金に関わる資料（CWの資金計画・アドバイス）を読み取ると、買い物判断へ反映するか提案される（利用者要望・2026-07-30実装）");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "input", cwPlanNote: "",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    await clickButtonContaining(page, "資料");
+    await page.setInputFiles("#input-photo-file", {
+      name: "cw-advisory.jpg",
+      mimeType: "image/jpeg",
+      buffer: Buffer.from("fake-cw-advisory-photo-bytes"),
+    });
+    await page.waitForTimeout(200);
+    await page.route("**/api/read-document", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          docType: "cw_advisory",
+          docTypeLabel: "📄 CWの資金計画・アドバイス",
+          conclusion: "食費は1日1000円までを目安に、次の入金までは外食を控えるとのアドバイス",
+          todos: [],
+        }),
+      });
+    });
+    await clickButtonWithText(page, "この資料を読み取る");
+    await page.waitForTimeout(300);
+    await page.unroute("**/api/read-document");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(
+      bodyText.includes("今後の買い物相談でもバトラーが参考にできるようにする"),
+      "お金に関わる資料では、買い物判断への反映を提案する"
+    );
+    let offerChecked = await page.$eval('[data-testid="confirm-cw-plan-offer"] input[type=checkbox]', (el) => el.checked);
+    assert(!offerChecked, "提案の初期状態はオフ——AIが提案するだけで、本人が選ぶまで反映されない（長期記憶は勝手に保存しない）");
+    await page.click('[data-testid="confirm-cw-plan-offer"] input[type=checkbox]');
+    await clickButtonWithText(page, "この内容で確定する");
+    await page.waitForTimeout(150);
+    await clickButtonWithText(page, "カレンダーへ戻る");
+    await page.waitForTimeout(300);
+    state = await getState(page);
+    assert(
+      state.cwPlanNote.includes("食費は1日1000円までを目安に"),
+      "本人が明示的にチェックを入れて確定した場合だけ、資料の内容が買い物判断の材料(cwPlanNote)へ反映される"
+    );
+
+    step("生活資料ライブラリ：反映のチェックを入れなければ、cwPlanNoteは変わらない");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "input",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    const cwPlanNoteBefore = (await getState(page)).cwPlanNote;
+    await clickButtonContaining(page, "資料");
+    await page.setInputFiles("#input-photo-file", {
+      name: "cw-advisory-2.jpg",
+      mimeType: "image/jpeg",
+      buffer: Buffer.from("fake-cw-advisory-photo-bytes-2"),
+    });
+    await page.waitForTimeout(200);
+    await page.route("**/api/read-document", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          docType: "cw_advisory",
+          docTypeLabel: "📄 CWの資金計画・アドバイス",
+          conclusion: "これは反映しないはずのアドバイス文",
+          todos: [],
+        }),
+      });
+    });
+    await clickButtonWithText(page, "この資料を読み取る");
+    await page.waitForTimeout(300);
+    await page.unroute("**/api/read-document");
+    await clickButtonWithText(page, "この内容で確定する");
+    await page.waitForTimeout(150);
+    await clickButtonWithText(page, "カレンダーへ戻る");
+    await page.waitForTimeout(300);
+    state = await getState(page);
+    assert(
+      state.cwPlanNote === cwPlanNoteBefore && !state.cwPlanNote.includes("反映しないはず"),
+      "提案のチェックを入れずに確定すると、cwPlanNoteは変わらない（黙って書き込まない）"
+    );
 
     step("生活資料ライブラリ：写真は「入力にない事実」を作れないため、読み取れない場合は断定的な代替を作らず正直に伝える");
     await page.evaluate(() => {

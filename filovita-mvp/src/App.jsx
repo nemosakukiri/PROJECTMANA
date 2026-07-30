@@ -48,6 +48,7 @@ export default function App() {
   const [draftError, setDraftError] = useState(null);
   // 写真から読み取った資料の種類。確定時にタグとしてEventへ付ける
   const [pendingTag, setPendingTag] = useState(null);
+  const [pendingDocType, setPendingDocType] = useState(null);
   // 手帳だけの情報層：タグの道具箱。タグ名ではなくtagIdで紐付ける
   // （表示名を変えても道具箱との紐付けが切れないように）
   const [tagRegistry, setTagRegistry] = useState(persisted?.tagRegistry ?? {});
@@ -108,6 +109,7 @@ export default function App() {
     setIsDrafting(true);
     setDraftError(null);
     setPendingTag(null);
+    setPendingDocType(null);
     const generated = await generateDraft(text);
     setIsDrafting(false);
     setDraft(generated);
@@ -126,6 +128,7 @@ export default function App() {
       return;
     }
     setPendingTag(result.docTypeLabel);
+    setPendingDocType(result.docType);
     setDraft(result.draft);
     setScreen("confirm");
   }
@@ -261,7 +264,7 @@ export default function App() {
     setVerdictHistory((prev) => [...prev, { id: makeId("verdict"), ...entry }]);
   }
 
-  function handleConfirm(conclusionText, confirmedTodos = []) {
+  function handleConfirm(conclusionText, confirmedTodos = [], reflectToCwPlan = false) {
     const newEvent = {
       id: `evt_${Date.now()}`,
       date: TODAY_DATE,
@@ -278,8 +281,16 @@ export default function App() {
       myNote: "",
     };
     setEvents((prev) => [...prev, newEvent]);
+    // 資料の内容を買い物相談の判断材料(cwPlanNote)へ反映するかどうかは、
+    // 利用者が確認画面で明示的に選んだ場合のみ——AIが提案し、本人が承認して
+    // 初めて長期記憶になる(2026-07-30、FILOVITA_PHILOSOPHY.md「長期記憶は
+    // 勝手に保存しない」参照)。黙って書き込んだり上書きしたりはしない。
+    if (reflectToCwPlan) {
+      setCwPlanNote((prev) => (prev.trim() ? `${prev}\n（資料より）${conclusionText}` : conclusionText));
+    }
     setDraft(null);
     setPendingTag(null);
+    setPendingDocType(null);
     setScreen("calendar");
   }
 
@@ -479,7 +490,7 @@ export default function App() {
           />
         )}
         {screen === "confirm" && draft && (
-          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} pendingTag={pendingTag} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
+          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} pendingTag={pendingTag} docType={pendingDocType} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
         )}
     </>
   );

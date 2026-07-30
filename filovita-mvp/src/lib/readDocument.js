@@ -18,6 +18,7 @@ export async function readDocument({ base64, mimeType }) {
         conclusion: { value: data.conclusion, confidence: 1 },
         todos: (data.todos || []).map((text) => ({ text })),
       },
+      docType: data.docType,
       docTypeLabel: data.docTypeLabel,
     };
   } catch {
