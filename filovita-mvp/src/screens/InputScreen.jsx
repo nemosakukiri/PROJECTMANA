@@ -3,12 +3,18 @@ import ContextHeader from "../components/ContextHeader.jsx";
 import GuideCard from "../components/GuideCard.jsx";
 import GuideHelpButton from "../components/GuideHelpButton.jsx";
 import { guideById } from "../theme/guide/guideContent.js";
-import { SpeechRecognitionApi, handleSpeechError, logMicPermissionState } from "../lib/speechRecognition.js";
+import { isAudioRecordingSupported, startRecording, blobToBase64, describeRecordingError } from "../lib/audioRecording.js";
+import { transcribeVoice } from "../lib/transcribeVoice.js";
 
 /* 入力→確認画面（＋ボタンから。共通ナビゲーションの先）
    話す/書くに加え、写真（生活資料ライブラリ、MVP_SPEC.md参照）を追加。
    写真は「入力にない事実を作れない」ため、話す/書くのようなその場の
-   フォールバックは無く、失敗時は正直にエラーを表示する。 */
+   フォールバックは無く、失敗時は正直にエラーを表示する。
+
+   「話す」は、ブラウザ内蔵の音声認識（SpeechRecognition）ではなく、
+   録音してサーバー側で文字起こしする方式（2026-07-30切り替え、
+   audioRecording.js参照）。録音した内容はそのままtextに入り、写真同様
+   利用者が読み返してから「次へ」を押す——結果を勝手に確定しない。 */
 export default function InputScreen({
   theme, mode = "both", onBack, onSubmit, onSubmitPhoto, isDrafting = false, draftError = null,
   seenGuides = {}, onDismissGuide,
@@ -16,48 +22,46 @@ export default function InputScreen({
   const { tokens } = theme;
   const [text, setText] = useState("");
   const [activeMode, setActiveMode] = useState(mode === "speak" ? "speak" : "write");
-  const [listening, setListening] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
   const [guideOpen, setGuideOpen] = useState(!seenGuides.input);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [photoBase64, setPhotoBase64] = useState(null);
   const [photoMimeType, setPhotoMimeType] = useState(null);
-  const recognitionRef = useRef(null);
+  const recorderRef = useRef(null);
   const guide = guideById("input");
 
-  function startListening() {
-    if (!SpeechRecognitionApi) return;
+  async function handleStartRecording() {
+    if (!isAudioRecordingSupported) return;
     setVoiceError(null);
-    logMicPermissionState("InputScreen:start");
-    const recognition = new SpeechRecognitionApi();
-    recognition.lang = "ja-JP";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.onresult = (e) => {
-      let combined = "";
-      for (let i = 0; i < e.results.length; i++) combined += e.results[i][0].transcript;
-      setText(combined);
-    };
-    recognition.onend = () => setListening(false);
-    // これまでエラーの中身を握りつぶし、静かに元の状態へ戻すだけだった
-    // ——利用者には「タップしたのに何も起きない」としか見えなかった
-    // (2026-07-29の監査で判明)。権限拒否・マイク無し・ネットワーク不通等、
-    // 実機で起こりうる失敗を、理由がわかる形で必ず伝える。生のevent.errorと
-    // navigator.permissions.query(microphone)の結果もコンソールに残す
-    // ——「Chromeでは許可になっているのにnot-allowedが出る」という指摘の
-    // 原因切り分けのため(2026-07-29)。
-    recognition.onerror = (e) => {
-      setListening(false);
-      setVoiceError(handleSpeechError("InputScreen", e));
-    };
-    recognitionRef.current = recognition;
-    recognition.start();
-    setListening(true);
+    try {
+      const { recorder, stopped } = await startRecording();
+      recorderRef.current = recorder;
+      setRecording(true);
+      const blob = await stopped;
+      setTranscribing(true);
+      const base64 = await blobToBase64(blob);
+      const result = await transcribeVoice({ base64, mimeType: blob.type });
+      setTranscribing(false);
+      if (result.error) {
+        setVoiceError(result.error);
+        return;
+      }
+      setText((prev) => (prev.trim() ? `${prev} ${result.transcript}` : result.transcript));
+    } catch (err) {
+      setRecording(false);
+      setVoiceError(describeRecordingError(err));
+    }
+  }
+
+  function handleStopRecording() {
+    recorderRef.current?.stop();
+    setRecording(false);
   }
 
   function stopListening() {
-    recognitionRef.current?.stop();
-    setListening(false);
+    if (recording) handleStopRecording();
   }
 
   function handlePhotoSelected(e) {
@@ -135,25 +139,29 @@ export default function InputScreen({
         {activeMode === "speak" && (
           <div style={{ textAlign: "center", padding: "20px 0 30px" }}>
             <button
-              onClick={() => (listening ? stopListening() : startListening())}
-              disabled={!SpeechRecognitionApi}
+              onClick={() => (recording ? handleStopRecording() : handleStartRecording())}
+              disabled={!isAudioRecordingSupported || transcribing}
               style={{
                 width: 84, height: 84, borderRadius: "50%", border: "none",
-                background: !SpeechRecognitionApi ? tokens.line : listening ? tokens.accent : tokens.ink,
-                color: tokens.paper, fontSize: 28, cursor: SpeechRecognitionApi ? "pointer" : "default",
-                marginBottom: 18, animation: listening ? "micPulse 1.3s ease-out infinite" : "none",
+                background: !isAudioRecordingSupported ? tokens.line : recording ? tokens.accent : tokens.ink,
+                color: tokens.paper, fontSize: 28,
+                cursor: isAudioRecordingSupported && !transcribing ? "pointer" : "default",
+                marginBottom: 18, animation: recording ? "micPulse 1.3s ease-out infinite" : "none",
+                opacity: transcribing ? 0.6 : 1,
               }}
             >
               🎤
             </button>
             <p style={{ fontSize: 13, color: tokens.inkSoft }}>
-              {!SpeechRecognitionApi
-                ? "このブラウザは音声入力に対応していません。「✍️ 書く」に切り替えてください"
-                : listening
-                  ? "聞いています。もう一度タップで終わります"
-                  : text
-                    ? "続けて話す場合はもう一度タップしてください"
-                    : "タップして話しはじめる"}
+              {!isAudioRecordingSupported
+                ? "この端末では音声入力に対応していません。「✍️ 書く」に切り替えてください"
+                : transcribing
+                  ? "バトラーが聞き取っています…"
+                  : recording
+                    ? "録音しています。もう一度タップで終わります"
+                    : text
+                      ? "続けて話す場合はもう一度タップしてください"
+                      : "タップして話しはじめる"}
             </p>
             {voiceError && (
               <p style={{ fontSize: 12.5, color: "#a3432a", marginTop: 8 }} data-testid="input-voice-error">
@@ -169,7 +177,7 @@ export default function InputScreen({
                 {text}
               </p>
             )}
-            {text.trim() && !listening && (
+            {text.trim() && !recording && !transcribing && (
               <button
                 onClick={() => !isDrafting && onSubmit(text)}
                 disabled={isDrafting}

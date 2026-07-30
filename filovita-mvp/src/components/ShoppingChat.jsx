@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
-import { SpeechRecognitionApi, handleSpeechError, logMicPermissionState } from "../lib/speechRecognition.js";
+import { isAudioRecordingSupported, startRecording, blobToBase64, describeRecordingError } from "../lib/audioRecording.js";
+import { transcribeVoice } from "../lib/transcribeVoice.js";
 
 // GitHub Pagesは静的ホスティングのみのため、この本体アプリと同じオリジンには
 // api/shopping-chat.jsは存在しない。別途Vercelにデプロイしたバックエンドの
@@ -29,41 +30,41 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
-  const [listening, setListening] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
   const [voiceError, setVoiceError] = useState(null);
-  const recognitionRef = useRef(null);
+  const recorderRef = useRef(null);
 
-  function startListening() {
-    if (!SpeechRecognitionApi) return;
+  // ブラウザ内蔵の音声認識（SpeechRecognition）ではなく、録音してサーバー側で
+  // 文字起こしする方式（2026-07-30切り替え、InputScreen.jsxと同じ実装。
+  // audioRecording.js参照——iOS Safariの音声認識実装が信頼できないと
+  // 実機検証で判明したため）。
+  async function handleStartRecording() {
+    if (!isAudioRecordingSupported) return;
     setVoiceError(null);
-    logMicPermissionState("ShoppingChat:start");
-    const recognition = new SpeechRecognitionApi();
-    recognition.lang = "ja-JP";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.onresult = (e) => {
-      let combined = "";
-      for (let i = 0; i < e.results.length; i++) combined += e.results[i][0].transcript;
-      setDraft(combined);
-    };
-    recognition.onend = () => setListening(false);
-    // これまでエラーの中身を握りつぶし、静かに元の状態へ戻すだけだった
-    // ——利用者には「タップしたのに何も起きない」としか見えなかった
-    // (2026-07-29の監査で判明。InputScreen.jsxと同じ修正を入れる)。生の
-    // event.errorとnavigator.permissions.query(microphone)の結果も
-    // コンソールに残す(「Chromeでは許可なのにnot-allowedが出る」の切り分け用)。
-    recognition.onerror = (e) => {
-      setListening(false);
-      setVoiceError(handleSpeechError("ShoppingChat", e));
-    };
-    recognitionRef.current = recognition;
-    recognition.start();
-    setListening(true);
+    try {
+      const { recorder, stopped } = await startRecording();
+      recorderRef.current = recorder;
+      setRecording(true);
+      const blob = await stopped;
+      setTranscribing(true);
+      const base64 = await blobToBase64(blob);
+      const result = await transcribeVoice({ base64, mimeType: blob.type });
+      setTranscribing(false);
+      if (result.error) {
+        setVoiceError(result.error);
+        return;
+      }
+      setDraft((prev) => (prev.trim() ? `${prev} ${result.transcript}` : result.transcript));
+    } catch (err) {
+      setRecording(false);
+      setVoiceError(describeRecordingError(err));
+    }
   }
 
-  function stopListening() {
-    recognitionRef.current?.stop();
-    setListening(false);
+  function handleStopRecording() {
+    recorderRef.current?.stop();
+    setRecording(false);
   }
 
   async function send() {
@@ -134,14 +135,15 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
       <div style={{ display: "flex", gap: 6 }}>
         <button
           type="button"
-          onClick={() => (listening ? stopListening() : startListening())}
-          disabled={!SpeechRecognitionApi}
-          title={SpeechRecognitionApi ? "音声入力" : "このブラウザは音声入力に対応していません"}
+          onClick={() => (recording ? handleStopRecording() : handleStartRecording())}
+          disabled={!isAudioRecordingSupported || transcribing}
+          title={isAudioRecordingSupported ? "音声入力" : "この端末では音声入力に対応していません"}
           data-testid="shopping-chat-mic"
           style={{
             width: 38, height: 38, flexShrink: 0, borderRadius: 9, border: `1px solid ${tokens.line}`,
-            background: listening ? tokens.accent : "transparent", color: listening ? tokens.paper : tokens.inkSoft,
-            fontSize: 16, cursor: SpeechRecognitionApi ? "pointer" : "default", opacity: SpeechRecognitionApi ? 1 : 0.4,
+            background: recording ? tokens.accent : "transparent", color: recording ? tokens.paper : tokens.inkSoft,
+            fontSize: 16, cursor: isAudioRecordingSupported && !transcribing ? "pointer" : "default",
+            opacity: isAudioRecordingSupported ? (transcribing ? 0.6 : 1) : 0.4,
           }}
         >
           🎤
@@ -149,7 +151,7 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
         <input
           type="text" value={draft} onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") send(); }}
-          placeholder={listening ? "聞いています…" : "例：桃が半額だから追加したい"}
+          placeholder={transcribing ? "バトラーが聞き取っています…" : recording ? "録音しています…" : "例：桃が半額だから追加したい"}
           style={{ flex: 1, padding: "9px 11px", fontSize: 13, borderRadius: 9, border: `1px solid ${tokens.line}`, fontFamily: "inherit" }}
         />
         <button

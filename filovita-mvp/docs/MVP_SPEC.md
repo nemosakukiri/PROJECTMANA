@@ -918,6 +918,86 @@ Vercelの実行ログを確認したところ、`/api/shopping-final-verdict`は
 
 ---
 
+## 音声入力の方式変更：ブラウザ内蔵の音声認識をやめ、録音+サーバー文字起こしへ（2026-07-30追記・実装済み）
+
+前節の`event.error`調査の続き。利用者と一緒に、Chromeのマイク権限・
+iOS本体のディクテーション設定・アプリ内ブラウザ(WKWebView)の可能性を
+順に切り分けた結果、**本物のSafari.appで直接開いても`service-not-allowed`
+が再現する**ことを実機で確認した。この時点で、設定側の問題ではなく
+iOS Safariの`SpeechRecognition`実装そのものの限界と判断した。
+
+### 調査で分かったこと
+
+- iOSでこのAPI（`webkitSpeechRecognition`）が動くのはSafari本体だけ。
+  Appleは WKWebView では意図的にこのAPIを無効化しているため、iOS版
+  Chromeなど他のブラウザでは最初から使えない。
+- Safari 14.1で追加されたが、iOSでの実装は長年「動くこともあるが
+  信頼できない」と報告され続けている（最初の認識結果のあとに`onresult`
+  が発火しなくなる、動画再生と同時に使うと壊れる、`continuous`モード
+  が特に不安定——2022年に報告された不具合が2023年時点でも未解決）。
+  Appleエンジニアからの公式な修正表明も無い。
+- `service-not-allowed`はSafari iOSで実際に報告例のあるエラーで、
+  マイク権限（getUserMedia）とは別レイヤーの、音声認識サービス自体の
+  利用可否を示すコード。
+
+（出典：[xjavascript.com](https://www.xjavascript.com/blog/add-ios-speech-recognition-support-for-web-app/)、
+[WICG/speech-api#96](https://github.com/WICG/speech-api/issues/96)、
+[Apple Discussions](https://discussions.apple.com/thread/255492924)、
+[Apple Developer Forums](https://developer.apple.com/forums/thread/699881)）
+
+### 方式変更
+
+ブラウザ内蔵の音声認識（`SpeechRecognition`/`webkitSpeechRecognition`）
+に頼るのをやめ、**録音した音声データをサーバーへ送り、AIに文字起こし
+させる方式**に切り替えた。生活資料ライブラリ（写真をサーバー側でAIに
+読み取らせる）と同じ考え方——ブラウザ側の非標準API任せにせず、判断・
+理解はサーバー側のAIに担わせる。
+
+- `src/lib/audioRecording.js`（新設）：`MediaRecorder`+`getUserMedia`
+  による録音の共通処理。`InputScreen.jsx`（Event記録）と
+  `ShoppingChat.jsx`（買い物相談）の両方で使う。ブラウザによって録音
+  できる形式が異なる（Chrome/Android系はwebm、SafariはMP4/AAC系）ため、
+  `MediaRecorder.isTypeSupported`で対応形式を選ぶ。getUserMediaの失敗
+  （`NotAllowedError`/`NotFoundError`/`NotReadableError`等）は標準的な
+  マイク権限モデルなので、Chromeの「マイク: 許可」設定と実際に一致する
+  ——`service-not-allowed`のような別レイヤーの謎は無くなった。
+- `api/transcribe-voice.js`（新設）：録音データを受け取り、Gemini
+  （`callGemini`を直接呼ぶ——AnthropicのMessages APIは音声入力に
+  対応していないため`callAI`のプロバイダ自動切り替えは使わない）に
+  渡して文字起こしさせる。要約・解釈はさせず、話された内容をそのまま
+  書き起こすよう指示。GEMINI_API_KEYが無い環境では、固定の文字起こし
+  結果をでっち上げず正直にエラーを返す（read-document.jsと同じ方針）。
+- `src/lib/transcribeVoice.js`（新設）：クライアント側の呼び出し窓口。
+  読み取れない資料と同様、録音から復元できる「入力にない事実」は無い
+  ため、静かなフォールバックは作らない。
+- `InputScreen.jsx`・`ShoppingChat.jsx`：タップで録音開始→もう一度
+  タップで停止→自動で文字起こし→結果をテキスト欄に反映、という流れに
+  変更。結果はそのまま確定せず、利用者が読み返して「次へ」「送る」を
+  押すまで編集できる（従来の「AIが生成した内容は常に編集可能」の原則
+  を維持）。
+- `api/_lib/ai.js`：メッセージに`audio`フィールド（`image`と同じ
+  `{mimeType, data}`形）を追加し、`callGemini`が音声を`inlineData`
+  として扱えるようにした。
+
+不要になった`src/lib/speechRecognition.js`は削除。
+
+### 検証
+
+実マイクの無いこの環境では、Chromiumの偽メディアデバイス
+（`--use-fake-ui-for-media-stream --use-fake-device-for-media-stream`）
+で`getUserMedia`と`MediaRecorder`を実際に動かし、本物の録音データが
+`/api/transcribe-voice`へ送られることをE2Eで確認した（文字起こし結果
+自体はAPIをモック——他のAI機能のテストと同じ方針）。getUserMediaの
+失敗パターン（`NotAllowedError`等）も、実際に例外を発生させてエラー
+メッセージの表示を検証。46ステップ中失敗0件。
+
+**まだ実機での実際の文字起こし精度・録音フォーマットの互換性は未検証**
+（`MediaRecorder`が生成する`audio/webm`や`audio/mp4`がGeminiの音声理解
+APIでどこまで安定して解釈されるかは、実際にデプロイして利用者に試して
+もらう必要がある）。
+
+---
+
 ## 実装状況(2026-07-26)
 
 最小構成で実装済み：

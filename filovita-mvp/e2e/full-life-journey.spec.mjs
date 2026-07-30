@@ -85,36 +85,32 @@ async function main() {
     setTimeout(() => reject(new Error(`vite dev server起動タイムアウト: ${out}`)), 15000);
   });
 
-  const browser = await chromium.launch({ executablePath: CHROMIUM_PATH });
-  const page = await browser.newPage({ viewport: { width: 430, height: 900 } });
+  // 実行環境に実マイクは無いが、Chromiumの偽メディアデバイスで
+  // getUserMedia({audio:true})を実際に成功させ、MediaRecorderで実際に
+  // 録音させる（2026-07-30、SpeechRecognitionをやめてこの方式に切り替えた
+  // ——audioRecording.js参照）。文字起こし自体はAPIをモックして検証する。
+  const browser = await chromium.launch({
+    executablePath: CHROMIUM_PATH,
+    args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"],
+  });
+  const page = await browser.newPage({
+    viewport: { width: 430, height: 900 },
+    permissions: ["microphone"],
+  });
 
   try {
-    // 実行環境にマイクが無いため、SpeechRecognitionだけをモックする。
-    // ここから先(認識結果を受け取ったあとのUI・データの流れ)は本物のコード。
-    // window.__speechShouldFailで失敗パターンも切り替えられるようにする
-    // ——InputScreen.jsx/ShoppingChat.jsxはSpeechRecognitionApiをモジュール
-    // 読み込み時に一度だけ捕まえるため、クラスの参照自体は差し替えず、
-    // クラス内部の分岐で挙動を切り替える必要がある(2026-07-29に判明)。
+    // getUserMedia自体はモックしない（本物の偽デバイスで実際に録音させる）。
+    // ただしエラーパス（権限拒否・マイク無し等）を検証するため、
+    // window.__micShouldFailが立っているときだけ本物のgetUserMediaを
+    // 呼ばず、指定した名前のDOMExceptionで失敗させるラッパーを被せる。
     await page.addInitScript(() => {
-      class FakeSpeechRecognition {
-        start() {
-          setTimeout(() => {
-            if (window.__speechShouldFail) {
-              if (this.onerror) this.onerror({ error: window.__speechErrorCode || "audio-capture" });
-              if (this.onend) this.onend();
-              return;
-            }
-            if (this.onresult) {
-              this.onresult({
-                results: [[{ transcript: "○○病院から電話があって、来月10日の通院で血液検査があるとのこと。" }]],
-              });
-            }
-          }, 150);
+      const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+      navigator.mediaDevices.getUserMedia = (constraints) => {
+        if (window.__micShouldFail) {
+          return Promise.reject(new DOMException(window.__micErrorMessage || "denied", window.__micErrorName || "NotAllowedError"));
         }
-        stop() { if (this.onend) this.onend(); }
-      }
-      window.SpeechRecognition = FakeSpeechRecognition;
-      window.webkitSpeechRecognition = FakeSpeechRecognition;
+        return original(constraints);
+      };
     });
 
     await page.goto(BASE_URL);
@@ -171,23 +167,15 @@ async function main() {
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
 
-    step("音声認識が失敗したら、event.errorのコードごとに理由が分かる文言を出し分ける(2026-07-29利用者指摘の修正確認)");
-    const speechErrorCases = [
-      ["not-allowed", "マイクの使用が許可されていません。"],
-      // service-not-allowedはnot-allowedとは別物(2026-07-30、利用者の
-      // 実機で実際にこのコードが確認された——マイク権限が「許可」でも
-      // 出ることがある、音声認識サービス自体の利用可否を示すコード)。
-      // 端末の設定確認を促す文言は、実際にディクテーション設定が有効な
-      // 状態でも再現し、本物のSafari.appでも再現したため誤り(2026-07-30
-      // に判明)。設定確認へ誘導せず、正直に「使えない」とだけ伝える。
-      ["service-not-allowed", "この端末のブラウザでは音声入力を利用できないようです。"],
-      ["audio-capture", "マイクが利用できません。"],
-      ["network", "音声認識サービスに接続できません。"],
-      ["no-speech", "音声が聞き取れませんでした。もう一度お話しください。"],
-      ["some-unknown-code", "音声入力を開始できませんでした。"],
+    step("録音が失敗したら、getUserMediaのエラー名ごとに理由が分かる文言を出し分ける(2026-07-30、SpeechRecognitionをやめ録音+サーバー文字起こし方式に切り替えた際の確認)");
+    const recordingErrorCases = [
+      ["NotAllowedError", "マイクの使用が許可されていません。"],
+      ["NotFoundError", "マイクが見つかりませんでした。"],
+      ["NotReadableError", "マイクを利用できませんでした。"],
+      ["AbortError", "録音を開始できませんでした。"],
     ];
-    for (const [code, expectedMessage] of speechErrorCases) {
-      await page.evaluate((c) => { window.__speechShouldFail = true; window.__speechErrorCode = c; }, code);
+    for (const [name, expectedMessage] of recordingErrorCases) {
+      await page.evaluate((n) => { window.__micShouldFail = true; window.__micErrorName = n; }, name);
       await page.evaluate(() => {
         const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "🎤");
         btn?.click();
@@ -196,28 +184,42 @@ async function main() {
       bodyText = await page.evaluate(() => document.body.textContent);
       assert(
         bodyText.includes(expectedMessage),
-        `event.error="${code}"のとき「${expectedMessage}」が表示される（実際のbodyTextに含まれていない）`
-      );
-      assert(
-        bodyText.includes(`error: ${code}`),
-        `画面上に生のevent.errorコード（error: ${code}）も表示され、DevToolsを開かずに報告できる`
+        `getUserMediaが${name}で失敗したとき「${expectedMessage}」が表示される（実際のbodyTextに含まれていない）`
       );
     }
-    await page.evaluate(() => { window.__speechShouldFail = false; });
+    await page.evaluate(() => { window.__micShouldFail = false; });
 
-    step("録音開始 → 認識結果が反映される → 停止 → 次へ");
-    await page.evaluate(() => {
-      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "🎤");
-      btn?.click();
+    step("録音開始 → 停止 → サーバー側で文字起こし → 次へ（本物のgetUserMedia/MediaRecorderを、偽メディアデバイスで実際に動かす）");
+    let capturedTranscribeRequest = null;
+    await page.route("**/api/transcribe-voice", async (route) => {
+      capturedTranscribeRequest = JSON.parse(route.request().postData());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ transcript: "○○病院から電話があって、来月10日の通院で血液検査があるとのこと。" }),
+      });
     });
-    await page.waitForTimeout(400);
-    let transcriptShown = await page.evaluate(() => document.body.textContent.includes("血液検査"));
-    assert(transcriptShown, "音声認識の結果(血液検査を含む文)が画面に表示されている");
     await page.evaluate(() => {
       const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "🎤");
       btn?.click();
     });
     await page.waitForTimeout(200);
+    const recordingStarted = await page.evaluate(() => document.body.textContent.includes("録音しています"));
+    assert(recordingStarted, "タップすると実際に録音が始まる（本物のMediaRecorder）");
+    await page.waitForTimeout(500);
+    await page.evaluate(() => {
+      const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "🎤");
+      btn?.click();
+    });
+    await page.waitForTimeout(600);
+    assert(!!capturedTranscribeRequest, "録音停止後、実際に録音した音声データが/api/transcribe-voiceへ送られる");
+    assert(
+      typeof capturedTranscribeRequest.audio === "string" && capturedTranscribeRequest.audio.length > 0,
+      "送信されるのは実際に録音された音声データ(base64)である"
+    );
+    let transcriptShown = await page.evaluate(() => document.body.textContent.includes("血液検査"));
+    assert(transcriptShown, "サーバーが返した文字起こし結果(血液検査を含む文)が画面に表示されている");
+    await page.unroute("**/api/transcribe-voice");
     await clickButtonWithText(page, "次へ");
     await page.waitForTimeout(300);
 
@@ -561,13 +563,24 @@ async function main() {
     assert(bodyText.includes("に自由に相談する"), "買い物リスト画面にも自由相談欄がある");
     assert(bodyText.includes("桃が半額だったんだけど"), "相談画面でのやり取りが、買い物リスト画面でも同じ履歴として続けて表示される");
 
-    step("買い物リスト：マイクで音声認識した内容を、書き換えずそのまま送信できる（InputScreen.jsxと同じSpeechRecognition実装・エラーハンドリング）");
+    step("買い物リスト：録音した音声を、書き換えずそのまま送信できる（InputScreen.jsxと同じ録音+サーバー文字起こし実装）");
+    let capturedListTranscribeRequest = null;
+    await page.route("**/api/transcribe-voice", async (route) => {
+      capturedListTranscribeRequest = JSON.parse(route.request().postData());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ transcript: "○○病院から電話があって、来月10日の通院で血液検査があるとのこと。" }),
+      });
+    });
     await page.click('[data-testid="shopping-chat-mic"]');
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(500);
+    await page.click('[data-testid="shopping-chat-mic"]');
+    await page.waitForTimeout(600);
+    assert(!!capturedListTranscribeRequest, "録音停止後、実際に録音した音声データが/api/transcribe-voiceへ送られる");
     let micValue = await page.$eval('[data-testid="shopping-chat-mic"] + input', (el) => el.value);
-    assert(micValue.includes("血液検査"), "マイクボタンで音声認識の結果がチャット欄にそのまま反映される（InputScreen.jsxの話すモードと同じonresultの実装）");
-    await page.click('[data-testid="shopping-chat-mic"]');
-    await page.waitForTimeout(150);
+    assert(micValue.includes("血液検査"), "サーバーが返した文字起こし結果がチャット欄にそのまま反映される（InputScreen.jsxの話すモードと同じ実装）");
+    await page.unroute("**/api/transcribe-voice");
     let capturedMicChatRequest = null;
     await page.route("**/api/shopping-chat", async (route) => {
       capturedMicChatRequest = JSON.parse(route.request().postData());
@@ -582,23 +595,23 @@ async function main() {
     assert(!!capturedMicChatRequest, "マイクで入力した内容を書き換えずに「送る」を押すと、実際にAPIへリクエストが送られる");
     assert(
       capturedMicChatRequest.message.includes("血液検査"),
-      `送信された内容が、書き換えていない音声認識結果そのものである（実際: ${capturedMicChatRequest?.message}）`
+      `送信された内容が、書き換えていない文字起こし結果そのものである（実際: ${capturedMicChatRequest?.message}）`
     );
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("血液検査"), "送信した音声入力の内容がチャット履歴に表示される");
     assert(bodyText.includes("その通院についてはカレンダーで確認しておきますね"), "AIの返答も表示される（音声入力→送信→応答まで実機相当で通ることを確認）");
     await page.unroute("**/api/shopping-chat");
 
-    step("買い物リスト：マイクの権限が無い等で音声認識が失敗したら、静かに元へ戻さず理由を利用者に伝える(2026-07-29の監査で発覚した欠陥の修正確認)");
-    await page.evaluate(() => { window.__speechShouldFail = true; window.__speechErrorCode = "not-allowed"; });
+    step("買い物リスト：マイクの権限が無い等で録音が失敗したら、静かに元へ戻さず理由を利用者に伝える(2026-07-30、録音+サーバー文字起こし方式に切り替えた際の確認)");
+    await page.evaluate(() => { window.__micShouldFail = true; window.__micErrorName = "NotAllowedError"; });
     await page.click('[data-testid="shopping-chat-mic"]');
     await page.waitForTimeout(300);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(
       bodyText.includes("マイクの使用が許可されていません"),
-      "権限拒否等でrecognition.onerrorが発火したら、握りつぶさず理由が利用者に見える形で表示される"
+      "getUserMediaが失敗したら、握りつぶさず理由が利用者に見える形で表示される"
     );
-    await page.evaluate(() => { window.__speechShouldFail = false; });
+    await page.evaluate(() => { window.__micShouldFail = false; });
 
     step("買い物リスト：チャットへ実際に打ち込んだ相談は、この画面のコンテキスト（店頭でチェック中の品目）を添えてAPIへ渡る");
     await page.fill('[data-testid="shopping-chat-mic"] + input', "桃はやめてぶどうだけにしようと思う");

@@ -1,10 +1,15 @@
 /* Anthropic/Gemini呼び出しの共通部分。shopping-chat.js・shopping-final-verdict.js・
-   generate-draft.js・read-document.jsから共有する。プロバイダはAI_PROVIDER環境変数で
-   切り替える（"gemini" | "anthropic"、未設定時は"anthropic"）。APIキーはここ
-   (サーバー側)だけで扱う。
+   generate-draft.js・read-document.js・transcribe-voice.jsから共有する。プロバイダは
+   AI_PROVIDER環境変数で切り替える（"gemini" | "anthropic"、未設定時は"anthropic"）。
+   APIキーはここ(サーバー側)だけで扱う。
 
-   messagesの各要素は{role, content, image?}の形。imageは{mimeType, data(base64)}
-   ——生活資料ライブラリ（read-document.js）が写真を渡すために使う。 */
+   messagesの各要素は{role, content, image?, audio?}の形。image/audioはどちらも
+   {mimeType, data(base64)}。imageは生活資料ライブラリ（read-document.js）が写真を
+   渡すために使う。audioは音声入力（transcribe-voice.js）が録音データを渡すために
+   使う——Anthropicの Messages API は音声入力に対応していないため、audioは
+   callGeminiのみで扱う（2026-07-30、iOS SafariのSpeechRecognition実装が
+   信頼できないと判明したため、ブラウザ内蔵の音声認識に頼らずサーバー側で
+   文字起こしする方式に切り替えた）。 */
 
 function toAnthropicMessages(messages) {
   return messages.map((m) => {
@@ -67,6 +72,7 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 500, thin
   const contents = messages.map((m) => {
     const parts = [];
     if (m.image) parts.push({ inlineData: { mimeType: m.image.mimeType, data: m.image.data } });
+    if (m.audio) parts.push({ inlineData: { mimeType: m.audio.mimeType, data: m.audio.data } });
     if (m.content) parts.push({ text: m.content });
     return { role: m.role === "assistant" ? "model" : "user", parts };
   });
