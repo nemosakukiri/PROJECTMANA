@@ -75,9 +75,15 @@ export default async function handler(req, res) {
   ];
 
   try {
+    // maxTokensを既定値(500)のまま使うと、Gemini 3系が内部の思考(thinking)に
+    // トークンを消費し、返事が文の途中で切れることがあった(2026-07-30、
+    // 利用者が実際に体験して報告——shopping-final-verdict.jsで先に踏んだのと
+    // 同じ問題)。thinkingLevelを下げつつ、会話の返事として十分な余裕を持たせる。
     const result = await callAI({
       systemPrompt: `${SYSTEM_PROMPT}\n\n${buildContextBlock(context)}`,
       messages,
+      maxTokens: 1000,
+      thinkingLevel: "low",
     });
     if (result.error) {
       res.status(result.status).json({ error: result.error });
