@@ -221,18 +221,25 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
                 onClick={() => onOpenDate(dateStr)}
                 style={{
                   position: "relative",
-                  aspectRatio: "1", border: isToday ? `1.5px solid ${tokens.ink}` : "1px solid transparent",
+                  aspectRatio: "1",
+                  border: isToday ? `2px solid ${tokens.ink}` : "1px solid transparent",
                   borderRadius: 10,
-                  background: dayEvents.length > 0
-                    ? tokens.card
-                    : isForest
-                      ? `rgba(47,107,58,${FOREST_DAY_TINT[dayStage]})`
-                      : "transparent",
+                  // 「今日」は他のどの状態（予定あり・森の育ち）よりも
+                  // 優先して、テーマのaccent色で塗りつぶし一目で分かるように
+                  // する（2026-07-30、利用者からの要望：「当日を見やすく」）
+                  background: isToday
+                    ? tokens.accent
+                    : dayEvents.length > 0
+                      ? tokens.card
+                      : isForest
+                        ? `rgba(47,107,58,${FOREST_DAY_TINT[dayStage]})`
+                        : "transparent",
+                  boxShadow: isToday ? `0 2px 8px ${tokens.accent}66` : "none",
                   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", fontSize: 12.5, color: tokens.ink, padding: 0,
+                  cursor: "pointer", fontSize: 12.5, color: isToday ? tokens.paper : tokens.ink, padding: 0,
                 }}
               >
-                {isForest && (
+                {isForest && !isToday && (
                   <span
                     style={{
                       position: "absolute", top: 3, right: 4, width: 5, height: 5, borderRadius: "50%",
@@ -240,9 +247,9 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
                     }}
                   />
                 )}
-                <span>{d}</span>
+                <span style={{ fontSize: isToday ? 14.5 : 12.5, fontWeight: isToday ? 700 : 400 }}>{d}</span>
                 {dayEvents.length > 0 && (
-                  <span style={{ fontSize: 8.5, color: tokens.inkFaint, marginTop: 1 }}>
+                  <span style={{ fontSize: 8.5, color: isToday ? tokens.paper : tokens.inkFaint, marginTop: 1, opacity: isToday ? 0.85 : 1 }}>
                     {"・".repeat(Math.min(dayEvents.length, 3))}
                   </span>
                 )}
