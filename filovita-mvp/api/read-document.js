@@ -45,11 +45,17 @@ const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」のバト�
 - 資料の中に「次は〜する」「〜までに〜する」のように、明確にこれからの
   行動が読み取れる場合だけ"todos"として抜き出してください。無ければ
   空配列にしてください。
+- レシートで合計金額がはっきり読み取れる場合だけ、"amount"に数値
+  （円、記号や桁区切りのカンマは付けない）を入れてください。読み取れ
+  ない・レシート以外の資料の場合はnullにしてください。金額を推測で
+  埋めてはいけません——この数値は利用者の家計台帳（残高）から実際に
+  差し引くために使われるため、誤って多く／少なく書くと生活費の管理に
+  直接影響します。
 
 必ず次のJSON形式だけを出力してください。説明文・前置き・コードブロックの
 装飾（\`\`\`など）は一切付けないでください。
 
-{"docType":"receipt|cw_advisory|support_record|hospital_note|prescription|handwritten_note|other","conclusion":"要約の一文","todos":["行動1"]}`;
+{"docType":"receipt|cw_advisory|support_record|hospital_note|prescription|handwritten_note|other","conclusion":"要約の一文","todos":["行動1"],"amount":1280}`;
 
 function parseDocumentJson(text) {
   const match = text.match(/\{[\s\S]*\}/);
@@ -59,7 +65,8 @@ function parseDocumentJson(text) {
     if (typeof parsed.conclusion !== "string" || !parsed.conclusion.trim()) return null;
     if (!DOC_TYPES.includes(parsed.docType)) return null;
     const todos = Array.isArray(parsed.todos) ? parsed.todos.filter((t) => typeof t === "string" && t.trim()) : [];
-    return { docType: parsed.docType, conclusion: parsed.conclusion.trim(), todos };
+    const amount = typeof parsed.amount === "number" && Number.isFinite(parsed.amount) && parsed.amount > 0 ? parsed.amount : null;
+    return { docType: parsed.docType, conclusion: parsed.conclusion.trim(), todos, amount };
   } catch {
     return null;
   }

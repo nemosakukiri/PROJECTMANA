@@ -833,6 +833,7 @@ async function main() {
           docTypeLabel: "🧾 レシート",
           conclusion: "スーパーで食料品と日用品を購入した（合計1,280円）",
           todos: ["レシートを家計簿に転記する"],
+          amount: 1280,
         }),
       });
     });
@@ -849,6 +850,11 @@ async function main() {
     assert(todoValues.some((v) => v.includes("家計簿")), "資料から読み取った今後の行動もToDoとして提示される");
     const offerShownForReceipt = await page.$('[data-testid="confirm-cw-plan-offer"]');
     assert(!offerShownForReceipt, "レシートのような金銭アドバイスと無関係な資料では、買い物判断への反映提案は出さない");
+    assert(bodyText.includes("¥1,280"), "レシートから読み取った金額が、残額から差し引く提案に表示される");
+    const deductionOfferChecked = await page.$eval('[data-testid="confirm-receipt-deduction-offer"] input[type=checkbox]', (el) => el.checked);
+    assert(!deductionOfferChecked, "残額から差し引く提案の初期状態はオフ——本人が選ぶまで家計台帳は変わらない");
+    const balanceBeforeDeduction = (await getState(page)).shoppingBalance;
+    await page.click('[data-testid="confirm-receipt-deduction-offer"] input[type=checkbox]');
     await clickButtonWithText(page, "この内容で確定する");
     await page.waitForTimeout(200);
     await clickButtonWithText(page, "カレンダーへ戻る");
@@ -857,7 +863,54 @@ async function main() {
     const receiptEvent = state.events.find((e) => e.conclusion.includes("食料品と日用品を購入した"));
     assert(!!receiptEvent, "資料の内容でEventが作成される");
     assert(receiptEvent.tags.includes("🧾 レシート"), "資料の種類がタグとして自動で付く（生活資料ライブラリ：必要ならタグを付ける）");
+    assert(
+      state.shoppingBalance === balanceBeforeDeduction - 1280,
+      `本人がチェックを入れて確定すると、レシートの金額が家計台帳(残額)から実際に差し引かれる（実際: ${balanceBeforeDeduction} → ${state.shoppingBalance}）`
+    );
     await page.unroute("**/api/read-document");
+
+    step("生活資料ライブラリ：残額から差し引く提案のチェックを入れなければ、家計台帳は変わらない");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "input",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    const balanceBeforeSecondReceipt = (await getState(page)).shoppingBalance;
+    await clickButtonContaining(page, "資料");
+    await page.setInputFiles("#input-photo-file", {
+      name: "receipt-2.jpg",
+      mimeType: "image/jpeg",
+      buffer: Buffer.from("fake-receipt-photo-bytes-2"),
+    });
+    await page.waitForTimeout(200);
+    await page.route("**/api/read-document", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          docType: "receipt",
+          docTypeLabel: "🧾 レシート",
+          conclusion: "コンビニで飲み物を購入した（合計300円）",
+          todos: [],
+          amount: 300,
+        }),
+      });
+    });
+    await clickButtonWithText(page, "この資料を読み取る");
+    await page.waitForTimeout(300);
+    await page.unroute("**/api/read-document");
+    await clickButtonWithText(page, "この内容で確定する");
+    await page.waitForTimeout(150);
+    await clickButtonWithText(page, "カレンダーへ戻る");
+    await page.waitForTimeout(300);
+    state = await getState(page);
+    assert(
+      state.shoppingBalance === balanceBeforeSecondReceipt,
+      "提案のチェックを入れずに確定すると、家計台帳(残額)は変わらない（黙って差し引かない）"
+    );
 
     step("生活資料ライブラリ：お金に関わる資料（CWの資金計画・アドバイス）を読み取ると、買い物判断へ反映するか提案される（利用者要望・2026-07-30実装）");
     await page.evaluate(() => {

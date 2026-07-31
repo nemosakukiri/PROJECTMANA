@@ -20,6 +20,7 @@ export async function readDocument({ base64, mimeType }) {
       },
       docType: data.docType,
       docTypeLabel: data.docTypeLabel,
+      amount: typeof data.amount === "number" ? data.amount : null,
     };
   } catch {
     return { error: fallbackMessage };

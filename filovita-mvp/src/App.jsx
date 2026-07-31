@@ -49,6 +49,10 @@ export default function App() {
   // 写真から読み取った資料の種類。確定時にタグとしてEventへ付ける
   const [pendingTag, setPendingTag] = useState(null);
   const [pendingDocType, setPendingDocType] = useState(null);
+  // レシートから読み取った金額。確認画面で本人が承認した場合だけ、
+  // 買い物の残額(shoppingBalance)から実際に差し引く（2026-07-30、
+  // 利用者からの指摘：「レシートを読んでいるのに残高が減らない」）
+  const [pendingReceiptAmount, setPendingReceiptAmount] = useState(null);
   // 手帳だけの情報層：タグの道具箱。タグ名ではなくtagIdで紐付ける
   // （表示名を変えても道具箱との紐付けが切れないように）
   const [tagRegistry, setTagRegistry] = useState(persisted?.tagRegistry ?? {});
@@ -110,6 +114,7 @@ export default function App() {
     setDraftError(null);
     setPendingTag(null);
     setPendingDocType(null);
+    setPendingReceiptAmount(null);
     const generated = await generateDraft(text);
     setIsDrafting(false);
     setDraft(generated);
@@ -129,6 +134,7 @@ export default function App() {
     }
     setPendingTag(result.docTypeLabel);
     setPendingDocType(result.docType);
+    setPendingReceiptAmount(result.amount ?? null);
     setDraft(result.draft);
     setScreen("confirm");
   }
@@ -264,7 +270,7 @@ export default function App() {
     setVerdictHistory((prev) => [...prev, { id: makeId("verdict"), ...entry }]);
   }
 
-  function handleConfirm(conclusionText, confirmedTodos = [], reflectToCwPlan = false) {
+  function handleConfirm(conclusionText, confirmedTodos = [], reflectToCwPlan = false, deductReceiptAmount = false) {
     const newEvent = {
       id: `evt_${Date.now()}`,
       date: TODAY_DATE,
@@ -288,9 +294,18 @@ export default function App() {
     if (reflectToCwPlan) {
       setCwPlanNote((prev) => (prev.trim() ? `${prev}\n（資料より）${conclusionText}` : conclusionText));
     }
+    // レシートの金額を実際に残額から差し引くかどうかも、本人が確認画面で
+    // 明示的に選んだ場合のみ——家計台帳（shoppingBalance）はButlerが
+    // その場で創作していい数字ではなく、正確に保たれてこそ買い物相談が
+    // 根拠のある答えを返せる(2026-07-30、利用者からの指摘：レシートも
+    // 入金も読んでいるのに残高の一貫性が失われていた)。
+    if (deductReceiptAmount && pendingReceiptAmount) {
+      setShoppingBalance((prev) => Number(prev || 0) - pendingReceiptAmount);
+    }
     setDraft(null);
     setPendingTag(null);
     setPendingDocType(null);
+    setPendingReceiptAmount(null);
     setScreen("calendar");
   }
 
@@ -490,7 +505,7 @@ export default function App() {
           />
         )}
         {screen === "confirm" && draft && (
-          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} pendingTag={pendingTag} docType={pendingDocType} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
+          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} pendingTag={pendingTag} docType={pendingDocType} receiptAmount={pendingReceiptAmount} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
         )}
     </>
   );

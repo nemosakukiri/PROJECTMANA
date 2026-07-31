@@ -9,7 +9,7 @@ import ContextHeader from "../components/ContextHeader.jsx";
 const CW_PLAN_OFFER_DOC_TYPES = ["cw_advisory", "handwritten_note"];
 
 /* ④確認画面（心臓部） */
-export default function ConfirmScreen({ theme, draft, companionName, pendingTag, docType, onBack, onConfirm }) {
+export default function ConfirmScreen({ theme, draft, companionName, pendingTag, docType, receiptAmount, onBack, onConfirm }) {
   const { tokens, labels } = theme;
   const [conclusion, setConclusion] = useState(draft.conclusion.value);
   // AIが抽出したToDoも、結論と同じく利用者が確認・修正してから保存する
@@ -22,6 +22,12 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
   // (FILOVITA_PHILOSOPHY.md「長期記憶は勝手に保存しない」参照)。
   const [reflectToCwPlan, setReflectToCwPlan] = useState(false);
   const offerCwPlanReflection = CW_PLAN_OFFER_DOC_TYPES.includes(docType);
+  // レシートの金額を家計台帳(残額)から差し引くかどうかも、同じく
+  // 本人の明示的な承認を経由する。台帳はButlerがその場で創作していい
+  // 数字ではない——正確に保たれてこそ、買い物相談が根拠のある答えを
+  // 返せる(2026-07-30、利用者からの指摘)。
+  const [deductReceiptAmount, setDeductReceiptAmount] = useState(false);
+  const offerReceiptDeduction = docType === "receipt" && typeof receiptAmount === "number" && receiptAmount > 0;
   // 呼び名を決めていたら、「AI」「執事」を実際の呼び名に差し替える
   const confirmIntro = companionName
     ? labels.confirmIntro.replace(/^(AIが|AIは|執事が|執事は)/, `${companionName}が`)
@@ -117,6 +123,26 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
           </label>
         )}
 
+        {offerReceiptDeduction && (
+          <label
+            style={{
+              display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer",
+              padding: "12px 14px", borderRadius: 12, marginBottom: 20,
+              background: tokens.accentBg || tokens.card, border: `1px solid ${tokens.line}`,
+            }}
+            data-testid="confirm-receipt-deduction-offer"
+          >
+            <input
+              type="checkbox" checked={deductReceiptAmount}
+              onChange={(e) => setDeductReceiptAmount(e.target.checked)}
+              style={{ marginTop: 2, flexShrink: 0 }}
+            />
+            <span style={{ fontSize: 12.5, color: tokens.inkSoft, lineHeight: 1.7 }}>
+              🧾 この金額（¥{receiptAmount.toLocaleString()}）を、買い物の残額から差し引く
+            </span>
+          </label>
+        )}
+
         {!confirmed ? (
           <button
             onClick={() => setConfirmed(true)}
@@ -130,7 +156,7 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
           </div>
         )}
         {confirmed && (
-          <button onClick={() => onConfirm(conclusion, todos, reflectToCwPlan)} style={{ width: "100%", background: "none", border: `1px solid ${tokens.line}`, color: tokens.inkSoft, borderRadius: 14, padding: "12px 0", fontSize: 13.5, cursor: "pointer", marginBottom: 30 }}>
+          <button onClick={() => onConfirm(conclusion, todos, reflectToCwPlan, deductReceiptAmount)} style={{ width: "100%", background: "none", border: `1px solid ${tokens.line}`, color: tokens.inkSoft, borderRadius: 14, padding: "12px 0", fontSize: 13.5, cursor: "pointer", marginBottom: 30 }}>
             {labels.backToCalendarCta}
           </button>
         )}
