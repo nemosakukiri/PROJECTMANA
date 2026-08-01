@@ -21,6 +21,27 @@
 
 import { callAI } from "./ai.js";
 
+// 第9条が実際にどの観点で止めたかを、技術用語ではなくfilovitaの思想の
+// 言葉のまま分類として残す（利用者からの要望：「どんな種類の危険だった
+// のかを記録しておくと、Butler自身を育てるデータになる」）。
+const DANGER_CATEGORIES = ["事実の捏造", "記録にない断定", "結果論による書き換え", "根拠のない誘導", "根拠不足"];
+
+/* 第9条が発動したこと（safe:falseと判定されたこと）を、利用者には見せず
+   開発者向けのログにだけ残す。永続ストアではなくVercelのランタイムログ
+   （保持期間はVercelのプラン依存、長くは残らない）に出すだけの簡易な
+   記録——長期的に傾向を分析したくなったら、別途保存先（DB等）を検討する
+   こと。2026-08-01時点では「まず発動の記録を残す」ことを優先している。 */
+function logSafetyEvent({ surface, dangerCategory, reason, before, after }) {
+  console.warn("[第9条発動]", JSON.stringify({
+    at: new Date().toISOString(),
+    surface,
+    dangerCategory: DANGER_CATEGORIES.includes(dangerCategory) ? dangerCategory : "不明",
+    reason,
+    before,
+    after,
+  }));
+}
+
 const VERIFY_SYSTEM_PROMPT = `あなたは、生活記録アプリ「Filovita」のバトラーが書いた発言案を検証する、
 独立した安全確認の役目です。これはButlerを疑うためではなく、Butlerという
 役割——生活を預かる者としての責任——を守るための確認です。人間の執事が
@@ -52,10 +73,16 @@ const VERIFY_SYSTEM_PROMPT = `あなたは、生活記録アプリ「Filovita」
 弱めてください。問題がなければ、発言案をそのままrevisedReplyに入れて
 安全と判定してください。
 
+安全でないと判定した場合は、上の1〜5のどれに当てはまったかを
+dangerCategoryとして、次の言葉のいずれかで示してください（複数当てはまる
+ときは最も当てはまるもの一つ）：
+"事実の捏造"（1）／"記録にない断定"（2）／"結果論による書き換え"（3）／
+"根拠のない誘導"（4）／"根拠不足"（5）。安全な場合はnullにしてください。
+
 必ず次のJSON形式だけを出力してください。説明文・前置き・コードブロックの
 装飾（\`\`\`など）は一切付けないでください。
 
-{"safe": true|false, "reason": "判定理由を一言で", "revisedReply": "safeがtrueなら発言案そのまま、falseなら断定を弱めた言い換え"}`;
+{"safe": true|false, "reason": "判定理由を一言で", "dangerCategory": "事実の捏造"|"記録にない断定"|"結果論による書き換え"|"根拠のない誘導"|"根拠不足"|null, "revisedReply": "safeがtrueなら発言案そのまま、falseなら断定を弱めた言い換え"}`;
 
 const FALLBACK_REPLY =
   "今は安全確認をしながらお答えすることができませんでした。少し時間をおいてから、もう一度お試しください。";
@@ -68,7 +95,12 @@ function parseVerification(text) {
     if (typeof parsed.safe !== "boolean" || typeof parsed.revisedReply !== "string" || !parsed.revisedReply.trim()) {
       return null;
     }
-    return { safe: parsed.safe, reason: typeof parsed.reason === "string" ? parsed.reason : "", revisedReply: parsed.revisedReply };
+    return {
+      safe: parsed.safe,
+      reason: typeof parsed.reason === "string" ? parsed.reason : "",
+      dangerCategory: typeof parsed.dangerCategory === "string" ? parsed.dangerCategory : null,
+      revisedReply: parsed.revisedReply,
+    };
   } catch {
     return null;
   }
@@ -112,6 +144,15 @@ ${draftReply}`;
     console.error("safetyCheck.verifyReply: 検証結果のJSON解析に失敗:", result.reply);
     return { safe: false, reason: "安全確認の結果を読み取れませんでした", revisedReply: FALLBACK_REPLY, verified: false };
   }
+  if (!parsed.safe) {
+    logSafetyEvent({
+      surface: "shopping-chat",
+      dangerCategory: parsed.dangerCategory,
+      reason: parsed.reason,
+      before: draftReply,
+      after: parsed.revisedReply,
+    });
+  }
   return { ...parsed, verified: true };
 }
 
@@ -143,10 +184,16 @@ Butlerという役割——生活を預かる者としての責任——を守�
 品目名は変えない）。すべて問題なければ、元の見立てをそのまま
 revisedVerdictに入れて安全と判定してください。
 
+安全でないと判定した場合は、上の1〜5のどれに当てはまったかを
+dangerCategoryとして、次の言葉のいずれかで示してください（複数当てはまる
+ときは最も当てはまるもの一つ）：
+"事実の捏造"（1）／"記録にない断定"（2）／"結果論による書き換え"（3）／
+"根拠のない誘導"（4）／"根拠不足"（5）。安全な場合はnullにしてください。
+
 必ず次のJSON形式だけを出力してください。説明文・前置き・コードブロックの
 装飾（\`\`\`など）は一切付けないでください。
 
-{"safe": true|false, "reason": "判定理由を一言で", "revisedVerdict": {"items": [{"name": "品目名", "category": "now|later|priority|skip", "reason": "理由"}], "summary": "全体のまとめ", "focus": "重視したこと"}}`;
+{"safe": true|false, "reason": "判定理由を一言で", "dangerCategory": "事実の捏造"|"記録にない断定"|"結果論による書き換え"|"根拠のない誘導"|"根拠不足"|null, "revisedVerdict": {"items": [{"name": "品目名", "category": "now|later|priority|skip", "reason": "理由"}], "summary": "全体のまとめ", "focus": "重視したこと"}}`;
 
 function parseVerdictVerification(text, fallbackVerdict) {
   const match = text.match(/\{[\s\S]*\}/);
@@ -157,7 +204,12 @@ function parseVerdictVerification(text, fallbackVerdict) {
     if (typeof parsed.safe !== "boolean" || !rv || !Array.isArray(rv.items) || rv.items.length !== fallbackVerdict.items.length) {
       return null;
     }
-    return { safe: parsed.safe, reason: typeof parsed.reason === "string" ? parsed.reason : "", revisedVerdict: rv };
+    return {
+      safe: parsed.safe,
+      reason: typeof parsed.reason === "string" ? parsed.reason : "",
+      dangerCategory: typeof parsed.dangerCategory === "string" ? parsed.dangerCategory : null,
+      revisedVerdict: rv,
+    };
   } catch {
     return null;
   }
@@ -203,6 +255,15 @@ ${JSON.stringify({ items: verdict.items, summary: verdict.summary, focus: verdic
   if (!parsed) {
     console.error("safetyCheck.verifyVerdict: 検証結果のJSON解析に失敗:", result.reply);
     return { safe: false, reason: "安全確認の結果を読み取れませんでした", revisedVerdict: fallbackVerdict, verified: false };
+  }
+  if (!parsed.safe) {
+    logSafetyEvent({
+      surface: "shopping-final-verdict",
+      dangerCategory: parsed.dangerCategory,
+      reason: parsed.reason,
+      before: { items: verdict.items, summary: verdict.summary, focus: verdict.focus },
+      after: parsed.revisedVerdict,
+    });
   }
   return { ...parsed, verified: true };
 }
