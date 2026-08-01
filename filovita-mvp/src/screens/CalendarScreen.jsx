@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Plus, Mic, ChevronLeft, ChevronRight, Settings } from "lucide-react";
-import { eventsOnDate, daysInMonth, firstWeekday } from "../data/fakeEvents.js";
+import { eventsOnDate, getDaysInMonth, getFirstWeekdayOfMonth } from "../data/fakeEvents.js";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import WarnLamp from "../theme/industrial/WarnLamp.jsx";
 import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
@@ -23,7 +23,7 @@ const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
 const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];
 
 /* ①カレンダー（中心画面） */
-export default function CalendarScreen({ theme, events, monthStage, inputMode, onOpenDate, onNew, onOpenSettings, onOpenShoppingConsult, onOpenWeeklyLife, seenGuides = {}, onDismissGuide }) {
+export default function CalendarScreen({ theme, events, monthStage, inputMode, todayDate, onOpenDate, onNew, onOpenSettings, onOpenShoppingConsult, onOpenWeeklyLife, seenGuides = {}, onDismissGuide }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -34,15 +34,23 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
   const [showContinuation, setShowContinuation] = useState(false);
   const [guideOpen, setGuideOpen] = useState(!seenGuides.calendar);
   const guide = guideById("calendar");
+  // 今表示している月は常に「今日」の月（月送りは未実装）。2026-08-01、
+  // 固定で「2026年7月」を指していた不具合を修正——実際の年月から毎回計算する。
+  const todayYear = Number(todayDate.slice(0, 4));
+  const todayMonth = Number(todayDate.slice(5, 7));
+  const todayDay = Number(todayDate.slice(8, 10));
+  const monthPrefix = todayDate.slice(0, 7);
+  const daysInMonth = getDaysInMonth(todayYear, todayMonth);
+  const firstWeekday = getFirstWeekdayOfMonth(todayYear, todayMonth);
   const cells = [...Array(firstWeekday).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
   const totalOpenTodos = events.reduce((s, e) => s + e.todos.filter((t) => !t.done).length, 0);
   const nextEvt = events.find((e) => e.nextEvent)?.nextEvent;
 
-  const julyRecordedDays = isStorybook || isJournal
-    ? [...new Set(events.filter((e) => e.date?.startsWith("2026-07")).map((e) => Number(e.date.slice(-2))))]
+  const monthRecordedDays = isStorybook || isJournal
+    ? [...new Set(events.filter((e) => e.date?.startsWith(monthPrefix)).map((e) => Number(e.date.slice(-2))))]
     : [];
-  const hiddenSpot = isStorybook ? getHiddenSpot("2026-07-18") : null;
-  const pageTraces = isStorybook ? storyTraces(julyRecordedDays) : [];
+  const hiddenSpot = isStorybook ? getHiddenSpot(todayDate) : null;
+  const pageTraces = isStorybook ? storyTraces(monthRecordedDays) : [];
   const travelerPos = isStorybook ? getTravelerPosition(monthStage) : { leftPercent: 50 };
 
   const continuationContent = (
@@ -121,7 +129,7 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
           )}
           {isJournal && (
             <p style={{ fontSize: 11.5, color: tokens.inkFaint, margin: "3px 0 0" }}>
-              {journalCaption(julyRecordedDays.length)}
+              {journalCaption(monthRecordedDays.length)}
             </p>
           )}
           {isIndustrial && (
@@ -215,7 +223,7 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
           <button style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer" }}><ChevronLeft size={17} /></button>
-          <span style={{ fontFamily: tokens.headingFont, fontSize: 15, fontWeight: 700, color: tokens.ink }}>2026年7月</span>
+          <span style={{ fontFamily: tokens.headingFont, fontSize: 15, fontWeight: 700, color: tokens.ink }}>{todayYear}年{todayMonth}月</span>
           <button style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer" }}><ChevronRight size={17} /></button>
         </div>
 
@@ -225,9 +233,9 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, o
         <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 3 }}>
           {cells.map((d, i) => {
             if (!d) return <div key={i} />;
-            const dateStr = `2026-07-${String(d).padStart(2, "0")}`;
+            const dateStr = `${monthPrefix}-${String(d).padStart(2, "0")}`;
             const dayEvents = eventsOnDate(events, dateStr);
-            const isToday = d === 18;
+            const isToday = d === todayDay;
             const dayStage = isForest ? getMonthStage(d) : null;
             return (
               <button

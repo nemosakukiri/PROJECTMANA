@@ -29,8 +29,24 @@ import ShoppingListScreen from "./screens/ShoppingListScreen.jsx";
 import WeeklyLifeScreen from "./screens/WeeklyLifeScreen.jsx";
 import { makeId } from "./theme/techo/tagToolbox.js";
 
-const TODAY_DATE = "2026-07-18";
-const TODAY_LABEL = "7月18日（土）";
+// 2026-08-01、利用者から「今日8月1日なのに7月18日になっている」と指摘を受けて発覚：
+// ここが固定文字列のままで、実際の今日の日付を計算していなかった。handleConfirmで
+// 新しいEventの日付として直接使われるため、単なる表示の不具合ではなく、記録される
+// データ自体が誤った日付になっていた。実際の日付から毎回計算するよう修正。
+const WEEKDAY_LABEL = ["日", "月", "火", "水", "木", "金", "土"];
+function computeTodayDate() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function computeTodayLabel() {
+  const d = new Date();
+  return `${d.getMonth() + 1}月${d.getDate()}日（${WEEKDAY_LABEL[d.getDay()]}）`;
+}
+const TODAY_DATE = computeTodayDate();
+const TODAY_LABEL = computeTodayLabel();
 
 // リロード後も続きから触れるよう、初期値は一度だけlocalStorageから読む
 const persisted = loadState();
@@ -378,6 +394,7 @@ export default function App() {
             events={events}
             monthStage={monthStage}
             inputMode={inputMode}
+            todayDate={TODAY_DATE}
             onOpenDate={handleOpenDate}
             onNew={() => setScreen("input")}
             onOpenSettings={() => setScreen("settings")}

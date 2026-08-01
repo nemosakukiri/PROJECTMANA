@@ -124,8 +124,20 @@ async function main() {
     await page.reload();
     await page.waitForTimeout(300);
 
-    step("案内人：初めてカレンダーを開くと、案内が自動で出る");
+    step("カレンダー：月の見出しと「今日」は、実際の今日の日付から計算される(2026-08-01、固定で「2026年7月18日」になっていた不具合の再発防止)");
+    const today = new Date();
     let bodyText = await page.evaluate(() => document.body.textContent);
+    assert(
+      bodyText.includes(`${today.getFullYear()}年${today.getMonth() + 1}月`),
+      `カレンダーの月見出しが実際の年月になっている（実際のbodyText断片: ${bodyText.slice(0, 200)}）`
+    );
+    const todayCellIsHighlighted = await page.evaluate((day) => {
+      const cell = [...document.querySelectorAll("button")].find((b) => b.querySelector("span")?.textContent.trim() === day);
+      return !!cell && cell.style.border.includes("2px");
+    }, String(today.getDate()));
+    assert(todayCellIsHighlighted, "実際の今日の日番号のセルが「今日」として強調表示されている");
+
+    step("案内人：初めてカレンダーを開くと、案内が自動で出る");
     assert(bodyText.includes("起きたことが、そのままここに並びます"), "カレンダーの案内が自動で表示されている");
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
@@ -240,10 +252,15 @@ async function main() {
     gap("Google Calendarとの双方向連携（次回セッション最優先事項、未実装）");
 
     step("今日のEventを開く");
-    await page.evaluate(() => {
-      const cell = [...document.querySelectorAll("button")].find((b) => b.querySelector("span")?.textContent.trim() === "18");
+    // App.jsxのTODAY_DATEは実際の今日の日付から毎回計算される
+    // (2026-08-01、固定文字列だった不具合を修正した際に変更)。
+    // テストも同じく実際の日を使う——固定の日番号だと、テスト実行日によって
+    // カレンダー上に存在しない日を探しに行き、必ず失敗する。
+    const todayDay = String(new Date().getDate());
+    await page.evaluate((day) => {
+      const cell = [...document.querySelectorAll("button")].find((b) => b.querySelector("span")?.textContent.trim() === day);
       cell?.click();
-    });
+    }, todayDay);
     await page.waitForTimeout(300);
     state = await getState(page);
     assert(state.screen === "dayList", "その日の記録一覧に遷移している");

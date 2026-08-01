@@ -28,14 +28,22 @@ export function eventsOnDate(events, dateStr) {
   return events.filter((e) => e.date === dateStr);
 }
 
-export const daysInMonth = 31;
-export const firstWeekday = 3;
+// 2026-08-01、利用者から「今日8月1日なのに7月18日になっている」と指摘を受けて発覚：
+// これらが31・3の固定値のままで、常に「2026年7月」として扱われていた
+// （カレンダー画面の月表示・グリッド・「今日」判定すべてがこれに依存）。
+// 実際の年月から毎回計算するよう修正。
+export function getDaysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
+export function getFirstWeekdayOfMonth(year, month) {
+  return new Date(year, month - 1, 1).getDay();
+}
 
 const WEEKDAY_NAMES = ["日", "月", "火", "水", "木", "金", "土"];
 
 export function formatDateLabel(dateStr) {
   const month = Number(dateStr.slice(5, 7));
   const day = Number(dateStr.slice(-2));
-  const weekdayIndex = (firstWeekday + (day - 1)) % 7;
+  const weekdayIndex = new Date(`${dateStr}T00:00:00`).getDay();
   return `${month}月${day}日（${WEEKDAY_NAMES[weekdayIndex]}）`;
 }
