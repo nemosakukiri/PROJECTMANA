@@ -22,12 +22,15 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
   // (FILOVITA_PHILOSOPHY.md「長期記憶は勝手に保存しない」参照)。
   const [reflectToCwPlan, setReflectToCwPlan] = useState(false);
   const offerCwPlanReflection = CW_PLAN_OFFER_DOC_TYPES.includes(docType);
-  // レシートの金額を家計台帳(残額)から差し引くかどうかも、同じく
-  // 本人の明示的な承認を経由する。台帳はButlerがその場で創作していい
-  // 数字ではない——正確に保たれてこそ、買い物相談が根拠のある答えを
-  // 返せる(2026-07-30、利用者からの指摘)。
-  const [deductReceiptAmount, setDeductReceiptAmount] = useState(false);
+  // レシートの金額は、CWのアドバイス等（解釈の要る資料）とは違い、
+  // 読み取れれば読み取れるだけ客観的な事実であり、判断の余地がない。
+  // 初期値をオフにしていたところ、チェックを入れ忘れて残額に反映されず、
+  // 「反映されないと困る」と利用者から実際に指摘を受けた(2026-07-31)。
+  // 読み取れた場合は初期値をオン（反映する）にし、反映したくない場合だけ
+  // 本人がチェックを外す方式に変更。それでも黙って書き込むのではなく、
+  // 確認画面で必ず見える状態にする（いつでも人が修正できる）。
   const offerReceiptDeduction = docType === "receipt" && typeof receiptAmount === "number" && receiptAmount > 0;
+  const [deductReceiptAmount, setDeductReceiptAmount] = useState(offerReceiptDeduction);
   // 呼び名を決めていたら、「AI」「執事」を実際の呼び名に差し替える
   const confirmIntro = companionName
     ? labels.confirmIntro.replace(/^(AIが|AIは|執事が|執事は)/, `${companionName}が`)
@@ -138,7 +141,7 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
               style={{ marginTop: 2, flexShrink: 0 }}
             />
             <span style={{ fontSize: 12.5, color: tokens.inkSoft, lineHeight: 1.7 }}>
-              🧾 この金額（¥{receiptAmount.toLocaleString()}）を、買い物の残額から差し引く
+              🧾 この金額（¥{receiptAmount.toLocaleString()}）を、買い物の残額から差し引きます（外すと差し引きません）
             </span>
           </label>
         )}

@@ -852,9 +852,11 @@ async function main() {
     assert(!offerShownForReceipt, "レシートのような金銭アドバイスと無関係な資料では、買い物判断への反映提案は出さない");
     assert(bodyText.includes("¥1,280"), "レシートから読み取った金額が、残額から差し引く提案に表示される");
     const deductionOfferChecked = await page.$eval('[data-testid="confirm-receipt-deduction-offer"] input[type=checkbox]', (el) => el.checked);
-    assert(!deductionOfferChecked, "残額から差し引く提案の初期状態はオフ——本人が選ぶまで家計台帳は変わらない");
+    assert(
+      deductionOfferChecked,
+      "残額から差し引く提案の初期状態はオン——レシートは客観的な事実なので、外さない限り反映される（2026-07-31、反映されず利用者が困った実例を受けて変更）"
+    );
     const balanceBeforeDeduction = (await getState(page)).shoppingBalance;
-    await page.click('[data-testid="confirm-receipt-deduction-offer"] input[type=checkbox]');
     await clickButtonWithText(page, "この内容で確定する");
     await page.waitForTimeout(200);
     await clickButtonWithText(page, "カレンダーへ戻る");
@@ -863,13 +865,14 @@ async function main() {
     const receiptEvent = state.events.find((e) => e.conclusion.includes("食料品と日用品を購入した"));
     assert(!!receiptEvent, "資料の内容でEventが作成される");
     assert(receiptEvent.tags.includes("🧾 レシート"), "資料の種類がタグとして自動で付く（生活資料ライブラリ：必要ならタグを付ける）");
+    assert(receiptEvent.receiptAmount === 1280, "レシートの金額は、反映の有無に関わらずEventにも残る（後から失われない）");
     assert(
       state.shoppingBalance === balanceBeforeDeduction - 1280,
-      `本人がチェックを入れて確定すると、レシートの金額が家計台帳(残額)から実際に差し引かれる（実際: ${balanceBeforeDeduction} → ${state.shoppingBalance}）`
+      `初期状態のまま確定すると、レシートの金額が家計台帳(残額)から実際に差し引かれる（実際: ${balanceBeforeDeduction} → ${state.shoppingBalance}）`
     );
     await page.unroute("**/api/read-document");
 
-    step("生活資料ライブラリ：残額から差し引く提案のチェックを入れなければ、家計台帳は変わらない");
+    step("生活資料ライブラリ：残額から差し引く提案のチェックを外して確定すると、家計台帳は変わらない");
     await page.evaluate(() => {
       localStorage.setItem("filovita-mvp-state", JSON.stringify({
         ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
@@ -902,6 +905,7 @@ async function main() {
     await clickButtonWithText(page, "この資料を読み取る");
     await page.waitForTimeout(300);
     await page.unroute("**/api/read-document");
+    await page.click('[data-testid="confirm-receipt-deduction-offer"] input[type=checkbox]');
     await clickButtonWithText(page, "この内容で確定する");
     await page.waitForTimeout(150);
     await clickButtonWithText(page, "カレンダーへ戻る");
@@ -909,7 +913,12 @@ async function main() {
     state = await getState(page);
     assert(
       state.shoppingBalance === balanceBeforeSecondReceipt,
-      "提案のチェックを入れずに確定すると、家計台帳(残額)は変わらない（黙って差し引かない）"
+      "提案のチェックを本人が外して確定すると、家計台帳(残額)は変わらない（本人の意思を優先する）"
+    );
+    const secondReceiptEvent = state.events.find((e) => e.conclusion.includes("コンビニで飲み物を購入した"));
+    assert(
+      !!secondReceiptEvent && secondReceiptEvent.receiptAmount === 300,
+      "反映しなかった場合でも、金額はEventに残り、あとから参照できる（消えてしまわない）"
     );
 
     step("生活資料ライブラリ：お金に関わる資料（CWの資金計画・アドバイス）を読み取ると、買い物判断へ反映するか提案される（利用者要望・2026-07-30実装）");

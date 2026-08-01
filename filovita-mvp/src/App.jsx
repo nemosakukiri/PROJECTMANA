@@ -285,6 +285,11 @@ export default function App() {
       nextEvent: null,
       related: [],
       myNote: "",
+      // レシートの金額は、残額に反映するかに関わらずEventへ残す。以前は
+      // pendingReceiptAmountのみに保持しており、確認時に反映を選ばないと
+      // 金額そのものが消えて、後から取り戻す手段が無かった
+      // (2026-07-31、実際にレシートが反映されず利用者が困った経緯を受けて追加)。
+      receiptAmount: pendingDocType === "receipt" ? pendingReceiptAmount : null,
     };
     setEvents((prev) => [...prev, newEvent]);
     // 資料の内容を買い物相談の判断材料(cwPlanNote)へ反映するかどうかは、
