@@ -1053,12 +1053,16 @@ async function main() {
     state = await getState(page);
     assert(state.screen === "weeklyLife", "今週の暮らし画面が開く");
 
-    step("今週の暮らし：実際の週間支援スケジュールが、曜日ごとにまとまって表示される");
+    step("今週の暮らし：曜日を押すと、その日の予定がその場に展開される（2026-08-01、利用者からの要望：カレンダーと同じ操作感に）");
     bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("月曜日") && bodyText.includes("水曜日"), "曜日の見出しがある");
+    assert(!bodyText.includes("水曜日"), "曜日を押す前は、まだどの日の予定も展開されていない");
+    await page.click('[data-testid="weekly-life-day-toggle-wed"]');
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("水曜日"), "水曜を押すと水曜日の見出しが展開される");
     assert(bodyText.includes("アミケア訪問看護ステーション"), "事業所名は表示される（利用者の意向）");
     assert(bodyText.includes("訪問看護"), "実データ（訪問看護）が表示されている");
-    assert(!bodyText.includes("鍼灸師") , "個人の担当者名は記録されていない（利用者の意向）");
+    assert(!bodyText.includes("鍼灸師"), "個人の担当者名は記録されていない（利用者の意向）");
     state = await getState(page);
     const wed = state.weeklyLife.filter((i) => i.kind === "regular" && i.repeat?.dayOfWeek === "wed");
     assert(
@@ -1068,6 +1072,10 @@ async function main() {
     );
 
     step("今週の暮らし：同じ曜日の予定は、時刻順に並ぶ");
+    await page.click('[data-testid="weekly-life-day-toggle-mon"]');
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("月曜日") && !bodyText.includes("水曜日"), "月曜を押すと、水曜の展開は閉じて月曜だけが開く（アコーディオン）");
     const monLabels = await page.evaluate(() => {
       const day = document.querySelector('[data-testid="weekly-life-day-mon"]');
       return [...day.querySelectorAll('[data-testid="weekly-life-item"]')].map((el) => el.textContent);
@@ -1077,8 +1085,9 @@ async function main() {
       `月曜日の予定が時刻順（10:00→12:45→18:00）に並んでいる（実際: ${monLabels.join(" / ")}）`
     );
 
-    step("今週の暮らし：新しい定期予定を追加できる");
-    await page.selectOption('[data-testid="weekly-life-day-select"]', "sun");
+    step("今週の暮らし：曜日を選んだ状態で、そのままその日に予定を足せる（日を選び直す必要がない）");
+    await page.click('[data-testid="weekly-life-day-toggle-sun"]');
+    await page.waitForTimeout(150);
     await page.fill('[data-testid="weekly-life-start-time"]', "09:00");
     await page.fill('[data-testid="weekly-life-label"]', "デイサービス");
     await page.fill('[data-testid="weekly-life-provider"]', "テスト事業所");
@@ -1087,7 +1096,7 @@ async function main() {
     state = await getState(page);
     assert(
       state.weeklyLife.some((i) => i.repeat?.dayOfWeek === "sun" && i.startTime === "09:00" && i.label === "デイサービス" && i.provider === "テスト事業所"),
-      "追加した定期予定が保存される"
+      "追加した定期予定が、展開していた曜日（日曜）に保存される"
     );
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("デイサービス"), "追加した予定が画面にも表示される");
@@ -1103,16 +1112,83 @@ async function main() {
     assert(!state.weeklyLife.some((i) => i.label === "デイサービス"), "削除した予定は保存データからも消える");
 
     step("今週の暮らし：追加・削除の結果はリロード後も残る");
-    await page.selectOption('[data-testid="weekly-life-day-select"]', "sun");
     await page.fill('[data-testid="weekly-life-start-time"]', "09:00");
     await page.fill('[data-testid="weekly-life-label"]', "デイサービス（再テスト）");
     await page.click('[data-testid="weekly-life-add-button"]');
     await page.waitForTimeout(150);
     await page.reload();
     await page.waitForTimeout(300);
+    await page.click('[data-testid="weekly-life-day-toggle-sun"]');
+    await page.waitForTimeout(150);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("デイサービス（再テスト）"), "リロード後も追加した予定が残っている");
+    await page.click('[data-testid="weekly-life-day-toggle-wed"]');
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("アミケア訪問看護ステーション"), "リロード後も元からの実データが残っている");
+
+    step("暮らしの種：カレンダー画面から、確認画面を挟まず一言をその場に置ける（2026-08-01、利用者からの設計対話より）");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "calendar",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("暮らしの種"), "カレンダー画面に「暮らしの種」の導線・入力欄がある");
+    await page.fill('[data-testid="seed-quick-capture-input"]', "この映画見たい");
+    await page.click('[data-testid="seed-quick-capture-submit"]');
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(state.screen === "calendar", "置いたあとも画面は遷移しない（確認画面を挟まない）");
+    assert(
+      state.seeds.some((s) => s.text === "この映画見たい" && s.status === "open" && Array.isArray(s.aiSuggestions) && s.aiSuggestions.length === 0),
+      "打った言葉そのままがstatus:openの種として保存される（分類はまだ何もされない）"
+    );
+
+    step("暮らしの種：Enterキーだけでも置ける（手帳に書くのと同じ軽さ）");
+    await page.fill('[data-testid="seed-quick-capture-input"]', "あの店行ってみたい");
+    await page.press('[data-testid="seed-quick-capture-input"]', "Enter");
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(state.seeds.some((s) => s.text === "あの店行ってみたい"), "Enterキーでも保存される");
+    const inputValueAfterEnter = await page.inputValue('[data-testid="seed-quick-capture-input"]');
+    assert(inputValueAfterEnter === "", "置いたあと、入力欄は空に戻り次を続けて置ける");
+
+    step("暮らしの種：一覧画面で、置いた順（新しい順）に並んで見える");
+    await clickButtonContaining(page, "暮らしの種を見る");
+    await page.waitForTimeout(200);
+    state = await getState(page);
+    assert(state.screen === "seeds", "暮らしの種の一覧画面が開く");
+    const seedTexts = await page.evaluate(() => [...document.querySelectorAll('[data-testid="seed-item"]')].map((el) => el.textContent));
+    assert(
+      seedTexts[0].includes("あの店行ってみたい") && seedTexts[1].includes("この映画見たい"),
+      `新しく置いたものが上に来る（実際: ${seedTexts.join(" / ")}）`
+    );
+
+    step("暮らしの種：一覧画面からも、同じ一言入力でそのまま置ける");
+    await page.fill('[data-testid="seed-quick-capture-input"]', "部屋の棚変える");
+    await page.click('[data-testid="seed-quick-capture-submit"]');
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("部屋の棚変える"), "一覧画面の入力欄からも追加できる");
+
+    step("暮らしの種：消したいものは消せる");
+    await page.evaluate(() => {
+      const row = [...document.querySelectorAll('[data-testid="seed-item"]')].find((el) => el.textContent.includes("部屋の棚変える"));
+      row.querySelector("button").click();
+    });
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(!state.seeds.some((s) => s.text === "部屋の棚変える"), "削除した種は保存データからも消える");
+
+    step("暮らしの種：リロード後も残る");
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("この映画見たい") && bodyText.includes("あの店行ってみたい"), "リロード後も置いた種が残っている");
 
     step("生活資料ライブラリ：写真は「入力にない事実」を作れないため、読み取れない場合は断定的な代替を作らず正直に伝える");
     await page.evaluate(() => {

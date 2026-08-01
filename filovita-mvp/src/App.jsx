@@ -27,6 +27,7 @@ import GuideTourScreen from "./screens/GuideTourScreen.jsx";
 import ShoppingConsultScreen from "./screens/ShoppingConsultScreen.jsx";
 import ShoppingListScreen from "./screens/ShoppingListScreen.jsx";
 import WeeklyLifeScreen from "./screens/WeeklyLifeScreen.jsx";
+import SeedsScreen from "./screens/SeedsScreen.jsx";
 import { makeId } from "./theme/techo/tagToolbox.js";
 
 // 2026-08-01、利用者から「今日8月1日なのに7月18日になっている」と指摘を受けて発覚：
@@ -98,6 +99,11 @@ export default function App() {
   // 用意し、まだ入力UIは無い——「今週表に出さない」ことと「生活モデルから
   // 消す」ことは別、という利用者の指摘による。
   const [weeklyLife, setWeeklyLife] = useState(persisted?.weeklyLife ?? initialWeeklyLife);
+  // 暮らしの種：予定でも家計でもない、生活の断片を置く横断レイヤー
+  // （docs/LIFE_MODEL.md「暮らしの種」参照、2026-08-01の設計対話より）。
+  // status:"open"以外は分類しない。textは打った言葉そのまま、
+  // aiSuggestionsは将来AIが分類案を出す場所としてv1では空のまま持つ。
+  const [seeds, setSeeds] = useState(persisted?.seeds ?? []);
   const [cwPlanNote, setCwPlanNote] = useState(persisted?.cwPlanNote ?? "");
   const [recurringItems, setRecurringItems] = useState(persisted?.recurringItems ?? [
     { id: "rec_food", name: "食料品", amount: 6000 },
@@ -121,11 +127,11 @@ export default function App() {
   useEffect(() => {
     saveState({
       screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife,
+      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife, seeds,
     });
   }, [
     screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife,
+    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife, seeds,
   ]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -230,6 +236,15 @@ export default function App() {
 
   function handleRemoveWeeklyLife(id) {
     setWeeklyLife((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  // 確認画面を挟まず、その場で直接保存する（docs/LIFE_MODEL.md「暮らしの種」参照）
+  function handleAddSeed(text) {
+    setSeeds((prev) => [...prev, { id: makeId("seed"), text, createdAt: new Date().toISOString(), status: "open", aiSuggestions: [] }]);
+  }
+
+  function handleRemoveSeed(id) {
+    setSeeds((prev) => prev.filter((s) => s.id !== id));
   }
 
   function handleAddIncomeSchedule(entry) {
@@ -400,8 +415,19 @@ export default function App() {
             onOpenSettings={() => setScreen("settings")}
             onOpenShoppingConsult={() => setScreen("shoppingConsult")}
             onOpenWeeklyLife={() => setScreen("weeklyLife")}
+            onAddSeed={handleAddSeed}
+            onOpenSeeds={() => setScreen("seeds")}
             seenGuides={seenGuides}
             onDismissGuide={handleDismissGuide}
+          />
+        )}
+        {screen === "seeds" && (
+          <SeedsScreen
+            theme={theme}
+            seeds={seeds}
+            onAdd={handleAddSeed}
+            onRemove={handleRemoveSeed}
+            onBack={() => setScreen("calendar")}
           />
         )}
         {screen === "weeklyLife" && (

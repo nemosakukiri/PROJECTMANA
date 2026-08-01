@@ -15,8 +15,10 @@ const WEEKDAYS = [
   { key: "sun", label: "日" },
 ];
 
-function AddForm({ tokens, onAdd }) {
-  const [dayOfWeek, setDayOfWeek] = useState("mon");
+/* 選んだ曜日に足すためのフォーム。曜日はすでにセルの選択で決まっているため、
+   ここでは聞かない（2026-08-01、利用者からの要望：日付を押した先で
+   その場に足せる方が分かりやすい）。 */
+function AddForm({ tokens, dayOfWeek, onAdd }) {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [label, setLabel] = useState("");
@@ -41,17 +43,8 @@ function AddForm({ tokens, onAdd }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 22 }} data-testid="weekly-life-add-form">
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 12 }} data-testid="weekly-life-add-form">
       <div style={{ display: "flex", gap: 6 }}>
-        <select
-          value={dayOfWeek} onChange={(e) => setDayOfWeek(e.target.value)}
-          data-testid="weekly-life-day-select"
-          style={{ padding: "9px 8px", fontSize: 13, borderRadius: 9, border: `1px solid ${tokens.line}`, fontFamily: "inherit" }}
-        >
-          {WEEKDAYS.map((d) => (
-            <option key={d.key} value={d.key}>{d.label}曜</option>
-          ))}
-        </select>
         <input
           type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
           data-testid="weekly-life-start-time"
@@ -100,12 +93,17 @@ function AddForm({ tokens, onAdd }) {
    生活属性（種別・移動負荷・準備負荷・回復時間）は、データの箱だけを
    用意し、値は空のまま第一版では扱わない——Butlerが予定の生活への影響を
    読めるようにする第二版で使う。個人の担当者名は記録しない（利用者の
-   意向）。事業所名は記録してよい。 */
+   意向）。事業所名は記録してよい。
+
+   曜日は、カレンダー画面の「日付を押すとその日が開く」操作と同じ形に
+   揃えた（2026-08-01、利用者からの要望：見慣れた操作の方が分かりやすい・
+   足しやすい）。7曜日を横一列に並べ、押した曜日だけその場に展開する。 */
 export default function WeeklyLifeScreen({ theme, weeklyLife, onAdd, onRemove, onBack }) {
   const { tokens } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
   const isForest = theme.componentTheme === "forest";
+  const [selectedDay, setSelectedDay] = useState(null);
 
   const regularItems = weeklyLife.filter((item) => item.kind === "regular");
 
@@ -116,52 +114,84 @@ export default function WeeklyLifeScreen({ theme, weeklyLife, onAdd, onRemove, o
       .slice()
       .sort((a, b) => a.startTime.localeCompare(b.startTime)),
   }));
+  const selected = byDay.find((d) => d.key === selectedDay) ?? null;
 
   const listBody = (
     <>
-      {byDay.every((d) => d.items.length === 0) ? (
-        <p style={{ fontSize: 13, color: tokens.inkFaint, marginBottom: 20 }}>
-          まだ、決まった予定は登録されていません。
-        </p>
-      ) : (
-        byDay.map((d) => (
-          <div key={d.key} style={{ marginBottom: 18 }} data-testid={`weekly-life-day-${d.key}`}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: tokens.inkSoft, marginBottom: 6 }}>{d.label}曜日</div>
-            {d.items.length === 0 ? (
-              <p style={{ fontSize: 12.5, color: tokens.inkFaint }}>予定なし</p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {d.items.map((item) => (
-                  <div
-                    key={item.id}
-                    data-testid="weekly-life-item"
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                      padding: "9px 12px", border: `1px solid ${tokens.line}`, borderRadius: 10,
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 13.5, color: tokens.ink }}>
-                        {item.startTime}{item.endTime ? `〜${item.endTime}` : ""}　{item.label}
-                      </div>
-                      {item.provider && (
-                        <div style={{ fontSize: 12, color: tokens.inkFaint, marginTop: 2 }}>{item.provider}</div>
-                      )}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 5 }}>
+        {byDay.map((d) => {
+          const isSelected = d.key === selectedDay;
+          return (
+            <button
+              key={d.key}
+              onClick={() => setSelectedDay(isSelected ? null : d.key)}
+              data-testid={`weekly-life-day-toggle-${d.key}`}
+              style={{
+                position: "relative",
+                aspectRatio: "1",
+                border: isSelected ? `2px solid ${tokens.ink}` : `1px solid ${tokens.line}`,
+                borderRadius: 10,
+                background: isSelected ? tokens.accent : d.items.length > 0 ? tokens.card : "transparent",
+                color: isSelected ? tokens.paper : tokens.ink,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", fontSize: 13, fontWeight: 600, padding: 0,
+              }}
+            >
+              {d.label}
+              {d.items.length > 0 && (
+                <span
+                  style={{
+                    position: "absolute", bottom: 5, width: 4, height: 4, borderRadius: "50%",
+                    background: isSelected ? tokens.paper : tokens.accent,
+                  }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {selected ? (
+        <div style={{ marginTop: 16 }} data-testid={`weekly-life-day-${selected.key}`}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: tokens.inkSoft, marginBottom: 8 }}>{selected.label}曜日</div>
+          {selected.items.length === 0 ? (
+            <p style={{ fontSize: 12.5, color: tokens.inkFaint }}>まだ、決まった予定は登録されていません。</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {selected.items.map((item) => (
+                <div
+                  key={item.id}
+                  data-testid="weekly-life-item"
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "9px 12px", border: `1px solid ${tokens.line}`, borderRadius: 10,
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 13.5, color: tokens.ink }}>
+                      {item.startTime}{item.endTime ? `〜${item.endTime}` : ""}　{item.label}
                     </div>
-                    <button
-                      onClick={() => onRemove(item.id)}
-                      style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer", padding: 2 }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    {item.provider && (
+                      <div style={{ fontSize: 12, color: tokens.inkFaint, marginTop: 2 }}>{item.provider}</div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))
+                  <button
+                    onClick={() => onRemove(item.id)}
+                    style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer", padding: 2 }}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <AddForm tokens={tokens} dayOfWeek={selected.key} onAdd={onAdd} />
+        </div>
+      ) : (
+        <p style={{ fontSize: 12.5, color: tokens.inkFaint, marginTop: 14 }}>
+          曜日を選ぶと、その日の予定が見られます。
+        </p>
       )}
-      <AddForm tokens={tokens} onAdd={onAdd} />
     </>
   );
 
@@ -170,8 +200,8 @@ export default function WeeklyLifeScreen({ theme, weeklyLife, onAdd, onRemove, o
       <ContextHeader theme={theme} breadcrumb="生活モデル" title="今週の暮らし" onBack={onBack} />
       <div style={{ padding: "0 20px 30px" }}>
         <p style={{ fontSize: 12.5, color: tokens.inkFaint, marginBottom: 18 }}>
-          毎週決まって入っている予定です。ここを見れば、新しい用事がいつなら
-          無理なく入れられそうか、一緒に考えやすくなります。
+          毎週決まって入っている予定です。曜日を押すと、その日の予定を見たり
+          足したりできます。
         </p>
         {isIndustrial ? (
           <SteelPanel>{listBody}</SteelPanel>
