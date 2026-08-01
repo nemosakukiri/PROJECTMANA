@@ -15,6 +15,7 @@
 import { callAI } from "./_lib/ai.js";
 import { applyCors } from "./_lib/cors.js";
 import { formatScheduleLines, formatWeeklyLifeLines, todayLabel } from "./_lib/scheduleContext.js";
+import { verifyVerdict } from "./_lib/safetyCheck.js";
 
 const CATEGORIES = ["now", "later", "priority", "skip"];
 
@@ -154,12 +155,13 @@ export default async function handler(req, res) {
     return;
   }
 
+  const factsBlock = buildContextBlock(context);
   const messages = [
     ...history
       .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
       .slice(-10)
       .map((m) => ({ role: m.role, content: m.content })),
-    { role: "user", content: buildContextBlock(context) },
+    { role: "user", content: factsBlock },
   ];
 
   try {
@@ -182,7 +184,14 @@ export default async function handler(req, res) {
       res.status(502).json({ error: "バトラーの見立てをうまく読み取れませんでした。もう一度お試しください。" });
       return;
     }
-    res.status(200).json({ ...verdict, provider: result.provider });
+
+    // 第9条（家計相談の憲法）：見立てを作った本人ではなく、独立した
+    // 第二の呼び出しがすべての見立てを確認してから利用者に見せる
+    // （docs/FILOVITA_PHILOSOPHY.md参照、2026-08-01）。
+    const historyText = messages.map((m) => `${m.role === "user" ? "利用者" : "バトラー"}：${m.content}`).join("\n");
+    const verification = await verifyVerdict({ verdict, factsBlock, historyText });
+
+    res.status(200).json({ ...verification.revisedVerdict, provider: result.provider });
   } catch (err) {
     console.error("shopping-final-verdict handler error:", err);
     res.status(500).json({ error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。" });

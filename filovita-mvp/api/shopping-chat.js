@@ -13,6 +13,7 @@
 import { callAI } from "./_lib/ai.js";
 import { applyCors } from "./_lib/cors.js";
 import { formatScheduleLines, formatWeeklyLifeLines, todayLabel } from "./_lib/scheduleContext.js";
+import { verifyReply } from "./_lib/safetyCheck.js";
 
 const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の中で暮らしに寄り添う「バトラー」です。
 利用者から買い物についての自由な相談を受けます。
@@ -125,8 +126,9 @@ export default async function handler(req, res) {
     // 「言ってる数字がブレる」という不信につながる(2026-07-31、利用者の実際の
     // 会話ログから発覚)。final-verdictほど厳格でなくてよいが、雑談ではなく
     // 家計の話なので一貫性を優先する。
+    const factsBlock = buildContextBlock(context);
     const result = await callAI({
-      systemPrompt: `${SYSTEM_PROMPT}\n\n${buildContextBlock(context)}`,
+      systemPrompt: `${SYSTEM_PROMPT}\n\n${factsBlock}`,
       messages,
       maxTokens: 1000,
       thinkingLevel: "low",
@@ -136,7 +138,14 @@ export default async function handler(req, res) {
       res.status(result.status).json({ error: result.error });
       return;
     }
-    res.status(200).json({ reply: result.reply, provider: result.provider });
+
+    // 第9条（家計相談の憲法）：発言を作った本人ではなく、独立した
+    // 第二の呼び出しがすべての発言を確認してから利用者に見せる
+    // （docs/FILOVITA_PHILOSOPHY.md参照、2026-08-01）。
+    const historyText = messages.map((m) => `${m.role === "user" ? "利用者" : "バトラー"}：${m.content}`).join("\n");
+    const verification = await verifyReply({ draftReply: result.reply, factsBlock, historyText });
+
+    res.status(200).json({ reply: verification.revisedReply, provider: result.provider });
   } catch (err) {
     console.error("shopping-chat handler error:", err);
     res.status(500).json({ error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。" });
