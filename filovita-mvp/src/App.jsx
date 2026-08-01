@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { themes, themeList, defaultThemeId } from "./theme/themes.js";
 import { initialEvents } from "./data/fakeEvents.js";
+import { initialWeeklyLife } from "./data/initialWeeklyLife.js";
 import { generateDraft } from "./lib/generateDraft.js";
 import { readDocument } from "./lib/readDocument.js";
 import { loadState, saveState } from "./lib/persistence.js";
@@ -25,6 +26,7 @@ import TagToolboxScreen from "./screens/TagToolboxScreen.jsx";
 import GuideTourScreen from "./screens/GuideTourScreen.jsx";
 import ShoppingConsultScreen from "./screens/ShoppingConsultScreen.jsx";
 import ShoppingListScreen from "./screens/ShoppingListScreen.jsx";
+import WeeklyLifeScreen from "./screens/WeeklyLifeScreen.jsx";
 import { makeId } from "./theme/techo/tagToolbox.js";
 
 const TODAY_DATE = "2026-07-18";
@@ -73,6 +75,13 @@ export default function App() {
   const [incomeSchedule, setIncomeSchedule] = useState(persisted?.incomeSchedule ?? []);
   const [paymentSchedule, setPaymentSchedule] = useState(persisted?.paymentSchedule ?? []);
   const [restockSchedule, setRestockSchedule] = useState(persisted?.restockSchedule ?? []);
+  // 今週の暮らし：生活モデル(docs/LIFE_MODEL.md)の第一版。「カレンダー予定」
+  // ではなく「この人の生活に何が組み込まれているか」を記録する場所。
+  // kind: "regular"(定期・毎週) だけを今週の暮らし画面に表示する。
+  // "irregular"(往診など、曜日不定)・"single"(単発)はデータの型だけ
+  // 用意し、まだ入力UIは無い——「今週表に出さない」ことと「生活モデルから
+  // 消す」ことは別、という利用者の指摘による。
+  const [weeklyLife, setWeeklyLife] = useState(persisted?.weeklyLife ?? initialWeeklyLife);
   const [cwPlanNote, setCwPlanNote] = useState(persisted?.cwPlanNote ?? "");
   const [recurringItems, setRecurringItems] = useState(persisted?.recurringItems ?? [
     { id: "rec_food", name: "食料品", amount: 6000 },
@@ -96,11 +105,11 @@ export default function App() {
   useEffect(() => {
     saveState({
       screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory,
+      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife,
     });
   }, [
     screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory,
+    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife,
   ]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -197,6 +206,14 @@ export default function App() {
       ...prev,
       [tagId]: { ...prev[tagId], references: prev[tagId].references.filter((r) => r.id !== refId) },
     }));
+  }
+
+  function handleAddWeeklyLife(entry) {
+    setWeeklyLife((prev) => [...prev, { id: makeId("wl"), ...entry }]);
+  }
+
+  function handleRemoveWeeklyLife(id) {
+    setWeeklyLife((prev) => prev.filter((i) => i.id !== id));
   }
 
   function handleAddIncomeSchedule(entry) {
@@ -365,8 +382,18 @@ export default function App() {
             onNew={() => setScreen("input")}
             onOpenSettings={() => setScreen("settings")}
             onOpenShoppingConsult={() => setScreen("shoppingConsult")}
+            onOpenWeeklyLife={() => setScreen("weeklyLife")}
             seenGuides={seenGuides}
             onDismissGuide={handleDismissGuide}
+          />
+        )}
+        {screen === "weeklyLife" && (
+          <WeeklyLifeScreen
+            theme={theme}
+            weeklyLife={weeklyLife}
+            onAdd={handleAddWeeklyLife}
+            onRemove={handleRemoveWeeklyLife}
+            onBack={() => setScreen("calendar")}
           />
         )}
         {screen === "shoppingConsult" && (
@@ -401,6 +428,7 @@ export default function App() {
             onGenerateList={handleGenerateShoppingList}
             chatHistory={shoppingChatHistory}
             onAppendChatMessage={handleAppendShoppingChatMessage}
+            weeklyLife={weeklyLife}
             onBack={() => setScreen("calendar")}
           />
         )}
@@ -415,6 +443,7 @@ export default function App() {
             incomeSchedule={incomeSchedule}
             paymentSchedule={paymentSchedule}
             restockSchedule={restockSchedule}
+            weeklyLife={weeklyLife}
             chatHistory={shoppingChatHistory}
             onAppendChatMessage={handleAppendShoppingChatMessage}
             items={shoppingListItems}

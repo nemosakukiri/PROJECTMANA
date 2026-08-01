@@ -631,6 +631,10 @@ async function main() {
       capturedListChatRequest.context.items.some((i) => i.name === "ぶどう"),
       "この画面から相談すると、コンテキストに店頭でチェック中の品目（ぶどう）が含まれる"
     );
+    assert(
+      capturedListChatRequest.context.weeklyLife?.some((i) => i.label.includes("マクドナルド")),
+      "家計の相談コンテキストに「今週の暮らし」（木曜のマクドナルド等）も含まれる——家計とスケジュールをつなげるための材料（2026-08-01、利用者からの要望）"
+    );
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("ぶどうだけでも十分バランス良さそうです"), "AIの返答がチャットに表示される");
     await page.unroute("**/api/shopping-chat");
@@ -671,6 +675,10 @@ async function main() {
     );
     assert(capturedVerdictRequest.context.nextShoppingDate, "リクエストのコンテキストに次の買い物日が含まれている");
     assert(Array.isArray(capturedVerdictRequest.history), "リクエストにこれまでの相談の会話履歴も含まれている");
+    assert(
+      capturedVerdictRequest.context.weeklyLife?.some((i) => i.label.includes("マクドナルド")),
+      "最終見立てのコンテキストにも「今週の暮らし」が含まれ、暮らしの予定を踏まえた判断ができる"
+    );
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("今買う") && bodyText.includes("来週でよい"), "AIの判断が品目ごとにカテゴリ分けして表示される（固定のgo/remove/skipではない）");
     assert(bodyText.includes("今日は食料品とタバコだけ買って"), "全体を通した結論（AIが生成したsummary）も表示される");
@@ -1011,6 +1019,83 @@ async function main() {
       state.cwPlanNote === cwPlanNoteBefore && !state.cwPlanNote.includes("反映しないはず"),
       "提案のチェックを入れずに確定すると、cwPlanNoteは変わらない（黙って書き込まない）"
     );
+
+    step("今週の暮らし：ホーム画面から開ける（2026-08-01、生活モデル設計対話より）");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "calendar",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("今週の暮らし"), "カレンダー画面に「今週の暮らし」の導線がある");
+    await clickButtonContaining(page, "今週の暮らし");
+    await page.waitForTimeout(200);
+    state = await getState(page);
+    assert(state.screen === "weeklyLife", "今週の暮らし画面が開く");
+
+    step("今週の暮らし：実際の週間支援スケジュールが、曜日ごとにまとまって表示される");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("月曜日") && bodyText.includes("水曜日"), "曜日の見出しがある");
+    assert(bodyText.includes("アミケア訪問看護ステーション"), "事業所名は表示される（利用者の意向）");
+    assert(bodyText.includes("訪問看護"), "実データ（訪問看護）が表示されている");
+    assert(!bodyText.includes("鍼灸師") , "個人の担当者名は記録されていない（利用者の意向）");
+    state = await getState(page);
+    const wed = state.weeklyLife.filter((i) => i.kind === "regular" && i.repeat?.dayOfWeek === "wed");
+    assert(
+      wed.some((i) => i.startTime === "10:30" && i.label === "訪問看護") &&
+      wed.some((i) => i.startTime === "15:30" && i.endTime === "18:30" && i.label === "訪問支援" && i.provider === "優河ケアステーション"),
+      "水曜日の実データ（訪問看護10:30、優河ケアステーションの訪問支援15:30〜18:30）が保持されている"
+    );
+
+    step("今週の暮らし：同じ曜日の予定は、時刻順に並ぶ");
+    const monLabels = await page.evaluate(() => {
+      const day = document.querySelector('[data-testid="weekly-life-day-mon"]');
+      return [...day.querySelectorAll('[data-testid="weekly-life-item"]')].map((el) => el.textContent);
+    });
+    assert(
+      monLabels[0].includes("10:00") && monLabels[1].includes("12:45") && monLabels[2].includes("18:00"),
+      `月曜日の予定が時刻順（10:00→12:45→18:00）に並んでいる（実際: ${monLabels.join(" / ")}）`
+    );
+
+    step("今週の暮らし：新しい定期予定を追加できる");
+    await page.selectOption('[data-testid="weekly-life-day-select"]', "sun");
+    await page.fill('[data-testid="weekly-life-start-time"]', "09:00");
+    await page.fill('[data-testid="weekly-life-label"]', "デイサービス");
+    await page.fill('[data-testid="weekly-life-provider"]', "テスト事業所");
+    await page.click('[data-testid="weekly-life-add-button"]');
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(
+      state.weeklyLife.some((i) => i.repeat?.dayOfWeek === "sun" && i.startTime === "09:00" && i.label === "デイサービス" && i.provider === "テスト事業所"),
+      "追加した定期予定が保存される"
+    );
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("デイサービス"), "追加した予定が画面にも表示される");
+
+    step("今週の暮らし：予定を削除できる");
+    await page.evaluate(() => {
+      const day = document.querySelector('[data-testid="weekly-life-day-sun"]');
+      const row = [...day.querySelectorAll('[data-testid="weekly-life-item"]')].find((el) => el.textContent.includes("デイサービス"));
+      row.querySelector("button").click();
+    });
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(!state.weeklyLife.some((i) => i.label === "デイサービス"), "削除した予定は保存データからも消える");
+
+    step("今週の暮らし：追加・削除の結果はリロード後も残る");
+    await page.selectOption('[data-testid="weekly-life-day-select"]', "sun");
+    await page.fill('[data-testid="weekly-life-start-time"]', "09:00");
+    await page.fill('[data-testid="weekly-life-label"]', "デイサービス（再テスト）");
+    await page.click('[data-testid="weekly-life-add-button"]');
+    await page.waitForTimeout(150);
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("デイサービス（再テスト）"), "リロード後も追加した予定が残っている");
+    assert(bodyText.includes("アミケア訪問看護ステーション"), "リロード後も元からの実データが残っている");
 
     step("生活資料ライブラリ：写真は「入力にない事実」を作れないため、読み取れない場合は断定的な代替を作らず正直に伝える");
     await page.evaluate(() => {

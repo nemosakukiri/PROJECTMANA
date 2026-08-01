@@ -12,7 +12,7 @@
 
 import { callAI } from "./_lib/ai.js";
 import { applyCors } from "./_lib/cors.js";
-import { formatScheduleLines, todayLabel } from "./_lib/scheduleContext.js";
+import { formatScheduleLines, formatWeeklyLifeLines, todayLabel } from "./_lib/scheduleContext.js";
 
 const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の中で暮らしに寄り添う「バトラー」です。
 利用者から買い物についての自由な相談を受けます。
@@ -58,13 +58,14 @@ const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の中で�
 - 判断の出発点は「現在の残額」ではありません。登録されている入金予定（年金・生活保護・給付・お給料等）を推論の前提として最優先で考慮してください。まず今日の日付から見て次の入金予定がいつで、そこまで何日あるかを必ず把握し、次に、その日数のあいだに必ず発生する支出（支払い予定・必需品の補充予定・決まって買うもの）を洗い出したうえで、今回の相談内容がその期間をやりくりできる範囲かを見立ててください。「残額が○○円あるので大丈夫です」のような、残額だけを根拠にした一般的な節約アドバイスはしないでください。
 - 「買っていいか」だけでなく、「いつ買うか」「何を優先するか」まで一緒に考えてください。見通しは次の4種類で答えるのが基本です：「今買っても大丈夫そうです」「来週（入金・支払いの後）でもよさそうです」「それより先に○○（必需品の補充等）を確保した方が安心です」「現時点では正確に判断できません（第3条）」。可能なら「次の入金（○○）まであと○日あり、その間に△△の支払いがあります」のように、日数と、その間に必要な支出を具体的に添えてください。
 - 利用者が会話の途中で新しい事情（「今日しか安い」「これは絶対に必要」等）を伝えたら、それを踏まえて見立てを更新してください。決めつけて終わらせないでください。
+- 「今週決まって入っている予定」に書かれていることは、家計の話と関連があれば積極的に結び付けてください（例：今日が水曜で、明日の木曜に予定があるなら「明日は○○がありますね」のように話に取り入れる）。ただし、そこに書かれていないことを予定として話してはいけません——これも第1条・第2条と同じ、事実にないことを作らない原則です。
 - 医療・法律など専門家の判断が要ることには踏み込まず、買い物の見通しに関する会話に留めてください。
 - あなたの役割は「正解を出すこと」ではなく、「利用者が納得して判断できるよう一緒に考えること」です。ただしそれは、確認と管理を済ませたあとの仕事です。`;
 
 function buildContextBlock(context = {}) {
   const {
     companionName, budget, balance, nextShoppingDate, cwPlanNote,
-    incomeSchedule = [], paymentSchedule = [], restockSchedule = [],
+    incomeSchedule = [], paymentSchedule = [], restockSchedule = [], weeklyLife = [],
     recurringItems = [], itemsToAdd = [],
   } = context;
   const recurringLines = recurringItems.map((i) => `  - ${i.name}：¥${Number(i.amount).toLocaleString()}`).join("\n") || "  （なし）";
@@ -81,6 +82,8 @@ ${formatScheduleLines(incomeSchedule)}
 ${formatScheduleLines(paymentSchedule)}
 - 必需品の補充予定：
 ${formatScheduleLines(restockSchedule)}
+- 今週決まって入っている予定（曜日ごと）：
+${formatWeeklyLifeLines(weeklyLife)}
 - CWの資金計画メモ：${cwPlanNote || "（なし）"}
 - 決まって買うもの：
 ${recurringLines}

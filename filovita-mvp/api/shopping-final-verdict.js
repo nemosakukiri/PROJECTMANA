@@ -14,7 +14,7 @@
 
 import { callAI } from "./_lib/ai.js";
 import { applyCors } from "./_lib/cors.js";
-import { formatScheduleLines, todayLabel } from "./_lib/scheduleContext.js";
+import { formatScheduleLines, formatWeeklyLifeLines, todayLabel } from "./_lib/scheduleContext.js";
 
 const CATEGORIES = ["now", "later", "priority", "skip"];
 
@@ -90,7 +90,7 @@ function formatItemLines(items = []) {
 function buildContextBlock(context = {}) {
   const {
     companionName, budget, balance, nextShoppingDate, cwPlanNote,
-    incomeSchedule = [], paymentSchedule = [], restockSchedule = [],
+    incomeSchedule = [], paymentSchedule = [], restockSchedule = [], weeklyLife = [],
     items = [],
   } = context;
   return `現在の生活の状況：
@@ -105,11 +105,13 @@ ${formatScheduleLines(incomeSchedule)}
 ${formatScheduleLines(paymentSchedule)}
 - 必需品の補充予定：
 ${formatScheduleLines(restockSchedule)}
+- 今週決まって入っている予定（曜日ごと）：
+${formatWeeklyLifeLines(weeklyLife)}
 - CWの資金計画メモ：${cwPlanNote || "（なし）"}
 - 今日の買い物リストの品目：
 ${formatItemLines(items)}
 
-上記の品目すべてについて、指定のJSON形式で最終見立てを出してください。`;
+上記の品目すべてについて、指定のJSON形式で最終見立てを出してください。関連があれば、今週決まって入っている予定も判断の理由に含めてよい（例：予定のある日は移動や来客で買い物に行きにくい等）。`;
 }
 
 function parseVerdictJson(text) {
