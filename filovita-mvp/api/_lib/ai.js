@@ -48,6 +48,12 @@ export async function callAnthropic({ systemPrompt, messages, maxTokens = 500, t
     if (response.status === 429) {
       return { error: "今は少し混み合っているようです。1分ほど待ってからもう一度お試しください。", status: 429 };
     }
+    // クレジット残高が無い場合、待っても直らない。「しばらくしてから
+    // もう一度」という誤解を招く文言のまま放置していたため、これも
+    // Geminiの日次上限と同じ問題を起こしていた(2026-08-01)。
+    if (errBody.includes("credit balance is too low")) {
+      return { error: "AIの利用契約（クレジット残高）が切れています。待っても直りません——管理者にクレジットの追加をご相談ください。", status: 402 };
+    }
     return { error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。", status: 502 };
   }
 
@@ -104,7 +110,18 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 500, thin
     const errBody = await response.text();
     console.error("Gemini API error:", response.status, errBody);
     if (response.status === 429) {
-      return { error: "今は少し混み合っているようです（無料枠の利用上限）。1分ほど待ってからもう一度お試しください。", status: 429 };
+      // 「1分待てば直る」と「今日はもう使えない」を同じ文言で伝えていたため、
+      // 1日あたりの無料枠を使い切った利用者が「もう少し待てば直る」と誤解し、
+      // 何度も待って再試行する原因になっていた(2026-08-01、実際にこの誤解で
+      // 利用者を長時間待たせてしまった)。Gemini無料枠の日次上限
+      // (PerDayPerProjectPerModel)は、1分待っても直らないため文言を分ける。
+      const isDailyQuota = errBody.includes("PerDay");
+      return {
+        error: isDailyQuota
+          ? "今日のAIの利用上限に達しました。しばらく待っても直りません——時間をおいて明日以降お試しいただくか、管理者に上限の引き上げをご相談ください。"
+          : "今は少し混み合っているようです。1分ほど待ってからもう一度お試しください。",
+        status: 429,
+      };
     }
     return { error: "バトラーがうまく応答できませんでした。しばらくしてからもう一度お試しください。", status: 502 };
   }
