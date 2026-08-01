@@ -9,7 +9,7 @@ import ContextHeader from "../components/ContextHeader.jsx";
 const CW_PLAN_OFFER_DOC_TYPES = ["cw_advisory", "handwritten_note"];
 
 /* ④確認画面（心臓部） */
-export default function ConfirmScreen({ theme, draft, companionName, pendingTag, docType, receiptAmount, onBack, onConfirm }) {
+export default function ConfirmScreen({ theme, draft, companionName, pendingTag, docType, receiptAmount, onBack, onConfirm, onDone }) {
   const { tokens, labels } = theme;
   const [conclusion, setConclusion] = useState(draft.conclusion.value);
   // AIが抽出したToDoも、結論と同じく利用者が確認・修正してから保存する
@@ -148,7 +148,18 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
 
         {!confirmed ? (
           <button
-            onClick={() => setConfirmed(true)}
+            onClick={() => {
+              // 確定メッセージ（例：「処理完了。ログを記録しました」）は
+              // このタップの直後に表示される。以前は実際のデータ保存
+              // (onConfirm)を次の「戻る」ボタンまで遅らせていたため、
+              // 「完了しました」と表示されているのに実は何も保存されて
+              // おらず、利用者がそのまま離脱すると記録もレシートの反映も
+              // 消えていた(2026-07-31、実際にレシートが反映されない
+              // 不具合として発覚)。表示している内容と実際の状態を一致
+              // させるため、保存はこのタップで確定させる。
+              onConfirm(conclusion, todos, reflectToCwPlan, deductReceiptAmount);
+              setConfirmed(true);
+            }}
             style={{ width: "100%", background: tokens.ink, color: tokens.paper, border: "none", borderRadius: 14, padding: "15px 0", fontSize: 15.5, fontWeight: 600, cursor: "pointer" }}
           >
             {labels.confirmCta}
@@ -159,7 +170,7 @@ export default function ConfirmScreen({ theme, draft, companionName, pendingTag,
           </div>
         )}
         {confirmed && (
-          <button onClick={() => onConfirm(conclusion, todos, reflectToCwPlan, deductReceiptAmount)} style={{ width: "100%", background: "none", border: `1px solid ${tokens.line}`, color: tokens.inkSoft, borderRadius: 14, padding: "12px 0", fontSize: 13.5, cursor: "pointer", marginBottom: 30 }}>
+          <button onClick={onDone} style={{ width: "100%", background: "none", border: `1px solid ${tokens.line}`, color: tokens.inkSoft, borderRadius: 14, padding: "12px 0", fontSize: 13.5, cursor: "pointer", marginBottom: 30 }}>
             {labels.backToCalendarCta}
           </button>
         )}

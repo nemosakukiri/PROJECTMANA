@@ -307,6 +307,13 @@ export default function App() {
     if (deductReceiptAmount && pendingReceiptAmount) {
       setShoppingBalance((prev) => Number(prev || 0) - pendingReceiptAmount);
     }
+    // draft等はここでは消さない——ConfirmScreenは`draft`があることを条件に
+    // 表示されているため、ここで消すとデータ保存と同時に画面ごと消えてしまい、
+    // 「完了しました」の表示も「戻る」ボタンも見せられなくなる。片付けは
+    // 実際に画面を離れるとき(handleLeaveConfirm)にまとめて行う。
+  }
+
+  function handleLeaveConfirm() {
     setDraft(null);
     setPendingTag(null);
     setPendingDocType(null);
@@ -510,7 +517,7 @@ export default function App() {
           />
         )}
         {screen === "confirm" && draft && (
-          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} pendingTag={pendingTag} docType={pendingDocType} receiptAmount={pendingReceiptAmount} onBack={() => setScreen("input")} onConfirm={handleConfirm} />
+          <ConfirmScreen theme={theme} draft={draft} companionName={companionName} pendingTag={pendingTag} docType={pendingDocType} receiptAmount={pendingReceiptAmount} onBack={() => setScreen("input")} onConfirm={handleConfirm} onDone={handleLeaveConfirm} />
         )}
     </>
   );
