@@ -4,6 +4,7 @@ import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
 import { isAudioRecordingSupported, startRecording, blobToBase64, describeRecordingError } from "../lib/audioRecording.js";
 import { transcribeVoice } from "../lib/transcribeVoice.js";
+import { loadState } from "../lib/persistence.js";
 
 // GitHub Pagesは静的ホスティングのみのため、この本体アプリと同じオリジンには
 // api/shopping-chat.jsは存在しない。別途Vercelにデプロイしたバックエンドの
@@ -74,11 +75,29 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
     setError(null);
     onAppendChatMessage("user", text);
     setSending(true);
+    // 画面には最新の残額(6,422円)が正しく表示・保存されているのに、
+    // チャットへ送られる`context`には古い値(2,153円)が残っていた実例が
+    // 2026-08-01に発覚した。原因（別タブ・端末側のキャッシュ等）を
+    // 問わず、送信の瞬間に必ず本当の最新値を見るよう、propsの`context`を
+    // 信用せず送信直前にlocalStorageから直接読み直す。台帳（家計に
+    // 関わる項目）だけを上書きし、店頭の品目チェック状態などこの画面
+    // 固有のものはpropsのままにする。
+    const latest = loadState() || {};
+    const freshContext = {
+      ...context,
+      budget: latest.shoppingBudget ?? context.budget,
+      balance: latest.shoppingBalance ?? context.balance,
+      nextShoppingDate: latest.nextShoppingDate ?? context.nextShoppingDate,
+      cwPlanNote: latest.cwPlanNote ?? context.cwPlanNote,
+      incomeSchedule: latest.incomeSchedule ?? context.incomeSchedule,
+      paymentSchedule: latest.paymentSchedule ?? context.paymentSchedule,
+      restockSchedule: latest.restockSchedule ?? context.restockSchedule,
+    };
     try {
       const response = await fetch(SHOPPING_CHAT_API_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ message: text, history: chatHistory, context }),
+        body: JSON.stringify({ message: text, history: chatHistory, context: freshContext }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.reply) {
