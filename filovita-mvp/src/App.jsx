@@ -25,6 +25,7 @@ import InputScreen from "./screens/InputScreen.jsx";
 import ConfirmScreen from "./screens/ConfirmScreen.jsx";
 import TagToolboxScreen from "./screens/TagToolboxScreen.jsx";
 import GuideTourScreen from "./screens/GuideTourScreen.jsx";
+import OnboardingInterviewScreen from "./screens/OnboardingInterviewScreen.jsx";
 import ShoppingConsultScreen from "./screens/ShoppingConsultScreen.jsx";
 import ShoppingListScreen from "./screens/ShoppingListScreen.jsx";
 import WeeklyLifeScreen from "./screens/WeeklyLifeScreen.jsx";
@@ -128,6 +129,11 @@ export default function App() {
   const [verdictHistory, setVerdictHistory] = useState(persisted?.verdictHistory ?? []);
   // 確認用のプレビュー。実際の日付を書き換えず、見た目だけ試せる（保存はしない）
   const [stagePreview, setStagePreview] = useState(null);
+  // 「はじめてガイド」は元々、設定画面からしか開けなかった(戻り先は常に
+  // settings)。Butlerとの出会い(初回聞き取り)の④「まだよく分からない」を
+  // 選んだ場合もこの画面に合流させるが、その場合の戻り先はcalendarに
+  // したいため、開いた経路に応じて戻り先を切り替える(2026-08-02)。
+  const [guideTourReturnScreen, setGuideTourReturnScreen] = useState("settings");
 
   const theme = themes[themeId] ?? themes[defaultThemeId];
 
@@ -380,6 +386,29 @@ export default function App() {
     // 実際に画面を離れるとき(handleLeaveConfirm)にまとめて行う。
   }
 
+  // Butlerとの出会い(初回聞き取り)の結果を、本物の状態へ書き込む。
+  // 聞いていないことを埋めたり、聞き取った内容を上書き確定させたりせず、
+  // 実際に教えてもらった分だけを追加する(第1条・第2条と同じ考え方)。
+  function handleCompleteOnboarding(result) {
+    if (result.wantsTour) {
+      setGuideTourReturnScreen("calendar");
+      setScreen("guideTour");
+      return;
+    }
+    if (result.budget != null) setShoppingBudget(result.budget);
+    if (result.incomeSchedule?.length) {
+      setIncomeSchedule((prev) => [...prev, ...result.incomeSchedule.map((e) => ({ id: makeId("income"), ...e }))]);
+    }
+    if (result.essentialCosts?.length) {
+      setEssentialCosts((prev) => [...prev, ...result.essentialCosts]);
+    }
+    if (result.weeklyLife?.length) {
+      setWeeklyLife((prev) => [...prev, ...result.weeklyLife]);
+    }
+    if (result.nextShoppingDate) setNextShoppingDate(result.nextShoppingDate);
+    setScreen("calendar");
+  }
+
   function handleLeaveConfirm() {
     setDraft(null);
     setPendingTag(null);
@@ -418,8 +447,18 @@ export default function App() {
         {screen === "calendarConnect" && (
           <CalendarConnectScreen
             theme={theme}
-            onConnect={() => setScreen("calendar")}
-            onSkip={() => setScreen("calendar")}
+            onConnect={() => setScreen("onboardingInterview")}
+            onSkip={() => setScreen("onboardingInterview")}
+          />
+        )}
+        {screen === "onboardingInterview" && (
+          <OnboardingInterviewScreen
+            theme={theme}
+            companionName={companionName}
+            userName={userName}
+            onSaveNames={(c, u) => { setCompanionName(c); setUserName(u); }}
+            onAddSeed={handleAddSeed}
+            onComplete={handleCompleteOnboarding}
           />
         )}
         {screen === "calendar" && (
@@ -540,7 +579,7 @@ export default function App() {
             stagePreview={stagePreview}
             onChangeStagePreview={setStagePreview}
             onBack={() => setScreen("calendar")}
-            onOpenGuideTour={() => setScreen("guideTour")}
+            onOpenGuideTour={() => { setGuideTourReturnScreen("settings"); setScreen("guideTour"); }}
             companionName={companionName}
             userName={userName}
             onChangeCompanionName={setCompanionName}
@@ -550,7 +589,7 @@ export default function App() {
         {screen === "guideTour" && (
           <GuideTourScreen
             theme={theme}
-            onBack={() => setScreen("settings")}
+            onBack={() => setScreen(guideTourReturnScreen)}
             companionName={companionName}
             userName={userName}
             onSaveNames={(c, u) => { setCompanionName(c); setUserName(u); }}

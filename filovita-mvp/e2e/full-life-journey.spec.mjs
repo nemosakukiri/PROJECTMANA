@@ -114,6 +114,58 @@ async function main() {
     });
 
     await page.goto(BASE_URL);
+
+    step("Butlerとの出会い：初回起動時、設定ウィザードではなくButler自身が迎え、一問一答で暮らしを聞き取る(2026-08-02)");
+    await clickButtonContaining(page, "はじめる");
+    await page.waitForTimeout(150);
+    await clickButtonContaining(page, "両方使う");
+    await page.waitForTimeout(150);
+    await page.evaluate(() => document.querySelectorAll("button")[0]?.click()); // テーマは先頭のものを選ぶ
+    await page.waitForTimeout(150);
+    await clickButtonWithText(page, "あとで設定する");
+    await page.waitForTimeout(150);
+    let bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("はじめまして"), "Butlerが自己紹介から始める（設定フォームではない）");
+    assert(bodyText.includes("管理のお手伝い"), "『暮らしを管理する』という役割を、質問の前に明言する（利用者からの指摘：質問だけ先にされても何のためか分からない）");
+    await clickButtonWithText(page, "次へ");
+    await page.waitForTimeout(150);
+    await page.fill('[data-testid="onboarding-companion-name"]', "テスト執事");
+    await clickButtonWithText(page, "次へ");
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("何のお手伝いをしましょうか"), "呼び名のあと、何を主に使いたいかを一問一答でたずねる（そこから質問が分かれる、との要望）");
+    await page.click('[data-testid="onboarding-purpose-shopping"]');
+    await page.click('[data-testid="onboarding-purpose-next"]');
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("2週間の予算"), "「買い物・お金」を選ぶと予算の質問に分岐する（一発話一目的：一度に一つだけ聞く）");
+    const hasMicOnQuestion = await page.evaluate(() => !!document.querySelector('[data-testid="onboarding-budget-text-mic"]'));
+    assert(hasMicOnQuestion, "音声でも答えられるよう、マイクボタンが添えられている（音声入力する利用者への配慮）");
+    await page.fill('[data-testid="onboarding-budget-amount"]', "25000");
+    await clickButtonWithText(page, "次へ");
+    await page.waitForTimeout(150);
+    await clickButtonWithText(page, "次へ"); // 入金予定：何も入力せず、無くても次へ進める
+    await page.waitForTimeout(150);
+    await page.fill('[data-testid="onboarding-essential-entity"]', "ネモ");
+    await page.fill('[data-testid="onboarding-essential-label"]', "薬");
+    await page.click('[data-testid="onboarding-essential-add"]');
+    await page.waitForTimeout(100);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("金額未確認"), "金額を聞いていなければ『金額未確認』のまま——ここでもAIやUIが勝手に数字を作らない");
+    await clickButtonWithText(page, "次へ");
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ありがとうございました"), "最後はお礼で締め、設定完了の事務的な通知にしない");
+    await clickButtonWithText(page, "Filovitaをはじめる");
+    await page.waitForTimeout(200);
+    const stateAfterOnboarding = await getState(page);
+    assert(stateAfterOnboarding.screen === "calendar", "聞き取りを終えるとカレンダー画面へ進む");
+    assert(stateAfterOnboarding.shoppingBudget === 25000, "聞き取った予算が、本物の家計データとして保存される（下書きのまま消えない）");
+    assert(
+      stateAfterOnboarding.essentialCosts?.some((c) => c.entity === "ネモ" && c.label === "薬" && c.amount === null),
+      "聞き取った『欠かせないもの』も、amount:nullのまま実データとして保存される（第1条・第2条：事実を作らない）"
+    );
+
     await page.evaluate(() => {
       localStorage.setItem("filovita-mvp-state", JSON.stringify({
         screen: "calendar", inputMode: "speak", themeId: "techo",
@@ -126,7 +178,7 @@ async function main() {
 
     step("カレンダー：月の見出しと「今日」は、実際の今日の日付から計算される(2026-08-01、固定で「2026年7月18日」になっていた不具合の再発防止)");
     const today = new Date();
-    let bodyText = await page.evaluate(() => document.body.textContent);
+    bodyText = await page.evaluate(() => document.body.textContent);
     assert(
       bodyText.includes(`${today.getFullYear()}年${today.getMonth() + 1}月`),
       `カレンダーの月見出しが実際の年月になっている（実際のbodyText断片: ${bodyText.slice(0, 200)}）`
