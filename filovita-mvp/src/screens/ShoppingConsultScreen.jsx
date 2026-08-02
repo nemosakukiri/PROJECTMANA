@@ -162,7 +162,7 @@ export default function ShoppingConsultScreen({
   onAddItemToAdd, onRemoveItemToAdd, onEditItemToAddPrice,
   onGenerateList,
   chatHistory, onAppendChatMessage,
-  weeklyLife,
+  weeklyLife, essentialCosts,
   onBack,
 }) {
   const { tokens } = theme;
@@ -308,7 +308,7 @@ export default function ShoppingConsultScreen({
           theme={theme} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
           context={{
             companionName, budget, balance, nextShoppingDate, cwPlanNote,
-            incomeSchedule, paymentSchedule, restockSchedule, recurringItems, itemsToAdd, weeklyLife,
+            incomeSchedule, paymentSchedule, restockSchedule, recurringItems, itemsToAdd, weeklyLife, essentialCosts,
           }}
         />
 

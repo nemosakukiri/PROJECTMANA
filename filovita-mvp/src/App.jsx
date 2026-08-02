@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { themes, themeList, defaultThemeId } from "./theme/themes.js";
 import { initialEvents } from "./data/fakeEvents.js";
 import { initialWeeklyLife } from "./data/initialWeeklyLife.js";
+import { initialEssentialCosts } from "./data/initialEssentialCosts.js";
 import { generateDraft } from "./lib/generateDraft.js";
 import { readDocument } from "./lib/readDocument.js";
 import { loadState, saveState } from "./lib/persistence.js";
@@ -28,6 +29,7 @@ import ShoppingConsultScreen from "./screens/ShoppingConsultScreen.jsx";
 import ShoppingListScreen from "./screens/ShoppingListScreen.jsx";
 import WeeklyLifeScreen from "./screens/WeeklyLifeScreen.jsx";
 import SeedsScreen from "./screens/SeedsScreen.jsx";
+import EssentialCostsScreen from "./screens/EssentialCostsScreen.jsx";
 import { makeId } from "./theme/techo/tagToolbox.js";
 
 // 2026-08-01、利用者から「今日8月1日なのに7月18日になっている」と指摘を受けて発覚：
@@ -104,6 +106,11 @@ export default function App() {
   // status:"open"以外は分類しない。textは打った言葉そのまま、
   // aiSuggestionsは将来AIが分類案を出す場所としてv1では空のまま持つ。
   const [seeds, setSeeds] = useState(persisted?.seeds ?? []);
+  // 欠かせないもの：生活を維持するために絶対に守らないといけない費用を、
+  // 「支出項目」ではなく「誰のためのものか（entity）」で持つ
+  // （docs/LIFE_MODEL.md参照、2026-08-01）。amountは実際に確認できた
+  // 金額だけを入れる——確認できるまでnullのまま、勝手な推測はしない。
+  const [essentialCosts, setEssentialCosts] = useState(persisted?.essentialCosts ?? initialEssentialCosts);
   const [cwPlanNote, setCwPlanNote] = useState(persisted?.cwPlanNote ?? "");
   const [recurringItems, setRecurringItems] = useState(persisted?.recurringItems ?? [
     { id: "rec_food", name: "食料品", amount: 6000 },
@@ -127,11 +134,11 @@ export default function App() {
   useEffect(() => {
     saveState({
       screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife, seeds,
+      shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife, seeds, essentialCosts,
     });
   }, [
     screen, inputMode, themeId, selectedDate, selectedEventId, events, draft, tagRegistry, tagToolboxes, activeTagName, seenGuides, companionName, userName,
-    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife, seeds,
+    shoppingBudget, shoppingBalance, nextShoppingDate, incomeSchedule, paymentSchedule, restockSchedule, cwPlanNote, recurringItems, itemsToAdd, shoppingListItems, shoppingChatHistory, verdictHistory, weeklyLife, seeds, essentialCosts,
   ]);
 
   const selectedEvent = events.find((e) => e.id === selectedEventId);
@@ -245,6 +252,18 @@ export default function App() {
 
   function handleRemoveSeed(id) {
     setSeeds((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function handleAddEssentialCost(entry) {
+    setEssentialCosts((prev) => [...prev, { id: makeId("ec"), ...entry }]);
+  }
+
+  function handleRemoveEssentialCost(id) {
+    setEssentialCosts((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  function handleEditEssentialCostAmount(id, amount) {
+    setEssentialCosts((prev) => prev.map((c) => (c.id === id ? { ...c, amount } : c)));
   }
 
   function handleAddIncomeSchedule(entry) {
@@ -417,6 +436,7 @@ export default function App() {
             onOpenWeeklyLife={() => setScreen("weeklyLife")}
             onAddSeed={handleAddSeed}
             onOpenSeeds={() => setScreen("seeds")}
+            onOpenEssentialCosts={() => setScreen("essentialCosts")}
             seenGuides={seenGuides}
             onDismissGuide={handleDismissGuide}
           />
@@ -427,6 +447,16 @@ export default function App() {
             seeds={seeds}
             onAdd={handleAddSeed}
             onRemove={handleRemoveSeed}
+            onBack={() => setScreen("calendar")}
+          />
+        )}
+        {screen === "essentialCosts" && (
+          <EssentialCostsScreen
+            theme={theme}
+            essentialCosts={essentialCosts}
+            onAdd={handleAddEssentialCost}
+            onRemove={handleRemoveEssentialCost}
+            onEditAmount={handleEditEssentialCostAmount}
             onBack={() => setScreen("calendar")}
           />
         )}
@@ -472,6 +502,7 @@ export default function App() {
             chatHistory={shoppingChatHistory}
             onAppendChatMessage={handleAppendShoppingChatMessage}
             weeklyLife={weeklyLife}
+            essentialCosts={essentialCosts}
             onBack={() => setScreen("calendar")}
           />
         )}
@@ -487,6 +518,7 @@ export default function App() {
             paymentSchedule={paymentSchedule}
             restockSchedule={restockSchedule}
             weeklyLife={weeklyLife}
+            essentialCosts={essentialCosts}
             chatHistory={shoppingChatHistory}
             onAppendChatMessage={handleAppendShoppingChatMessage}
             items={shoppingListItems}

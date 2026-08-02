@@ -79,7 +79,7 @@ function ListRow({ tokens, item, onToggle }) {
 function FinalVerdictPanel({
   theme, speaker, checkedItems,
   companionName, budget, balance, nextShoppingDate, cwPlanNote,
-  incomeSchedule, paymentSchedule, restockSchedule, weeklyLife, chatHistory,
+  incomeSchedule, paymentSchedule, restockSchedule, weeklyLife, essentialCosts, chatHistory,
   onVerdictRecorded,
 }) {
   const { tokens } = theme;
@@ -101,7 +101,7 @@ function FinalVerdictPanel({
     // あとから説明できるようにする（隠すが、消さない。FILOVITA_PHILOSOPHY.md参照）
     const contextSnapshot = {
       companionName, budget, balance, nextShoppingDate, cwPlanNote,
-      incomeSchedule, paymentSchedule, restockSchedule, weeklyLife,
+      incomeSchedule, paymentSchedule, restockSchedule, weeklyLife, essentialCosts,
       items: checkedItems.map((i) => ({ name: i.name, amount: i.amount, section: i.section })),
     };
     const requestKey = JSON.stringify({ context: contextSnapshot, history: chatHistory });
@@ -227,7 +227,7 @@ function FinalVerdictPanel({
    地続きにつながる)。MVP_SPEC.md「複数周期の統合判断」参照。 */
 export default function ShoppingListScreen({
   theme, companionName, budget, balance, nextShoppingDate, cwPlanNote,
-  incomeSchedule, paymentSchedule, restockSchedule, weeklyLife, chatHistory, onAppendChatMessage,
+  incomeSchedule, paymentSchedule, restockSchedule, weeklyLife, essentialCosts, chatHistory, onAppendChatMessage,
   items, onToggleItem, onAddItem, onBack,
   verdictHistory, onVerdictRecorded,
 }) {
@@ -308,7 +308,7 @@ export default function ShoppingListScreen({
           theme={theme} speaker={speaker} chatHistory={chatHistory} onAppendChatMessage={onAppendChatMessage}
           context={{
             companionName, budget, balance, nextShoppingDate, cwPlanNote,
-            incomeSchedule, paymentSchedule, restockSchedule, weeklyLife,
+            incomeSchedule, paymentSchedule, restockSchedule, weeklyLife, essentialCosts,
             items: [...checkedUsual, ...checkedAdd].map((i) => ({ name: i.name, amount: i.amount, section: i.section })),
           }}
         />
@@ -319,7 +319,7 @@ export default function ShoppingListScreen({
             companionName={companionName} budget={budget} balance={balance}
             nextShoppingDate={nextShoppingDate} cwPlanNote={cwPlanNote}
             incomeSchedule={incomeSchedule} paymentSchedule={paymentSchedule} restockSchedule={restockSchedule}
-            weeklyLife={weeklyLife}
+            weeklyLife={weeklyLife} essentialCosts={essentialCosts}
             chatHistory={chatHistory}
             onVerdictRecorded={onVerdictRecorded}
           />

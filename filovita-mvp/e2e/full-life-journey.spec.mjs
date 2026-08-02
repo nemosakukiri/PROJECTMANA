@@ -1190,6 +1190,92 @@ async function main() {
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("この映画見たい") && bodyText.includes("あの店行ってみたい"), "リロード後も置いた種が残っている");
 
+    step("欠かせないもの：カレンダー画面から開ける（2026-08-01、第9条の設計対話の延長より）");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "calendar",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("欠かせないもの"), "カレンダー画面に「欠かせないもの」の導線がある");
+    await clickButtonContaining(page, "欠かせないもの");
+    await page.waitForTimeout(200);
+    state = await getState(page);
+    assert(state.screen === "essentialCosts", "欠かせないもの画面が開く");
+
+    step("欠かせないもの：実データ（ネモの薬）が、誰のためのものかで表示される。金額は勝手に埋めない");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ネモ") && bodyText.includes("薬"), "ネモの薬が表示されている（今日の危機を踏まえた実データ）");
+    assert(bodyText.includes("確認できていません"), "金額が確認できていないことが、断定せずそのまま表示される");
+    state = await getState(page);
+    assert(
+      state.essentialCosts.some((c) => c.entity === "ネモ" && c.label === "薬" && c.amount === null),
+      "ネモの薬はamount:nullのまま保持され、AIや実装側で勝手な金額が入っていない"
+    );
+
+    step("欠かせないもの：新しく追加できる（誰のためか・何か）");
+    await page.fill('[data-testid="essential-cost-entity"]', "サク");
+    await page.fill('[data-testid="essential-cost-label"]', "フード");
+    await page.click('[data-testid="essential-cost-add-button"]');
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(
+      state.essentialCosts.some((c) => c.entity === "サク" && c.label === "フード" && c.amount === null),
+      "追加した項目も金額なしのまま保存される"
+    );
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("サク") && bodyText.includes("フード"), "追加した項目が画面にも表示される");
+
+    step("欠かせないもの：金額をあとから入力できる（本人が確認できたときだけ）");
+    await page.locator('[data-testid="essential-cost-item"]', { hasText: "フード" }).locator('input[type="number"]').fill("4000");
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(
+      state.essentialCosts.find((c) => c.entity === "サク" && c.label === "フード")?.amount === 4000,
+      "本人が入力した金額はそのまま保存される（推測ではなく本人の確認による事実）"
+    );
+
+    step("欠かせないもの：不要になったら削除できる");
+    await page.evaluate(() => {
+      const row = [...document.querySelectorAll('[data-testid="essential-cost-item"]')].find((el) => el.textContent.includes("フード"));
+      row.querySelector("button").click();
+    });
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(!state.essentialCosts.some((c) => c.label === "フード"), "削除した項目は保存データからも消える");
+
+    step("欠かせないもの：リロード後も残る");
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("ネモ") && bodyText.includes("薬"), "リロード後もネモの薬が残っている");
+
+    step("欠かせないもの：家計相談・最終見立てのAIコンテキストにも渡る（誰のためか・金額未確認なら未確認のまま）");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "shoppingConsult",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
+    let capturedEssentialCostsRequest = null;
+    await page.route("**/api/shopping-chat", async (route) => {
+      capturedEssentialCostsRequest = JSON.parse(route.request().postData());
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ reply: "承知しました。" }) });
+    });
+    await page.fill('[data-testid="shopping-chat-mic"] + input', "今週買い物して大丈夫か知りたい");
+    await clickButtonWithText(page, "送る");
+    await page.waitForTimeout(300);
+    assert(
+      capturedEssentialCostsRequest?.context.essentialCosts?.some((c) => c.entity === "ネモ" && c.label === "薬" && c.amount === null),
+      "家計相談のコンテキストに、金額未確認のまま「ネモ・薬」が含まれる（AI側で数字を作らせない）"
+    );
+    await page.unroute("**/api/shopping-chat");
+
     step("生活資料ライブラリ：写真は「入力にない事実」を作れないため、読み取れない場合は断定的な代替を作らず正直に伝える");
     await page.evaluate(() => {
       localStorage.setItem("filovita-mvp-state", JSON.stringify({

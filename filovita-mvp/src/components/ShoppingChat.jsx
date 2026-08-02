@@ -93,6 +93,7 @@ export default function ShoppingChat({ theme, speaker, chatHistory, onAppendChat
       paymentSchedule: latest.paymentSchedule ?? context.paymentSchedule,
       restockSchedule: latest.restockSchedule ?? context.restockSchedule,
       weeklyLife: latest.weeklyLife ?? context.weeklyLife,
+      essentialCosts: latest.essentialCosts ?? context.essentialCosts,
     };
     try {
       const response = await fetch(SHOPPING_CHAT_API_URL, {

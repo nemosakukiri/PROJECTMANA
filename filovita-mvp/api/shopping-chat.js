@@ -5,14 +5,14 @@
    （shopping-final-verdict.jsと共有。両者とも同じ「暮らしの予定」を
    判断材料として使うため、コンテキストの組み立て方も揃えている）。
 
-   このプロンプトは docs/FILOVITA_PHILOSOPHY.md「家計相談の憲法」8条の
+   このプロンプトは docs/FILOVITA_PHILOSOPHY.md「家計相談の憲法」9条の
    実装（訳文）の一つに過ぎない。プロンプトの言い回しを直すだけでなく、
-   モデルやプロバイダを差し替えるときも、必ずあの8条を満たしているかを
-   先に確認すること（8条自体はプロンプトではなく仕様として扱う）。 */
+   モデルやプロバイダを差し替えるときも、必ずあの9条を満たしているかを
+   先に確認すること（9条自体はプロンプトではなく仕様として扱う）。 */
 
 import { callAI } from "./_lib/ai.js";
 import { applyCors } from "./_lib/cors.js";
-import { formatScheduleLines, formatWeeklyLifeLines, todayLabel } from "./_lib/scheduleContext.js";
+import { formatScheduleLines, formatWeeklyLifeLines, formatEssentialCostsLines, todayLabel } from "./_lib/scheduleContext.js";
 import { verifyReply } from "./_lib/safetyCheck.js";
 
 const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の中で暮らしに寄り添う「バトラー」です。
@@ -22,7 +22,7 @@ const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の中で�
 順番を絶対に崩してはいけません。事実を確認できていない段階で、提案や
 安心させる言葉を先に出してはいけません。
 
-以下は「家計相談の憲法」8条を、この会話の実装に落とし込んだものです。
+以下は「家計相談の憲法」9条を、この会話の実装に落とし込んだものです。
 必ず守ってください。
 
 【第1条・第2条：事実優先・台帳優先——事実を作らない】
@@ -60,13 +60,14 @@ const SYSTEM_PROMPT = `あなたは生活記録アプリ「Filovita」の中で�
 - 「買っていいか」だけでなく、「いつ買うか」「何を優先するか」まで一緒に考えてください。見通しは次の4種類で答えるのが基本です：「今買っても大丈夫そうです」「来週（入金・支払いの後）でもよさそうです」「それより先に○○（必需品の補充等）を確保した方が安心です」「現時点では正確に判断できません（第3条）」。可能なら「次の入金（○○）まであと○日あり、その間に△△の支払いがあります」のように、日数と、その間に必要な支出を具体的に添えてください。
 - 利用者が会話の途中で新しい事情（「今日しか安い」「これは絶対に必要」等）を伝えたら、それを踏まえて見立てを更新してください。決めつけて終わらせないでください。
 - 「今週決まって入っている予定」に書かれていることは、家計の話と関連があれば積極的に結び付けてください（例：今日が水曜で、明日の木曜に予定があるなら「明日は○○がありますね」のように話に取り入れる）。ただし、そこに書かれていないことを予定として話してはいけません——これも第1条・第2条と同じ、事実にないことを作らない原則です。
+- 「欠かせないもの」に挙げられている費用は、生活を維持するために絶対に守らないといけないものとして、他の任意の買い物より優先して考慮してください。金額が確認できているものは、その金額を必ず確保できる見通しかを優先して見てください。金額が「金額未確認」となっているものは、金額を勝手に見積もらず、存在（誰のために何が必要か）だけを踏まえてください——欠かせないものが確保できなくなりそうな見通しになったときは、それを最優先で伝えてください。
 - 医療・法律など専門家の判断が要ることには踏み込まず、買い物の見通しに関する会話に留めてください。
 - あなたの役割は「正解を出すこと」ではなく、「利用者が納得して判断できるよう一緒に考えること」です。ただしそれは、確認と管理を済ませたあとの仕事です。`;
 
 function buildContextBlock(context = {}) {
   const {
     companionName, budget, balance, nextShoppingDate, cwPlanNote,
-    incomeSchedule = [], paymentSchedule = [], restockSchedule = [], weeklyLife = [],
+    incomeSchedule = [], paymentSchedule = [], restockSchedule = [], weeklyLife = [], essentialCosts = [],
     recurringItems = [], itemsToAdd = [],
   } = context;
   const recurringLines = recurringItems.map((i) => `  - ${i.name}：¥${Number(i.amount).toLocaleString()}`).join("\n") || "  （なし）";
@@ -85,6 +86,8 @@ ${formatScheduleLines(paymentSchedule)}
 ${formatScheduleLines(restockSchedule)}
 - 今週決まって入っている予定（曜日ごと）：
 ${formatWeeklyLifeLines(weeklyLife)}
+- 欠かせないもの（生活を維持するために絶対に守らないといけない費用、誰のためのものかで表示）：
+${formatEssentialCostsLines(essentialCosts)}
 - CWの資金計画メモ：${cwPlanNote || "（なし）"}
 - 決まって買うもの：
 ${recurringLines}

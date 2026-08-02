@@ -8,13 +8,13 @@
    コンテキストへ材料を追加する入力手段として位置づける（MVP_SPEC.md参照）。
    AI呼び出しの共通部分はshopping-chat.jsと_lib/ai.jsを共有する。
 
-   このプロンプトも docs/FILOVITA_PHILOSOPHY.md「家計相談の憲法」8条の
-   実装の一つ。8条自体はプロンプトではなく仕様として扱い、モデルや
+   このプロンプトも docs/FILOVITA_PHILOSOPHY.md「家計相談の憲法」9条の
+   実装の一つ。9条自体はプロンプトではなく仕様として扱い、モデルや
    プロバイダを差し替えるときも必ず満たしているかを確認すること。 */
 
 import { callAI } from "./_lib/ai.js";
 import { applyCors } from "./_lib/cors.js";
-import { formatScheduleLines, formatWeeklyLifeLines, todayLabel } from "./_lib/scheduleContext.js";
+import { formatScheduleLines, formatWeeklyLifeLines, formatEssentialCostsLines, todayLabel } from "./_lib/scheduleContext.js";
 import { verifyVerdict } from "./_lib/safetyCheck.js";
 
 const CATEGORIES = ["now", "later", "priority", "skip"];
@@ -91,7 +91,7 @@ function formatItemLines(items = []) {
 function buildContextBlock(context = {}) {
   const {
     companionName, budget, balance, nextShoppingDate, cwPlanNote,
-    incomeSchedule = [], paymentSchedule = [], restockSchedule = [], weeklyLife = [],
+    incomeSchedule = [], paymentSchedule = [], restockSchedule = [], weeklyLife = [], essentialCosts = [],
     items = [],
   } = context;
   return `現在の生活の状況：
@@ -108,11 +108,13 @@ ${formatScheduleLines(paymentSchedule)}
 ${formatScheduleLines(restockSchedule)}
 - 今週決まって入っている予定（曜日ごと）：
 ${formatWeeklyLifeLines(weeklyLife)}
+- 欠かせないもの（生活を維持するために絶対に守らないといけない費用、誰のためのものかで表示）：
+${formatEssentialCostsLines(essentialCosts)}
 - CWの資金計画メモ：${cwPlanNote || "（なし）"}
 - 今日の買い物リストの品目：
 ${formatItemLines(items)}
 
-上記の品目すべてについて、指定のJSON形式で最終見立てを出してください。関連があれば、今週決まって入っている予定も判断の理由に含めてよい（例：予定のある日は移動や来客で買い物に行きにくい等）。`;
+上記の品目すべてについて、指定のJSON形式で最終見立てを出してください。関連があれば、今週決まって入っている予定も判断の理由に含めてよい（例：予定のある日は移動や来客で買い物に行きにくい等）。「欠かせないもの」に挙げられている費用（金額が確認できているものに限る）は、他の任意の買い物より優先して確保されるべきものとして扱ってください——欠かせないものの確保が危うくなる場合は、そのことをsummaryやreasonで明確に伝えてください。`;
 }
 
 function parseVerdictJson(text) {

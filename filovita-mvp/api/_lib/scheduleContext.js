@@ -36,3 +36,23 @@ export function formatWeeklyLifeLines(weeklyLife = []) {
     .filter(Boolean)
     .join("\n");
 }
+
+// 「欠かせないもの」（生活を維持するために絶対に守らないといけない費用、
+// 誰のためのものかで持つ）を家計相談のコンテキストに渡すための整形
+// （2026-08-01、第9条の設計対話の延長より——「Butlerが何を守るべき
+// 生活要素として認識していたのか」を観測できるようにする）。金額は
+// 実際に確認できたものだけ。未確認のものは、そのまま「金額未確認」と
+// 伝え、AI側で推測させない。
+export function formatEssentialCostsLines(essentialCosts = []) {
+  if (essentialCosts.length === 0) return "  （まだ登録されていません）";
+  const byEntity = [...new Set(essentialCosts.map((c) => c.entity))];
+  return byEntity
+    .map((entity) => {
+      const items = essentialCosts
+        .filter((c) => c.entity === entity)
+        .map((c) => `${c.label}（${c.amount != null ? `¥${Number(c.amount).toLocaleString()}` : "金額未確認"}）`)
+        .join("／");
+      return `  - ${entity}：${items}`;
+    })
+    .join("\n");
+}
