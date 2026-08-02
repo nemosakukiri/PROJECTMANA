@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>AI会議室（開発用）</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+    max-width: 900px; margin: 0 auto; padding: 24px 16px 60px;
+    background: #faf8f4; color: #2a2622;
+  }
+  h1 { font-size: 18px; margin-bottom: 2px; }
+  .sub { font-size: 12.5px; color: #8a8378; margin-bottom: 24px; }
+  textarea, input[type=text] {
+    width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 14px;
+    border: 1px solid #d8d2c6; border-radius: 10px; font-family: inherit; resize: vertical;
+  }
+  button {
+    padding: 10px 18px; font-size: 13.5px; border-radius: 10px; border: none;
+    background: #2a2622; color: #faf8f4; cursor: pointer; margin-top: 8px;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+  @media (max-width: 640px) { .cols { grid-template-columns: 1fr; } }
+  .panel { border: 1px solid #d8d2c6; border-radius: 12px; padding: 14px 16px; background: #fff; }
+  .panel h3 { margin: 0 0 10px; font-size: 13.5px; }
+  .row { margin-bottom: 8px; }
+  .row .label { font-size: 11px; color: #8a8378; margin-bottom: 2px; }
+  .row .value { font-size: 13.5px; line-height: 1.6; }
+  .fulltext { margin-top: 10px; font-size: 12.5px; color: #4a453d; line-height: 1.7; white-space: pre-wrap; }
+  .diff-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+  .diff-table th, .diff-table td { border: 1px solid #d8d2c6; padding: 8px 10px; text-align: left; vertical-align: top; }
+  .diff-table th { background: #f1ede4; font-weight: 600; font-size: 11.5px; color: #8a8378; }
+  .decision-box { margin-top: 24px; padding: 14px 16px; border: 1.5px solid #2a2622; border-radius: 12px; background: #fff; }
+  .decision-box h3 { margin: 0 0 8px; font-size: 13.5px; }
+  .log-item { border-top: 1px solid #e5e0d5; padding: 12px 0; }
+  .log-item .topic { font-size: 13.5px; font-weight: 600; }
+  .log-item .meta { font-size: 11px; color: #8a8378; margin: 2px 0 6px; }
+  .log-item .decision { font-size: 13px; white-space: pre-wrap; }
+  .error { color: #a3432a; font-size: 12.5px; }
+  .loading { font-size: 12.5px; color: #8a8378; }
+</style>
+</head>
+<body>
+  <h1>AI会議室（開発用）</h1>
+  <div class="sub">Filovitaを作るための開発環境。麻奈さんの「翻訳者・議事録係」を減らすための道具。決定は麻奈さんがします。</div>
+
+  <div class="row">
+    <div class="label" style="margin-bottom:6px;">議題</div>
+    <textarea id="topic" rows="3" placeholder="例：Butlerのessential Costs設計について"></textarea>
+    <button id="submitBtn">両方に聞く</button>
+    <span id="status" class="loading" style="margin-left:10px;"></span>
+  </div>
+
+  <div id="resultArea"></div>
+
+  <div class="decision-box" id="decisionBox" style="display:none;">
+    <h3>麻奈さんの決定</h3>
+    <textarea id="decisionText" rows="3" placeholder="ここに決めたことを書く"></textarea>
+    <button id="saveDecisionBtn">決定を記録</button>
+  </div>
+
+  <h2 style="font-size:14px; margin-top:36px;">これまでの記録</h2>
+  <div id="logArea"></div>
+
+<script>
+const STORAGE_KEY = "filovita-council-log";
+
+function loadLog() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch { return []; }
+}
+function saveLog(log) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(log));
+}
+
+let lastResult = null;
+let lastTopic = "";
+
+function renderPanel(title, panel) {
+  if (!panel) return `<div class="panel"><h3>${title}</h3><p class="error">応答なし</p></div>`;
+  if (panel.error) return `<div class="panel"><h3>${title}</h3><p class="error">${escapeHtml(panel.error)}</p>${panel.fullText ? `<div class="fulltext">${escapeHtml(panel.fullText)}</div>` : ""}</div>`;
+  return `<div class="panel">
+    <h3>${title}</h3>
+    <div class="row"><div class="label">問題認識</div><div class="value">${escapeHtml(panel.problemUnderstanding)}</div></div>
+    <div class="row"><div class="label">懸念点</div><div class="value">${escapeHtml(panel.concerns)}</div></div>
+    <div class="row"><div class="label">推奨案</div><div class="value">${escapeHtml(panel.recommendation)}</div></div>
+    <div class="fulltext">${escapeHtml(panel.fullText)}</div>
+  </div>`;
+}
+
+function renderDiffTable(claude, gpt) {
+  const rows = [
+    ["問題認識", claude?.problemUnderstanding, gpt?.problemUnderstanding],
+    ["懸念点", claude?.concerns, gpt?.concerns],
+    ["推奨案", claude?.recommendation, gpt?.recommendation],
+  ];
+  return `<table class="diff-table">
+    <tr><th>項目</th><th>Claude（実装担当）</th><th>GPT（レビュー担当）</th></tr>
+    ${rows.map(([label, a, b]) => `<tr><td>${label}</td><td>${escapeHtml(a || "—")}</td><td>${escapeHtml(b || "—")}</td></tr>`).join("")}
+  </table>`;
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function renderLog() {
+  const log = loadLog();
+  const area = document.getElementById("logArea");
+  if (log.length === 0) {
+    area.innerHTML = '<p class="loading">まだ記録はありません。</p>';
+    return;
+  }
+  area.innerHTML = log
+    .slice()
+    .reverse()
+    .map(
+      (entry) => `<div class="log-item">
+        <div class="topic">${escapeHtml(entry.topic)}</div>
+        <div class="meta">${new Date(entry.at).toLocaleString("ja-JP")}</div>
+        <div class="decision">${escapeHtml(entry.decision)}</div>
+      </div>`
+    )
+    .join("");
+}
+
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const topic = document.getElementById("topic").value.trim();
+  if (!topic) return;
+  const btn = document.getElementById("submitBtn");
+  const status = document.getElementById("status");
+  btn.disabled = true;
+  status.textContent = "Claude・GPT両方に問い合わせ中…（少し時間がかかります）";
+  document.getElementById("resultArea").innerHTML = "";
+  document.getElementById("decisionBox").style.display = "none";
+
+  try {
+    const res = await fetch("/api/council", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ topic }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      document.getElementById("resultArea").innerHTML = `<p class="error">${escapeHtml(data.error || "エラーが発生しました")}</p>`;
+      return;
+    }
+    lastResult = data;
+    lastTopic = topic;
+    document.getElementById("resultArea").innerHTML = `
+      ${renderDiffTable(data.claude, data.gpt)}
+      <div class="cols">
+        ${renderPanel("Claude（実装担当）", data.claude)}
+        ${renderPanel("GPT（レビュー担当）", data.gpt)}
+      </div>
+    `;
+    document.getElementById("decisionBox").style.display = "block";
+  } catch (err) {
+    document.getElementById("resultArea").innerHTML = `<p class="error">通信に失敗しました：${escapeHtml(String(err))}</p>`;
+  } finally {
+    btn.disabled = false;
+    status.textContent = "";
+  }
+});
+
+document.getElementById("saveDecisionBtn").addEventListener("click", () => {
+  const decision = document.getElementById("decisionText").value.trim();
+  if (!decision) return;
+  const log = loadLog();
+  log.push({ topic: lastTopic, decision, at: new Date().toISOString(), claude: lastResult?.claude, gpt: lastResult?.gpt });
+  saveLog(log);
+  document.getElementById("decisionText").value = "";
+  renderLog();
+});
+
+renderLog();
+</script>
+</body>
+</html>
