@@ -11,10 +11,11 @@ import { useState, useEffect, useRef } from 'react';
  * 初回は 1.6 秒のフル演出、2回目以降は 0.5 秒の短縮版になる
  * (localStorage の 'filovita_visited' で判定)
  *
- * ロゴについて:
- *   執事のシルエット＋「FILOVITA」の文字は、フォントが入っていない環境
- *   でも同じ見た目になるよう、あらかじめアウトライン化したSVGパスとして
- *   埋め込んである(2026-08-03)。外部フォントの読み込みは不要。
+ * フォントについて:
+ *   外部フォントには依存していません。「FILOVITA」の8文字は、
+ *   ウィーン分離派のポスター文字を参考にゼロから座標を描き起こした
+ *   オリジナルの字形(SVGパス)です。フォントのインストール状況に
+ *   関わらず、常に同じ形で表示されます。
  */
 export default function NotebookOpen({ onDone }) {
   const isFirstVisit = useRef(
@@ -44,16 +45,9 @@ export default function NotebookOpen({ onDone }) {
       <div style={styles.stage}>
         {/* 中のページ(紙の質感) */}
         <div style={styles.page}>
-          {/* 執事のシルエット＋FILOVITAのロゴマーク(2026-08-03、麻奈さんから受け取ったSVG) */}
-          <svg
-            width="66%" viewBox="0 0 400 220"
-            style={{
-              opacity: showLogo ? 1 : 0,
-              filter: showLogo ? 'blur(0px)' : 'blur(4px)',
-              transition: `opacity ${inkMs}ms ease, filter ${inkMs}ms ease`,
-            }}
-          >
-            <g transform="translate(200,90)">
+          <svg width="120" height="130" viewBox="0 0 400 280" style={{ marginBottom: 4 }}>
+            {/* 執事のシルエット(常時表示) */}
+            <g transform="translate(200,110) scale(1.7)" fill="none">
               <rect x="-18" y="-34" width="36" height="12" rx="2" fill="#5A3A24" />
               <rect x="-22" y="-25" width="44" height="4" rx="2" fill="#5A3A24" />
               <circle cx="0" cy="-2" r="17" fill="#E8CBB0" />
@@ -61,17 +55,25 @@ export default function NotebookOpen({ onDone }) {
               <rect x="-5" y="6" width="10" height="13" fill="#F6F1E7" />
               <path d="M -2.5 7.5 L 2.5 7.5 L 0 15 Z" fill="#9C7A3C" />
             </g>
-            {/* 「FILOVITA」の文字をアウトライン化したパス。フォントが
-                入っていない環境でも同じ見た目で表示されるように
-                (2026-08-03、麻奈さんからの指摘を受けてtext要素から変更)。 */}
-            <path d="M78 700H464V594H194V419H454V316H194V0H78Z" transform="translate(106.96,155) scale(0.04,-0.04)" fill="#8A6E4A" />
-            <path d="M78 700H197V0H78Z" transform="translate(130.16,155) scale(0.04,-0.04)" fill="#8A6E4A" />
-            <path d="M78 700H196V106H474V0H78Z" transform="translate(143.51999999999998,155) scale(0.04,-0.04)" fill="#8A6E4A" />
-            <path d="M38 350Q38 428 65.5 494.5Q93 561 142.0 609.5Q191 658 257.0 685.0Q323 712 401 712Q479 712 545.5 685.0Q612 658 661.5 609.5Q711 561 738.0 494.5Q765 428 765 350Q765 272 738.0 205.5Q711 139 662.0 89.5Q613 40 546.5 12.5Q480 -15 401 -15Q322 -15 256.0 12.5Q190 40 141.0 89.5Q92 139 65.0 205.5Q38 272 38 350ZM164 350Q164 278 194.5 221.5Q225 165 278.5 133.0Q332 101 401 101Q471 101 524.5 133.0Q578 165 608.5 221.5Q639 278 639 350Q639 422 608.5 478.5Q578 535 524.5 567.0Q471 599 401 599Q332 599 278.5 567.0Q225 535 194.5 478.5Q164 422 164 350Z" transform="translate(165.16,155) scale(0.04,-0.04)" fill="#8A6E4A" />
-            <path d="M345 208 551 700H687L345 -38L3 700H139Z" transform="translate(199.64,155) scale(0.04,-0.04)" fill="#8A6E4A" />
-            <path d="M78 700H197V0H78Z" transform="translate(229.6,155) scale(0.04,-0.04)" fill="#8A6E4A" />
-            <path d="M8 591V700H496V591H312V0H192V591Z" transform="translate(242.95999999999998,155) scale(0.04,-0.04)" fill="#8A6E4A" />
-            <path d="M554 0 474 180H217L137 0H3L345 738L687 0ZM345 502 250 280H440Z" transform="translate(265.48,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+            {/* FILOVITA オリジナル字形(インクのように浮かび上がる) */}
+            <g
+              transform="translate(70,210) scale(0.42)"
+              fill="#8A6E4A"
+              style={{
+                opacity: showLogo ? 1 : 0,
+                filter: showLogo ? 'blur(0px)' : 'blur(4px)',
+                transition: `opacity ${inkMs}ms ease, filter ${inkMs}ms ease`,
+              }}
+            >
+              <path d="M40 30 L40 110 L58 110 L58 78 L92 78 L92 62 L58 62 L58 46 L100 46 L100 30 Z" />
+              <path d="M118 30 L118 110 L136 110 L136 30 Z" />
+              <path d="M156 30 L156 110 L220 110 L220 94 L174 94 L174 30 Z" />
+              <path d="M238 70 Q238 30 278 30 Q318 30 318 70 Q318 110 278 110 Q238 110 238 70 Z M256 70 Q256 46 278 46 Q300 46 300 70 Q300 94 278 94 Q256 94 256 70 Z" />
+              <path d="M330 30 L360 110 L378 110 L408 30 L389 30 L369 88 L349 30 Z" />
+              <path d="M424 30 L424 110 L442 110 L442 30 Z" />
+              <path d="M456 30 L456 46 L484 46 L484 110 L502 110 L502 46 L530 46 L530 30 Z" />
+              <path d="M572 30 L536 110 L555 110 L563 92 L601 92 L609 110 L628 110 L592 30 Z M582 60 L570 78 L594 78 Z" />
+            </g>
           </svg>
           <div
             style={{
