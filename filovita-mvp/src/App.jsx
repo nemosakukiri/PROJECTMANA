@@ -30,7 +30,6 @@ import ShoppingConsultScreen from "./screens/ShoppingConsultScreen.jsx";
 import ShoppingListScreen from "./screens/ShoppingListScreen.jsx";
 import WeeklyLifeScreen from "./screens/WeeklyLifeScreen.jsx";
 import SeedsScreen from "./screens/SeedsScreen.jsx";
-import EssentialCostsScreen from "./screens/EssentialCostsScreen.jsx";
 import { makeId } from "./theme/techo/tagToolbox.js";
 
 // 2026-08-01、利用者から「今日8月1日なのに7月18日になっている」と指摘を受けて発覚：
@@ -475,7 +474,6 @@ export default function App() {
             onOpenWeeklyLife={() => setScreen("weeklyLife")}
             onAddSeed={handleAddSeed}
             onOpenSeeds={() => setScreen("seeds")}
-            onOpenEssentialCosts={() => setScreen("essentialCosts")}
             seenGuides={seenGuides}
             onDismissGuide={handleDismissGuide}
           />
@@ -486,16 +484,6 @@ export default function App() {
             seeds={seeds}
             onAdd={handleAddSeed}
             onRemove={handleRemoveSeed}
-            onBack={() => setScreen("calendar")}
-          />
-        )}
-        {screen === "essentialCosts" && (
-          <EssentialCostsScreen
-            theme={theme}
-            essentialCosts={essentialCosts}
-            onAdd={handleAddEssentialCost}
-            onRemove={handleRemoveEssentialCost}
-            onEditAmount={handleEditEssentialCostAmount}
             onBack={() => setScreen("calendar")}
           />
         )}
@@ -542,6 +530,9 @@ export default function App() {
             onAppendChatMessage={handleAppendShoppingChatMessage}
             weeklyLife={weeklyLife}
             essentialCosts={essentialCosts}
+            onAddEssentialCost={handleAddEssentialCost}
+            onRemoveEssentialCost={handleRemoveEssentialCost}
+            onEditEssentialCostAmount={handleEditEssentialCostAmount}
             onBack={() => setScreen("calendar")}
           />
         )}

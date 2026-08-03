@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import ContextHeader from "../components/ContextHeader.jsx";
 import ShoppingChat from "../components/ShoppingChat.jsx";
+import EssentialCostsSection from "../components/EssentialCostsSection.jsx";
 import SteelPanel from "../theme/industrial/SteelPanel.jsx";
 import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
 import BarkPanel from "../theme/forest/BarkPanel.jsx";
@@ -163,6 +164,7 @@ export default function ShoppingConsultScreen({
   onGenerateList,
   chatHistory, onAppendChatMessage,
   weeklyLife, essentialCosts,
+  onAddEssentialCost, onRemoveEssentialCost, onEditEssentialCostAmount,
   onBack,
 }) {
   const { tokens } = theme;
@@ -262,6 +264,14 @@ export default function ShoppingConsultScreen({
           tokens={tokens} items={itemsToAdd} onAdd={onAddItemToAdd} onRemove={onRemoveItemToAdd}
           onEditAmount={onEditItemToAddPrice}
           amountKey="price" namePlaceholder="例：コーヒー" addLabel="追加"
+        />
+
+        <div style={{ fontSize: 10, letterSpacing: "0.1em", color: tokens.inkFaint, marginBottom: 10 }}>
+          欠かせないもの（生活を維持するために絶対に守らないといけない費用）
+        </div>
+        <EssentialCostsSection
+          theme={theme} essentialCosts={essentialCosts}
+          onAdd={onAddEssentialCost} onRemove={onRemoveEssentialCost} onEditAmount={onEditEssentialCostAmount}
         />
 
         {(() => {

@@ -24,7 +24,7 @@ const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
 const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];
 
 /* ①カレンダー（中心画面） */
-export default function CalendarScreen({ theme, events, monthStage, inputMode, todayDate, onOpenDate, onNew, onOpenSettings, onOpenShoppingConsult, onOpenWeeklyLife, onAddSeed, onOpenSeeds, onOpenEssentialCosts, seenGuides = {}, onDismissGuide }) {
+export default function CalendarScreen({ theme, events, monthStage, inputMode, todayDate, onOpenDate, onNew, onOpenSettings, onOpenShoppingConsult, onOpenWeeklyLife, onAddSeed, onOpenSeeds, seenGuides = {}, onDismissGuide }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -206,21 +206,6 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, t
           }}
         >
           <span style={{ fontSize: 16 }}>🌱</span> 暮らしの種を見る
-        </button>
-
-        {/* 欠かせないもの(docs/LIFE_MODEL.md)：生活を維持するために絶対に
-            守らないといけない費用を、誰のためのものかで持つ場所
-            （2026-08-01、第9条の設計対話の延長より）。 */}
-        <button
-          onClick={onOpenEssentialCosts}
-          data-testid="open-essential-costs"
-          style={{
-            display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left",
-            padding: "11px 14px", marginBottom: 14, borderRadius: 12, cursor: "pointer",
-            border: `1px solid ${tokens.line}`, background: "transparent", color: tokens.inkSoft, fontSize: 13,
-          }}
-        >
-          <span style={{ fontSize: 16 }}>🛡️</span> 欠かせないもの
         </button>
 
         {/* 今日の続き：数字を並べたままにせず、聞かれたら答える形にする */}

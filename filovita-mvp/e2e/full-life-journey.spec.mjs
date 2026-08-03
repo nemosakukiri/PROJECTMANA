@@ -1275,7 +1275,7 @@ async function main() {
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("この映画見たい") && bodyText.includes("あの店行ってみたい"), "リロード後も置いた種が残っている");
 
-    step("欠かせないもの：カレンダー画面から開ける（2026-08-01、第9条の設計対話の延長より）");
+    step("欠かせないもの：買い物相談画面の中で開ける（2026-08-03、利用者からの指摘：AIコンテキストにはすでに渡っているのに、画面はカレンダーからしか開けずちぐはぐだった。買い物相談の中へ移した）");
     await page.evaluate(() => {
       localStorage.setItem("filovita-mvp-state", JSON.stringify({
         ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
@@ -1284,12 +1284,18 @@ async function main() {
     });
     await page.reload();
     await page.waitForTimeout(300);
+    let calendarBodyText = await page.evaluate(() => document.body.textContent);
+    assert(!calendarBodyText.includes("🛡️") && !calendarBodyText.includes("欠かせないもの"), "カレンダー画面側の入り口は消えている");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "shoppingConsult",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(300);
     bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("欠かせないもの"), "カレンダー画面に「欠かせないもの」の導線がある");
-    await clickButtonContaining(page, "欠かせないもの");
-    await page.waitForTimeout(200);
-    state = await getState(page);
-    assert(state.screen === "essentialCosts", "欠かせないもの画面が開く");
+    assert(bodyText.includes("欠かせないもの"), "買い物相談画面の中に「欠かせないもの」の欄がある");
 
     step("欠かせないもの：実データ（ネモの薬）が、誰のためのものかで表示される。金額は勝手に埋めない");
     bodyText = await page.evaluate(() => document.body.textContent);

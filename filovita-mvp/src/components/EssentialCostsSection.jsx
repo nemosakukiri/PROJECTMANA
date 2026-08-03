@@ -1,9 +1,5 @@
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import ContextHeader from "../components/ContextHeader.jsx";
-import SteelPanel from "../theme/industrial/SteelPanel.jsx";
-import OrnateFrame from "../theme/gothic/OrnateFrame.jsx";
-import BarkPanel from "../theme/forest/BarkPanel.jsx";
 
 function AddForm({ tokens, onAdd }) {
   const [entity, setEntity] = useState("");
@@ -56,24 +52,25 @@ function AddForm({ tokens, onAdd }) {
    金額(amount)は、実際に確認できたものだけを入れる——確認できるまでは
    空欄のまま表示する。ここで金額を推測して埋めることは、家計相談の
    憲法・第9条が禁じている「事実を作る」行為そのものになるため、UIの
-   どこにも「だいたいこれくらい」を入力させる導線は作らない。 */
-export default function EssentialCostsScreen({ theme, essentialCosts, onAdd, onRemove, onEditAmount, onBack }) {
-  const { tokens } = theme;
-  const isIndustrial = theme.componentTheme === "industrial";
-  const isGothic = theme.componentTheme === "gothic";
-  const isForest = theme.componentTheme === "forest";
+   どこにも「だいたいこれくらい」を入力させる導線は作らない。
 
+   2026-08-03、麻奈さんの指摘で、独立したカレンダー画面から買い物相談
+   画面の中へ移した——この金額はすでにButlerとの買い物相談のAIコンテキスト
+   に渡っていたのに、画面上はカレンダーからしか開けず、買い物相談の中には
+   出てこないという、ちぐはぐな状態だったため。 */
+export default function EssentialCostsSection({ theme, essentialCosts, onAdd, onRemove, onEditAmount }) {
+  const { tokens } = theme;
   const entities = [...new Set(essentialCosts.map((c) => c.entity))];
 
-  const listBody = (
-    <>
+  return (
+    <div style={{ marginBottom: 24 }}>
       {entities.length === 0 ? (
-        <p style={{ fontSize: 13, color: tokens.inkFaint, marginBottom: 20 }}>
+        <p style={{ fontSize: 13, color: tokens.inkFaint, marginBottom: 14 }}>
           まだ、欠かせないものは登録されていません。
         </p>
       ) : (
         entities.map((entity) => (
-          <div key={entity} style={{ marginBottom: 18 }} data-testid={`essential-cost-entity-${entity}`}>
+          <div key={entity} style={{ marginBottom: 14 }} data-testid={`essential-cost-entity-${entity}`}>
             <div style={{ fontSize: 12, fontWeight: 700, color: tokens.inkSoft, marginBottom: 6 }}>{entity}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               {essentialCosts
@@ -117,27 +114,6 @@ export default function EssentialCostsScreen({ theme, essentialCosts, onAdd, onR
         ))
       )}
       <AddForm tokens={tokens} onAdd={onAdd} />
-    </>
-  );
-
-  return (
-    <div>
-      <ContextHeader theme={theme} breadcrumb="生活カルテ" title="欠かせないもの" onBack={onBack} />
-      <div style={{ padding: "0 20px 30px" }}>
-        <p style={{ fontSize: 12.5, color: tokens.inkFaint, marginBottom: 18 }}>
-          生活を守るために欠かせない費用です。誰のためのものかで持ちます。
-          金額は、確認できたものだけ入れれば大丈夫です。
-        </p>
-        {isIndustrial ? (
-          <SteelPanel>{listBody}</SteelPanel>
-        ) : isGothic ? (
-          <OrnateFrame>{listBody}</OrnateFrame>
-        ) : isForest ? (
-          <BarkPanel>{listBody}</BarkPanel>
-        ) : (
-          listBody
-        )}
-      </div>
     </div>
   );
 }
