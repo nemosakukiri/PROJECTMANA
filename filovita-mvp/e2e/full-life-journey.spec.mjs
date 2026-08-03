@@ -115,6 +115,9 @@ async function main() {
 
     await page.goto(BASE_URL);
 
+    step("起動アニメーション：初回はフル演出(最大1.75秒)のあと、実際のアプリに進む(2026-08-03、麻奈さんから受け取ったNotebookOpenコンポーネント)");
+    await page.waitForSelector('button:has-text("はじめる")', { timeout: 5000 });
+
     step("Butlerとの出会い：初回起動時、設定ウィザードではなくButler自身が迎え、一問一答で暮らしを聞き取る(2026-08-02)");
     await clickButtonContaining(page, "はじめる");
     await page.waitForTimeout(150);
@@ -174,7 +177,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
 
     step("カレンダー：月の見出しと「今日」は、実際の今日の日付から計算される(2026-08-01、固定で「2026年7月18日」になっていた不具合の再発防止)");
     const today = new Date();
@@ -194,7 +197,7 @@ async function main() {
     await clickButtonWithText(page, "わかった");
     await page.waitForTimeout(150);
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(!bodyText.includes("ここがあなたの生活です"), "一度見た案内は、リロード後も自動では出てこない");
     await page.evaluate(() => {
@@ -336,7 +339,7 @@ async function main() {
     assert(!!singlePlan, "単発予定は繰り返し(repeat)ではなく、kind:\"single\"として保存される");
     assert(singlePlan.date === state.selectedDate, `単発予定の日付が、実際にクリックした日付と一致する（実際: ${singlePlan.date} / 選択日: ${state.selectedDate}）`);
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("整形外科"), "リロード後も、この日の単発予定が残っている");
     await page.evaluate(() => {
@@ -437,7 +440,7 @@ async function main() {
 
     step("⑧ 後日の利用：ページを実際にリロードして、すべて残っていることを確認する");
     await page.reload();
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(800);
     state = await getState(page);
     assert(state.events.length === 1, "リロード後もEventが残っている");
     const evtAfterReload = state.events.find((e) => e.id === state.selectedEventId);
@@ -473,7 +476,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     await clickButtonContaining(page, "はじめてガイド");
     await page.waitForTimeout(200);
     bodyText = await page.evaluate(() => document.body.textContent);
@@ -511,7 +514,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("執事が下書きを作りました"), "確認画面の文言が「AI」ではなく決めた呼び名に差し替わっている");
 
@@ -523,7 +526,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("呼び名"), "設定画面に呼び名の項目がある");
     const companionValue = await page.evaluate(() => document.querySelector('input[placeholder="例：執事、相棒、ネモ…"]')?.value);
@@ -540,7 +543,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("買い物を相談する"), "カレンダー画面に「買い物を相談する」の固定導線がある");
     await clickButtonContaining(page, "買い物を相談する");
@@ -602,7 +605,7 @@ async function main() {
 
     step("買い物相談：入力した内容はリロード後も残っている");
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("コーヒー") && bodyText.includes("大きな買い物"), "リロード後も追加したい品目が残っている");
     assert(bodyText.includes("生活保護費") && bodyText.includes("家賃") && bodyText.includes("米"), "リロード後も「暮らしの予定」（入金・支払い・必需品補充）が残っている");
@@ -631,7 +634,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     await clickButtonContaining(page, "買い物リストを作る");
     await page.waitForTimeout(200);
     state = await getState(page);
@@ -820,7 +823,7 @@ async function main() {
 
     step("買い物リスト：チェックの状態も、追加した品目も、リロード後に残っている");
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     state = await getState(page);
     const peach = state.shoppingListItems.find((i) => i.name === "桃");
     const grape = state.shoppingListItems.find((i) => i.name === "ぶどう");
@@ -836,7 +839,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     await clickButtonContaining(page, "書く"); // inputModeが依然speakのままなので、書くモードへ切り替える
     let capturedDraftRequest = null;
     await page.route("**/api/generate-draft", async (route) => {
@@ -902,7 +905,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     await clickButtonContaining(page, "書く");
     await page.fill(
       'textarea[placeholder="話した内容、決まったことをそのまま書いてください"]',
@@ -921,7 +924,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     await clickButtonContaining(page, "資料");
     await page.setInputFiles("#input-photo-file", {
       name: "receipt.jpg",
@@ -990,7 +993,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     const balanceBeforeSecondReceipt = (await getState(page)).shoppingBalance;
     await clickButtonContaining(page, "資料");
     await page.setInputFiles("#input-photo-file", {
@@ -1039,7 +1042,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     await clickButtonContaining(page, "資料");
     await page.setInputFiles("#input-photo-file", {
       name: "cw-advisory.jpg",
@@ -1088,7 +1091,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     const cwPlanNoteBefore = (await getState(page)).cwPlanNote;
     await clickButtonContaining(page, "資料");
     await page.setInputFiles("#input-photo-file", {
@@ -1130,7 +1133,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("今週の暮らし"), "カレンダー画面に「今週の暮らし」の導線がある");
     await clickButtonContaining(page, "今週の暮らし");
@@ -1202,7 +1205,7 @@ async function main() {
     await page.click('[data-testid="weekly-life-add-button"]');
     await page.waitForTimeout(150);
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     await page.click('[data-testid="weekly-life-day-toggle-sun"]');
     await page.waitForTimeout(150);
     bodyText = await page.evaluate(() => document.body.textContent);
@@ -1220,7 +1223,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("暮らしの種"), "カレンダー画面に「暮らしの種」の導線・入力欄がある");
     await page.fill('[data-testid="seed-quick-capture-input"]', "この映画見たい");
@@ -1271,7 +1274,7 @@ async function main() {
 
     step("暮らしの種：リロード後も残る");
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("この映画見たい") && bodyText.includes("あの店行ってみたい"), "リロード後も置いた種が残っている");
 
@@ -1283,7 +1286,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     let calendarBodyText = await page.evaluate(() => document.body.textContent);
     assert(!calendarBodyText.includes("🛡️") && !calendarBodyText.includes("欠かせないもの"), "カレンダー画面側の入り口は消えている");
     await page.evaluate(() => {
@@ -1293,7 +1296,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("欠かせないもの"), "買い物相談画面の中に「欠かせないもの」の欄がある");
 
@@ -1340,7 +1343,7 @@ async function main() {
 
     step("欠かせないもの：リロード後も残る");
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("ネモ") && bodyText.includes("薬"), "リロード後もネモの薬が残っている");
 
@@ -1352,7 +1355,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     let capturedEssentialCostsRequest = null;
     await page.route("**/api/shopping-chat", async (route) => {
       capturedEssentialCostsRequest = JSON.parse(route.request().postData());
@@ -1375,7 +1378,7 @@ async function main() {
       }));
     });
     await page.reload();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(700);
     await clickButtonContaining(page, "資料");
     await page.setInputFiles("#input-photo-file", {
       name: "blurry.jpg",

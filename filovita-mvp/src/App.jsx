@@ -26,6 +26,7 @@ import ConfirmScreen from "./screens/ConfirmScreen.jsx";
 import TagToolboxScreen from "./screens/TagToolboxScreen.jsx";
 import GuideTourScreen from "./screens/GuideTourScreen.jsx";
 import OnboardingInterviewScreen from "./screens/OnboardingInterviewScreen.jsx";
+import NotebookOpen from "./components/NotebookOpen.jsx";
 import ShoppingConsultScreen from "./screens/ShoppingConsultScreen.jsx";
 import ShoppingListScreen from "./screens/ShoppingListScreen.jsx";
 import WeeklyLifeScreen from "./screens/WeeklyLifeScreen.jsx";
@@ -55,6 +56,11 @@ const TODAY_LABEL = computeTodayLabel();
 const persisted = loadState();
 
 export default function App() {
+  // 起動アニメーション(NotebookOpen)：アプリを開くたびに再生する
+  // (2026-08-03、麻奈さんから受け取ったコンポーネント)。localStorageの
+  // 'filovita_visited'で初回/2回目以降の長さを自分で判定するため、
+  // ここでは「まだ演出が終わっていない」ことだけを持つ。
+  const [bootDone, setBootDone] = useState(false);
   const [screen, setScreen] = useState(persisted?.screen ?? "welcome");
   const [inputMode, setInputMode] = useState(persisted?.inputMode ?? "both");
   const [themeId, setThemeId] = useState(persisted?.themeId ?? defaultThemeId);
@@ -658,6 +664,14 @@ export default function App() {
         )}
     </>
   );
+
+  if (!bootDone) {
+    return (
+      <div style={{ minHeight: "100vh" }}>
+        <NotebookOpen onDone={() => setBootDone(true)} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: theme.tokens.paper, display: "flex", justifyContent: "center", fontFamily: "'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif" }}>
