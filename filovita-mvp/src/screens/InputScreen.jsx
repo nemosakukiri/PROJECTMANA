@@ -220,8 +220,13 @@ export default function InputScreen({
               レシート・CWからのお知らせ・支援記録・病院の説明書・手書きのメモなど、
               生活資料を撮影するとバトラーが読み取ります。
             </p>
+            {/* captureを付けると、端末によってはカメラが直接開き、写真アプリ
+                (フォトライブラリ)から選ぶ選択肢が出てこなくなる——「撮影・
+                選択する」という文言に反して選べなかった不具合(2026-08-03、
+                利用者からの指摘)。captureを外し、OS標準の選択肢
+                (カメラ／フォトライブラリ／ファイル)を出す。 */}
             <input
-              type="file" accept="image/*" capture="environment"
+              type="file" accept="image/*"
               onChange={handlePhotoSelected} id="input-photo-file"
               style={{ display: "none" }}
             />
