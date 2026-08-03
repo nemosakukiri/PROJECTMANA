@@ -317,9 +317,9 @@ async function main() {
     state = await getState(page);
     assert(state.screen === "dayList", "その日の記録一覧に遷移している");
 
-    step("この日だけの予定（単発）：日付をクリックした先に、通院などの単発予定を足せる(2026-08-03、利用者からの実例：今週土曜の整形外科が出てこなかったことで発覚)");
-    bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("まだ、この日だけの予定は登録されていません"), "単発予定が無ければ、その旨がそのまま表示される");
+    step("この日の予定：日付をクリックした先に、毎週決まっている予定も単発の予定も一緒に反映される(2026-08-03、利用者からの実例：今週土曜の整形外科・毎週のBLUE等が出てこなかったことで発覚)");
+    const regularCountBefore = await page.evaluate(() => document.querySelectorAll('[data-testid="regular-plan-item"]').length);
+    console.log(`  (今日の曜日にすでにある「毎週」の予定: ${regularCountBefore}件)`);
     await page.click('[data-testid="single-plan-open-form"]');
     await page.waitForTimeout(150);
     await page.fill('[data-testid="single-plan-start-time"]', "10:00");
@@ -329,6 +329,8 @@ async function main() {
     await page.waitForTimeout(150);
     bodyText = await page.evaluate(() => document.body.textContent);
     assert(bodyText.includes("整形外科") && bodyText.includes("宮尾整形外科"), "追加した単発予定がその場に表示される");
+    const regularCountAfterAdd = await page.evaluate(() => document.querySelectorAll('[data-testid="regular-plan-item"]').length);
+    assert(regularCountAfterAdd === regularCountBefore, "単発予定を足しても、もともとの毎週の予定は消えず一緒に表示されたまま（両方が同じ場所に反映される、という利用者の要望）");
     state = await getState(page);
     const singlePlan = state.weeklyLife.find((i) => i.kind === "single" && i.label === "整形外科");
     assert(!!singlePlan, "単発予定は繰り返し(repeat)ではなく、kind:\"single\"として保存される");
@@ -344,6 +346,8 @@ async function main() {
     await page.waitForTimeout(150);
     state = await getState(page);
     assert(!state.weeklyLife.some((i) => i.kind === "single" && i.label === "整形外科"), "削除した単発予定は保存データからも消える");
+    const regularCountAfterDelete = await page.evaluate(() => document.querySelectorAll('[data-testid="regular-plan-item"]').length);
+    assert(regularCountAfterDelete === regularCountBefore, "単発予定を消しても、もともとの毎週の予定は影響を受けない（ここでは毎週の予定自体は編集・削除できない）");
 
     await page.evaluate(() => {
       const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("血液検査"));

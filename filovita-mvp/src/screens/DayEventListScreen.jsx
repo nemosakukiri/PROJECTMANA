@@ -70,7 +70,19 @@ function SinglePlanForm({ tokens, date, onAdd, onDone }) {
   );
 }
 
-/* ②その日のEvent一覧（見出しのみ）＋この日だけの予定（単発） */
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+function dateToDayKey(dateStr) {
+  if (!dateStr) return null;
+  return DAY_KEYS[new Date(`${dateStr}T00:00:00`).getDay()];
+}
+
+/* ②その日のEvent一覧（見出しのみ）＋この日の予定（毎週決まっているもの＋
+   単発）。「日付をクリックした先に予定が反映されていない」という指摘
+   (2026-08-03)——単発予定を足す欄を追加しただけでは、既存の「今週の
+   暮らし」の毎週の予定(BLUE・訪問看護等)がここには出てこなかった。
+   両方をこの1ページにまとめて出す。毎週の予定はここでは編集・削除
+   させない(「今週の暮らし」画面側の役割のまま。ここで消すと繰り返しの
+   パターンごと消えてしまうため)。 */
 export default function DayEventListScreen({ theme, events, date, inputMode, onOpenEvent, onBack, onNew, weeklyLife = [], onAddWeeklyLife, onRemoveWeeklyLife }) {
   const { tokens } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
@@ -79,23 +91,23 @@ export default function DayEventListScreen({ theme, events, date, inputMode, onO
   const dayEvents = eventsOnDate(events, date);
   const label = dayEvents[0]?.dateLabel ?? (date ? formatDateLabel(date) : "");
   const [addingPlan, setAddingPlan] = useState(false);
-  const singlePlans = weeklyLife
-    .filter((item) => item.kind === "single" && item.date === date)
-    .slice()
-    .sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
+  const dayKey = dateToDayKey(date);
+  const regularPlans = weeklyLife.filter((item) => item.kind === "regular" && item.repeat?.dayOfWeek === dayKey);
+  const singlePlans = weeklyLife.filter((item) => item.kind === "single" && item.date === date);
+  const allPlans = [...regularPlans, ...singlePlans].sort((a, b) => (a.startTime || "").localeCompare(b.startTime || ""));
 
   return (
     <div>
       <ContextHeader theme={theme} breadcrumb="カレンダー" title={label} onBack={onBack} />
       <div style={{ padding: "10px 20px 0" }}>
         <div style={{ fontSize: 12, fontWeight: 700, color: tokens.inkSoft, marginBottom: 8 }}>この日の予定</div>
-        {singlePlans.length === 0 && !addingPlan && (
-          <p style={{ fontSize: 12.5, color: tokens.inkFaint, marginBottom: 10 }}>まだ、この日だけの予定は登録されていません。</p>
+        {allPlans.length === 0 && !addingPlan && (
+          <p style={{ fontSize: 12.5, color: tokens.inkFaint, marginBottom: 10 }}>まだ、この日の予定は登録されていません。</p>
         )}
-        {singlePlans.map((item) => (
+        {allPlans.map((item) => (
           <div
             key={item.id}
-            data-testid="single-plan-item"
+            data-testid={item.kind === "single" ? "single-plan-item" : "regular-plan-item"}
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "9px 12px", border: `1px solid ${tokens.line}`, borderRadius: 10, marginBottom: 6,
@@ -104,17 +116,24 @@ export default function DayEventListScreen({ theme, events, date, inputMode, onO
             <div>
               <div style={{ fontSize: 13.5, color: tokens.ink }}>
                 {item.startTime}{item.endTime ? `〜${item.endTime}` : ""}　{item.label}
+                {item.kind === "regular" && (
+                  <span style={{ fontSize: 10.5, color: tokens.inkFaint, marginLeft: 6, border: `1px solid ${tokens.line}`, borderRadius: 999, padding: "1px 7px" }}>
+                    毎週
+                  </span>
+                )}
               </div>
               {item.provider && (
                 <div style={{ fontSize: 12, color: tokens.inkFaint, marginTop: 2 }}>{item.provider}</div>
               )}
             </div>
-            <button
-              onClick={() => onRemoveWeeklyLife?.(item.id)}
-              style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer", padding: 2 }}
-            >
-              <Trash2 size={15} />
-            </button>
+            {item.kind === "single" && (
+              <button
+                onClick={() => onRemoveWeeklyLife?.(item.id)}
+                style={{ background: "none", border: "none", color: tokens.inkFaint, cursor: "pointer", padding: 2 }}
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
           </div>
         ))}
         {addingPlan ? (
