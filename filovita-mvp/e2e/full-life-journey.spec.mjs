@@ -1125,7 +1125,7 @@ async function main() {
       "提案のチェックを入れずに確定すると、cwPlanNoteは変わらない（黙って書き込まない）"
     );
 
-    step("今週の暮らし：ホーム画面から開ける（2026-08-01、生活モデル設計対話より）");
+    step("今週の暮らし：カレンダー画面からの導線は外した（2026-08-03、利用者からの指摘：カレンダーまでのボタンが多すぎる）。画面自体はまだ残っている");
     await page.evaluate(() => {
       localStorage.setItem("filovita-mvp-state", JSON.stringify({
         ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
@@ -1135,11 +1135,17 @@ async function main() {
     await page.reload();
     await page.waitForTimeout(700);
     bodyText = await page.evaluate(() => document.body.textContent);
-    assert(bodyText.includes("今週の暮らし"), "カレンダー画面に「今週の暮らし」の導線がある");
-    await clickButtonContaining(page, "今週の暮らし");
-    await page.waitForTimeout(200);
+    assert(!bodyText.includes("今週の暮らし"), "カレンダー画面から「今週の暮らし」の導線が消えている");
+    await page.evaluate(() => {
+      localStorage.setItem("filovita-mvp-state", JSON.stringify({
+        ...JSON.parse(localStorage.getItem("filovita-mvp-state")),
+        screen: "weeklyLife",
+      }));
+    });
+    await page.reload();
+    await page.waitForTimeout(700);
     state = await getState(page);
-    assert(state.screen === "weeklyLife", "今週の暮らし画面が開く");
+    assert(state.screen === "weeklyLife", "画面自体は残っており、直接遷移すれば開く（後で入り口を戻せるように）");
 
     step("今週の暮らし：曜日を押すと、その日の予定がその場に展開される（2026-08-01、利用者からの要望：カレンダーと同じ操作感に）");
     bodyText = await page.evaluate(() => document.body.textContent);

@@ -477,7 +477,6 @@ export default function App() {
             onNew={() => setScreen("input")}
             onOpenSettings={() => setScreen("settings")}
             onOpenShoppingConsult={() => setScreen("shoppingConsult")}
-            onOpenWeeklyLife={() => setScreen("weeklyLife")}
             onAddSeed={handleAddSeed}
             onOpenSeeds={() => setScreen("seeds")}
             seenGuides={seenGuides}

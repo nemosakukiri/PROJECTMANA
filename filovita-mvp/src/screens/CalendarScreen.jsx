@@ -24,7 +24,7 @@ const FOREST_DAY_TINT = [0.04, 0.07, 0.1, 0.14, 0.18];
 const FOREST_DOT_OPACITY = [0.25, 0.4, 0.55, 0.7, 0.85];
 
 /* ①カレンダー（中心画面） */
-export default function CalendarScreen({ theme, events, monthStage, inputMode, todayDate, onOpenDate, onNew, onOpenSettings, onOpenShoppingConsult, onOpenWeeklyLife, onAddSeed, onOpenSeeds, seenGuides = {}, onDismissGuide }) {
+export default function CalendarScreen({ theme, events, monthStage, inputMode, todayDate, onOpenDate, onNew, onOpenSettings, onOpenShoppingConsult, onAddSeed, onOpenSeeds, seenGuides = {}, onDismissGuide }) {
   const { tokens, labels } = theme;
   const isIndustrial = theme.componentTheme === "industrial";
   const isGothic = theme.componentTheme === "gothic";
@@ -175,21 +175,6 @@ export default function CalendarScreen({ theme, events, monthStage, inputMode, t
         >
           <span style={{ fontSize: 16 }}>🛒</span> 買い物を相談する
         </button>
-        {/* 生活モデル(docs/LIFE_MODEL.md)の第一版：この人の生活に何が
-            組み込まれているかを記録する場所（2026-08-01、利用者との
-            設計対話より） */}
-        <button
-          onClick={onOpenWeeklyLife}
-          data-testid="open-weekly-life"
-          style={{
-            display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left",
-            padding: "11px 14px", marginBottom: 14, borderRadius: 12, cursor: "pointer",
-            border: `1px solid ${tokens.line}`, background: "transparent", color: tokens.inkSoft, fontSize: 13,
-          }}
-        >
-          <span style={{ fontSize: 16 }}>📅</span> 今週の暮らし
-        </button>
-
         {/* 暮らしの種(docs/LIFE_MODEL.md)：予定でも家計でもない、生活の
             断片を置く横断レイヤー（2026-08-01、利用者との設計対話より）。
             「確認画面すら要らないくらい軽く」という要望通り、その場で
