@@ -604,6 +604,9 @@ export default function App() {
             onOpenEvent={(id) => { setSelectedEventId(id); setScreen("detail"); }}
             onBack={() => setScreen("calendar")}
             onNew={() => setScreen("input")}
+            weeklyLife={weeklyLife}
+            onAddWeeklyLife={handleAddWeeklyLife}
+            onRemoveWeeklyLife={handleRemoveWeeklyLife}
           />
         )}
         {screen === "detail" && selectedEvent && (

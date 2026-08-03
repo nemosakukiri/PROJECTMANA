@@ -316,6 +316,35 @@ async function main() {
     await page.waitForTimeout(300);
     state = await getState(page);
     assert(state.screen === "dayList", "その日の記録一覧に遷移している");
+
+    step("この日だけの予定（単発）：日付をクリックした先に、通院などの単発予定を足せる(2026-08-03、利用者からの実例：今週土曜の整形外科が出てこなかったことで発覚)");
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("まだ、この日だけの予定は登録されていません"), "単発予定が無ければ、その旨がそのまま表示される");
+    await page.click('[data-testid="single-plan-open-form"]');
+    await page.waitForTimeout(150);
+    await page.fill('[data-testid="single-plan-start-time"]', "10:00");
+    await page.fill('[data-testid="single-plan-label"]', "整形外科");
+    await page.fill('[data-testid="single-plan-provider"]', "宮尾整形外科");
+    await page.click('[data-testid="single-plan-add-button"]');
+    await page.waitForTimeout(150);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("整形外科") && bodyText.includes("宮尾整形外科"), "追加した単発予定がその場に表示される");
+    state = await getState(page);
+    const singlePlan = state.weeklyLife.find((i) => i.kind === "single" && i.label === "整形外科");
+    assert(!!singlePlan, "単発予定は繰り返し(repeat)ではなく、kind:\"single\"として保存される");
+    assert(singlePlan.date === state.selectedDate, `単発予定の日付が、実際にクリックした日付と一致する（実際: ${singlePlan.date} / 選択日: ${state.selectedDate}）`);
+    await page.reload();
+    await page.waitForTimeout(300);
+    bodyText = await page.evaluate(() => document.body.textContent);
+    assert(bodyText.includes("整形外科"), "リロード後も、この日の単発予定が残っている");
+    await page.evaluate(() => {
+      const row = [...document.querySelectorAll('[data-testid="single-plan-item"]')].find((r) => r.textContent.includes("整形外科"));
+      row?.querySelector("button")?.click();
+    });
+    await page.waitForTimeout(150);
+    state = await getState(page);
+    assert(!state.weeklyLife.some((i) => i.kind === "single" && i.label === "整形外科"), "削除した単発予定は保存データからも消える");
+
     await page.evaluate(() => {
       const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes("血液検査"));
       btn?.click();
