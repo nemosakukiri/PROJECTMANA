@@ -11,14 +11,10 @@ import { useState, useEffect, useRef } from 'react';
  * 初回は 1.6 秒のフル演出、2回目以降は 0.5 秒の短縮版になる
  * (localStorage の 'filovita_visited' で判定)
  *
- * 事前準備:
- *   index.html の <head> に以下を追加してください
- *   <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400&display=swap" rel="stylesheet">
- *
- *   フォントについて:
- *   ウィーン分離派のポスター文字(コロマン・モーザーらのレタリング)に近い、
- *   幾何学的で細身の Jost を採用。執事のシルエット(直線的・フォーマル)と
- *   同じ幾何学的な語彙を共有しており、ロゴ全体で一貫したデザイン言語になる。
+ * ロゴについて:
+ *   執事のシルエット＋「FILOVITA」の文字は、フォントが入っていない環境
+ *   でも同じ見た目になるよう、あらかじめアウトライン化したSVGパスとして
+ *   埋め込んである(2026-08-03)。外部フォントの読み込みは不要。
  */
 export default function NotebookOpen({ onDone }) {
   const isFirstVisit = useRef(
@@ -48,26 +44,35 @@ export default function NotebookOpen({ onDone }) {
       <div style={styles.stage}>
         {/* 中のページ(紙の質感) */}
         <div style={styles.page}>
-          <svg width="70%" viewBox="0 0 320 60" style={{ marginBottom: 8 }}>
-            <g fill="none" stroke="#9C7A3C" strokeWidth="1.2">
-              <path d="M30 40 Q 20 20 35 12 Q 50 5 55 20 Q 58 32 45 35" />
-              <path d="M290 40 Q 300 20 285 12 Q 270 5 265 20 Q 262 32 275 35" />
-            </g>
-            <g fill="#9C7A3C">
-              <circle cx="35" cy="12" r="2.3" />
-              <circle cx="285" cy="12" r="2.3" />
-            </g>
-          </svg>
-          <div
+          {/* 執事のシルエット＋FILOVITAのロゴマーク(2026-08-03、麻奈さんから受け取ったSVG) */}
+          <svg
+            width="66%" viewBox="0 0 400 220"
             style={{
-              ...styles.logo,
               opacity: showLogo ? 1 : 0,
               filter: showLogo ? 'blur(0px)' : 'blur(4px)',
               transition: `opacity ${inkMs}ms ease, filter ${inkMs}ms ease`,
             }}
           >
-            FILOVITA
-          </div>
+            <g transform="translate(200,90)">
+              <rect x="-18" y="-34" width="36" height="12" rx="2" fill="#5A3A24" />
+              <rect x="-22" y="-25" width="44" height="4" rx="2" fill="#5A3A24" />
+              <circle cx="0" cy="-2" r="17" fill="#E8CBB0" />
+              <path d="M -19 17 Q -19 -6 0 -6 Q 19 -6 19 17 L 19 29 L -19 29 Z" fill="#5A3A24" />
+              <rect x="-5" y="6" width="10" height="13" fill="#F6F1E7" />
+              <path d="M -2.5 7.5 L 2.5 7.5 L 0 15 Z" fill="#9C7A3C" />
+            </g>
+            {/* 「FILOVITA」の文字をアウトライン化したパス。フォントが
+                入っていない環境でも同じ見た目で表示されるように
+                (2026-08-03、麻奈さんからの指摘を受けてtext要素から変更)。 */}
+            <path d="M78 700H464V594H194V419H454V316H194V0H78Z" transform="translate(106.96,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+            <path d="M78 700H197V0H78Z" transform="translate(130.16,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+            <path d="M78 700H196V106H474V0H78Z" transform="translate(143.51999999999998,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+            <path d="M38 350Q38 428 65.5 494.5Q93 561 142.0 609.5Q191 658 257.0 685.0Q323 712 401 712Q479 712 545.5 685.0Q612 658 661.5 609.5Q711 561 738.0 494.5Q765 428 765 350Q765 272 738.0 205.5Q711 139 662.0 89.5Q613 40 546.5 12.5Q480 -15 401 -15Q322 -15 256.0 12.5Q190 40 141.0 89.5Q92 139 65.0 205.5Q38 272 38 350ZM164 350Q164 278 194.5 221.5Q225 165 278.5 133.0Q332 101 401 101Q471 101 524.5 133.0Q578 165 608.5 221.5Q639 278 639 350Q639 422 608.5 478.5Q578 535 524.5 567.0Q471 599 401 599Q332 599 278.5 567.0Q225 535 194.5 478.5Q164 422 164 350Z" transform="translate(165.16,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+            <path d="M345 208 551 700H687L345 -38L3 700H139Z" transform="translate(199.64,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+            <path d="M78 700H197V0H78Z" transform="translate(229.6,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+            <path d="M8 591V700H496V591H312V0H192V591Z" transform="translate(242.95999999999998,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+            <path d="M554 0 474 180H217L137 0H3L345 738L687 0ZM345 502 250 280H440Z" transform="translate(265.48,155) scale(0.04,-0.04)" fill="#8A6E4A" />
+          </svg>
           <div
             style={{
               ...styles.tagline,
@@ -131,14 +136,6 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logo: {
-    fontFamily: "'Jost', sans-serif",
-    fontWeight: 400,
-    letterSpacing: '0.1em',
-    fontSize: 32,
-    color: '#8A6E4A',
-    textShadow: '0 1px 0 rgba(255,255,255,0.6), 0 -1px 1px rgba(0,0,0,0.2)',
   },
   tagline: {
     fontSize: 11,
