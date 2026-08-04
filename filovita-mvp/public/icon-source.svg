@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <clipPath id="roundedSquare">
+      <rect x="0" y="0" width="512" height="512" rx="90" ry="90" />
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#roundedSquare)">
+    <rect x="0" y="0" width="512" height="512" fill="#F4E7DD" />
+
+    <!-- waves -->
+    <path d="M -20 372 C 60 342, 140 402, 220 372 S 380 342, 460 372 S 560 402, 620 372"
+          fill="none" stroke="#D97B56" stroke-width="12" stroke-linecap="round" />
+    <path d="M -20 402 C 60 372, 140 432, 220 402 S 380 372, 460 402 S 560 432, 620 402"
+          fill="none" stroke="#4FA88C" stroke-width="12" stroke-linecap="round" />
+
+    <!-- butler -->
+    <g>
+      <!-- hat -->
+      <rect x="196" y="150" width="120" height="16" rx="6" fill="#211D1B" />
+      <rect x="228" y="112" width="56" height="42" rx="4" fill="#211D1B" />
+
+      <!-- head -->
+      <circle cx="256" cy="196" r="42" fill="#E3C4A0" />
+
+      <!-- body -->
+      <path d="M 190 320
+               L 190 250
+               C 190 205, 218 178, 256 178
+               C 294 178, 322 205, 322 250
+               L 322 320
+               Z"
+            fill="#211D1B" />
+
+      <!-- pocket accent -->
+      <rect x="242" y="228" width="28" height="40" fill="#FBF4EE" />
+      <path d="M 246 232 L 266 232 L 256 254 Z" fill="#D9713D" />
+    </g>
+  </g>
+</svg>
